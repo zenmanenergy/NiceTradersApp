@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>logFormatVersion</key>
+	<integer>11</integer>
+	<key>logs</key>
+	<dict>
+		<key>ABEAD80F-DCE4-45EF-B731-7A9E868FACA4</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>ABEAD80F-DCE4-45EF-B731-7A9E868FACA4.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Nice Traders project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Nice Traders</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Cleaning project Nice Traders with scheme Nice Traders and configuration Debug</string>
+			<key>timeStartedRecording</key>
+			<real>785346525.29815602</real>
+			<key>timeStoppedRecording</key>
+			<real>785346525.59937406</real>
+			<key>title</key>
+			<string>Cleaning project Nice Traders with scheme Nice Traders and configuration Debug</string>
+			<key>uniqueIdentifier</key>
+			<string>ABEAD80F-DCE4-45EF-B731-7A9E868FACA4</string>
+		</dict>
+	</dict>
+</dict>
+</plist>
