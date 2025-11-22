@@ -45,6 +45,7 @@ struct CreateListingView: View {
     @State private var showError = false
     @State private var fieldErrors: [String: String] = [:]
     @State private var navigateToDashboard = false
+    @State private var locationUpdateTimer: Timer?
     
     let totalSteps = 3
     
@@ -263,6 +264,16 @@ struct CreateListingView: View {
             if locationStatus == .unset {
                 handleUseLocation()
             }
+            
+            // Set up timer to update location every 5 minutes
+            locationUpdateTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { _ in
+                handleUseLocation()
+            }
+        }
+        .onDisappear {
+            // Clean up timer when view disappears
+            locationUpdateTimer?.invalidate()
+            locationUpdateTimer = nil
         }
     }
     
@@ -1127,6 +1138,11 @@ struct CreateListingView: View {
         dateFormatter.timeZone = TimeZone(identifier: "UTC")
         let availableUntilString = dateFormatter.string(from: availableUntil)
         
+        // Extract lat/lng from location string
+        let locationParts = location.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        let latitude = locationParts.count > 0 ? locationParts[0] : ""
+        let longitude = locationParts.count > 1 ? locationParts[1] : ""
+        
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/CreateListing")!
         components.queryItems = [
             URLQueryItem(name: "SessionId", value: sessionId),
@@ -1134,6 +1150,8 @@ struct CreateListingView: View {
             URLQueryItem(name: "amount", value: amount),
             URLQueryItem(name: "acceptCurrency", value: acceptCurrency.code),
             URLQueryItem(name: "location", value: location),
+            URLQueryItem(name: "latitude", value: latitude),
+            URLQueryItem(name: "longitude", value: longitude),
             URLQueryItem(name: "locationRadius", value: locationRadius),
             URLQueryItem(name: "meetingPreference", value: meetingPreference),
             URLQueryItem(name: "availableUntil", value: availableUntilString)

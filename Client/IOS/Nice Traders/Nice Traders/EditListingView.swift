@@ -1140,6 +1140,11 @@ struct EditListingView: View {
         dateFormatter.timeZone = TimeZone(identifier: "UTC")
         let availableUntilString = dateFormatter.string(from: availableUntil)
         
+        // Extract lat/lng from location string
+        let locationParts = location.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        let latitude = locationParts.count > 0 ? locationParts[0] : ""
+        let longitude = locationParts.count > 1 ? locationParts[1] : ""
+        
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/UpdateListing")!
         components.queryItems = [
             URLQueryItem(name: "SessionId", value: sessionId),
@@ -1148,6 +1153,8 @@ struct EditListingView: View {
             URLQueryItem(name: "amount", value: amount),
             URLQueryItem(name: "acceptCurrency", value: acceptCurrency.code),
             URLQueryItem(name: "location", value: location),
+            URLQueryItem(name: "latitude", value: latitude),
+            URLQueryItem(name: "longitude", value: longitude),
             URLQueryItem(name: "locationRadius", value: locationRadius),
             URLQueryItem(name: "meetingPreference", value: meetingPreference),
             URLQueryItem(name: "availableUntil", value: availableUntilString)

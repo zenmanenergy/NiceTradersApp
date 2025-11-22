@@ -812,14 +812,14 @@ struct ContactView: View {
         let combinedDate = calendar.dateComponents([.year, .month, .day], from: proposedDate)
         let combinedTime = calendar.dateComponents([.hour, .minute], from: proposedTime)
         
-        var components = DateComponents()
-        components.year = combinedDate.year
-        components.month = combinedDate.month
-        components.day = combinedDate.day
-        components.hour = combinedTime.hour
-        components.minute = combinedTime.minute
+        var dateComponents = DateComponents()
+        dateComponents.year = combinedDate.year
+        dateComponents.month = combinedDate.month
+        dateComponents.day = combinedDate.day
+        dateComponents.hour = combinedTime.hour
+        dateComponents.minute = combinedTime.minute
         
-        guard let finalDate = calendar.date(from: components) else { return }
+        guard let finalDate = calendar.date(from: dateComponents) else { return }
         let proposedDateTime = dateFormatter.string(from: finalDate)
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/ProposeMeeting")!
