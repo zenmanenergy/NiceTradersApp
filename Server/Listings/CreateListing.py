@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 import json
 
-def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, LocationRadius, MeetingPreference, AvailableUntil):
+def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil):
     """Create a new currency exchange listing"""
     try:
         # Parameters are passed directly from the blueprint
@@ -12,6 +12,8 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Locati
         amount = Amount
         accept_currency = AcceptCurrency
         location = Location
+        latitude = Latitude
+        longitude = Longitude
         location_radius = LocationRadius or '5'
         meeting_preference = MeetingPreference or 'public'
         available_until = AvailableUntil
@@ -65,20 +67,31 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Locati
                 'error': 'Invalid amount format'
             })
         
+        # Parse coordinates if provided
+        lat_value = None
+        lng_value = None
+        if latitude and longitude:
+            try:
+                lat_value = float(latitude)
+                lng_value = float(longitude)
+            except (ValueError, TypeError):
+                # Invalid coordinates - just log and continue without them
+                print(f"[CreateListing] Warning: Invalid coordinates lat={latitude}, lng={longitude}")
+        
         # Insert new listing
         insert_query = """
             INSERT INTO listings (
                 listing_id, user_id, currency, amount, accept_currency, 
-                location, location_radius, meeting_preference, available_until, 
+                location, latitude, longitude, location_radius, meeting_preference, available_until, 
                 status, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', NOW(), NOW()
             )
         """
         
         cursor.execute(insert_query, (
             listing_id, user_id, currency, amount_float, accept_currency,
-            location, int(location_radius), meeting_preference, available_until
+            location, lat_value, lng_value, int(location_radius), meeting_preference, available_until
         ))
         connection.commit()
         connection.close()

@@ -1,7 +1,7 @@
 from _Lib import Database
 import json
 
-def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, LocationRadius, MeetingPreference, AvailableUntil, Status):
+def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status):
     """Update an existing listing"""
     try:
         # Parameters are passed directly from the blueprint
@@ -11,6 +11,8 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
         amount = Amount
         accept_currency = AcceptCurrency
         location = Location
+        latitude = Latitude
+        longitude = Longitude
         location_radius = LocationRadius
         meeting_preference = MeetingPreference
         available_until = AvailableUntil
@@ -86,6 +88,18 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
         if location:
             update_fields.append("location = %s")
             params.append(location)
+        
+        # Handle coordinates
+        if latitude and longitude:
+            try:
+                lat_value = float(latitude)
+                lng_value = float(longitude)
+                update_fields.append("latitude = %s")
+                params.append(lat_value)
+                update_fields.append("longitude = %s")
+                params.append(lng_value)
+            except (ValueError, TypeError):
+                print(f"[UpdateListing] Warning: Invalid coordinates lat={latitude}, lng={longitude}")
         
         if location_radius:
             update_fields.append("location_radius = %s")

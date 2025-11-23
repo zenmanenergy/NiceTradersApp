@@ -19,8 +19,6 @@ struct DashboardView: View {
     @State private var showMessages = false
     @State private var selectedTab = 0
     
-    let baseURL = "http://192.168.1.244:9000"
-    
     var body: some View {
         ZStack {
             if isLoading {
@@ -83,7 +81,7 @@ struct DashboardView: View {
     }
     
     func verifySession(sessionId: String, completion: @escaping (Bool) -> Void) {
-        let urlString = "\(baseURL)/Login/Verify?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(Settings.shared.baseURL)/Login/Verify?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion(false)
@@ -175,7 +173,7 @@ struct DashboardView: View {
     }
     
     func getDashboardSummary(sessionId: String, completion: @escaping ([String: Any]) -> Void) {
-        let urlString = "\(baseURL)/Dashboard/GetUserDashboard?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(Settings.shared.baseURL)/Dashboard/GetUserDashboard?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion([:])
@@ -195,7 +193,7 @@ struct DashboardView: View {
     }
     
     func getPurchasedContacts(sessionId: String, completion: @escaping ([[String: Any]]) -> Void) {
-        let urlString = "\(baseURL)/Contact/GetPurchasedContacts?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(Settings.shared.baseURL)/Contact/GetPurchasedContacts?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion([])
@@ -216,7 +214,7 @@ struct DashboardView: View {
     }
     
     func getListingPurchases(sessionId: String, completion: @escaping ([[String: Any]]) -> Void) {
-        let urlString = "\(baseURL)/Contact/GetListingPurchases?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(Settings.shared.baseURL)/Contact/GetListingPurchases?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion([])

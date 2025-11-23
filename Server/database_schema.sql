@@ -34,8 +34,13 @@ CREATE TABLE users (
     UserType VARCHAR(50) DEFAULT 'standard',
     DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     IsActive TINYINT DEFAULT 1,
+    Location TEXT,
+    Bio TEXT,
+    Rating DECIMAL(3,2) DEFAULT 0.00,
+    TotalExchanges INT DEFAULT 0,
     INDEX idx_email (Email),
-    INDEX idx_is_active (IsActive)
+    INDEX idx_is_active (IsActive),
+    INDEX idx_rating (Rating)
 );
 
 -- Create user_settings table (matching existing structure from UpdateSettings.py)
@@ -77,8 +82,10 @@ CREATE TABLE listings (
     amount DECIMAL(15,2) NOT NULL,
     accept_currency VARCHAR(10) NOT NULL,
     location TEXT NOT NULL,
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
     location_radius INT DEFAULT 5,
-    meeting_preference ENUM('public', 'private', 'online') DEFAULT 'public',
+    meeting_preference ENUM('public', 'private', 'online', 'flexible') DEFAULT 'public',
     available_until DATETIME NOT NULL,
     status ENUM('active', 'inactive', 'completed', 'expired') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -86,6 +93,7 @@ CREATE TABLE listings (
     INDEX idx_currency (currency),
     INDEX idx_accept_currency (accept_currency),
     INDEX idx_location (location(255)),
+    INDEX idx_coordinates (latitude, longitude),
     INDEX idx_status (status),
     INDEX idx_available_until (available_until),
     INDEX idx_user_id (user_id),
@@ -201,7 +209,7 @@ CREATE TABLE messages (
     INDEX idx_sender_id (sender_id),
     INDEX idx_recipient_id (recipient_id),
     INDEX idx_status (status),
-    INDEX idx_created_at (created_at),
+    INDEX idx_sent_at (sent_at),
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
     FOREIGN KEY (sender_id) REFERENCES users(UserId) ON DELETE CASCADE,
     FOREIGN KEY (recipient_id) REFERENCES users(UserId) ON DELETE CASCADE
@@ -343,29 +351,6 @@ CREATE TABLE exchange_rates (
 
 -- Create meeting proposals table for scheduling meetings
 CREATE TABLE meeting_proposals (
-    proposal_id CHAR(40) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    proposer_id CHAR(39) NOT NULL,
-    recipient_id CHAR(39) NOT NULL,
-    proposed_location TEXT NOT NULL,
-    proposed_time DATETIME NOT NULL,
-    message TEXT NULL,
-    status ENUM('pending', 'accepted', 'rejected', 'expired') DEFAULT 'pending',
-    proposed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    responded_at TIMESTAMP NULL,
-    expires_at TIMESTAMP NULL,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_proposer_id (proposer_id),
-    INDEX idx_recipient_id (recipient_id),
-    INDEX idx_status (status),
-    INDEX idx_proposed_time (proposed_time),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposer_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES users(UserId) ON DELETE CASCADE
-);
-
--- Create meeting proposals table for scheduling meetings
-CREATE TABLE meeting_proposals (
     proposal_id CHAR(39) PRIMARY KEY,
     listing_id CHAR(39) NOT NULL,
     proposer_id CHAR(39) NOT NULL,
@@ -397,9 +382,29 @@ CREATE TABLE exchange_rate_logs (
     INDEX idx_timestamp (download_timestamp),
     INDEX idx_success (success)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create exchange history table for user exchange records
+CREATE TABLE exchange_history (
+    ExchangeId CHAR(39) PRIMARY KEY,
+    UserId CHAR(39) NOT NULL,
+    ExchangeDate DATETIME NOT NULL,
+    Currency VARCHAR(10) NOT NULL,
+    Amount DECIMAL(15,2) NOT NULL,
+    PartnerName VARCHAR(200),
+    Rating TINYINT CHECK (Rating >= 1 AND Rating <= 5),
+    Notes TEXT,
+    TransactionType ENUM('buy', 'sell') DEFAULT 'sell',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user_id (UserId),
+    INDEX idx_exchange_date (ExchangeDate),
+    INDEX idx_currency (Currency),
+    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Show table creation status
 SELECT 'Complete NiceTradersApp database schema created successfully!' as status;
 SELECT 'All ID columns are CHAR(39) for consistent sizing' as note;
 SELECT 'Includes Contact module tables: contact_access, messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
 SELECT 'Includes Exchange Rates tables: exchange_rates, exchange_rate_logs' as exchange_rate_tables;
+SELECT 'Includes exchange_history table for user transaction records' as exchange_history_table;
 SELECT 'Ready for use with Flask application and all functionality' as ready;

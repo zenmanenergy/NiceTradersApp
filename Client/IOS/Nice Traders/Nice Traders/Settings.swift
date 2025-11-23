@@ -11,7 +11,7 @@ class Settings {
     static let shared = Settings()
     
     // Base URL for API
-    let baseURL = "http://192.168.1.244:9000"
+    let baseURL = "http://localhost:9000"
     
     private init() {}
 }

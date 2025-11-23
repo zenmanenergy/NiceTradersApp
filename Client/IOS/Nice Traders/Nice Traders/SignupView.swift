@@ -24,8 +24,6 @@ struct SignupView: View {
     @State private var showLogin = false
     @State private var navigateToDashboard = false
     
-    let baseURL = "http://192.168.1.244:9000"
-    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -253,7 +251,7 @@ struct SignupView: View {
             "\(key)=\(value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         }.joined(separator: "&")
         
-        let urlString = "\(baseURL)/Signup/CreateAccount?\(queryString)"
+        let urlString = "\(Settings.shared.baseURL)/Signup/CreateAccount?\(queryString)"
         
         guard let url = URL(string: urlString) else {
             isSubmitting = false

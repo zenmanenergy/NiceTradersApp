@@ -19,8 +19,6 @@ struct LoginView: View {
     @State private var alertMessage = ""
     @State private var navigateToDashboard = false
     
-    let baseURL = "http://192.168.1.244:9000"
-    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -250,7 +248,7 @@ struct LoginView: View {
             "\(key)=\(value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         }.joined(separator: "&")
         
-        let urlString = "\(baseURL)/Login/Login?\(queryString)"
+        let urlString = "\(Settings.shared.baseURL)/Login/Login?\(queryString)"
         
         guard let url = URL(string: urlString) else {
             isSubmitting = false

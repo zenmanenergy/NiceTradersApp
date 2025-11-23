@@ -20,11 +20,13 @@ def CreateListing():
 		Amount = ListingData.get('amount', None)
 		AcceptCurrency = ListingData.get('acceptCurrency', None)
 		Location = ListingData.get('location', None)
+		Latitude = ListingData.get('latitude', None)
+		Longitude = ListingData.get('longitude', None)
 		LocationRadius = ListingData.get('locationRadius', '5')
 		MeetingPreference = ListingData.get('meetingPreference', 'public')
 		AvailableUntil = ListingData.get('availableUntil', None)
 		
-		result = create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, LocationRadius, MeetingPreference, AvailableUntil)
+		result = create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -69,12 +71,14 @@ def UpdateListing():
 		Amount = ListingData.get('amount', None)
 		AcceptCurrency = ListingData.get('acceptCurrency', None)
 		Location = ListingData.get('location', None)
+		Latitude = ListingData.get('latitude', None)
+		Longitude = ListingData.get('longitude', None)
 		LocationRadius = ListingData.get('locationRadius', None)
 		MeetingPreference = ListingData.get('meetingPreference', None)
 		AvailableUntil = ListingData.get('availableUntil', None)
 		Status = ListingData.get('status', None)
 		
-		result = update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, LocationRadius, MeetingPreference, AvailableUntil, Status)
+		result = update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status)
 		return result
 	except Exception as e:
 		return Debugger(e)
