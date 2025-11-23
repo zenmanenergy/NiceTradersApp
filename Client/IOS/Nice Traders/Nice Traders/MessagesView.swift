@@ -45,6 +45,8 @@ struct MessagesView: View {
     @State private var isLoading = true
     @State private var error: String?
     @State private var selectedContact: PurchasedContact?
+    @State private var showSearch = false
+    @State private var showCreateListing = false
     
     var body: some View {
         ZStack {
@@ -158,6 +160,14 @@ struct MessagesView: View {
                     }
                 }
             }
+            
+            // Bottom Navigation
+            BottomNavigationBar(
+                showSearch: $showSearch,
+                showCreateListing: $showCreateListing,
+                showMessages: $showMessages,
+                activeTab: "messages"
+            )
         }
         .navigationDestination(item: $selectedContact) { contact in
             ContactView(contactData: convertToDashboardContactData(contact))

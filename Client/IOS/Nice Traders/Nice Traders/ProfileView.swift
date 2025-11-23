@@ -75,6 +75,10 @@ struct ProfileView: View {
     @State private var isEditing = false
     @State private var editedUser: UserProfile?
     @State private var isLoading = true
+    @State private var showSearch = false
+    @State private var showCreateListing = false
+    @State private var showMessages = false
+
     @State private var navigateToExchangeHistory = false
     
     var successRate: Int {
@@ -118,6 +122,14 @@ struct ProfileView: View {
                     .padding(.bottom, 32)
                 }
             }
+            
+            // Bottom Navigation
+            BottomNavigationBar(
+                showSearch: $showSearch,
+                showCreateListing: $showCreateListing,
+                showMessages: $showMessages,
+                activeTab: "home"
+            )
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)

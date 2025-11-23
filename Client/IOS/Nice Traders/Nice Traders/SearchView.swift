@@ -58,6 +58,8 @@ struct SearchView: View {
     @State private var showCurrencyDropdown = false
     @State private var showMapView = false
     @State private var selectedListing: SearchListing?
+    @State private var showCreateListing = false
+    @State private var showMessages = false
     
     var filteredCurrencies: [String] {
         if currencySearchQuery.isEmpty {
@@ -109,6 +111,14 @@ struct SearchView: View {
                 }
                 .background(Color(hex: "f8fafc"))
             }
+            
+            // Bottom Navigation
+            BottomNavigationBar(
+                showSearch: $showSearch,
+                showCreateListing: $showCreateListing,
+                showMessages: $showMessages,
+                activeTab: "search"
+            )
         }
         .navigationBarHidden(true)
         .onAppear {

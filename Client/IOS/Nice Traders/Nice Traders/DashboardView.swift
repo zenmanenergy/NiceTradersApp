@@ -115,8 +115,13 @@ struct DashboardView: View {
         
         // Get dashboard summary
         getDashboardSummary(sessionId: sessionId) { response in
+            print("[Dashboard] Full response: \(response)")
+            
             if let dashboardData = response["data"] as? [String: Any],
                let userData = dashboardData["user"] as? [String: Any] {
+                
+                print("[Dashboard] Found dashboard data")
+                print("[Dashboard] User data: \(userData)")
                 
                 let firstName = userData["firstName"] as? String ?? ""
                 let lastName = userData["lastName"] as? String ?? ""
@@ -131,13 +136,19 @@ struct DashboardView: View {
                 
                 // Process listings
                 if let recentListings = dashboardData["recentListings"] as? [[String: Any]] {
-                    myListings = recentListings.compactMap { listingDict in
-                        guard let listingId = listingDict["listingId"] as? Int,
+                    print("[Dashboard] Found \(recentListings.count) listings in response")
+                    print("[Dashboard] Listings data: \(recentListings)")
+                    
+                    myListings = recentListings.compactMap { listingDict -> Listing? in
+                        print("[Dashboard] Processing listing: \(listingDict)")
+                        
+                        guard let listingId = listingDict["listingId"] as? String,
                               let currency = listingDict["currency"] as? String,
                               let amount = listingDict["amount"] as? Double,
                               let acceptCurrency = listingDict["acceptCurrency"] as? String,
                               let location = listingDict["location"] as? String,
                               let status = listingDict["status"] as? String else {
+                            print("[Dashboard] Failed to parse listing - listingId type: \(type(of: listingDict["listingId"]))")
                             return nil
                         }
                         
@@ -156,7 +167,13 @@ struct DashboardView: View {
                             contactCount: 0
                         )
                     }
+                    
+                    print("[Dashboard] Successfully parsed \(myListings.count) listings")
+                } else {
+                    print("[Dashboard] No recentListings found in dashboard data")
                 }
+            } else {
+                print("[Dashboard] Failed to find data or user in response")
             }
             
             isLoading = false
@@ -314,13 +331,17 @@ struct MainDashboardView: View {
                     
                     Spacer(minLength: 80)
                 }
+                .refreshable {
+                    onRefresh?()
+                }
             }
             
             // Bottom Navigation
-            BottomNavigation(
+            BottomNavigationBar(
                 showSearch: $showSearch,
                 showCreateListing: $showCreateListing,
-                showMessages: $showMessages
+                showMessages: $showMessages,
+                activeTab: "home"
             )
         }
         .background(Color(red: 0.97, green: 0.98, blue: 0.99))
@@ -748,7 +769,7 @@ struct ListingCard: View {
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/DeleteListing")!
         components.queryItems = [
             URLQueryItem(name: "SessionId", value: sessionId),
-            URLQueryItem(name: "listingId", value: String(listing.id))
+            URLQueryItem(name: "listingId", value: listing.id)
         ]
         
         guard let url = components.url else {
@@ -842,8 +863,8 @@ struct DashboardUserInfo {
     }
 }
 
-struct Listing: Identifiable {
-    let id: Int
+struct Listing: Identifiable, Hashable {
+    let id: String
     let haveCurrency: String
     let haveAmount: Double
     let wantCurrency: String
@@ -868,6 +889,55 @@ struct ActiveExchange: Identifiable {
     
     enum ExchangeType {
         case buyer, seller
+    }
+}
+
+// MARK: - Bottom Navigation (Reusable Component)
+struct BottomNavigationBar: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var showSearch: Bool
+    @Binding var showCreateListing: Bool
+    @Binding var showMessages: Bool
+    var activeTab: String = "home" // "home", "search", "messages"
+    
+    var body: some View {
+        HStack {
+            NavItem(icon: "house.fill", label: "Home", isActive: activeTab == "home", action: {
+                if activeTab != "home" {
+                    dismiss()
+                }
+            })
+            NavItem(icon: "magnifyingglass", label: "Search", isActive: activeTab == "search", action: {
+                if activeTab != "search" {
+                    showSearch = true
+                }
+            })
+            NavItem(icon: "plus.circle.fill", label: "List", action: { showCreateListing = true })
+            NavItem(icon: "message.fill", label: "Messages", isActive: activeTab == "messages", action: {
+                if activeTab != "messages" {
+                    showMessages = true
+                }
+            })
+            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "Logout", action: logout)
+        }
+        .padding(.vertical, 12)
+        .background(Color.white)
+        .overlay(
+            Rectangle()
+                .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
+                .frame(height: 1),
+            alignment: .top
+        )
+    }
+    
+    func logout() {
+        UserDefaults.standard.removeObject(forKey: "SessionId")
+        UserDefaults.standard.removeObject(forKey: "UserType")
+        
+        // Post notification to reset navigation
+        NotificationCenter.default.post(name: NSNotification.Name("LogoutUser"), object: nil)
+        
+        dismiss()
     }
 }
 
