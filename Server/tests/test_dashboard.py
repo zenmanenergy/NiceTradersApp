@@ -16,9 +16,11 @@ class TestDashboardEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'dashboard' in data
-        assert 'myListings' in data['dashboard']
-        assert 'purchasedContacts' in data['dashboard']
+        assert 'data' in data
+        assert 'recentListings' in data['data']
+        assert 'pendingOffers' in data['data']
+        assert 'stats' in data['data']
+        assert 'user' in data['data']
     
     def test_get_user_dashboard_invalid_session(self, client):
         """Test getting dashboard with invalid session"""
@@ -48,7 +50,11 @@ class TestDashboardEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'statistics' in data
+        assert 'data' in data
+        assert 'tradingVolume' in data['data']
+        assert 'listingsByStatus' in data['data']
+        assert 'transactionsByStatus' in data['data']
+        assert 'topCurrencies' in data['data']
     
     def test_get_user_statistics_invalid_session(self, client):
         """Test getting statistics with invalid session"""

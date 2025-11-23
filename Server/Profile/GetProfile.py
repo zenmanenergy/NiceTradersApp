@@ -11,8 +11,7 @@ def get_profile(SessionId):
 		# Get user ID from session
 		session_query = """
 			SELECT users.UserId, users.FirstName, users.LastName, users.Email, users.Phone, 
-				   users.DateCreated, users.Location, users.Bio, users.Rating, users.TotalExchanges,
-				   users.CompletedExchanges, users.VerificationStatus
+				   users.DateCreated, users.Location, users.Bio, users.Rating, users.TotalExchanges
 			FROM usersessions 
 			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
@@ -34,8 +33,6 @@ def get_profile(SessionId):
 				"joinDate": user_result['DateCreated'].strftime('%B %d, %Y') if user_result['DateCreated'] else '',
 				"rating": float(user_result['Rating']) if user_result['Rating'] else 0.0,
 				"totalExchanges": int(user_result['TotalExchanges']) if user_result['TotalExchanges'] else 0,
-				"completedExchanges": int(user_result['CompletedExchanges']) if user_result['CompletedExchanges'] else 0,
-				"verificationStatus": user_result['VerificationStatus'] or 'unverified',
 				"location": user_result['Location'] or '',
 				"bio": user_result['Bio'] or ''
 			}

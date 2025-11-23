@@ -25,11 +25,18 @@ class TestSignupEndpoints:
         data = json.loads(response.data)
         assert data['success'] is True
         assert 'sessionId' in data
-        assert 'userId' in data
+        assert 'userType' in data
         
-        # Cleanup
-        cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (data['userId'],))
-        cursor.execute("DELETE FROM users WHERE Email = %s", (test_email,))
+        # Cleanup - need to get userId from session
+        session_id = data['sessionId']
+        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        session_result = cursor.fetchone()
+        if session_result:
+            user_id = session_result['UserId']
+            cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
+            cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+        else:
+            cursor.execute("DELETE FROM users WHERE Email = %s", (test_email,))
         connection.commit()
     
     def test_create_account_duplicate_email(self, client, test_user):

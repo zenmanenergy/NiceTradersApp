@@ -23,7 +23,7 @@ class TestExchangeRatesEndpoints:
         data = json.loads(response.data)
         assert data['success'] is True
         assert 'rates' in data
-        assert isinstance(data['rates'], list)
+        assert isinstance(data['rates'], dict)
     
     def test_get_specific_exchange_rate(self, client):
         """Test getting rate between two currencies"""
@@ -59,7 +59,9 @@ class TestExchangeRatesEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'convertedAmount' in data
+        assert 'converted_amount' in data
+        assert 'exchange_rate' in data
+        assert 'original_amount' in data
     
     def test_convert_amount_invalid_amount(self, client):
         """Test conversion with invalid amount"""

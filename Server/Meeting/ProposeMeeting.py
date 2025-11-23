@@ -109,8 +109,8 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, me
         """
         cursor.execute(expire_query, (listing_id, proposer_id, recipient_id, recipient_id, proposer_id))
         
-        # Create new proposal
-        proposal_id = f"MPR-{uuid.uuid4()}"
+        # Create new proposal (MPR prefix + UUID trimmed to fit CHAR(39))
+        proposal_id = f"MPR-{str(uuid.uuid4())[:-1]}"  # 39 chars: MPR- + 35 char UUID
         expires_at = datetime.now() + timedelta(days=7)  # Proposals expire after 7 days
         
         insert_query = """

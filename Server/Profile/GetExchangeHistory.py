@@ -27,7 +27,7 @@ def get_exchange_history(SessionId):
 		# Get exchange history
 		history_query = """
 			SELECT ExchangeId, ExchangeDate, Currency, Amount, PartnerName, Rating, 
-				   ExchangeType, Status, CreatedDate
+				   TransactionType, created_at
 			FROM exchange_history 
 			WHERE UserId = %s 
 			ORDER BY ExchangeDate DESC
@@ -46,8 +46,7 @@ def get_exchange_history(SessionId):
 				"amount": float(exchange['Amount']) if exchange['Amount'] else 0,
 				"partner": exchange['PartnerName'],
 				"rating": int(exchange['Rating']) if exchange['Rating'] else 0,
-				"type": exchange['ExchangeType'],
-				"status": exchange['Status']
+				"type": exchange['TransactionType']
 			})
 		
 		response_data = {

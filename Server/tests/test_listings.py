@@ -79,7 +79,7 @@ class TestListingsEndpoints:
         data = json.loads(response.data)
         assert data['success'] is True
         assert 'listing' in data
-        assert data['listing']['listing_id'] == test_listing['listing_id']
+        assert data['listing']['id'] == test_listing['listing_id']
     
     def test_get_listing_by_invalid_id(self, client):
         """Test getting listing with invalid ID"""
@@ -149,6 +149,8 @@ class TestListingsEndpoints:
         # Create a listing to delete
         cursor, connection = db_connection
         import uuid
+        from datetime import datetime, timedelta
+        from tests.test_utils import generate_uuid
         
         listing_id = generate_uuid('LST')
         available_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')

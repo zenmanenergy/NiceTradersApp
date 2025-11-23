@@ -43,7 +43,7 @@ class TestMeetingEndpoints:
         """, (recipient_id, "Recipient", "User", recipient_email, password, "standard", 1))
         
         # Create listing
-        listing_id = f"LISTING-{uuid.uuid4()}"
+        listing_id = generate_uuid('LST')
         available_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
         
         cursor.execute("""
@@ -56,7 +56,7 @@ class TestMeetingEndpoints:
               'Test Location', 10, 'public', available_until, 'active'))
         
         # Create contact access
-        access_id = f"ACCESS-{uuid.uuid4()}"
+        access_id = generate_uuid('CAC')
         cursor.execute("""
             INSERT INTO contact_access (
                 access_id, user_id, listing_id, purchased_at, status, amount_paid, currency
@@ -108,9 +108,10 @@ class TestMeetingEndpoints:
         cursor, connection = db_connection
         import uuid
         import bcrypt
+        from tests.test_utils import generate_uuid
         
         # Create users and listing
-        user1_id = f"USER1-{uuid.uuid4()}"
+        user1_id = generate_uuid('USR')
         user1_email = f"user1_{uuid.uuid4().hex[:8]}@example.com"
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
@@ -119,13 +120,13 @@ class TestMeetingEndpoints:
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user1_id, "User1", "Test", user1_email, password, "standard", 1))
         
-        user1_session = f"SESSION-{uuid.uuid4()}"
+        user1_session = generate_uuid('SES')
         cursor.execute("""
             INSERT INTO usersessions (SessionId, UserId)
             VALUES (%s, %s)
         """, (user1_session, user1_id))
         
-        user2_id = f"USER2-{uuid.uuid4()}"
+        user2_id = generate_uuid('USR')
         user2_email = f"user2_{uuid.uuid4().hex[:8]}@example.com"
         
         cursor.execute("""
@@ -134,7 +135,7 @@ class TestMeetingEndpoints:
         """, (user2_id, "User2", "Test", user2_email, password, "standard", 1))
         
         # Create listing
-        listing_id = f"LISTING-{uuid.uuid4()}"
+        listing_id = generate_uuid('LST')
         available_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
         
         cursor.execute("""
@@ -147,7 +148,7 @@ class TestMeetingEndpoints:
               'Test Location', 10, 'public', available_until, 'active'))
         
         # Create proposal
-        proposal_id = f"PROPOSAL-{uuid.uuid4()}"
+        proposal_id = generate_uuid('MPR')
         proposed_time = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
         
         cursor.execute("""

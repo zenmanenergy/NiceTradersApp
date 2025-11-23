@@ -67,4 +67,6 @@ class TestSearchEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'popularSearches' in data
+        assert 'popularPairs' in data
+        assert 'popularLocations' in data
+        assert 'trendingCurrencies' in data

@@ -30,13 +30,13 @@ def get_listing_by_id(ListingId):
                 l.status,
                 l.created_at,
                 l.updated_at,
-                u.user_id,
-                u.name as user_name,
-                u.email as user_email,
-                u.rating as user_rating,
-                u.total_exchanges as user_total_exchanges
+                u.UserId as user_id,
+                CONCAT(u.FirstName, ' ', u.LastName) as user_name,
+                u.Email as user_email,
+                u.Rating as user_rating,
+                u.TotalExchanges as user_total_exchanges
             FROM listings l
-            JOIN users u ON l.user_id = u.user_id
+            JOIN users u ON l.user_id = u.UserId
             WHERE l.listing_id = %s
         """
         

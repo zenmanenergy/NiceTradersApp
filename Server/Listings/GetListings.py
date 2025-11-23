@@ -30,11 +30,11 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
                 l.available_until,
                 l.status,
                 l.created_at,
-                u.name as user_name,
-                u.rating as user_rating,
-                u.total_exchanges as user_total_exchanges
+                CONCAT(u.FirstName, ' ', u.LastName) as user_name,
+                u.Rating as user_rating,
+                u.TotalExchanges as user_total_exchanges
             FROM listings l
-            JOIN users u ON l.user_id = u.user_id
+            JOIN users u ON l.user_id = u.UserId
             WHERE l.status = 'active' AND l.available_until > NOW()
             AND NOT EXISTS (
                 SELECT 1 FROM exchange_transactions et 
