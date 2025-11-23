@@ -1,5 +1,6 @@
 from _Lib import Database
 import json
+from decimal import Decimal
 
 def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset):
     """Get listings with optional filtering"""
@@ -72,7 +73,7 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
             formatted_listings.append({
                 'id': listing['listing_id'],
                 'currency': listing['currency'],
-                'amount': float(listing['amount']),
+                'amount': float(listing['amount']) if isinstance(listing['amount'], Decimal) else listing['amount'],
                 'acceptCurrency': listing['accept_currency'],
                 'location': listing['location'],
                 'locationRadius': listing['location_radius'],
@@ -82,7 +83,7 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
                 'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
                 'user': {
                     'name': listing['user_name'],
-                    'rating': float(listing['user_rating']) if listing['user_rating'] else 0,
+                    'rating': float(listing['user_rating']) if isinstance(listing['user_rating'], Decimal) else (listing['user_rating'] or 0),
                     'totalExchanges': listing['user_total_exchanges'] or 0
                 }
             })

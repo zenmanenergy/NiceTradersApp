@@ -8,20 +8,14 @@
 import SwiftUI
 
 struct SearchFilters: Codable {
-    var currency: String
-    var amountMin: String
-    var amountMax: String
-    var rateType: String
-    var meetingPreference: String
-    var verifiedOnly: Bool
+    var haveCurrency: String
+    var wantCurrency: String
+    var maxDistance: String
     
     init() {
-        currency = ""
-        amountMin = ""
-        amountMax = ""
-        rateType = "any"
-        meetingPreference = "any"
-        verifiedOnly = false
+        haveCurrency = ""
+        wantCurrency = ""
+        maxDistance = "5"
     }
 }
 
@@ -83,27 +77,12 @@ struct SearchView: View {
                     showUserLocation: true,
                     selectedListing: $selectedListing
                 )
-                .overlay(
-                    // Filters overlay on map
-                    VStack {
-                        if showFilters {
-                            filtersPanel
-                                .transition(.move(edge: .top).combined(with: .opacity))
-                        }
-                        Spacer()
-                    }
-                )
             } else {
                 // List View
                 ScrollView {
                     VStack(spacing: 0) {
                         // Quick Search
                         quickSearchSection
-                        
-                        // Advanced Filters
-                        if showFilters {
-                            filtersPanel
-                        }
                         
                         // Results Section
                         resultsSection
@@ -149,32 +128,17 @@ struct SearchView: View {
             
             Spacer()
             
-            HStack(spacing: 8) {
-                Button(action: {
-                    withAnimation {
-                        showMapView.toggle()
-                    }
-                }) {
-                    Image(systemName: showMapView ? "list.bullet" : "map")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(8)
+            Button(action: {
+                withAnimation {
+                    showMapView.toggle()
                 }
-                
-                Button(action: {
-                    withAnimation {
-                        showFilters.toggle()
-                    }
-                }) {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(8)
-                }
+            }) {
+                Image(systemName: showMapView ? "list.bullet" : "map")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(8)
             }
         }
         .padding(.horizontal, 24)
@@ -190,267 +154,111 @@ struct SearchView: View {
     
     // MARK: - Quick Search Section
     var quickSearchSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Search Currency")
-                .font(.system(size: 19, weight: .semibold))
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Find Currency Exchange")
+                .font(.system(size: 22, weight: .bold))
                 .foregroundColor(Color(hex: "2d3748"))
             
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(Color(hex: "a0aec0"))
-                    
-                    TextField("Search currencies...", text: $currencySearchQuery)
-                        .font(.system(size: 16))
-                        .onTapGesture {
-                            showCurrencyDropdown = true
-                        }
-                        .onChange(of: currencySearchQuery) {
-                            showCurrencyDropdown = true
-                        }
+            // Question 1: What currency do you have?
+            VStack(alignment: .leading, spacing: 8) {
+                Text("What currency do you have?")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(hex: "4a5568"))
+                
+                Picker("I have", selection: $searchFilters.haveCurrency) {
+                    Text("Select currency").tag("")
+                    ForEach(availableCurrencies, id: \.self) { currency in
+                        Text(currency).tag(currency)
+                    }
                 }
+                .pickerStyle(.menu)
                 .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.white)
                 .cornerRadius(12)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(showCurrencyDropdown ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
+                        .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                 )
-                
-                if showCurrencyDropdown && !loadingFilters {
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            ForEach(filteredCurrencies, id: \.self) { currency in
-                                Button(action: {
-                                    selectCurrency(currency)
-                                }) {
-                                    HStack {
-                                        Text(currency)
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(searchFilters.currency == currency ? Color(hex: "667eea") : Color(hex: "2d3748"))
-                                        
-                                        Spacer()
-                                        
-                                        if searchFilters.currency == currency {
-                                            Image(systemName: "checkmark")
-                                                .foregroundColor(Color(hex: "667eea"))
-                                        }
-                                    }
-                                    .padding(16)
-                                    .background(searchFilters.currency == currency ? Color(hex: "edf2f7") : Color.white)
-                                }
-                                
-                                if currency != filteredCurrencies.last {
-                                    Divider()
-                                }
-                            }
-                            
-                            if filteredCurrencies.isEmpty {
-                                Text("No currencies found")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(Color(hex: "a0aec0"))
-                                    .padding(16)
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 300)
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                    )
-                    .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 8)
-                }
             }
             
-            if !searchFilters.currency.isEmpty {
-                HStack {
-                    HStack(spacing: 12) {
-                        Text(getCurrencyFlag(searchFilters.currency))
-                            .font(.system(size: 20))
-                        
-                        Text("Searching for \(searchFilters.currency)")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Color(hex: "667eea"))
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: clearCurrencySelection) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(hex: "667eea"))
-                            .frame(width: 24, height: 24)
-                            .background(Color(hex: "667eea").opacity(0.1))
-                            .cornerRadius(6)
+            // Question 2: What currency do you want?
+            VStack(alignment: .leading, spacing: 8) {
+                Text("What currency do you want?")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(hex: "4a5568"))
+                
+                Picker("I want", selection: $searchFilters.wantCurrency) {
+                    Text("Select currency").tag("")
+                    ForEach(availableCurrencies, id: \.self) { currency in
+                        Text(currency).tag(currency)
                     }
                 }
-                .padding(16)
-                .background(Color(hex: "edf2f7"))
+                .pickerStyle(.menu)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white)
                 .cornerRadius(12)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color(hex: "667eea"), lineWidth: 2)
+                        .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                 )
             }
-        }
-        .padding(24)
-        .background(Color.white)
-    }
-    
-    // MARK: - Filters Panel
-    var filtersPanel: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Search Filters")
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundColor(Color(hex: "2d3748"))
+            
+            // Question 3: How far are you willing to travel?
+            VStack(alignment: .leading, spacing: 8) {
+                Text("How far are you willing to travel?")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(hex: "4a5568"))
                 
-                Spacer()
-                
-                Button(action: clearFilters) {
-                    Text("Clear All")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "667eea"))
-                        .underline()
+                Picker("Distance", selection: $searchFilters.maxDistance) {
+                    Text("1 mile").tag("1")
+                    Text("5 miles").tag("5")
+                    Text("10 miles").tag("10")
+                    Text("25 miles").tag("25")
+                    Text("50 miles").tag("50")
+                    Text("100 miles").tag("100")
                 }
+                .pickerStyle(.menu)
+                .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
+                )
             }
             
-            VStack(spacing: 16) {
-                // Currency Selection
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Currency")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    Picker("Currency", selection: $searchFilters.currency) {
-                        Text("Any Currency").tag("")
-                        ForEach(availableCurrencies, id: \.self) { currency in
-                            Text(currency).tag(currency)
+            // Search Button
+            Button(action: performSearch) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
+                        .font(.system(size: 17, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(16)
+                .background(
+                    Group {
+                        if searchFilters.haveCurrency.isEmpty || searchFilters.wantCurrency.isEmpty {
+                            Color.gray.opacity(0.3)
+                        } else {
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         }
                     }
-                    .pickerStyle(.menu)
-                    .padding(12)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                    )
-                    .disabled(loadingFilters)
-                }
-                
-                // Amount Range
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Amount Range")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    HStack(spacing: 12) {
-                        TextField("Min", text: $searchFilters.amountMin)
-                            .keyboardType(.numberPad)
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                            )
-                        
-                        Text("to")
-                            .foregroundColor(Color(hex: "718096"))
-                        
-                        TextField("Max", text: $searchFilters.amountMax)
-                            .keyboardType(.numberPad)
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                            )
-                    }
-                }
-                
-                // Rate Type
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Rate Type")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    Picker("Rate Type", selection: $searchFilters.rateType) {
-                        Text("Any Rate").tag("any")
-                        Text("Market Rate").tag("market")
-                        Text("Custom Rate").tag("custom")
-                    }
-                    .pickerStyle(.menu)
-                    .padding(12)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                    )
-                }
-                
-                // Meeting Preference
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Meeting Type")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    Picker("Meeting Type", selection: $searchFilters.meetingPreference) {
-                        Text("Any Location").tag("any")
-                        Text("Public Places Only").tag("public")
-                        Text("Flexible Locations").tag("flexible")
-                    }
-                    .pickerStyle(.menu)
-                    .padding(12)
-                    .background(Color.white)
-                    .cornerRadius(8)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-                    )
-                }
-                
-                // Verified Only
-                HStack {
-                    Toggle("Verified traders only", isOn: $searchFilters.verifiedOnly)
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "4a5568"))
-                        .tint(Color(hex: "667eea"))
-                }
-                .padding(16)
-                .background(Color(hex: "f7fafc"))
-                .cornerRadius(8)
+                )
+                .foregroundColor(.white)
+                .cornerRadius(12)
             }
-            
-            Button(action: {
-                performSearch(resetPagination: true)
-                withAnimation {
-                    showFilters = false
-                }
-            }) {
-                Text("Apply Filters")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(16)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(12)
-            }
+            .disabled(searchFilters.haveCurrency.isEmpty || searchFilters.wantCurrency.isEmpty || isSearching)
         }
         .padding(24)
         .background(Color.white)
-        .transition(.move(edge: .top).combined(with: .opacity))
     }
     
     // MARK: - Results Section
@@ -464,9 +272,7 @@ struct SearchView: View {
                 Spacer()
                 
                 if hasSearched && !isSearching {
-                    Button(action: {
-                        performSearch(resetPagination: true)
-                    }) {
+                    Button(action: performSearch) {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(Color(hex: "667eea"))
@@ -531,9 +337,7 @@ struct SearchView: View {
                 .foregroundColor(Color(hex: "718096"))
                 .multilineTextAlignment(.center)
             
-            Button(action: {
-                performSearch(resetPagination: true)
-            }) {
+            Button(action: performSearch) {
                 Text("Try Again")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
@@ -558,21 +362,11 @@ struct SearchView: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
-            Text("Try adjusting your search filters or check back later for new listings.")
+            Text("Try adjusting your search or check back later for new listings.")
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "718096"))
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
-            
-            Button(action: clearFilters) {
-                Text("Clear Filters")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color(hex: "667eea"))
-                    .cornerRadius(8)
-            }
         }
         .frame(maxWidth: .infinity)
         .padding(48)
@@ -753,34 +547,11 @@ struct SearchView: View {
     }
     
     // MARK: - Functions
-    func selectCurrency(_ currency: String) {
-        searchFilters.currency = currency
-        currencySearchQuery = ""
-        showCurrencyDropdown = false
-        performSearch(resetPagination: true)
-    }
-    
-    func clearCurrencySelection() {
-        searchFilters.currency = ""
-        currencySearchQuery = ""
-        performSearch(resetPagination: true)
-    }
-    
-    func clearFilters() {
-        searchFilters = SearchFilters()
-        if hasSearched {
-            performSearch(resetPagination: true)
-        }
-    }
-    
-    func performSearch(resetPagination: Bool) {
+    func performSearch() {
         isSearching = true
         hasSearched = true
         searchError = nil
-        
-        if resetPagination {
-            pagination.offset = 0
-        }
+        pagination.offset = 0
         
         guard let sessionId = SessionManager.shared.sessionId else {
             isSearching = false
@@ -794,14 +565,15 @@ struct SearchView: View {
             URLQueryItem(name: "offset", value: String(pagination.offset))
         ]
         
-        if !searchFilters.currency.isEmpty {
-            queryItems.append(URLQueryItem(name: "currency", value: searchFilters.currency))
+        // Add currency filters (AcceptCurrency is what they have, Currency is what they want)
+        if !searchFilters.haveCurrency.isEmpty {
+            queryItems.append(URLQueryItem(name: "AcceptCurrency", value: searchFilters.haveCurrency))
         }
-        if !searchFilters.amountMin.isEmpty {
-            queryItems.append(URLQueryItem(name: "minAmount", value: searchFilters.amountMin))
+        if !searchFilters.wantCurrency.isEmpty {
+            queryItems.append(URLQueryItem(name: "Currency", value: searchFilters.wantCurrency))
         }
-        if !searchFilters.amountMax.isEmpty {
-            queryItems.append(URLQueryItem(name: "maxAmount", value: searchFilters.amountMax))
+        if !searchFilters.maxDistance.isEmpty {
+            queryItems.append(URLQueryItem(name: "MaxDistance", value: searchFilters.maxDistance))
         }
         
         components.queryItems = queryItems
@@ -846,17 +618,13 @@ struct SearchView: View {
                     let decoder = JSONDecoder()
                     let listings = listingsData.compactMap { dict -> SearchListing? in
                         guard let jsonData = try? JSONSerialization.data(withJSONObject: dict),
-                              let listing = try? decoder.decode(SearchListing.self, from: jsonData) else {
+                              let listing = try? JSONSerialization.decode(SearchListing.self, from: jsonData) else {
                             return nil
                         }
                         return listing
                     }
                     
-                    if resetPagination {
-                        searchResults = listings
-                    } else {
-                        searchResults.append(contentsOf: listings)
-                    }
+                    searchResults = listings
                 }
                 
                 if let paginationData = json["pagination"] as? [String: Any] {
@@ -870,12 +638,11 @@ struct SearchView: View {
     func loadMore() {
         guard pagination.hasMore && !isSearching else { return }
         pagination.offset += pagination.limit
-        performSearch(resetPagination: false)
+        performSearch()
     }
     
     func loadInitialData() {
         loadSearchFilters()
-        performInitialSearch()
     }
     
     func loadSearchFilters() {
@@ -896,10 +663,6 @@ struct SearchView: View {
                 }
             }
         }.resume()
-    }
-    
-    func performInitialSearch() {
-        performSearch(resetPagination: true)
     }
     
     func formatDate(_ dateString: String) -> String {

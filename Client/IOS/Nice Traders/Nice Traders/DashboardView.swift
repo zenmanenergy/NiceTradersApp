@@ -41,21 +41,25 @@ struct DashboardView: View {
             }
         }
         .navigationBarHidden(true)
-        .navigationDestination(isPresented: $showCreateListing) {
-            CreateListingView(showCreateListing: $showCreateListing)
-                .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showCreateListing) {
+            NavigationView {
+                CreateListingView(showCreateListing: $showCreateListing)
+            }
         }
-        .navigationDestination(isPresented: $showProfile) {
-            ProfileView()
-                .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showProfile) {
+            NavigationView {
+                ProfileView()
+            }
         }
-        .navigationDestination(isPresented: $showSearch) {
-            SearchView(showSearch: $showSearch)
-                .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showSearch) {
+            NavigationView {
+                SearchView(showSearch: $showSearch)
+            }
         }
-        .navigationDestination(isPresented: $showMessages) {
-            MessagesView(showMessages: $showMessages)
-                .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showMessages) {
+            NavigationView {
+                MessagesView(showMessages: $showMessages)
+            }
         }
         .onAppear {
             verifySessionAndLoadData()
@@ -661,8 +665,7 @@ struct EmptyListingsView: View {
 
 struct ListingCard: View {
     let listing: Listing
-    @State private var showDeleteAlert = false
-    @State private var isDeleting = false
+    @State private var showEditListing = false
     var onDelete: (() -> Void)?
     
     var body: some View {
@@ -708,37 +711,19 @@ struct ListingCard: View {
             .background(Color(red: 0.97, green: 0.98, blue: 0.99))
             .cornerRadius(8)
             
-            HStack(spacing: 12) {
-                Button(action: {
-                    // Edit action - TODO: Navigate to edit view
-                }) {
-                    HStack {
-                        Image(systemName: "pencil")
-                        Text("Edit")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(red: 0.4, green: 0.49, blue: 0.92))
-                    .foregroundColor(.white)
-                    .font(.system(size: 13, weight: .semibold))
-                    .cornerRadius(8)
+            Button(action: {
+                showEditListing = true
+            }) {
+                HStack {
+                    Image(systemName: "pencil")
+                    Text("Edit Listing")
                 }
-                
-                Button(action: {
-                    showDeleteAlert = true
-                }) {
-                    HStack {
-                        Image(systemName: "trash")
-                        Text("Delete")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color(hex: "f56565"))
-                    .foregroundColor(.white)
-                    .font(.system(size: 13, weight: .semibold))
-                    .cornerRadius(8)
-                }
-                .disabled(isDeleting)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Color(red: 0.4, green: 0.49, blue: 0.92))
+                .foregroundColor(.white)
+                .font(.system(size: 14, weight: .semibold))
+                .cornerRadius(8)
             }
         }
         .padding(16)
@@ -749,45 +734,14 @@ struct ListingCard: View {
                 .stroke(Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
-        .alert("Delete Listing", isPresented: $showDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Delete", role: .destructive) {
-                deleteListing()
+        .sheet(isPresented: $showEditListing) {
+            NavigationView {
+                EditListingView(listingId: listing.id)
             }
-        } message: {
-            Text("Are you sure you want to delete this listing? This action cannot be undone.")
-        }
-    }
-    
-    func deleteListing() {
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
-            return
-        }
-        
-        isDeleting = true
-        
-        var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/DeleteListing")!
-        components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
-            URLQueryItem(name: "listingId", value: listing.id)
-        ]
-        
-        guard let url = components.url else {
-            isDeleting = false
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            DispatchQueue.main.async {
-                isDeleting = false
-                
-                if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let success = json["success"] as? Bool, success {
-                    onDelete?()
-                }
+            .onDisappear {
+                onDelete?()
             }
-        }.resume()
+        }
     }
 }
 

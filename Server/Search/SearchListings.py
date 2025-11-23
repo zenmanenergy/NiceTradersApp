@@ -1,6 +1,7 @@
 from _Lib import Database
 import json
 from datetime import datetime
+from decimal import Decimal
 
 def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, MinAmount=None, MaxAmount=None, SessionId=None, Limit=None, Offset=None):
     """Search for currency exchange listings with filters"""
@@ -134,11 +135,11 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 'id': listing['listing_id'],
                 'listingId': listing['listing_id'],
                 'currency': listing['currency'],
-                'amount': float(listing['amount']),
+                'amount': float(listing['amount']) if isinstance(listing['amount'], Decimal) else listing['amount'],
                 'acceptCurrency': listing['accept_currency'],
                 'location': listing['location'],
-                'latitude': float(listing['latitude']) if listing['latitude'] else None,
-                'longitude': float(listing['longitude']) if listing['longitude'] else None,
+                'latitude': float(listing['latitude']) if listing['latitude'] and isinstance(listing['latitude'], Decimal) else listing['latitude'],
+                'longitude': float(listing['longitude']) if listing['longitude'] and isinstance(listing['longitude'], Decimal) else listing['longitude'],
                 'meetingPreference': listing['meeting_preference'],
                 'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
                 'status': listing['status'],
@@ -146,9 +147,9 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 'user': {
                     'firstName': listing['FirstName'],
                     'lastName': listing['LastName'],
-                    'rating': float(listing['Rating']) if listing['Rating'] else None,
+                    'rating': float(listing['Rating']) if listing['Rating'] and isinstance(listing['Rating'], Decimal) else (float(listing['Rating']) if listing['Rating'] else None),
                     'trades': listing['TotalExchanges'] if listing['TotalExchanges'] else None,
-                    'verified': listing['Rating'] and float(listing['Rating']) >= 4.5  # Auto-verify high-rated users
+                    'verified': (float(listing['Rating']) if isinstance(listing['Rating'], Decimal) else listing['Rating']) >= 4.5 if listing['Rating'] else False
                 }
             })
         

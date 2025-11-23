@@ -252,10 +252,6 @@ struct EditListingView: View {
             }
             .background(Color(hex: "f8fafc"))
             .navigationBarHidden(true)
-            .navigationDestination(isPresented: $navigateToDashboard) {
-                DashboardView()
-                    .navigationBarBackButtonHidden(true)
-            }
             .alert("Delete Listing", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive, action: confirmDelete)
@@ -1187,7 +1183,7 @@ struct EditListingView: View {
                 
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     if let success = json["success"] as? Bool, success {
-                        navigateToDashboard = true
+                        dismiss()
                     } else {
                         errorMessage = json["error"] as? String ?? "Failed to update listing"
                         showError = true
@@ -1244,7 +1240,7 @@ struct EditListingView: View {
                 
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     if let success = json["success"] as? Bool, success {
-                        navigateToDashboard = true
+                        dismiss()
                     } else {
                         errorMessage = json["error"] as? String ?? "Failed to delete listing"
                         showError = true

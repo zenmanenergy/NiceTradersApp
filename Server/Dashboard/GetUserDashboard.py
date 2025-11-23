@@ -1,6 +1,7 @@
 from _Lib import Database
 import json
 from datetime import datetime
+from decimal import Decimal
 
 def get_user_dashboard(SessionId):
     """Get dashboard data for authenticated user"""
@@ -126,7 +127,7 @@ def get_user_dashboard(SessionId):
                 {
                     'listingId': listing['listing_id'],
                     'currency': listing['currency'],
-                    'amount': float(listing['amount']),
+                    'amount': float(listing['amount']) if isinstance(listing['amount'], Decimal) else listing['amount'],
                     'acceptCurrency': listing['accept_currency'],
                     'location': listing['location'],
                     'status': listing['status'],
@@ -139,13 +140,13 @@ def get_user_dashboard(SessionId):
                 {
                     'offerId': offer['offer_id'],
                     'listingId': offer['listing_id'],
-                    'offeredAmount': float(offer['offered_amount']),
+                    'offeredAmount': float(offer['offered_amount']) if isinstance(offer['offered_amount'], Decimal) else offer['offered_amount'],
                     'offeredCurrency': offer['offered_currency'],
                     'message': offer['message'],
                     'createdAt': offer['created_at'].isoformat() if offer['created_at'] else None,
                     'originalListing': {
                         'currency': offer['currency'],
-                        'amount': float(offer['amount'])
+                        'amount': float(offer['amount']) if isinstance(offer['amount'], Decimal) else offer['amount']
                     },
                     'offerUser': {
                         'firstName': offer['FirstName'],

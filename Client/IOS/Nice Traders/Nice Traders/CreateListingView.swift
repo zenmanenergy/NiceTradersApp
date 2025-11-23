@@ -253,10 +253,6 @@ struct CreateListingView: View {
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
-        .navigationDestination(isPresented: $navigateToDashboard) {
-            DashboardView()
-                .navigationBarBackButtonHidden(true)
-        }
         .onAppear {
             ExchangeRatesAPI.shared.refreshRatesIfNeeded()
             
@@ -1184,8 +1180,8 @@ struct CreateListingView: View {
                 
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     if let success = json["success"] as? Bool, success {
-                        // Navigate back to dashboard
-                        navigateToDashboard = true
+                        // Dismiss back to dashboard
+                        showCreateListing = false
                     } else {
                         errorMessage = json["error"] as? String ?? "Failed to create listing"
                         showError = true

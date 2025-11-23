@@ -37,7 +37,7 @@ final class APITests: XCTestCase {
         let urlString = "\(baseURL)/Login/Login?Email=\(encodedEmail)&Password=\(encodedPassword)"
         
         XCTAssertNotNil(URL(string: urlString), "Login URL should be valid")
-        XCTAssertTrue(urlString.contains("Email=test%40example.com"), "Email should be URL encoded")
+        XCTAssertTrue(urlString.contains("Email=test@example.com"), "Email should be included (@ is allowed in URL query)")
         XCTAssertTrue(urlString.contains("Password=password123"), "Password should be included")
     }
     

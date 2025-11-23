@@ -6,19 +6,86 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		0E89437F2ED3CA7B00585906 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0E9E9EF02ECEE26C00CD06E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0E9E9EF72ECEE26C00CD06E0;
+			remoteInfo = "Nice Traders";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		0E89437B2ED3CA7B00585906 /* Nice TradersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Nice TradersTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		0E89438F2ED3CE2100585906 /* Nice Traders copy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Nice Traders copy.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E9E9EF82ECEE26C00CD06E0 /* Nice Traders.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Nice Traders.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0E8943902ED3CE2100585906 /* Exceptions for "Nice Traders" folder in "Nice Traders copy" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				ContactDetailView.swift,
+				ContactPurchaseView.swift,
+				ContactView.swift,
+				ContentView.swift,
+				CreateListingView.swift,
+				DashboardView.swift,
+				EditListingView.swift,
+				ExchangeHistoryView.swift,
+				ExchangeRatesAPI.swift,
+				ExchangeRatesView.swift,
+				LearnMoreView.swift,
+				ListingMapView.swift,
+				LoginView.swift,
+				MessagesView.swift,
+				Nice_TradersApp.swift,
+				PrivacyView.swift,
+				ProfileView.swift,
+				SearchView.swift,
+				SessionManager.swift,
+				Settings.swift,
+				SharedModels.swift,
+				SignupView.swift,
+				TermsView.swift,
+			);
+			target = 0E8943882ED3CE2100585906 /* Nice Traders copy */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		0E89437C2ED3CA7B00585906 /* Nice TradersTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Nice TradersTests";
+			sourceTree = "<group>";
+		};
 		0E9E9EFA2ECEE26C00CD06E0 /* Nice Traders */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0E8943902ED3CE2100585906 /* Exceptions for "Nice Traders" folder in "Nice Traders copy" target */,
+			);
 			path = "Nice Traders";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0E8943782ED3CA7B00585906 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E89438A2ED3CE2100585906 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0E9E9EF52ECEE26C00CD06E0 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				0E9E9EFA2ECEE26C00CD06E0 /* Nice Traders */,
+				0E89437C2ED3CA7B00585906 /* Nice TradersTests */,
 				0E9E9EF92ECEE26C00CD06E0 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +109,8 @@
 			isa = PBXGroup;
 			children = (
 				0E9E9EF82ECEE26C00CD06E0 /* Nice Traders.app */,
+				0E89437B2ED3CA7B00585906 /* Nice TradersTests.xctest */,
+				0E89438F2ED3CE2100585906 /* Nice Traders copy.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +118,51 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0E89437A2ED3CA7B00585906 /* Nice TradersTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E8943812ED3CA7B00585906 /* Build configuration list for PBXNativeTarget "Nice TradersTests" */;
+			buildPhases = (
+				0E8943772ED3CA7B00585906 /* Sources */,
+				0E8943782ED3CA7B00585906 /* Frameworks */,
+				0E8943792ED3CA7B00585906 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0E8943802ED3CA7B00585906 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0E89437C2ED3CA7B00585906 /* Nice TradersTests */,
+			);
+			name = "Nice TradersTests";
+			packageProductDependencies = (
+			);
+			productName = "Nice TradersTests";
+			productReference = 0E89437B2ED3CA7B00585906 /* Nice TradersTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		0E8943882ED3CE2100585906 /* Nice Traders copy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0E89438C2ED3CE2100585906 /* Build configuration list for PBXNativeTarget "Nice Traders copy" */;
+			buildPhases = (
+				0E8943892ED3CE2100585906 /* Sources */,
+				0E89438A2ED3CE2100585906 /* Frameworks */,
+				0E89438B2ED3CE2100585906 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0E9E9EFA2ECEE26C00CD06E0 /* Nice Traders */,
+			);
+			name = "Nice Traders copy";
+			packageProductDependencies = (
+			);
+			productName = "Nice Traders";
+			productReference = 0E89438F2ED3CE2100585906 /* Nice Traders copy.app */;
+			productType = "com.apple.product-type.application";
+		};
 		0E9E9EF72ECEE26C00CD06E0 /* Nice Traders */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0E9E9F032ECEE26E00CD06E0 /* Build configuration list for PBXNativeTarget "Nice Traders" */;
@@ -80,6 +195,10 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					0E89437A2ED3CA7B00585906 = {
+						CreatedOnToolsVersion = 26.1.1;
+						TestTargetID = 0E9E9EF72ECEE26C00CD06E0;
+					};
 					0E9E9EF72ECEE26C00CD06E0 = {
 						CreatedOnToolsVersion = 26.1.1;
 					};
@@ -100,11 +219,27 @@
 			projectRoot = "";
 			targets = (
 				0E9E9EF72ECEE26C00CD06E0 /* Nice Traders */,
+				0E89437A2ED3CA7B00585906 /* Nice TradersTests */,
+				0E8943882ED3CE2100585906 /* Nice Traders copy */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0E8943792ED3CA7B00585906 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E89438B2ED3CE2100585906 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0E9E9EF62ECEE26C00CD06E0 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +250,20 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0E8943772ED3CA7B00585906 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0E8943892ED3CE2100585906 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0E9E9EF42ECEE26C00CD06E0 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +273,125 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		0E8943802ED3CA7B00585906 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0E9E9EF72ECEE26C00CD06E0 /* Nice Traders */;
+			targetProxy = 0E89437F2ED3CA7B00585906 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		0E8943822ED3CA7B00585906 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J7S264TV3T;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "NiceTraders.Nice-TradersTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nice Traders.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nice Traders";
+			};
+			name = Debug;
+		};
+		0E8943832ED3CA7B00585906 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J7S264TV3T;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "NiceTraders.Nice-TradersTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Nice Traders.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Nice Traders";
+			};
+			name = Release;
+		};
+		0E89438D2ED3CE2100585906 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J7S264TV3T;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "NICE Traders";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "NiceTraders.Nice-Traders";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0E89438E2ED3CE2100585906 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = J7S264TV3T;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "NICE Traders";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = "NiceTraders.Nice-Traders";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		0E9E9F012ECEE26E00CD06E0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -315,6 +582,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0E8943812ED3CA7B00585906 /* Build configuration list for PBXNativeTarget "Nice TradersTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E8943822ED3CA7B00585906 /* Debug */,
+				0E8943832ED3CA7B00585906 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0E89438C2ED3CE2100585906 /* Build configuration list for PBXNativeTarget "Nice Traders copy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E89438D2ED3CE2100585906 /* Debug */,
+				0E89438E2ED3CE2100585906 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		0E9E9EF32ECEE26C00CD06E0 /* Build configuration list for PBXProject "Nice Traders" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
