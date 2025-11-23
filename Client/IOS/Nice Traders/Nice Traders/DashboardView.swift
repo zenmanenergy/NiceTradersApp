@@ -35,7 +35,8 @@ struct DashboardView: View {
                     showCreateListing: $showCreateListing,
                     showSearch: $showSearch,
                     showProfile: $showProfile,
-                    showMessages: $showMessages
+                    showMessages: $showMessages,
+                    onRefresh: loadDashboardData
                 )
             }
         }
@@ -53,7 +54,7 @@ struct DashboardView: View {
                 .navigationBarBackButtonHidden(true)
         }
         .navigationDestination(isPresented: $showMessages) {
-            Text("Messages View - Coming Soon")
+            MessagesView(showMessages: $showMessages)
                 .navigationBarBackButtonHidden(true)
         }
         .onAppear {
@@ -114,7 +115,7 @@ struct DashboardView: View {
         
         // Get dashboard summary
         getDashboardSummary(sessionId: sessionId) { response in
-            if let dashboardData = response["dashboard"] as? [String: Any],
+            if let dashboardData = response["data"] as? [String: Any],
                let userData = dashboardData["user"] as? [String: Any] {
                 
                 let firstName = userData["firstName"] as? String ?? ""
@@ -285,6 +286,7 @@ struct MainDashboardView: View {
     @Binding var showSearch: Bool
     @Binding var showProfile: Bool
     @Binding var showMessages: Bool
+    var onRefresh: (() -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -307,7 +309,7 @@ struct MainDashboardView: View {
                         .padding(.horizontal)
                     
                     // My Listings
-                    MyListingsSection(listings: myListings, showCreateListing: $showCreateListing)
+                    MyListingsSection(listings: myListings, showCreateListing: $showCreateListing, onRefresh: onRefresh)
                         .padding(.horizontal)
                     
                     Spacer(minLength: 80)
@@ -581,6 +583,7 @@ struct ActiveExchangeCard: View {
 struct MyListingsSection: View {
     let listings: [Listing]
     @Binding var showCreateListing: Bool
+    var onRefresh: (() -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -592,7 +595,9 @@ struct MyListingsSection: View {
                 EmptyListingsView(showCreateListing: $showCreateListing)
             } else {
                 ForEach(listings) { listing in
-                    ListingCard(listing: listing)
+                    ListingCard(listing: listing, onDelete: {
+                        onRefresh?()
+                    })
                 }
             }
         }
@@ -635,6 +640,9 @@ struct EmptyListingsView: View {
 
 struct ListingCard: View {
     let listing: Listing
+    @State private var showDeleteAlert = false
+    @State private var isDeleting = false
+    var onDelete: (() -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -679,15 +687,38 @@ struct ListingCard: View {
             .background(Color(red: 0.97, green: 0.98, blue: 0.99))
             .cornerRadius(8)
             
-            Button("Edit Listing") {
-                // Edit action
+            HStack(spacing: 12) {
+                Button(action: {
+                    // Edit action - TODO: Navigate to edit view
+                }) {
+                    HStack {
+                        Image(systemName: "pencil")
+                        Text("Edit")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color(red: 0.4, green: 0.49, blue: 0.92))
+                    .foregroundColor(.white)
+                    .font(.system(size: 13, weight: .semibold))
+                    .cornerRadius(8)
+                }
+                
+                Button(action: {
+                    showDeleteAlert = true
+                }) {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("Delete")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color(hex: "f56565"))
+                    .foregroundColor(.white)
+                    .font(.system(size: 13, weight: .semibold))
+                    .cornerRadius(8)
+                }
+                .disabled(isDeleting)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Color(red: 0.4, green: 0.49, blue: 0.92))
-            .foregroundColor(.white)
-            .font(.system(size: 13, weight: .semibold))
-            .cornerRadius(8)
         }
         .padding(16)
         .background(Color.white)
@@ -697,6 +728,45 @@ struct ListingCard: View {
                 .stroke(Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 1)
         )
         .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
+        .alert("Delete Listing", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteListing()
+            }
+        } message: {
+            Text("Are you sure you want to delete this listing? This action cannot be undone.")
+        }
+    }
+    
+    func deleteListing() {
+        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+            return
+        }
+        
+        isDeleting = true
+        
+        var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/DeleteListing")!
+        components.queryItems = [
+            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: String(listing.id))
+        ]
+        
+        guard let url = components.url else {
+            isDeleting = false
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                isDeleting = false
+                
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    onDelete?()
+                }
+            }
+        }.resume()
     }
 }
 

@@ -7,28 +7,6 @@
 
 import SwiftUI
 
-struct SearchListing: Identifiable, Codable {
-    let id: Int
-    let listingId: Int
-    let currency: String
-    let amount: Double
-    let acceptCurrency: String
-    let location: String?
-    let meetingPreference: String
-    let availableUntil: String?
-    let status: String
-    let createdAt: String?
-    let user: ListingUser
-    
-    struct ListingUser: Codable {
-        let firstName: String
-        let lastName: String
-        let rating: Double?
-        let trades: Int?
-        let verified: Bool?
-    }
-}
-
 struct SearchFilters: Codable {
     var currency: String
     var amountMin: String
@@ -63,6 +41,7 @@ struct PaginationInfo: Codable {
 
 struct SearchView: View {
     @Binding var showSearch: Bool
+    @StateObject private var locationManager = LocationManager()
     @State private var availableCurrencies: [String] = []
     @State private var availableLocations: [String] = []
     @State private var searchResults: [SearchListing] = []
@@ -77,6 +56,8 @@ struct SearchView: View {
     @State private var showFilters = false
     @State private var currencySearchQuery = ""
     @State private var showCurrencyDropdown = false
+    @State private var showMapView = false
+    @State private var selectedListing: SearchListing?
     
     var filteredCurrencies: [String] {
         if currencySearchQuery.isEmpty {
@@ -92,25 +73,47 @@ struct SearchView: View {
             // Header
             headerView
             
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Quick Search
-                    quickSearchSection
-                    
-                    // Advanced Filters
-                    if showFilters {
-                        filtersPanel
+            if showMapView {
+                // Map View
+                ListingMapView(
+                    listings: searchResults,
+                    userLocation: locationManager.location,
+                    showUserLocation: true,
+                    selectedListing: $selectedListing
+                )
+                .overlay(
+                    // Filters overlay on map
+                    VStack {
+                        if showFilters {
+                            filtersPanel
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                        }
+                        Spacer()
                     }
-                    
-                    // Results Section
-                    resultsSection
+                )
+            } else {
+                // List View
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Quick Search
+                        quickSearchSection
+                        
+                        // Advanced Filters
+                        if showFilters {
+                            filtersPanel
+                        }
+                        
+                        // Results Section
+                        resultsSection
+                    }
                 }
+                .background(Color(hex: "f8fafc"))
             }
-            .background(Color(hex: "f8fafc"))
         }
         .navigationBarHidden(true)
         .onAppear {
             loadInitialData()
+            locationManager.requestLocation()
         }
     }
     
@@ -136,17 +139,32 @@ struct SearchView: View {
             
             Spacer()
             
-            Button(action: {
-                withAnimation {
-                    showFilters.toggle()
+            HStack(spacing: 8) {
+                Button(action: {
+                    withAnimation {
+                        showMapView.toggle()
+                    }
+                }) {
+                    Image(systemName: showMapView ? "list.bullet" : "map")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.2))
+                        .cornerRadius(8)
                 }
-            }) {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(8)
+                
+                Button(action: {
+                    withAnimation {
+                        showFilters.toggle()
+                    }
+                }) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.2))
+                        .cornerRadius(8)
+                }
             }
         }
         .padding(.horizontal, 24)
@@ -574,9 +592,18 @@ struct SearchView: View {
                 
                 Spacer()
                 
-                Text(listing.status.capitalized)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(Color(hex: "48bb78"))
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(listing.status.capitalized)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(Color(hex: "48bb78"))
+                    
+                    let distanceStr = listing.approximateDistanceString(from: locationManager.location)
+                    if !distanceStr.isEmpty {
+                        Text(distanceStr)
+                            .font(.system(size: 12))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                }
             }
             
             // Trader Info

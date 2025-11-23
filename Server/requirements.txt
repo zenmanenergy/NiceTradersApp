@@ -5,3 +5,4 @@ PyMySQL==1.0.2
 urlquote
 requests==2.31.0
 schedule==1.2.0
+colorama

@@ -69,7 +69,7 @@ def get_user_dashboard(SessionId):
         cursor.execute(completed_transactions_query, (user_id, user_id))
         completed_transactions_count = cursor.fetchone()['count']
         
-        # Get recent active listings (last 10 listings, excluding sold/completed and those with purchased contact access)
+        # Get recent active listings (last 10 listings, excluding sold/completed)
         recent_listings_query = """
             SELECT listing_id, currency, amount, accept_currency, location, 
                    status, created_at, available_until
@@ -81,10 +81,6 @@ def get_user_dashboard(SessionId):
                 SELECT 1 FROM exchange_transactions et 
                 WHERE et.listing_id = l.listing_id 
                 AND et.status = 'completed'
-            )
-            AND NOT EXISTS (
-                SELECT 1 FROM contact_access ca 
-                WHERE ca.listing_id = l.listing_id
             )
             ORDER BY l.created_at DESC 
             LIMIT 10

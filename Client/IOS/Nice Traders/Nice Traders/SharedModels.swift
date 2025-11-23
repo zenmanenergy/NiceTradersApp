@@ -81,3 +81,54 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         print("Location error: \(error.localizedDescription)")
     }
 }
+
+// MARK: - Search Models
+
+struct SearchListing: Identifiable, Codable, Equatable {
+    let id: Int
+    let listingId: Int
+    let currency: String
+    let amount: Double
+    let acceptCurrency: String
+    let location: String?
+    let latitude: Double?
+    let longitude: Double?
+    let meetingPreference: String
+    let availableUntil: String?
+    let status: String
+    let createdAt: String?
+    let user: ListingUser
+    
+    // Calculate approximate distance (coordinates are already randomized for privacy)
+    func approximateDistance(from userLocation: CLLocation?) -> Double? {
+        guard let userLoc = userLocation,
+              let lat = latitude,
+              let lon = longitude else {
+            return nil
+        }
+        
+        let listingLocation = CLLocation(latitude: lat, longitude: lon)
+        return userLoc.distance(from: listingLocation) / 1000.0 // Convert to km
+    }
+    
+    func approximateDistanceString(from userLocation: CLLocation?) -> String {
+        guard let dist = approximateDistance(from: userLocation) else {
+            return ""
+        }
+        
+        // Round to nearest km for approximate display
+        if dist < 1 {
+            return "< 1 km away"
+        } else {
+            return "~\(Int(dist)) km away"
+        }
+    }
+    
+    struct ListingUser: Codable, Equatable {
+        let firstName: String
+        let lastName: String
+        let rating: Double?
+        let trades: Int?
+        let verified: Bool?
+    }
+}

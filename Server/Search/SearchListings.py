@@ -28,6 +28,8 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 l.amount,
                 l.accept_currency,
                 l.location,
+                l.latitude,
+                l.longitude,
                 l.location_radius,
                 l.meeting_preference,
                 l.available_until,
@@ -36,7 +38,9 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 l.updated_at,
                 u.FirstName,
                 u.LastName,
-                u.Email
+                u.Email,
+                u.Rating,
+                u.TotalExchanges
             FROM listings l
             JOIN users u ON l.user_id = u.UserId
             WHERE l.status = 'active' AND l.available_until > NOW()
@@ -127,21 +131,24 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         formatted_listings = []
         for listing in listings:
             formatted_listings.append({
+                'id': listing['listing_id'],
                 'listingId': listing['listing_id'],
-                'userId': listing['user_id'],
                 'currency': listing['currency'],
                 'amount': float(listing['amount']),
                 'acceptCurrency': listing['accept_currency'],
-                'locationRadius': listing['location_radius'],
+                'location': listing['location'],
+                'latitude': float(listing['latitude']) if listing['latitude'] else None,
+                'longitude': float(listing['longitude']) if listing['longitude'] else None,
                 'meetingPreference': listing['meeting_preference'],
                 'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
                 'status': listing['status'],
                 'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
-                'updatedAt': listing['updated_at'].isoformat() if listing['updated_at'] else None,
                 'user': {
                     'firstName': listing['FirstName'],
                     'lastName': listing['LastName'],
-                    'email': listing['Email']
+                    'rating': float(listing['Rating']) if listing['Rating'] else None,
+                    'trades': listing['TotalExchanges'] if listing['TotalExchanges'] else None,
+                    'verified': listing['Rating'] and float(listing['Rating']) >= 4.5  # Auto-verify high-rated users
                 }
             })
         

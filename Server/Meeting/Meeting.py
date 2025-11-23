@@ -4,6 +4,7 @@ from _Lib.Debugger import Debugger
 from Meeting.ProposeMeeting import propose_meeting
 from Meeting.RespondToMeeting import respond_to_meeting
 from Meeting.GetMeetingProposals import get_meeting_proposals
+from Meeting.GetExactLocation import get_exact_location
 
 blueprint = Blueprint('meeting', __name__)
 
@@ -49,6 +50,20 @@ def GetMeetingProposals():
         listing_id = request_data.get('listingId')
         
         result = get_meeting_proposals(session_id, listing_id)
+        return result
+    except Exception as e:
+        return Debugger(e)
+
+@blueprint.route("/Meeting/GetExactLocation", methods=['GET'])
+@cross_origin()
+def GetExactLocation():
+    try:
+        request_data = request.args.to_dict()
+        
+        session_id = request_data.get('sessionId')
+        listing_id = request_data.get('listingId')
+        
+        result = get_exact_location(session_id, listing_id)
         return result
     except Exception as e:
         return Debugger(e)
