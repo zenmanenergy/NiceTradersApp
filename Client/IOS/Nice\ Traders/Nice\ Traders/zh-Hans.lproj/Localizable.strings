@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "我在出售（我有）";
 "FROM_CURRENCY" = "从货币";
 "TO_CURRENCY" = "到货币";
+
+// Location Tracking
+"loading_map" = "正在加载地图...";
+"meeting_point" = "见面地点";
+"miles" = "公里";
+"you" = "你";
+"finding_other_user" = "正在查找其他用户...";
+

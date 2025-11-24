@@ -6,12 +6,17 @@
 //
 
 import Foundation
+import CoreLocation
 
 class LocalizationManager: ObservableObject {
     @Published var currentLanguage: String {
         didSet {
             UserDefaults.standard.set(currentLanguage, forKey: "AppLanguage")
             Locale.setAutomaticLocale(currentLanguage)
+            // Also save to backend via SessionManager if user is authenticated
+            if let userId = SessionManager.shared.userId {
+                self.saveLanguagePreferenceToBackend(languageCode: currentLanguage, userId: userId)
+            }
         }
     }
     
@@ -36,10 +41,58 @@ class LocalizationManager: ObservableObject {
         if let savedLanguage = UserDefaults.standard.string(forKey: "AppLanguage") {
             self.currentLanguage = savedLanguage
         } else {
-            // Auto-detect from system locale
+            // Auto-detect from system locale first
             let systemLocale = Locale.preferredLanguages.first ?? "en"
             let languageCode = String(systemLocale.prefix(2))
             self.currentLanguage = supportedLanguages[languageCode] != nil ? languageCode : "en"
+        }
+    }
+    
+    // MARK: - Language Detection from GPS
+    
+    /// Detect user's language based on their current GPS location
+    /// Falls back to system locale if GPS access is unavailable
+    func initializeLanguageFromLocation(_ locationManager: CLLocationManager) {
+        // If we already have a saved preference, use it
+        if UserDefaults.standard.string(forKey: "AppLanguage") != nil {
+            return
+        }
+        
+        // Try to detect from GPS location
+        if let currentLocation = locationManager.location {
+            LocationLanguageDetector.detectLanguageFromLocation(currentLocation) { [weak self] detectedLanguage in
+                DispatchQueue.main.async {
+                    // Save the detected language
+                    UserDefaults.standard.set(detectedLanguage, forKey: "AppLanguage")
+                    self?.currentLanguage = detectedLanguage
+                }
+            }
+        }
+    }
+    
+    // MARK: - Backend Synchronization
+    
+    private func saveLanguagePreferenceToBackend(languageCode: String, userId: String) {
+        let backendURL = URLComponents(string: "http://localhost:5000/api/profile/update")?.url ?? URL(fileURLWithPath: "")
+        var request = URLRequest(url: backendURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let payload: [String: Any] = [
+            "user_id": userId,
+            "preferred_language": languageCode
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+            
+            URLSession.shared.dataTask(with: request) { _, response, error in
+                if let error = error {
+                    print("Error saving language preference: \(error.localizedDescription)")
+                }
+            }.resume()
+        } catch {
+            print("Error encoding language preference: \(error.localizedDescription)")
         }
     }
     

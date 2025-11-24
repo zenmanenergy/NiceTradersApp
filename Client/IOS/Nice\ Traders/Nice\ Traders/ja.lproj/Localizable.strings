@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "販売中（持っている）";
 "FROM_CURRENCY" = "通貨から";
 "TO_CURRENCY" = "通貨へ";
+
+// Location Tracking
+"loading_map" = "地図を読み込み中...";
+"meeting_point" = "待ち合わせ場所";
+"miles" = "キロメートル";
+"you" = "あなた";
+"finding_other_user" = "他のユーザーを探索中...";
+

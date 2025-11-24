@@ -66,6 +66,7 @@ struct ContactView: View {
     let contactData: DashboardContactData
     
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var activeTab: String = "details"
     @State private var messages: [DashboardContactMessage] = []
     @State private var newMessage: String = ""

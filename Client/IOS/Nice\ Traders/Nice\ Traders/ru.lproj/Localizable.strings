@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "Я продаю (у меня есть)";
 "FROM_CURRENCY" = "Из валюты";
 "TO_CURRENCY" = "В валюту";
+
+// Location Tracking
+"loading_map" = "Загрузка карты...";
+"meeting_point" = "Место встречи";
+"miles" = "километры";
+"you" = "Вы";
+"finding_other_user" = "Поиск другого пользователя...";
+

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var email = ""
     @State private var password = ""
@@ -37,7 +38,7 @@ struct LoginView: View {
                     Spacer()
                 }
                 
-                Text("Sign In")
+                Text(localizationManager.signIn)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -45,8 +46,8 @@ struct LoginView: View {
             .padding(.vertical, 16)
             .background(
                 LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                    startPoint: .topLeading,
+                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, 
+green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
@@ -58,11 +59,11 @@ struct LoginView: View {
                         Text("💱")
                             .font(.system(size: 48))
                         
-                        Text("Welcome Back")
+                        Text(localizationManager.localize("WELCOME_BACK"))
                             .font(.system(size: 29, weight: .semibold))
                             .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
                         
-                        Text("Sign in to continue exchanging currency")
+                        Text(localizationManager.localize("SIGN_IN_TO_CONTINUE"))
                             .font(.system(size: 16))
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                             .multilineTextAlignment(.center)
@@ -73,17 +74,17 @@ struct LoginView: View {
                     // Form
                     VStack(spacing: 24) {
                         FormField(
-                            label: "Email Address",
+                            label: localizationManager.email,
                             text: $email,
-                            placeholder: "Enter your email",
+                            placeholder: localizationManager.localize("ENTER_EMAIL"),
                             keyboardType: .emailAddress,
                             error: errors["email"]
                         )
                         
                         FormField(
-                            label: "Password",
+                            label: localizationManager.password,
                             text: $password,
-                            placeholder: "Enter your password",
+                            placeholder: localizationManager.localize("ENTER_PASSWORD"),
                             isSecure: true,
                             error: errors["password"]
                         )
@@ -94,10 +95,10 @@ struct LoginView: View {
                     HStack {
                         Spacer()
                         Button(action: {
-                            alertMessage = "Forgot Password coming soon!"
+                            alertMessage = localizationManager.localize("FORGOT_PASSWORD_COMING_SOON")
                             showingAlert = true
                         }) {
-                            Text("Forgot Password?")
+                            Text(localizationManager.forgotPassword)
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
@@ -113,9 +114,9 @@ struct LoginView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(0.8)
-                                Text("Signing In...")
+                                Text(localizationManager.localize("SIGNING_IN"))
                             } else {
-                                Text("Sign In")
+                                Text(localizationManager.signIn)
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -124,14 +125,14 @@ struct LoginView: View {
                         .padding(.vertical, 16)
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                                startPoint: .topLeading,
+                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color
+(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .cornerRadius(12)
-                        .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y: 4)
-                    }
+                        .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y
+: 4)                                                                                                                           }
                     .disabled(isSubmitting)
                     .opacity(isSubmitting ? 0.7 : 1.0)
                     .padding(.horizontal, 24)
@@ -142,7 +143,7 @@ struct LoginView: View {
                             .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
                             .frame(height: 1)
                         
-                        Text("or")
+                        Text(localizationManager.localize("OR"))
                             .font(.system(size: 14))
                             .foregroundColor(Color(red: 0.63, green: 0.68, blue: 0.75))
                             .padding(.horizontal, 16)
@@ -156,13 +157,13 @@ struct LoginView: View {
                     
                     // Social Login
                     Button(action: {
-                        alertMessage = "Google Sign In coming soon!"
+                        alertMessage = localizationManager.localize("GOOGLE_SIGN_IN_COMING_SOON")
                         showingAlert = true
                     }) {
                         HStack(spacing: 12) {
                             Image(systemName: "g.circle.fill")
                                 .font(.system(size: 20))
-                            Text("Continue with Google")
+                            Text(localizationManager.localize("CONTINUE_WITH_GOOGLE"))
                                 .font(.system(size: 16, weight: .medium))
                         }
                         .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
@@ -178,7 +179,7 @@ struct LoginView: View {
                     
                     // Signup Link
                     HStack(spacing: 4) {
-                        Text("Don't have an account?")
+                        Text(localizationManager.localize("DONT_HAVE_ACCOUNT"))
                             .font(.system(size: 15))
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         
@@ -186,7 +187,7 @@ struct LoginView: View {
                             // Navigate to signup - will be handled by parent
                             dismiss()
                         }) {
-                            Text("Sign Up")
+                            Text(localizationManager.signUp)
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
@@ -206,8 +207,8 @@ struct LoginView: View {
                 errors = [:]
             }
         }
-        .alert("Login", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) { }
+        .alert(localizationManager.localize("LOGIN"), isPresented: $showingAlert) {
+            Button(localizationManager.localize("OK"), role: .cancel) { }
         } message: {
             Text(alertMessage)
         }
@@ -220,13 +221,13 @@ struct LoginView: View {
         errors = [:]
         
         if email.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors["email"] = "Email is required"
+            errors["email"] = localizationManager.localize("EMAIL_REQUIRED")
         } else if !email.contains("@") || !email.contains(".") {
-            errors["email"] = "Please enter a valid email"
+            errors["email"] = localizationManager.invalidEmail
         }
         
         if password.isEmpty {
-            errors["password"] = "Password is required"
+            errors["password"] = localizationManager.localize("PASSWORD_REQUIRED")
         }
         
         return errors.isEmpty
@@ -252,7 +253,7 @@ struct LoginView: View {
         
         guard let url = URL(string: urlString) else {
             isSubmitting = false
-            alertMessage = "Invalid URL"
+            alertMessage = localizationManager.localize("INVALID_URL")
             showingAlert = true
             return
         }
@@ -266,13 +267,13 @@ struct LoginView: View {
                 
                 if let error = error {
                     print("Network error:", error.localizedDescription)
-                    alertMessage = "Network error: \(error.localizedDescription)"
+                    alertMessage = localizationManager.localize("NETWORK_ERROR") + ": \(error.localizedDescription)"
                     showingAlert = true
                     return
                 }
                 
                 guard let data = data else {
-                    alertMessage = "No data received from server"
+                    alertMessage = localizationManager.localize("NO_DATA_RECEIVED")
                     showingAlert = true
                     return
                 }
@@ -282,7 +283,7 @@ struct LoginView: View {
                         print("Response:", json)
                         
                         if let errorMessage = json["ErrorMessage"] as? String {
-                            alertMessage = "Error: \(errorMessage)"
+                            alertMessage = localizationManager.error + ": \(errorMessage)"
                             showingAlert = true
                             return
                         }
@@ -303,13 +304,13 @@ struct LoginView: View {
                             UserDefaults.standard.removeObject(forKey: "SessionId")
                             UserDefaults.standard.removeObject(forKey: "UserType")
                             
-                            alertMessage = "Invalid login credentials"
+                            alertMessage = localizationManager.localize("INVALID_LOGIN_CREDENTIALS")
                             showingAlert = true
                         }
                     }
                 } catch {
                     print("JSON parsing error:", error)
-                    alertMessage = "Failed to parse server response"
+                    alertMessage = localizationManager.localize("FAILED_PARSE_RESPONSE")
                     showingAlert = true
                 }
             }

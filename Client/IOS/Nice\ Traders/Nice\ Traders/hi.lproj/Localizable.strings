@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "मैं बेच रहा हूँ (मेरे पास है)";
 "FROM_CURRENCY" = "मुद्रा से";
 "TO_CURRENCY" = "मुद्रा को";
+
+// Location Tracking
+"loading_map" = "नक्शा लोड हो रहा है...";
+"meeting_point" = "मिलन स्थल";
+"miles" = "किलोमीटर";
+"you" = "आप";
+"finding_other_user" = "दूसरे उपयोगकर्ता को खोज रहे हैं...";
+

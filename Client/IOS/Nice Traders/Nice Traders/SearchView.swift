@@ -232,7 +232,7 @@ struct SearchView: View {
             Button(action: performSearch) {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                    Text("Search")
+                    Text(localizationManager.search)
                         .font(.system(size: 17, weight: .semibold))
                 }
                 .frame(maxWidth: .infinity)

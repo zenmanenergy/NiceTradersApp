@@ -27,6 +27,7 @@ struct ExchangeFilters {
 
 struct ExchangeHistoryView: View {
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var exchangeHistory: [Exchange] = []
     @State private var filteredHistory: [Exchange] = []
     @State private var isLoading = true

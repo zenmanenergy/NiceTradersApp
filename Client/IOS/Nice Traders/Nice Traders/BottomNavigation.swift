@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BottomNavigation: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     var activeTab: String = "home" // "home", "search", "create", "messages", "profile"
     
     var body: some View {

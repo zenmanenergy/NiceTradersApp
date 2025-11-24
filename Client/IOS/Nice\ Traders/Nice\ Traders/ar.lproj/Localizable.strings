@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "أنا أبيع (لدي)";
 "FROM_CURRENCY" = "من العملة";
 "TO_CURRENCY" = "إلى العملة";
+
+// Location Tracking
+"loading_map" = "جاري تحميل الخريطة...";
+"meeting_point" = "نقطة الالتقاء";
+"miles" = "كيلومترات";
+"you" = "أنت";
+"finding_other_user" = "جاري البحث عن مستخدم آخر...";
+

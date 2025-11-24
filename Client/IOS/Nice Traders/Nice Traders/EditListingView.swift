@@ -11,6 +11,7 @@ import CoreLocation
 struct EditListingView: View {
     let listingId: String
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @StateObject private var locationManager = LocationManager()
     
     // Form data

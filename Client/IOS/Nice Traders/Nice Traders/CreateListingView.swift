@@ -23,6 +23,7 @@ struct Currency: Identifiable, Hashable {
 struct CreateListingView: View {
     @Binding var navigateToCreateListing: Bool
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @StateObject private var locationManager = LocationManager()
     
     // Form data

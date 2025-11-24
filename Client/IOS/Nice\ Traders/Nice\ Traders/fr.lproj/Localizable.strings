@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "Je suis en train de vendre (j'ai)";
 "FROM_CURRENCY" = "De Devise";
 "TO_CURRENCY" = "Vers Devise";
+
+// Location Tracking
+"loading_map" = "Chargement de la carte...";
+"meeting_point" = "Point de Rendez-Vous";
+"miles" = "kilomètres";
+"you" = "Vous";
+"finding_other_user" = "Recherche de l'autre utilisateur...";
+

@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "I'm selling (I have)";
 "FROM_CURRENCY" = "From Currency";
 "TO_CURRENCY" = "To Currency";
+
+// Location Tracking
+"loading_map" = "Loading map...";
+"meeting_point" = "Meeting Point";
+"miles" = "miles";
+"you" = "You";
+"finding_other_user" = "Finding other user...";
+

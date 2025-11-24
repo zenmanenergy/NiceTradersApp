@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "Estoy vendiendo (tengo)";
 "FROM_CURRENCY" = "De Moneda";
 "TO_CURRENCY" = "A Moneda";
+
+// Location Tracking
+"loading_map" = "Cargando mapa...";
+"meeting_point" = "Punto de Encuentro";
+"miles" = "millas";
+"you" = "Tú";
+"finding_other_user" = "Buscando al otro usuario...";
+

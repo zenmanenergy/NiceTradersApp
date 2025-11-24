@@ -10,6 +10,7 @@ import SwiftUI
 struct ContactDetailView: View {
     let contactData: ContactData
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var activeTab: ContactTab = .details
     @State private var messages: [ContactMessage] = []

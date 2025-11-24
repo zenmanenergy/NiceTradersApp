@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SignupView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var firstName = ""
     @State private var lastName = ""
@@ -42,7 +43,7 @@ struct SignupView: View {
                     Spacer()
                 }
                 
-                Text("Create Account")
+                Text(localizationManager.signUp)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -50,8 +51,8 @@ struct SignupView: View {
             .padding(.vertical, 16)
             .background(
                 LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                    startPoint: .topLeading,
+                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, 
+green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
@@ -60,11 +61,11 @@ struct SignupView: View {
                 VStack(spacing: 0) {
                     // Welcome Text
                     VStack(spacing: 8) {
-                        Text("Join NICE Traders")
+                        Text(localizationManager.localize("JOIN_NICE_TRADERS"))
                             .font(.system(size: 29, weight: .semibold))
                             .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
                         
-                        Text("Start exchanging currency with your neighbors")
+                        Text(localizationManager.localize("START_EXCHANGING_WITH_NEIGHBORS"))
                             .font(.system(size: 16))
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                             .multilineTextAlignment(.center)
@@ -77,48 +78,48 @@ struct SignupView: View {
                         // Name Row
                         HStack(spacing: 16) {
                             FormField(
-                                label: "First Name",
+                                label: localizationManager.firstName,
                                 text: $firstName,
-                                placeholder: "Enter your first name",
+                                placeholder: localizationManager.localize("ENTER_FIRST_NAME"),
                                 error: errors["firstName"]
                             )
                             
                             FormField(
-                                label: "Last Name",
+                                label: localizationManager.lastName,
                                 text: $lastName,
-                                placeholder: "Enter your last name",
+                                placeholder: localizationManager.localize("ENTER_LAST_NAME"),
                                 error: errors["lastName"]
                             )
                         }
                         
                         FormField(
-                            label: "Email Address",
+                            label: localizationManager.email,
                             text: $email,
-                            placeholder: "Enter your email",
+                            placeholder: localizationManager.localize("ENTER_EMAIL"),
                             keyboardType: .emailAddress,
                             error: errors["email"]
                         )
                         
                         FormField(
-                            label: "Phone Number",
+                            label: localizationManager.localize("PHONE_NUMBER"),
                             text: $phone,
-                            placeholder: "Enter your phone number",
+                            placeholder: localizationManager.localize("ENTER_PHONE"),
                             keyboardType: .phonePad,
                             error: errors["phone"]
                         )
                         
                         FormField(
-                            label: "Password",
+                            label: localizationManager.password,
                             text: $password,
-                            placeholder: "Create a password",
+                            placeholder: localizationManager.localize("CREATE_PASSWORD"),
                             isSecure: true,
                             error: errors["password"]
                         )
                         
                         FormField(
-                            label: "Confirm Password",
+                            label: localizationManager.confirmPassword,
                             text: $confirmPassword,
-                            placeholder: "Confirm your password",
+                            placeholder: localizationManager.localize("CONFIRM_PASSWORD_PLACEHOLDER"),
                             isSecure: true,
                             error: errors["confirmPassword"]
                         )
@@ -132,9 +133,9 @@ struct SignupView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                     .scaleEffect(0.8)
-                                Text("Creating Account...")
+                                Text(localizationManager.localize("CREATING_ACCOUNT"))
                             } else {
-                                Text("Create Account")
+                                Text(localizationManager.signUp)
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -143,14 +144,14 @@ struct SignupView: View {
                         .padding(.vertical, 16)
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                                startPoint: .topLeading,
+                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color
+(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .cornerRadius(12)
-                        .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y: 4)
-                    }
+                        .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y
+: 4)                                                                                                                           }
                     .disabled(isSubmitting)
                     .opacity(isSubmitting ? 0.7 : 1.0)
                     .padding(.horizontal, 24)
@@ -158,14 +159,14 @@ struct SignupView: View {
                     
                     // Login Link
                     HStack(spacing: 4) {
-                        Text("Already have an account?")
+                        Text(localizationManager.localize("ALREADY_HAVE_ACCOUNT"))
                             .font(.system(size: 15))
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         
                         Button(action: {
                             showLogin = true
                         }) {
-                            Text("Sign In")
+                            Text(localizationManager.signIn)
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
@@ -173,7 +174,7 @@ struct SignupView: View {
                     .padding(.top, 24)
                     
                     // Terms
-                    Text("By creating an account, you agree to our **Terms of Service** and **Privacy Policy**")
+                    Text(localizationManager.localize("TERMS_AND_PRIVACY"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(red: 0.63, green: 0.68, blue: 0.75))
                         .multilineTextAlignment(.center)
@@ -185,8 +186,8 @@ struct SignupView: View {
         }
         .navigationBarHidden(true)
         .background(Color.white)
-        .alert("Signup", isPresented: $showingAlert) {
-            Button("OK", role: .cancel) { }
+        .alert(localizationManager.localize("SIGNUP"), isPresented: $showingAlert) {
+            Button(localizationManager.localize("OK"), role: .cancel) { }
         } message: {
             Text(alertMessage)
         }
@@ -202,31 +203,31 @@ struct SignupView: View {
         errors = [:]
         
         if firstName.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors["firstName"] = "First name is required"
+            errors["firstName"] = localizationManager.localize("FIRST_NAME_REQUIRED")
         }
         
         if lastName.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors["lastName"] = "Last name is required"
+            errors["lastName"] = localizationManager.localize("LAST_NAME_REQUIRED")
         }
         
         if email.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors["email"] = "Email is required"
+            errors["email"] = localizationManager.localize("EMAIL_REQUIRED")
         } else if !email.contains("@") || !email.contains(".") {
-            errors["email"] = "Please enter a valid email"
+            errors["email"] = localizationManager.invalidEmail
         }
         
         if phone.trimmingCharacters(in: .whitespaces).isEmpty {
-            errors["phone"] = "Phone number is required"
+            errors["phone"] = localizationManager.localize("PHONE_REQUIRED")
         }
         
         if password.isEmpty {
-            errors["password"] = "Password is required"
+            errors["password"] = localizationManager.localize("PASSWORD_REQUIRED")
         } else if password.count < 6 {
-            errors["password"] = "Password must be at least 6 characters"
+            errors["password"] = localizationManager.localize("PASSWORD_MIN_LENGTH")
         }
         
         if password != confirmPassword {
-            errors["confirmPassword"] = "Passwords do not match"
+            errors["confirmPassword"] = localizationManager.passwordMismatch
         }
         
         return errors.isEmpty
@@ -255,7 +256,7 @@ struct SignupView: View {
         
         guard let url = URL(string: urlString) else {
             isSubmitting = false
-            alertMessage = "Invalid URL"
+            alertMessage = localizationManager.localize("INVALID_URL")
             showingAlert = true
             return
         }
@@ -269,13 +270,13 @@ struct SignupView: View {
                 
                 if let error = error {
                     print("Network error:", error.localizedDescription)
-                    alertMessage = "Network error: \(error.localizedDescription)"
+                    alertMessage = localizationManager.localize("NETWORK_ERROR") + ": \(error.localizedDescription)"
                     showingAlert = true
                     return
                 }
                 
                 guard let data = data else {
-                    alertMessage = "No data received from server"
+                    alertMessage = localizationManager.localize("NO_DATA_RECEIVED")
                     showingAlert = true
                     return
                 }
@@ -285,7 +286,7 @@ struct SignupView: View {
                         print("Response:", json)
                         
                         if let errorMessage = json["ErrorMessage"] as? String {
-                            alertMessage = "Error: \(errorMessage)"
+                            alertMessage = localizationManager.error + ": \(errorMessage)"
                             showingAlert = true
                             return
                         }
@@ -304,14 +305,14 @@ struct SignupView: View {
                             // Navigate to dashboard
                             navigateToDashboard = true
                         } else {
-                            let errorMsg = json["error"] as? String ?? "Unknown error"
-                            alertMessage = "Signup failed: \(errorMsg)"
+                            let errorMsg = json["error"] as? String ?? localizationManager.localize("UNKNOWN_ERROR")
+                            alertMessage = localizationManager.localize("SIGNUP_FAILED") + ": \(errorMsg)"
                             showingAlert = true
                         }
                     }
                 } catch {
                     print("JSON parsing error:", error)
-                    alertMessage = "Failed to parse server response"
+                    alertMessage = localizationManager.localize("FAILED_PARSE_RESPONSE")
                     showingAlert = true
                 }
             }
@@ -348,8 +349,8 @@ struct FormField: View {
             .background(Color.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 2)
-            )
+                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, gree
+n: 0.91, blue: 0.94), lineWidth: 2)                                                                                    )
             .cornerRadius(12)
             .font(.system(size: 16))
             

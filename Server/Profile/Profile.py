@@ -23,19 +23,25 @@ def GetProfile():
 	except Exception as e:
 		return Debugger(e)
 
-@blueprint.route("/Profile/UpdateProfile", methods=['GET'])
+@blueprint.route("/Profile/UpdateProfile", methods=['GET', 'POST'])
 @cross_origin()
 def UpdateProfile():
 	try:
-		ProfileData = request.args.to_dict()
+		# Support both GET and POST requests
+		if request.method == 'POST':
+			ProfileData = request.get_json() or {}
+		else:
+			ProfileData = request.args.to_dict()
+		
 		SessionId = ProfileData.get('SessionId', None)
 		Name = ProfileData.get('name', None)
 		Email = ProfileData.get('email', None)
 		Phone = ProfileData.get('phone', None)
 		Location = ProfileData.get('location', None)
 		Bio = ProfileData.get('bio', None)
+		PreferredLanguage = ProfileData.get('preferred_language', None)
 		
-		result = update_profile(SessionId, Name, Email, Phone, Location, Bio)
+		result = update_profile(SessionId, Name, Email, Phone, Location, Bio, PreferredLanguage)
 		return result
 	except Exception as e:
 		return Debugger(e)

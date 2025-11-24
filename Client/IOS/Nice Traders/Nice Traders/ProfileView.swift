@@ -46,6 +46,7 @@ struct PrivacySettings: Codable {
 
 struct ProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var user: UserProfile = UserProfile(
         name: "Loading...",
         email: "",

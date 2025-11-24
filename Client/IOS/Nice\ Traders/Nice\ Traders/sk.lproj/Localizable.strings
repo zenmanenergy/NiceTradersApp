@@ -75,3 +75,11 @@
 "SELLING_HAVE" = "Predávam (mám)";
 "FROM_CURRENCY" = "Od meny";
 "TO_CURRENCY" = "Na menu";
+
+// Location Tracking
+"loading_map" = "Načítavanie mapy...";
+"meeting_point" = "Miesto stretnutia";
+"miles" = "kilometre";
+"you" = "Vy";
+"finding_other_user" = "Hľadá sa ďalší používateľ...";
+
