@@ -1,31 +1,30 @@
-export async function SuperFetch(url, Data, FormValid,debug=false){
-	console.log(Data)
-	if (!FormValid) {
-		console.log("Form not valid");
-		// const invalidFields = document.querySelectorAll("input:invalid");
-		// if (invalidFields.length > 0) {
-		// 	const firstInvalidField = invalidFields[0];
-		// 	if (firstInvalidField) {
-		// 		firstInvalidField.focus();
-		// 	}
-		// }
-		return true;
-	}
-	
 
-	const queryString = Object.keys(Data)
-		.map(key => key + '=' + (Data[key] === undefined ? '' : encodeURIComponent(Data[key])))
+import { baseURL } from './Settings.js';
+
+const normalizeRequestUrl = (endpoint, params) => {
+	const queryString = Object.keys(params)
+		.filter(key => params[key] !== undefined)
+		.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
 		.join('&');
 
-	url += queryString
-	console.log(url)
-	if (debug){
-		console.log("DEBUG MODE! DID NOT SEND TO SERVER")
-		return false
-	}
+	if (!queryString) return endpoint;
+	const separator = endpoint.includes('?') ? '&' : '?';
+	return `${endpoint}${separator}${queryString}`;
+};
+
+export default async function SuperFetch(url, Data = {}) {
+	console.log(Data);
+
+	const requestUrl = normalizeRequestUrl(url, Data);
+
+	const trimmedBase = baseURL.replace(/\/$/, '');
+	const trimmedRequest = requestUrl.replace(/^\//, '');
+	const finalUrl = `${trimmedBase}/${trimmedRequest}`;
+
+	console.log(finalUrl);
 	let results;
 	try {
-		const response = await fetch(url);
+		const response = await fetch(finalUrl);
 		results = await response.json();
 		if (results.ErrorMessage){
 			console.error("uh oh!", results.ErrorMessage+"\n\n"+results.StackTrace)

@@ -17,7 +17,7 @@ from Search import Search
 from Contact import Contact
 from ExchangeRates import ExchangeRates
 from Meeting import Meeting
-from Admin.Admin import Admin
+from Admin import Admin
 
 app.register_blueprint(Login.blueprint)
 app.register_blueprint(Signup.blueprint)
@@ -28,7 +28,7 @@ app.register_blueprint(Search.search_bp)
 app.register_blueprint(Contact.contact_bp)
 app.register_blueprint(ExchangeRates.exchange_rates_bp)
 app.register_blueprint(Meeting.blueprint)
-app.register_blueprint(Admin, url_prefix='/Admin')
+app.register_blueprint(Admin.blueprint)
 
 
 

@@ -1,3 +1,4 @@
+import SuperFetch from './SuperFetch.js';
 import { baseURL } from './Settings';
 
 class session {
@@ -39,8 +40,7 @@ class session {
 		const url = baseURL + '/Login/Verify?' + queryString;
 		console.log(url);
 		try {
-			const response = await fetch(url, { method: 'GET' });
-			const data = await response.json();
+			const data = await SuperFetch(`${baseURL}/Login/Verify`, VerifySessionData);
 			if (data && data.SessionId && data.UserType) {
 				callback(data);
 			} else {

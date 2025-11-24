@@ -206,7 +206,7 @@
 <main class="admin-container">
 	<div class="admin-header">
 		<h1>🔧 Admin Dashboard</h1>
-		<p>Relational Database Browser</p>
+		<p>Nice Traders Admin</p>
 	</div>
 	
 	{#if breadcrumbs.length > 0}
