@@ -125,8 +125,7 @@ green: 0.29, blue: 0.64)]),                                                     
                         .padding(.vertical, 16)
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color
-(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
+                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )

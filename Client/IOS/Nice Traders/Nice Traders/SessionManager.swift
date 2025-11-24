@@ -6,8 +6,9 @@
 //
 
 import Foundation
+import Combine
 
-class SessionManager {
+class SessionManager: ObservableObject {
     static let shared = SessionManager()
     
     private init() {}

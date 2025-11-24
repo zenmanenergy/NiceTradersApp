@@ -51,8 +51,7 @@ struct SignupView: View {
             .padding(.vertical, 16)
             .background(
                 LinearGradient(
-                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, 
-green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
+                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46,  green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
@@ -144,8 +143,7 @@ green: 0.29, blue: 0.64)]),                                                     
                         .padding(.vertical, 16)
                         .background(
                             LinearGradient(
-                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color
-(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
+                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
@@ -349,8 +347,7 @@ struct FormField: View {
             .background(Color.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, gree
-n: 0.91, blue: 0.94), lineWidth: 2)                                                                                    )
+                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 2)                                                                                    )
             .cornerRadius(12)
             .font(.system(size: 16))
             

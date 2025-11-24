@@ -37,6 +37,7 @@ struct PaginationInfo: Codable {
 struct SearchView: View {
     @Binding var navigateToSearch: Bool
     @StateObject private var locationManager = LocationManager()
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var availableCurrencies: [String] = []
     @State private var availableLocations: [String] = []
     @State private var searchResults: [SearchListing] = []
