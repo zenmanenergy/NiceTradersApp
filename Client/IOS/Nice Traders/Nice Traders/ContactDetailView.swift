@@ -42,55 +42,57 @@ struct ContactDetailView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                VStack(alignment: .trailing, spacing: 8) {
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.white.opacity(0.2))
-                            .cornerRadius(8)
-                        }
-                        Spacer()
-                    }
+        ZStack {
+            VStack(spacing: 0) {
+                // Header
+                ZStack {
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                     
-                    Spacer()
-                    
-                    HStack {
-                        Spacer()
-                        VStack(alignment: .trailing) {
-                            HStack(spacing: 8) {
-                                Text(contactData.listing.currency)
-                                Text("→")
-                                Text(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")
+                    VStack(alignment: .trailing, spacing: 8) {
+                        HStack {
+                            Button(action: { dismiss() }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                    Text("Back")
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.white.opacity(0.2))
+                                .cornerRadius(8)
                             }
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            
-                            Text("$\(String(format: "%.2f", contactData.listing.amount))")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "FFD700"))
+                            Spacer()
+                        }
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Spacer()
+                            VStack(alignment: .trailing) {
+                                HStack(spacing: 8) {
+                                    Text(contactData.listing.currency)
+                                    Text("→")
+                                    Text(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")
+                                }
+                                .font(.title)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                
+                                Text("$\(String(format: "%.2f", contactData.listing.amount))")
+                                    .font(.title2)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "FFD700"))
+                            }
                         }
                     }
+                    .padding()
+                    .padding(.top, 40)
                 }
-                .padding()
-            }
-            .frame(height: 120)
+                .frame(height: 160)
             
             // Tab Navigation
             HStack(spacing: 12) {
@@ -135,12 +137,22 @@ struct ContactDetailView: View {
             .frame(maxHeight: activeTab == .messages ? 0 : .infinity)
             .opacity(activeTab == .messages ? 0 : 1)
             
-            // Messages view (separate from ScrollView for fixed input)
-            if activeTab == .messages {
-                messagesView
+                // Messages view (separate from ScrollView for fixed input)
+                if activeTab == .messages {
+                    messagesView
+                }
+                
+                Spacer(minLength: 80)
+            }
+            
+            // Bottom Navigation
+            VStack {
+                Spacer()
+                BottomNavigation(activeTab: "messages")
             }
         }
         .navigationBarHidden(true)
+        .edgesIgnoringSafeArea(.top)
         .onAppear {
             loadMessages()
             loadMeetingProposals()
@@ -159,20 +171,7 @@ struct ContactDetailView: View {
                 
                 detailRow(label: "Amount to Exchange:", value: "$\(String(format: "%.2f", contactData.listing.amount)) \(contactData.listing.currency)")
                 
-                if let lockedAmount = contactData.lockedAmount, let toCurrency = contactData.toCurrency {
-                    detailRow(label: "Receiving:", value: "$\(String(format: "%.2f", lockedAmount)) \(toCurrency)")
-                } else {
-                    detailRow(label: "Receiving:", value: "Exchange rate pending calculation")
-                }
-                
-                if let exchangeRate = contactData.exchangeRate, let fromCurrency = contactData.fromCurrency, let toCurrency = contactData.toCurrency {
-                    detailRow(label: "Exchange Rate:", value: "\(String(format: "%.4f", exchangeRate)) \(fromCurrency) per \(toCurrency)")
-                } else {
-                    detailRow(label: "Exchange Rate:", value: "Exchange rate pending calculation")
-                }
-                
                 detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
-                detailRow(label: "General Location:", value: contactData.listing.location)
                 
                 if let purchasedAt = contactData.purchasedAt {
                     detailRow(label: "Contact Purchased:", value: formatDate(purchasedAt))
