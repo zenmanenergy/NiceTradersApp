@@ -1,0 +1,77 @@
+/* German Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Abbrechen";
+"SEND" = "Senden";
+"BACK" = "Zurück";
+"EDIT" = "Bearbeiten";
+"DELETE" = "Löschen";
+"SAVE" = "Speichern";
+"LOADING" = "Wird geladen...";
+"ERROR" = "Fehler";
+"SUCCESS" = "Erfolg";
+"SEARCH" = "Suche";
+"FILTER" = "Filter";
+"SORT" = "Sortieren";
+"NO_RESULTS" = "Keine Ergebnisse";
+"CONFIRMATION" = "Bist du sicher?";
+
+// Authentication
+"SIGN_IN" = "Anmelden";
+"SIGN_UP" = "Registrieren";
+"EMAIL" = "E-Mail";
+"PASSWORD" = "Passwort";
+"CONFIRM_PASSWORD" = "Passwort Bestätigen";
+"FIRST_NAME" = "Vorname";
+"LAST_NAME" = "Nachname";
+"FORGOT_PASSWORD" = "Passwort vergessen?";
+"INVALID_EMAIL" = "Ungültige E-Mail-Adresse";
+"PASSWORD_MISMATCH" = "Passwörter stimmen nicht überein";
+
+// Listings
+"CREATE_LISTING" = "Anzeige Erstellen";
+"EDIT_LISTING" = "Anzeige Bearbeiten";
+"MY_LISTINGS" = "Meine Anzeigen";
+"LISTING_DETAILS" = "Anzeigendetails";
+"AMOUNT" = "Betrag";
+"CURRENCY" = "Währung";
+"LOCATION" = "Ort";
+"DESCRIPTION" = "Beschreibung";
+"NO_LISTINGS" = "Noch keine Anzeigen";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Zahlung Erhalten";
+"PURCHASE_CONTACT" = "Kontakt Kaufen";
+"SEND_MESSAGE" = "Nachricht Senden";
+"NEW_MESSAGE" = "Neue Nachricht";
+
+// Meetings
+"MEETING_PROPOSED" = "Treffen Vorgeschlagen";
+"PROPOSE_MEETING" = "Treffen Vorschlagen";
+"MEETING_TIME" = "Treffenzeit";
+"MEETING_LOCATION" = "Treffenort";
+"ACCEPT_MEETING" = "Treffen Akzeptieren";
+"DECLINE_MEETING" = "Treffen Ablehnen";
+
+// Profile
+"MY_PROFILE" = "Mein Profil";
+"EDIT_PROFILE" = "Profil Bearbeiten";
+"SETTINGS" = "Einstellungen";
+"LANGUAGE" = "Sprache";
+"LOGOUT" = "Abmelden";
+"DELETE_ACCOUNT" = "Konto Löschen";
+"RATING" = "Bewertung";
+"TOTAL_EXCHANGES" = "Gesamte Austausche";
+
+// Dashboard
+"DASHBOARD" = "Armaturenbrett";
+"PURCHASED_CONTACTS" = "Gekaufte Kontakte";
+"RECENT_EXCHANGES" = "Letzte Austausche";
+"EXCHANGE_HISTORY" = "Austausch Historie";
+
+// Search
+"SEARCH_LISTINGS" = "Anzeigen Durchsuchen";
+"BUYING_LOOKING_FOR" = "Ich kaufe (suche nach)";
+"SELLING_HAVE" = "Ich verkaufe (ich habe)";
+"FROM_CURRENCY" = "Von Währung";
+"TO_CURRENCY" = "Zu Währung";

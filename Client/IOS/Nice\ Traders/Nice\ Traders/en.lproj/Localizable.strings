@@ -1,0 +1,77 @@
+/* English Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Cancel";
+"SEND" = "Send";
+"BACK" = "Back";
+"EDIT" = "Edit";
+"DELETE" = "Delete";
+"SAVE" = "Save";
+"LOADING" = "Loading...";
+"ERROR" = "Error";
+"SUCCESS" = "Success";
+"SEARCH" = "Search";
+"FILTER" = "Filter";
+"SORT" = "Sort";
+"NO_RESULTS" = "No results found";
+"CONFIRMATION" = "Are you sure?";
+
+// Authentication
+"SIGN_IN" = "Sign In";
+"SIGN_UP" = "Sign Up";
+"EMAIL" = "Email";
+"PASSWORD" = "Password";
+"CONFIRM_PASSWORD" = "Confirm Password";
+"FIRST_NAME" = "First Name";
+"LAST_NAME" = "Last Name";
+"FORGOT_PASSWORD" = "Forgot Password?";
+"INVALID_EMAIL" = "Invalid email address";
+"PASSWORD_MISMATCH" = "Passwords do not match";
+
+// Listings
+"CREATE_LISTING" = "Create Listing";
+"EDIT_LISTING" = "Edit Listing";
+"MY_LISTINGS" = "My Listings";
+"LISTING_DETAILS" = "Listing Details";
+"AMOUNT" = "Amount";
+"CURRENCY" = "Currency";
+"LOCATION" = "Location";
+"DESCRIPTION" = "Description";
+"NO_LISTINGS" = "No listings yet";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Payment Received";
+"PURCHASE_CONTACT" = "Purchase Contact";
+"SEND_MESSAGE" = "Send Message";
+"NEW_MESSAGE" = "New Message";
+
+// Meetings
+"MEETING_PROPOSED" = "Meeting Proposed";
+"PROPOSE_MEETING" = "Propose Meeting";
+"MEETING_TIME" = "Meeting Time";
+"MEETING_LOCATION" = "Meeting Location";
+"ACCEPT_MEETING" = "Accept Meeting";
+"DECLINE_MEETING" = "Decline Meeting";
+
+// Profile
+"MY_PROFILE" = "My Profile";
+"EDIT_PROFILE" = "Edit Profile";
+"SETTINGS" = "Settings";
+"LANGUAGE" = "Language";
+"LOGOUT" = "Log Out";
+"DELETE_ACCOUNT" = "Delete Account";
+"RATING" = "Rating";
+"TOTAL_EXCHANGES" = "Total Exchanges";
+
+// Dashboard
+"DASHBOARD" = "Dashboard";
+"PURCHASED_CONTACTS" = "Purchased Contacts";
+"RECENT_EXCHANGES" = "Recent Exchanges";
+"EXCHANGE_HISTORY" = "Exchange History";
+
+// Search
+"SEARCH_LISTINGS" = "Search Listings";
+"BUYING_LOOKING_FOR" = "I'm buying (looking for)";
+"SELLING_HAVE" = "I'm selling (I have)";
+"FROM_CURRENCY" = "From Currency";
+"TO_CURRENCY" = "To Currency";

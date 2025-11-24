@@ -1,0 +1,77 @@
+/* Portuguese Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Cancelar";
+"SEND" = "Enviar";
+"BACK" = "Voltar";
+"EDIT" = "Editar";
+"DELETE" = "Excluir";
+"SAVE" = "Guardar";
+"LOADING" = "Carregando...";
+"ERROR" = "Erro";
+"SUCCESS" = "Sucesso";
+"SEARCH" = "Pesquisar";
+"FILTER" = "Filtro";
+"SORT" = "Ordenar";
+"NO_RESULTS" = "Nenhum resultado";
+"CONFIRMATION" = "Você tem certeza?";
+
+// Authentication
+"SIGN_IN" = "Entrar";
+"SIGN_UP" = "Registrar";
+"EMAIL" = "E-mail";
+"PASSWORD" = "Senha";
+"CONFIRM_PASSWORD" = "Confirmar Senha";
+"FIRST_NAME" = "Primeiro Nome";
+"LAST_NAME" = "Sobrenome";
+"FORGOT_PASSWORD" = "Esqueceu a senha?";
+"INVALID_EMAIL" = "Endereço de e-mail inválido";
+"PASSWORD_MISMATCH" = "As senhas não correspondem";
+
+// Listings
+"CREATE_LISTING" = "Criar Anúncio";
+"EDIT_LISTING" = "Editar Anúncio";
+"MY_LISTINGS" = "Meus Anúncios";
+"LISTING_DETAILS" = "Detalhes do Anúncio";
+"AMOUNT" = "Quantidade";
+"CURRENCY" = "Moeda";
+"LOCATION" = "Localização";
+"DESCRIPTION" = "Descrição";
+"NO_LISTINGS" = "Nenhum anúncio ainda";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Pagamento Recebido";
+"PURCHASE_CONTACT" = "Comprar Contato";
+"SEND_MESSAGE" = "Enviar Mensagem";
+"NEW_MESSAGE" = "Nova Mensagem";
+
+// Meetings
+"MEETING_PROPOSED" = "Reunião Proposta";
+"PROPOSE_MEETING" = "Propor Reunião";
+"MEETING_TIME" = "Hora da Reunião";
+"MEETING_LOCATION" = "Local da Reunião";
+"ACCEPT_MEETING" = "Aceitar Reunião";
+"DECLINE_MEETING" = "Recusar Reunião";
+
+// Profile
+"MY_PROFILE" = "Meu Perfil";
+"EDIT_PROFILE" = "Editar Perfil";
+"SETTINGS" = "Configurações";
+"LANGUAGE" = "Idioma";
+"LOGOUT" = "Sair";
+"DELETE_ACCOUNT" = "Deletar Conta";
+"RATING" = "Classificação";
+"TOTAL_EXCHANGES" = "Total de Trocas";
+
+// Dashboard
+"DASHBOARD" = "Painel";
+"PURCHASED_CONTACTS" = "Contatos Comprados";
+"RECENT_EXCHANGES" = "Trocas Recentes";
+"EXCHANGE_HISTORY" = "Histórico de Trocas";
+
+// Search
+"SEARCH_LISTINGS" = "Pesquisar Anúncios";
+"BUYING_LOOKING_FOR" = "Estou comprando (procurando)";
+"SELLING_HAVE" = "Estou vendendo (tenho)";
+"FROM_CURRENCY" = "De Moeda";
+"TO_CURRENCY" = "Para Moeda";

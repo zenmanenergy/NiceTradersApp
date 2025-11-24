@@ -1,0 +1,77 @@
+/* Russian Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Отмена";
+"SEND" = "Отправить";
+"BACK" = "Назад";
+"EDIT" = "Редактировать";
+"DELETE" = "Удалить";
+"SAVE" = "Сохранить";
+"LOADING" = "Загрузка...";
+"ERROR" = "Ошибка";
+"SUCCESS" = "Успех";
+"SEARCH" = "Поиск";
+"FILTER" = "Фильтр";
+"SORT" = "Сортировка";
+"NO_RESULTS" = "Результаты не найдены";
+"CONFIRMATION" = "Вы уверены?";
+
+// Authentication
+"SIGN_IN" = "Вход";
+"SIGN_UP" = "Регистрация";
+"EMAIL" = "Электронная почта";
+"PASSWORD" = "Пароль";
+"CONFIRM_PASSWORD" = "Подтвердите пароль";
+"FIRST_NAME" = "Имя";
+"LAST_NAME" = "Фамилия";
+"FORGOT_PASSWORD" = "Забыли пароль?";
+"INVALID_EMAIL" = "Неверный адрес электронной почты";
+"PASSWORD_MISMATCH" = "Пароли не совпадают";
+
+// Listings
+"CREATE_LISTING" = "Создать объявление";
+"EDIT_LISTING" = "Редактировать объявление";
+"MY_LISTINGS" = "Мои объявления";
+"LISTING_DETAILS" = "Детали объявления";
+"AMOUNT" = "Сумма";
+"CURRENCY" = "Валюта";
+"LOCATION" = "Местоположение";
+"DESCRIPTION" = "Описание";
+"NO_LISTINGS" = "Нет объявлений";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Платеж получен";
+"PURCHASE_CONTACT" = "Купить контакт";
+"SEND_MESSAGE" = "Отправить сообщение";
+"NEW_MESSAGE" = "Новое сообщение";
+
+// Meetings
+"MEETING_PROPOSED" = "Встреча предложена";
+"PROPOSE_MEETING" = "Предложить встречу";
+"MEETING_TIME" = "Время встречи";
+"MEETING_LOCATION" = "Место встречи";
+"ACCEPT_MEETING" = "Принять встречу";
+"DECLINE_MEETING" = "Отклонить встречу";
+
+// Profile
+"MY_PROFILE" = "Мой профиль";
+"EDIT_PROFILE" = "Редактировать профиль";
+"SETTINGS" = "Параметры";
+"LANGUAGE" = "Язык";
+"LOGOUT" = "Выход";
+"DELETE_ACCOUNT" = "Удалить учетную запись";
+"RATING" = "Рейтинг";
+"TOTAL_EXCHANGES" = "Всего обменов";
+
+// Dashboard
+"DASHBOARD" = "Панель управления";
+"PURCHASED_CONTACTS" = "Купленные контакты";
+"RECENT_EXCHANGES" = "Недавние обмены";
+"EXCHANGE_HISTORY" = "История обменов";
+
+// Search
+"SEARCH_LISTINGS" = "Поиск объявлений";
+"BUYING_LOOKING_FOR" = "Я покупаю (ищу)";
+"SELLING_HAVE" = "Я продаю (у меня есть)";
+"FROM_CURRENCY" = "Из валюты";
+"TO_CURRENCY" = "В валюту";

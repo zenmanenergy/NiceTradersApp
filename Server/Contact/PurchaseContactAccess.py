@@ -1,6 +1,11 @@
 from _Lib import Database
 import json
 import uuid
+import sys
+import os
+
+# Add Admin module to path for NotificationService
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def simulate_payment_processing(payment_method='paypal'):
     """Simulate PayPal payment processing - always succeeds for testing"""
@@ -53,10 +58,17 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
             connection.close()
             return json.dumps({'success': False, 'error': 'Listing not found'})
         
-        if listing['user_id'] == user_id:
+        seller_id = listing['user_id']
+        
+        if seller_id == user_id:
             cursor.close()
             connection.close()
             return json.dumps({'success': False, 'error': 'Cannot purchase your own listing'})
+        
+        # Get buyer name for notification
+        cursor.execute("SELECT FirstName, LastName FROM users WHERE UserId = %s", (user_id,))
+        buyer = cursor.fetchone()
+        buyer_name = f"{buyer['FirstName']} {buyer['LastName']}" if buyer else "A user"
         
         # Simulate payment
         payment_result = simulate_payment_processing(payment_method)
@@ -80,6 +92,23 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
         """, (transaction_id, user_id, listing_id, f'PayPal: {payment_result["transaction_id"]}'))
         
         connection.commit()
+        
+        # Send APN notification to seller
+        try:
+            from NotificationService import notification_service
+            seller_session = notification_service.get_user_last_session(seller_id)
+            notification_service.send_payment_received_notification(
+                seller_id=seller_id,
+                buyer_name=buyer_name,
+                amount=2.00,
+                currency='USD',
+                listing_id=listing_id,
+                session_id=seller_session
+            )
+        except Exception as apn_error:
+            # Log error but don't fail the transaction
+            print(f"Error sending APN notification: {apn_error}")
+        
         cursor.close()
         connection.close()
         

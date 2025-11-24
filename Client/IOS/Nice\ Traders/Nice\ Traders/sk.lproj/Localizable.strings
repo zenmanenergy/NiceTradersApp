@@ -1,0 +1,77 @@
+/* Slovak Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Zrušiť";
+"SEND" = "Poslať";
+"BACK" = "Späť";
+"EDIT" = "Upraviť";
+"DELETE" = "Odstrániť";
+"SAVE" = "Uložiť";
+"LOADING" = "Načítavanie...";
+"ERROR" = "Chyba";
+"SUCCESS" = "Úspech";
+"SEARCH" = "Hľadať";
+"FILTER" = "Filter";
+"SORT" = "Zoradiť";
+"NO_RESULTS" = "Žiadne výsledky";
+"CONFIRMATION" = "Ste si istí?";
+
+// Authentication
+"SIGN_IN" = "Prihlásiť sa";
+"SIGN_UP" = "Registrácia";
+"EMAIL" = "Email";
+"PASSWORD" = "Heslo";
+"CONFIRM_PASSWORD" = "Potvrdiť heslo";
+"FIRST_NAME" = "Meno";
+"LAST_NAME" = "Priezvisko";
+"FORGOT_PASSWORD" = "Zabudli ste heslo?";
+"INVALID_EMAIL" = "Neplatná e-mailová adresa";
+"PASSWORD_MISMATCH" = "Heslá sa nezhodujú";
+
+// Listings
+"CREATE_LISTING" = "Vytvoriť inzerát";
+"EDIT_LISTING" = "Upraviť inzerát";
+"MY_LISTINGS" = "Moje inzeráty";
+"LISTING_DETAILS" = "Detaily inzerátu";
+"AMOUNT" = "Suma";
+"CURRENCY" = "Mena";
+"LOCATION" = "Umiestnenie";
+"DESCRIPTION" = "Popis";
+"NO_LISTINGS" = "Žiadne inzeráty";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Platba prijatá";
+"PURCHASE_CONTACT" = "Kúpiť kontakt";
+"SEND_MESSAGE" = "Poslať správu";
+"NEW_MESSAGE" = "Nová správa";
+
+// Meetings
+"MEETING_PROPOSED" = "Schôdzka navrhnutá";
+"PROPOSE_MEETING" = "Navrhnúť schôdzku";
+"MEETING_TIME" = "Čas schôdzky";
+"MEETING_LOCATION" = "Miesto schôdzky";
+"ACCEPT_MEETING" = "Prijať schôdzku";
+"DECLINE_MEETING" = "Odmietnuť schôdzku";
+
+// Profile
+"MY_PROFILE" = "Môj profil";
+"EDIT_PROFILE" = "Upraviť profil";
+"SETTINGS" = "Nastavenia";
+"LANGUAGE" = "Jazyk";
+"LOGOUT" = "Odhlásiť sa";
+"DELETE_ACCOUNT" = "Odstrániť účet";
+"RATING" = "Hodnotenie";
+"TOTAL_EXCHANGES" = "Celkové výmeny";
+
+// Dashboard
+"DASHBOARD" = "Prehľad";
+"PURCHASED_CONTACTS" = "Zakúpené kontakty";
+"RECENT_EXCHANGES" = "Nedávne výmeny";
+"EXCHANGE_HISTORY" = "História výmen";
+
+// Search
+"SEARCH_LISTINGS" = "Hľadať inzeráty";
+"BUYING_LOOKING_FOR" = "Kupujem (hľadám)";
+"SELLING_HAVE" = "Predávam (mám)";
+"FROM_CURRENCY" = "Od meny";
+"TO_CURRENCY" = "Na menu";

@@ -1,0 +1,77 @@
+/* Chinese Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "取消";
+"SEND" = "发送";
+"BACK" = "返回";
+"EDIT" = "编辑";
+"DELETE" = "删除";
+"SAVE" = "保存";
+"LOADING" = "加载中...";
+"ERROR" = "错误";
+"SUCCESS" = "成功";
+"SEARCH" = "搜索";
+"FILTER" = "筛选";
+"SORT" = "排序";
+"NO_RESULTS" = "无结果";
+"CONFIRMATION" = "你确定吗？";
+
+// Authentication
+"SIGN_IN" = "登录";
+"SIGN_UP" = "注册";
+"EMAIL" = "电子邮件";
+"PASSWORD" = "密码";
+"CONFIRM_PASSWORD" = "确认密码";
+"FIRST_NAME" = "名字";
+"LAST_NAME" = "姓氏";
+"FORGOT_PASSWORD" = "忘记密码?";
+"INVALID_EMAIL" = "无效的电子邮件地址";
+"PASSWORD_MISMATCH" = "密码不匹配";
+
+// Listings
+"CREATE_LISTING" = "创建列表";
+"EDIT_LISTING" = "编辑列表";
+"MY_LISTINGS" = "我的列表";
+"LISTING_DETAILS" = "列表详情";
+"AMOUNT" = "金额";
+"CURRENCY" = "货币";
+"LOCATION" = "位置";
+"DESCRIPTION" = "描述";
+"NO_LISTINGS" = "尚无列表";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "已收到付款";
+"PURCHASE_CONTACT" = "购买联系方式";
+"SEND_MESSAGE" = "发送消息";
+"NEW_MESSAGE" = "新消息";
+
+// Meetings
+"MEETING_PROPOSED" = "已提议会议";
+"PROPOSE_MEETING" = "提议会议";
+"MEETING_TIME" = "会议时间";
+"MEETING_LOCATION" = "会议地点";
+"ACCEPT_MEETING" = "接受会议";
+"DECLINE_MEETING" = "拒绝会议";
+
+// Profile
+"MY_PROFILE" = "我的个人资料";
+"EDIT_PROFILE" = "编辑个人资料";
+"SETTINGS" = "设置";
+"LANGUAGE" = "语言";
+"LOGOUT" = "登出";
+"DELETE_ACCOUNT" = "删除账户";
+"RATING" = "评分";
+"TOTAL_EXCHANGES" = "总交换数";
+
+// Dashboard
+"DASHBOARD" = "仪表板";
+"PURCHASED_CONTACTS" = "购买的联系方式";
+"RECENT_EXCHANGES" = "最近的交换";
+"EXCHANGE_HISTORY" = "交换历史";
+
+// Search
+"SEARCH_LISTINGS" = "搜索列表";
+"BUYING_LOOKING_FOR" = "我在购买（寻找）";
+"SELLING_HAVE" = "我在出售（我有）";
+"FROM_CURRENCY" = "从货币";
+"TO_CURRENCY" = "到货币";

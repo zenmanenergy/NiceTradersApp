@@ -1,0 +1,77 @@
+/* French Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Annuler";
+"SEND" = "Envoyer";
+"BACK" = "Retour";
+"EDIT" = "Modifier";
+"DELETE" = "Supprimer";
+"SAVE" = "Enregistrer";
+"LOADING" = "Chargement...";
+"ERROR" = "Erreur";
+"SUCCESS" = "Succès";
+"SEARCH" = "Rechercher";
+"FILTER" = "Filtre";
+"SORT" = "Trier";
+"NO_RESULTS" = "Aucun résultat";
+"CONFIRMATION" = "Êtes-vous sûr ?";
+
+// Authentication
+"SIGN_IN" = "Se Connecter";
+"SIGN_UP" = "S'Inscrire";
+"EMAIL" = "E-mail";
+"PASSWORD" = "Mot de Passe";
+"CONFIRM_PASSWORD" = "Confirmer le Mot de Passe";
+"FIRST_NAME" = "Prénom";
+"LAST_NAME" = "Nom";
+"FORGOT_PASSWORD" = "Mot de passe oublié?";
+"INVALID_EMAIL" = "Adresse e-mail invalide";
+"PASSWORD_MISMATCH" = "Les mots de passe ne correspondent pas";
+
+// Listings
+"CREATE_LISTING" = "Créer une Annonce";
+"EDIT_LISTING" = "Modifier l'Annonce";
+"MY_LISTINGS" = "Mes Annonces";
+"LISTING_DETAILS" = "Détails de l'Annonce";
+"AMOUNT" = "Montant";
+"CURRENCY" = "Devise";
+"LOCATION" = "Lieu";
+"DESCRIPTION" = "Description";
+"NO_LISTINGS" = "Pas d'annonces pour le moment";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Paiement Reçu";
+"PURCHASE_CONTACT" = "Acheter Contact";
+"SEND_MESSAGE" = "Envoyer un Message";
+"NEW_MESSAGE" = "Nouveau Message";
+
+// Meetings
+"MEETING_PROPOSED" = "Réunion Proposée";
+"PROPOSE_MEETING" = "Proposer une Réunion";
+"MEETING_TIME" = "Heure de la Réunion";
+"MEETING_LOCATION" = "Lieu de la Réunion";
+"ACCEPT_MEETING" = "Accepter la Réunion";
+"DECLINE_MEETING" = "Refuser la Réunion";
+
+// Profile
+"MY_PROFILE" = "Mon Profil";
+"EDIT_PROFILE" = "Modifier mon Profil";
+"SETTINGS" = "Paramètres";
+"LANGUAGE" = "Langue";
+"LOGOUT" = "Déconnexion";
+"DELETE_ACCOUNT" = "Supprimer le Compte";
+"RATING" = "Évaluation";
+"TOTAL_EXCHANGES" = "Total des Échanges";
+
+// Dashboard
+"DASHBOARD" = "Tableau de Bord";
+"PURCHASED_CONTACTS" = "Contacts Achetés";
+"RECENT_EXCHANGES" = "Échanges Récents";
+"EXCHANGE_HISTORY" = "Historique des Échanges";
+
+// Search
+"SEARCH_LISTINGS" = "Rechercher des Annonces";
+"BUYING_LOOKING_FOR" = "Je suis en train d'acheter (cherchant)";
+"SELLING_HAVE" = "Je suis en train de vendre (j'ai)";
+"FROM_CURRENCY" = "De Devise";
+"TO_CURRENCY" = "Vers Devise";

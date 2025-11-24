@@ -1,8 +1,12 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from _Lib.Database import ConnectToDatabase
+from .APNService import APNService
 
 blueprint = Blueprint('admin', __name__)
+
+# Initialize APN Service
+apn_service = APNService()
 
 @blueprint.route('/Admin/SearchUsers', methods=['GET', 'POST'])
 @cross_origin()
@@ -135,6 +139,48 @@ def get_user_by_id():
             return jsonify({'success': True, 'user': user})
         else:
             return jsonify({'success': False, 'error': 'User not found'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/UpdateUser', methods=['GET', 'POST'])
+@cross_origin()
+def update_user():
+    """Update basic user information"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        user_id = params.get('userId')
+        if not user_id:
+            return jsonify({'success': False, 'error': 'userId is required'})
+
+        allowed_fields = ['FirstName', 'LastName', 'Email', 'Phone', 'Location', 'Bio', 'IsActive']
+        updates = {}
+        for field in allowed_fields:
+            if field in params and params[field] is not None:
+                value = params[field]
+                if field == 'IsActive':
+                    if isinstance(value, str):
+                        value = 1 if value.lower() in ['1', 'true', 'yes', 'on'] else 0
+                    else:
+                        value = 1 if value else 0
+                updates[field] = value
+
+        if not updates:
+            return jsonify({'success': False, 'error': 'No fields to update'})
+
+        cursor, connection = ConnectToDatabase()
+        set_clause = ', '.join(f"{field} = %s" for field in updates.keys())
+        values = list(updates.values())
+        values.append(user_id)
+        cursor.execute(f"UPDATE users SET {set_clause} WHERE UserId = %s", values)
+        connection.commit()
+
+        cursor.execute("SELECT * FROM users WHERE UserId = %s", (user_id,))
+        user = cursor.fetchone()
+        cursor.close()
+        connection.close()
+
+        return jsonify({'success': True, 'user': user})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -330,3 +376,45 @@ def get_transaction_by_id():
             return jsonify({'success': False, 'error': 'Transaction not found'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/SendApnMessage', methods=['POST'])
+@cross_origin()
+def send_apn_message():
+    """Send an Apple Push Notification (APN) to a user"""
+    try:
+        params = request.get_json()
+        user_id = params.get('user_id')
+        title = params.get('title')
+        body = params.get('body')
+        badge = params.get('badge', 1)
+        sound = params.get('sound', 'default')
+        
+        if not user_id or not title or not body:
+            return jsonify({
+                'success': False,
+                'error': 'user_id, title, and body are required'
+            }), 400
+        
+        # Send the notification
+        result = apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=badge,
+            sound=sound
+        )
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'message': result['message']
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Failed to send notification')
+            }), 400
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

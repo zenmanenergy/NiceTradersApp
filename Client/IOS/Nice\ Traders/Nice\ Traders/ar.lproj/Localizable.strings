@@ -1,0 +1,77 @@
+/* Arabic Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "إلغاء";
+"SEND" = "إرسال";
+"BACK" = "رجوع";
+"EDIT" = "تعديل";
+"DELETE" = "حذف";
+"SAVE" = "حفظ";
+"LOADING" = "جاري التحميل...";
+"ERROR" = "خطأ";
+"SUCCESS" = "نجاح";
+"SEARCH" = "بحث";
+"FILTER" = "تصفية";
+"SORT" = "ترتيب";
+"NO_RESULTS" = "لا توجد نتائج";
+"CONFIRMATION" = "هل أنت متأكد؟";
+
+// Authentication
+"SIGN_IN" = "تسجيل الدخول";
+"SIGN_UP" = "إنشاء حساب";
+"EMAIL" = "البريد الإلكتروني";
+"PASSWORD" = "كلمة المرور";
+"CONFIRM_PASSWORD" = "تأكيد كلمة المرور";
+"FIRST_NAME" = "الاسم الأول";
+"LAST_NAME" = "اسم العائلة";
+"FORGOT_PASSWORD" = "هل نسيت كلمة المرور؟";
+"INVALID_EMAIL" = "عنوان بريد إلكتروني غير صالح";
+"PASSWORD_MISMATCH" = "كلمات المرور غير متطابقة";
+
+// Listings
+"CREATE_LISTING" = "إنشاء إعلان";
+"EDIT_LISTING" = "تعديل الإعلان";
+"MY_LISTINGS" = "إعلاناتي";
+"LISTING_DETAILS" = "تفاصيل الإعلان";
+"AMOUNT" = "المبلغ";
+"CURRENCY" = "العملة";
+"LOCATION" = "الموقع";
+"DESCRIPTION" = "الوصف";
+"NO_LISTINGS" = "لا توجد إعلانات";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "تم استقبال الدفع";
+"PURCHASE_CONTACT" = "شراء جهة الاتصال";
+"SEND_MESSAGE" = "إرسال رسالة";
+"NEW_MESSAGE" = "رسالة جديدة";
+
+// Meetings
+"MEETING_PROPOSED" = "تم الاقتراح بعقد اجتماع";
+"PROPOSE_MEETING" = "اقترح اجتماعًا";
+"MEETING_TIME" = "وقت الاجتماع";
+"MEETING_LOCATION" = "موقع الاجتماع";
+"ACCEPT_MEETING" = "قبول الاجتماع";
+"DECLINE_MEETING" = "رفض الاجتماع";
+
+// Profile
+"MY_PROFILE" = "ملفي الشخصي";
+"EDIT_PROFILE" = "تعديل الملف الشخصي";
+"SETTINGS" = "الإعدادات";
+"LANGUAGE" = "اللغة";
+"LOGOUT" = "تسجيل الخروج";
+"DELETE_ACCOUNT" = "حذف الحساب";
+"RATING" = "التقييم";
+"TOTAL_EXCHANGES" = "إجمالي التبادلات";
+
+// Dashboard
+"DASHBOARD" = "لوحة المعلومات";
+"PURCHASED_CONTACTS" = "جهات الاتصال المشتراة";
+"RECENT_EXCHANGES" = "التبادلات الأخيرة";
+"EXCHANGE_HISTORY" = "سجل التبادل";
+
+// Search
+"SEARCH_LISTINGS" = "البحث في الإعلانات";
+"BUYING_LOOKING_FOR" = "أنا أشتري (أبحث عن)";
+"SELLING_HAVE" = "أنا أبيع (لدي)";
+"FROM_CURRENCY" = "من العملة";
+"TO_CURRENCY" = "إلى العملة";

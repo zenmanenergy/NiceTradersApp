@@ -1,0 +1,77 @@
+/* Japanese Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "キャンセル";
+"SEND" = "送信";
+"BACK" = "戻る";
+"EDIT" = "編集";
+"DELETE" = "削除";
+"SAVE" = "保存";
+"LOADING" = "読み込み中...";
+"ERROR" = "エラー";
+"SUCCESS" = "成功";
+"SEARCH" = "検索";
+"FILTER" = "フィルター";
+"SORT" = "ソート";
+"NO_RESULTS" = "結果なし";
+"CONFIRMATION" = "よろしいですか？";
+
+// Authentication
+"SIGN_IN" = "サインイン";
+"SIGN_UP" = "サインアップ";
+"EMAIL" = "メール";
+"PASSWORD" = "パスワード";
+"CONFIRM_PASSWORD" = "パスワード確認";
+"FIRST_NAME" = "名";
+"LAST_NAME" = "姓";
+"FORGOT_PASSWORD" = "パスワードを忘れた?";
+"INVALID_EMAIL" = "無効なメールアドレス";
+"PASSWORD_MISMATCH" = "パスワードが一致しません";
+
+// Listings
+"CREATE_LISTING" = "リスティング作成";
+"EDIT_LISTING" = "リスティング編集";
+"MY_LISTINGS" = "私のリスティング";
+"LISTING_DETAILS" = "リスティング詳細";
+"AMOUNT" = "金額";
+"CURRENCY" = "通貨";
+"LOCATION" = "場所";
+"DESCRIPTION" = "説明";
+"NO_LISTINGS" = "リスティングはまだありません";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "支払いを受け取りました";
+"PURCHASE_CONTACT" = "連絡先を購入";
+"SEND_MESSAGE" = "メッセージを送信";
+"NEW_MESSAGE" = "新しいメッセージ";
+
+// Meetings
+"MEETING_PROPOSED" = "ミーティングが提案されました";
+"PROPOSE_MEETING" = "ミーティングを提案";
+"MEETING_TIME" = "ミーティング時間";
+"MEETING_LOCATION" = "ミーティング場所";
+"ACCEPT_MEETING" = "ミーティングを受け入れる";
+"DECLINE_MEETING" = "ミーティングを拒否";
+
+// Profile
+"MY_PROFILE" = "マイプロフィール";
+"EDIT_PROFILE" = "プロフィール編集";
+"SETTINGS" = "設定";
+"LANGUAGE" = "言語";
+"LOGOUT" = "ログアウト";
+"DELETE_ACCOUNT" = "アカウント削除";
+"RATING" = "評価";
+"TOTAL_EXCHANGES" = "合計交換数";
+
+// Dashboard
+"DASHBOARD" = "ダッシュボード";
+"PURCHASED_CONTACTS" = "購入した連絡先";
+"RECENT_EXCHANGES" = "最近の交換";
+"EXCHANGE_HISTORY" = "交換履歴";
+
+// Search
+"SEARCH_LISTINGS" = "リスティングを検索";
+"BUYING_LOOKING_FOR" = "購入中（探索中）";
+"SELLING_HAVE" = "販売中（持っている）";
+"FROM_CURRENCY" = "通貨から";
+"TO_CURRENCY" = "通貨へ";

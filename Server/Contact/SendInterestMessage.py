@@ -2,6 +2,11 @@ from _Lib import Database
 import json
 from datetime import datetime
 import uuid
+import sys
+import os
+
+# Add Admin module to path for NotificationService
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def send_interest_message(listing_id, session_id, message='', availability=[]):
     """Send interest message to a trader with availability preferences"""
@@ -118,6 +123,23 @@ def send_interest_message(listing_id, session_id, message='', availability=[]):
         
         # Commit the transaction
         connection.commit()
+        
+        # Send APN notification to listing owner
+        try:
+            from NotificationService import notification_service
+            owner_session = notification_service.get_user_last_session(listing_owner_id)
+            message_preview = message[:50] if message else "New interest in your listing"
+            notification_service.send_message_received_notification(
+                recipient_id=listing_owner_id,
+                sender_name=sender_name,
+                message_preview=message_preview,
+                listing_id=listing_id,
+                message_id=message_id,
+                session_id=owner_session
+            )
+        except Exception as apn_error:
+            # Log error but don't fail the transaction
+            print(f"[SendInterestMessage] Error sending APN notification: {apn_error}")
         
         response_data = {
             'success': True,

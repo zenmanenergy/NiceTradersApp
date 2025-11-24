@@ -1,0 +1,77 @@
+/* Hindi Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "रद्द करें";
+"SEND" = "भेजें";
+"BACK" = "वापस";
+"EDIT" = "संपादित करें";
+"DELETE" = "हटाएँ";
+"SAVE" = "बचाएं";
+"LOADING" = "लोड हो रहा है...";
+"ERROR" = "त्रुटि";
+"SUCCESS" = "सफलता";
+"SEARCH" = "खोज";
+"FILTER" = "फ़िल्टर";
+"SORT" = "छाँटना";
+"NO_RESULTS" = "कोई परिणाम नहीं";
+"CONFIRMATION" = "क्या आप सुनिश्चित हैं?";
+
+// Authentication
+"SIGN_IN" = "साइन इन करें";
+"SIGN_UP" = "साइन अप करें";
+"EMAIL" = "ईमेल";
+"PASSWORD" = "पासवर्ड";
+"CONFIRM_PASSWORD" = "पासवर्ड की पुष्टि करें";
+"FIRST_NAME" = "पहला नाम";
+"LAST_NAME" = "अंतिम नाम";
+"FORGOT_PASSWORD" = "पासवर्ड भूल गए?";
+"INVALID_EMAIL" = "अमान्य ईमेल पता";
+"PASSWORD_MISMATCH" = "पासवर्ड मेल नहीं खाते";
+
+// Listings
+"CREATE_LISTING" = "सूची बनाएँ";
+"EDIT_LISTING" = "सूची संपादित करें";
+"MY_LISTINGS" = "मेरी सूचियाँ";
+"LISTING_DETAILS" = "सूची विवरण";
+"AMOUNT" = "राशि";
+"CURRENCY" = "मुद्रा";
+"LOCATION" = "स्थान";
+"DESCRIPTION" = "विवरण";
+"NO_LISTINGS" = "कोई सूचियाँ नहीं";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "भुगतान प्राप्त";
+"PURCHASE_CONTACT" = "संपर्क खरीदें";
+"SEND_MESSAGE" = "संदेश भेजें";
+"NEW_MESSAGE" = "नया संदेश";
+
+// Meetings
+"MEETING_PROPOSED" = "बैठक का प्रस्ताव";
+"PROPOSE_MEETING" = "बैठक का प्रस्ताव दें";
+"MEETING_TIME" = "बैठक का समय";
+"MEETING_LOCATION" = "बैठक का स्थान";
+"ACCEPT_MEETING" = "बैठक स्वीकार करें";
+"DECLINE_MEETING" = "बैठक अस्वीकार करें";
+
+// Profile
+"MY_PROFILE" = "मेरा प्रोफ़ाइल";
+"EDIT_PROFILE" = "प्रोफ़ाइल संपादित करें";
+"SETTINGS" = "सेटिंग्स";
+"LANGUAGE" = "भाषा";
+"LOGOUT" = "लॉग आउट करें";
+"DELETE_ACCOUNT" = "खाता हटाएँ";
+"RATING" = "मूल्यांकन";
+"TOTAL_EXCHANGES" = "कुल एक्सचेंज";
+
+// Dashboard
+"DASHBOARD" = "डैशबोर्ड";
+"PURCHASED_CONTACTS" = "खरीदे गए संपर्क";
+"RECENT_EXCHANGES" = "हाल ही के एक्सचेंज";
+"EXCHANGE_HISTORY" = "एक्सचेंज इतिहास";
+
+// Search
+"SEARCH_LISTINGS" = "सूचियों की खोज करें";
+"BUYING_LOOKING_FOR" = "मैं खरीद रहा हूँ (ढूंढ रहा हूँ)";
+"SELLING_HAVE" = "मैं बेच रहा हूँ (मेरे पास है)";
+"FROM_CURRENCY" = "मुद्रा से";
+"TO_CURRENCY" = "मुद्रा को";

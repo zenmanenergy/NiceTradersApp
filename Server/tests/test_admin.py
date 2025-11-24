@@ -46,3 +46,25 @@ def test_get_listing_by_id_returns_listing(client, test_listing):
     payload = json.loads(response.data)
     assert payload['success'] is True
     assert payload['listing']['listing_id'] == test_listing['listing_id']
+
+
+def test_update_user_allows_basic_edits(client, test_user):
+    """The UpdateUser endpoint should persist edits to basic fields."""
+    response = client.get('/Admin/UpdateUser', query_string={
+        'userId': test_user['user_id'],
+        'FirstName': 'Updated',
+        'LastName': 'Admin',
+        'Phone': '555-0101',
+        'Location': 'Updated City',
+        'IsActive': '0'
+    })
+
+    assert response.status_code == 200
+    payload = json.loads(response.data)
+    assert payload['success'] is True
+    updated = payload['user']
+    assert updated['FirstName'] == 'Updated'
+    assert updated['LastName'] == 'Admin'
+    assert updated['Phone'] == '555-0101'
+    assert updated['Location'] == 'Updated City'
+    assert updated['IsActive'] == 0

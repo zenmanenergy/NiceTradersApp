@@ -2,6 +2,11 @@ from _Lib import Database
 import json
 import uuid
 from datetime import datetime, timedelta
+import sys
+import os
+
+# Add Admin module to path for NotificationService
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def propose_meeting(session_id, listing_id, proposed_location, proposed_time, message=None):
     """Propose a meeting time and location for an exchange"""
@@ -125,6 +130,31 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, me
         ))
         
         connection.commit()
+        
+        # Get proposer name for notification
+        cursor.execute("SELECT FirstName, LastName FROM users WHERE UserId = %s", (proposer_id,))
+        proposer = cursor.fetchone()
+        proposer_name = f"{proposer['FirstName']} {proposer['LastName']}" if proposer else "A user"
+        
+        # Format the proposed time for the notification
+        time_str = proposed_datetime.strftime('%b %d at %I:%M %p')
+        
+        # Send APN notification to recipient
+        try:
+            from NotificationService import notification_service
+            recipient_session = notification_service.get_user_last_session(recipient_id)
+            notification_service.send_meeting_proposal_notification(
+                recipient_id=recipient_id,
+                proposer_name=proposer_name,
+                proposed_time=time_str,
+                listing_id=listing_id,
+                proposal_id=proposal_id,
+                session_id=recipient_session
+            )
+        except Exception as apn_error:
+            # Log error but don't fail the transaction
+            print(f"[ProposeMeeting] Error sending APN notification: {apn_error}")
+        
         connection.close()
         
         print(f"[ProposeMeeting] Meeting proposal created successfully: {proposal_id}")

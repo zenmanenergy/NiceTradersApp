@@ -1,0 +1,77 @@
+/* Spanish Localizable Strings */
+
+// Common buttons and actions
+"CANCEL" = "Cancelar";
+"SEND" = "Enviar";
+"BACK" = "Atrás";
+"EDIT" = "Editar";
+"DELETE" = "Eliminar";
+"SAVE" = "Guardar";
+"LOADING" = "Cargando...";
+"ERROR" = "Error";
+"SUCCESS" = "Éxito";
+"SEARCH" = "Buscar";
+"FILTER" = "Filtro";
+"SORT" = "Ordenar";
+"NO_RESULTS" = "Sin resultados";
+"CONFIRMATION" = "¿Estás seguro?";
+
+// Authentication
+"SIGN_IN" = "Iniciar Sesión";
+"SIGN_UP" = "Registrarse";
+"EMAIL" = "Correo Electrónico";
+"PASSWORD" = "Contraseña";
+"CONFIRM_PASSWORD" = "Confirmar Contraseña";
+"FIRST_NAME" = "Nombre";
+"LAST_NAME" = "Apellido";
+"FORGOT_PASSWORD" = "¿Olvidaste tu contraseña?";
+"INVALID_EMAIL" = "Dirección de correo inválida";
+"PASSWORD_MISMATCH" = "Las contraseñas no coinciden";
+
+// Listings
+"CREATE_LISTING" = "Crear Anuncio";
+"EDIT_LISTING" = "Editar Anuncio";
+"MY_LISTINGS" = "Mis Anuncios";
+"LISTING_DETAILS" = "Detalles del Anuncio";
+"AMOUNT" = "Cantidad";
+"CURRENCY" = "Moneda";
+"LOCATION" = "Ubicación";
+"DESCRIPTION" = "Descripción";
+"NO_LISTINGS" = "Sin anuncios aún";
+
+// Contact and Payment
+"PAYMENT_RECEIVED" = "Pago Recibido";
+"PURCHASE_CONTACT" = "Comprar Contacto";
+"SEND_MESSAGE" = "Enviar Mensaje";
+"NEW_MESSAGE" = "Nuevo Mensaje";
+
+// Meetings
+"MEETING_PROPOSED" = "Reunión Propuesta";
+"PROPOSE_MEETING" = "Proponer Reunión";
+"MEETING_TIME" = "Hora de la Reunión";
+"MEETING_LOCATION" = "Lugar de la Reunión";
+"ACCEPT_MEETING" = "Aceptar Reunión";
+"DECLINE_MEETING" = "Rechazar Reunión";
+
+// Profile
+"MY_PROFILE" = "Mi Perfil";
+"EDIT_PROFILE" = "Editar Perfil";
+"SETTINGS" = "Configuración";
+"LANGUAGE" = "Idioma";
+"LOGOUT" = "Cerrar Sesión";
+"DELETE_ACCOUNT" = "Eliminar Cuenta";
+"RATING" = "Calificación";
+"TOTAL_EXCHANGES" = "Total de Intercambios";
+
+// Dashboard
+"DASHBOARD" = "Panel de Control";
+"PURCHASED_CONTACTS" = "Contactos Comprados";
+"RECENT_EXCHANGES" = "Intercambios Recientes";
+"EXCHANGE_HISTORY" = "Historial de Intercambios";
+
+// Search
+"SEARCH_LISTINGS" = "Buscar Anuncios";
+"BUYING_LOOKING_FOR" = "Estoy comprando (buscando)";
+"SELLING_HAVE" = "Estoy vendiendo (tengo)";
+"FROM_CURRENCY" = "De Moneda";
+"TO_CURRENCY" = "A Moneda";
