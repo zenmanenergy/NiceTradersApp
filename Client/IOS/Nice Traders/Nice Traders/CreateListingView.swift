@@ -21,7 +21,8 @@ struct Currency: Identifiable, Hashable {
 }
 
 struct CreateListingView: View {
-    @Binding var showCreateListing: Bool
+    @Binding var navigateToCreateListing: Bool
+    @Environment(\.dismiss) var dismiss
     @StateObject private var locationManager = LocationManager()
     
     // Form data
@@ -46,6 +47,8 @@ struct CreateListingView: View {
     @State private var fieldErrors: [String: String] = [:]
     @State private var navigateToDashboard = false
     @State private var locationUpdateTimer: Timer?
+    @State private var navigateToSearch = false
+    @State private var navigateToMessages = false
     
     let totalSteps = 3
     
@@ -250,9 +253,18 @@ struct CreateListingView: View {
                 
                 // Footer actions
                 footerView
+            
+            // Bottom Navigation
+            BottomNavigation(activeTab: "create")
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
+        .navigationDestination(isPresented: $navigateToSearch) {
+            SearchView(navigateToSearch: $navigateToSearch)
+        }
+        .navigationDestination(isPresented: $navigateToMessages) {
+            MessagesView(navigateToMessages: $navigateToMessages)
+        }
         .onAppear {
             ExchangeRatesAPI.shared.refreshRatesIfNeeded()
             
@@ -276,24 +288,11 @@ struct CreateListingView: View {
     // MARK: - Header View
     var headerView: some View {
         HStack {
-            Button(action: goBack) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(8)
-            }
-            
-            Spacer()
-            
             Text("Create Listing")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
             Spacer()
-            
-            Color.clear.frame(width: 40, height: 40)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
@@ -1049,7 +1048,7 @@ struct CreateListingView: View {
         if currentStep > 1 {
             currentStep -= 1
         } else {
-            showCreateListing = false
+            dismiss()
         }
     }
     
@@ -1181,7 +1180,7 @@ struct CreateListingView: View {
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
                     if let success = json["success"] as? Bool, success {
                         // Dismiss back to dashboard
-                        showCreateListing = false
+                        dismiss()
                     } else {
                         errorMessage = json["error"] as? String ?? "Failed to create listing"
                         showError = true
@@ -1198,5 +1197,5 @@ struct CreateListingView: View {
 // Color extension is in SharedModels.swift
 
 #Preview {
-    CreateListingView(showCreateListing: .constant(true))
+    CreateListingView(navigateToCreateListing: .constant(true))
 }

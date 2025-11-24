@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct SearchFilters: Codable {
     var haveCurrency: String
@@ -34,7 +35,7 @@ struct PaginationInfo: Codable {
 }
 
 struct SearchView: View {
-    @Binding var showSearch: Bool
+    @Binding var navigateToSearch: Bool
     @StateObject private var locationManager = LocationManager()
     @State private var availableCurrencies: [String] = []
     @State private var availableLocations: [String] = []
@@ -52,8 +53,8 @@ struct SearchView: View {
     @State private var showCurrencyDropdown = false
     @State private var showMapView = false
     @State private var selectedListing: SearchListing?
-    @State private var showCreateListing = false
-    @State private var showMessages = false
+    @State private var navigateToCreateListing = false
+    @State private var navigateToMessages = false
     
     var filteredCurrencies: [String] {
         if currencySearchQuery.isEmpty {
@@ -92,38 +93,35 @@ struct SearchView: View {
             }
             
             // Bottom Navigation
-            BottomNavigationBar(
-                showSearch: $showSearch,
-                showCreateListing: $showCreateListing,
-                showMessages: $showMessages,
-                activeTab: "search"
-            )
+            BottomNavigation(activeTab: "search")
         }
         .navigationBarHidden(true)
+        .navigationDestination(isPresented: $navigateToCreateListing) {
+            CreateListingView(navigateToCreateListing: $navigateToCreateListing)
+        }
+        .navigationDestination(isPresented: $navigateToMessages) {
+            MessagesView(navigateToMessages: $navigateToMessages)
+        }
         .onAppear {
             loadInitialData()
             locationManager.requestLocation()
+            
+            // Give location manager a moment to update
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                if let loc = locationManager.location {
+                    print("[SearchView] Location ready: \(loc.coordinate.latitude), \(loc.coordinate.longitude)")
+                } else {
+                    print("[SearchView] Location not available yet")
+                }
+            }
         }
     }
     
     // MARK: - Header View
     var headerView: some View {
         HStack {
-            Button(action: {
-                showSearch = false
-            }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(8)
-            }
-            
-            Spacer()
-            
             Text("Search Currency")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
             Spacer()
@@ -414,7 +412,7 @@ struct SearchView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Text("\(listing.user.firstName) \(listing.user.lastName)")
+                        Text(listing.user.firstName)
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(Color(hex: "2d3748"))
                         
@@ -507,7 +505,7 @@ struct SearchView: View {
                 
                 Spacer()
                 
-                NavigationLink(destination: Text("Contact Trader")) {
+                NavigationLink(destination: ContactPurchaseView(listingId: listing.listingId)) {
                     Text("Contact Trader")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
@@ -565,18 +563,34 @@ struct SearchView: View {
             URLQueryItem(name: "offset", value: String(pagination.offset))
         ]
         
-        // Add currency filters (AcceptCurrency is what they have, Currency is what they want)
+        // Add currency filters - Currency is what they have, AcceptCurrency is what they want
+        // This finds listings that have what we want and accept what we have
         if !searchFilters.haveCurrency.isEmpty {
-            queryItems.append(URLQueryItem(name: "AcceptCurrency", value: searchFilters.haveCurrency))
-        }
-        if !searchFilters.wantCurrency.isEmpty {
             queryItems.append(URLQueryItem(name: "Currency", value: searchFilters.wantCurrency))
         }
+        if !searchFilters.wantCurrency.isEmpty {
+            queryItems.append(URLQueryItem(name: "AcceptCurrency", value: searchFilters.haveCurrency))
+        }
+        
+        // Add distance filter with user's location
         if !searchFilters.maxDistance.isEmpty {
             queryItems.append(URLQueryItem(name: "MaxDistance", value: searchFilters.maxDistance))
+            
+            // Add user's current location for distance calculation
+            if let location = locationManager.location {
+                let lat = location.coordinate.latitude
+                let lng = location.coordinate.longitude
+                print("[SearchView] Using location: \(lat), \(lng)")
+                queryItems.append(URLQueryItem(name: "UserLatitude", value: String(lat)))
+                queryItems.append(URLQueryItem(name: "UserLongitude", value: String(lng)))
+            } else {
+                print("[SearchView] WARNING: No location available for distance search")
+            }
         }
         
         components.queryItems = queryItems
+        
+        print("[SearchView] Search URL: \(components.url?.absoluteString ?? "invalid")")
         
         guard let url = components.url else {
             DispatchQueue.main.async {
@@ -615,16 +629,22 @@ struct SearchView: View {
                 isSearching = false
                 
                 if let listingsData = json["listings"] as? [[String: Any]] {
+                    print("[Search] Found \(listingsData.count) listings in response")
                     let decoder = JSONDecoder()
                     let listings = listingsData.compactMap { dict -> SearchListing? in
                         guard let jsonData = try? JSONSerialization.data(withJSONObject: dict),
-                              let listing = try? JSONSerialization.decode(SearchListing.self, from: jsonData) else {
+                              let listing = try? decoder.decode(SearchListing.self, from: jsonData) else {
+                            print("[Search] Failed to decode listing: \(dict)")
                             return nil
                         }
                         return listing
                     }
                     
+                    print("[Search] Successfully decoded \(listings.count) listings")
                     searchResults = listings
+                    hasSearched = true
+                } else {
+                    print("[Search] No listings array found in response")
                 }
                 
                 if let paginationData = json["pagination"] as? [String: Any] {
@@ -691,5 +711,5 @@ struct SearchView: View {
 }
 
 #Preview {
-    SearchView(showSearch: .constant(true))
+    SearchView(navigateToSearch: .constant(true))
 }

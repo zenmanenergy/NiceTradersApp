@@ -14,7 +14,7 @@ struct DashboardContactData: Codable {
     let purchased_at: String?
     let locked_amount: Double?
     let exchange_rate: Double?
-    let listing_id: Int
+    let listing_id: String
     
     struct ContactListing: Codable {
         let currency: String
@@ -34,15 +34,15 @@ struct DashboardContactData: Codable {
 }
 
 struct DashboardContactMessage: Identifiable, Codable {
-    let id: Int
+    let id: String
     let message_text: String
     let sent_at: String
     let is_from_user: Bool
 }
 
 struct DashboardMeetingProposal: Identifiable, Codable {
-    let id: Int
-    let proposal_id: Int
+    let id: String
+    let proposal_id: String
     let proposed_location: String
     let proposed_time: String
     let message: String?
@@ -847,13 +847,13 @@ struct ContactView: View {
         }.resume()
     }
     
-    func respondToProposal(_ proposalId: Int, response: String) {
+    func respondToProposal(_ proposalId: String, response: String) {
         guard let sessionId = SessionManager.shared.sessionId else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
-            URLQueryItem(name: "proposalId", value: String(proposalId)),
+            URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: response)
         ]
         
@@ -916,6 +916,6 @@ struct ContactView: View {
         purchased_at: "2025-11-15",
         locked_amount: 425,
         exchange_rate: 0.85,
-        listing_id: 1
+        listing_id: "LST-preview-123"
     ))
 }

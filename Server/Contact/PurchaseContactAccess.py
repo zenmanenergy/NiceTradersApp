@@ -107,7 +107,7 @@ def purchase_contact_access(listing_id, session_id, payment_method='default'):
         # Simulate PayPal payment processing (replace with real PayPal API later)
         amount = 2.00  # Fixed $2 fee for contact access
         print(f"[DEBUG] Processing payment for amount: ${amount}")
-        payment_result = simulate_payment_processing(amount)
+        payment_result = simulate_payment_processing(payment_method)
         print(f"[DEBUG] Payment result: {payment_result}")
         
         if not payment_result['success']:

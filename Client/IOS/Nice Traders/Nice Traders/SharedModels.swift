@@ -66,27 +66,47 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
+        
+        // Start location updates immediately
+        manager.requestWhenInUseAuthorization()
+        #if targetEnvironment(simulator)
+        // In simulator, start continuous updates to pick up custom locations
+        manager.startUpdatingLocation()
+        print("[LocationManager] Started continuous location updates (simulator)")
+        #endif
     }
     
     func requestLocation() {
-        manager.requestWhenInUseAuthorization()
+        #if targetEnvironment(simulator)
+        // Already updating continuously in simulator
+        #else
         manager.requestLocation()
+        #endif
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.first
+        print("[LocationManager] Location updated: \(location?.coordinate.latitude ?? 0), \(location?.coordinate.longitude ?? 0)")
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location error: \(error.localizedDescription)")
+        print("[LocationManager] Location error: \(error.localizedDescription)")
+        
+        // Fallback to default location only on error and if no location is set
+        #if targetEnvironment(simulator)
+        if location == nil {
+            self.location = CLLocation(latitude: 37.7749, longitude: -122.4194)
+            print("[LocationManager] Using fallback simulated location: 37.7749, -122.4194")
+        }
+        #endif
     }
 }
 
 // MARK: - Search Models
 
 struct SearchListing: Identifiable, Codable, Equatable {
-    let id: Int
-    let listingId: Int
+    let id: String
+    let listingId: String
     let currency: String
     let amount: Double
     let acceptCurrency: String
@@ -126,7 +146,7 @@ struct SearchListing: Identifiable, Codable, Equatable {
     
     struct ListingUser: Codable, Equatable {
         let firstName: String
-        let lastName: String
+        let lastName: String?
         let rating: Double?
         let trades: Int?
         let verified: Bool?

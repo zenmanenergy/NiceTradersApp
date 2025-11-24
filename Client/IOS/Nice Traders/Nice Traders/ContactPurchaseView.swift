@@ -193,7 +193,7 @@ struct ContactPurchaseView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        Text(listing.user.name)
+                        Text(hasActiveContact ? "\(listing.user.firstName) \(listing.user.lastName ?? "")" : listing.user.firstName)
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: "2d3748"))
@@ -260,32 +260,34 @@ struct ContactPurchaseView: View {
     // MARK: - Contact Status
     
     private func contactStatusView(_ listing: ListingDetails) -> some View {
-        HStack(spacing: 12) {
-            Text(hasActiveContact ? "✅" : "💰")
+        let statusIcon = hasActiveContact ? "✅" : "💰"
+        let statusTitle = hasActiveContact ? "Contact Access Active" : "Contact Access Required"
+        let statusMessage = hasActiveContact 
+            ? "You can communicate directly with \(listing.user.firstName) \(listing.user.lastName ?? "") and coordinate your exchange."
+            : "Pay $2.00 to contact \(listing.user.firstName) and coordinate your exchange."
+        let backgroundColor = hasActiveContact ? Color(hex: "f0fff4") : Color(hex: "fffaf0")
+        let borderColor = hasActiveContact ? Color(hex: "48bb78") : Color(hex: "ed8936")
+        
+        return HStack(spacing: 12) {
+            Text(statusIcon)
                 .font(.title2)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(hasActiveContact ? "Contact Access Active" : "Contact Access Required")
+                Text(statusTitle)
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Group {
-                    if hasActiveContact {
-                        Text("You can communicate directly with \(listing.user.name) and coordinate your exchange.")
-                    } else {
-                        Text("Pay $2.00 to contact \(listing.user.name) and coordinate your exchange.")
-                    }
-                }
-                .font(.subheadline)
-                .foregroundColor(Color(hex: "718096"))
-                .fixedSize(horizontal: false, vertical: true)
+                Text(statusMessage)
+                    .font(.subheadline)
+                    .foregroundColor(Color(hex: "718096"))
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding()
-        .background(hasActiveContact ? Color(hex: "f0fff4") : Color(hex: "fffaf0"))
+        .background(backgroundColor)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(hasActiveContact ? Color(hex: "48bb78") : Color(hex: "ed8936"), lineWidth: 2)
+                .stroke(borderColor, lineWidth: 2)
         )
         .cornerRadius(12)
     }
@@ -663,9 +665,13 @@ struct ContactPurchaseView: View {
     }
     
     private func purchaseContact() {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("[ContactPurchase] No session ID available")
+            return
+        }
         
         isProcessingPayment = true
+        print("[ContactPurchase] Starting payment process for listing: \(listingId)")
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/PurchaseContactAccess")!
         components.queryItems = [
@@ -675,33 +681,59 @@ struct ContactPurchaseView: View {
         ]
         
         guard let url = components.url else {
+            print("[ContactPurchase] Invalid URL")
             DispatchQueue.main.async {
                 self.isProcessingPayment = false
             }
             return
         }
         
+        print("[ContactPurchase] Request URL: \(url.absoluteString)")
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
+            if let error = error {
+                print("[ContactPurchase] Network error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
-                    // Show error alert
+                    // TODO: Show error alert
                 }
                 return
             }
             
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let success = json["success"] as? Bool, success {
-                
+            guard let data = data else {
+                print("[ContactPurchase] No data received")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
-                    self.hasActiveContact = true
-                    // Show success message
+                    // TODO: Show error alert
+                }
+                return
+            }
+            
+            print("[ContactPurchase] Response data: \(String(data: data, encoding: .utf8) ?? "invalid")")
+            
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                print("[ContactPurchase] Parsed JSON: \(json)")
+                
+                if let success = json["success"] as? Bool, success {
+                    print("[ContactPurchase] Payment successful!")
+                    DispatchQueue.main.async {
+                        self.isProcessingPayment = false
+                        self.hasActiveContact = true
+                        // TODO: Show success message
+                    }
+                } else {
+                    let errorMsg = json["error"] as? String ?? "Payment failed"
+                    print("[ContactPurchase] Payment failed: \(errorMsg)")
+                    DispatchQueue.main.async {
+                        self.isProcessingPayment = false
+                        // TODO: Show error: errorMsg
+                    }
                 }
             } else {
+                print("[ContactPurchase] Failed to parse JSON response")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
-                    // Show error
+                    // TODO: Show error
                 }
             }
         }.resume()
@@ -751,7 +783,8 @@ struct ContactPurchaseView: View {
             locationRadius: data["location_radius"] as? Int ?? 5,
             meetingPreference: data["meeting_preference"] as? String ?? "public",
             user: TraderUserInfo(
-                name: userData["name"] as? String ?? "",
+                firstName: userData["first_name"] as? String ?? "",
+                lastName: userData["last_name"] as? String,
                 verified: userData["verified"] as? Bool ?? false,
                 rating: userData["rating"] as? Double ?? 0,
                 trades: userData["trades"] as? Int ?? 0,
@@ -805,7 +838,8 @@ struct ListingDetails {
 }
 
 struct TraderUserInfo {
-    let name: String
+    let firstName: String
+    let lastName: String?
     let verified: Bool
     let rating: Double
     let trades: Int

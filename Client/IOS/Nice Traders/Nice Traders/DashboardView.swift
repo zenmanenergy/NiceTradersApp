@@ -13,10 +13,10 @@ struct DashboardView: View {
     @State private var allActiveExchanges: [ActiveExchange] = []
     @State private var isLoading = true
     @State private var error: String?
-    @State private var showCreateListing = false
-    @State private var showSearch = false
-    @State private var showProfile = false
-    @State private var showMessages = false
+    @State private var navigateToCreateListing = false
+    @State private var navigateToSearch = false
+    @State private var navigateToProfile = false
+    @State private var navigateToMessages = false
     @State private var selectedTab = 0
     
     var body: some View {
@@ -32,38 +32,52 @@ struct DashboardView: View {
                     user: user,
                     myListings: myListings,
                     allActiveExchanges: allActiveExchanges,
-                    showCreateListing: $showCreateListing,
-                    showSearch: $showSearch,
-                    showProfile: $showProfile,
-                    showMessages: $showMessages,
+                    navigateToCreateListing: $navigateToCreateListing,
+                    navigateToSearch: $navigateToSearch,
+                    navigateToProfile: $navigateToProfile,
+                    navigateToMessages: $navigateToMessages,
                     onRefresh: loadDashboardData
                 )
             }
         }
         .navigationBarHidden(true)
-        .sheet(isPresented: $showCreateListing) {
-            NavigationView {
-                CreateListingView(showCreateListing: $showCreateListing)
-            }
+        .navigationDestination(isPresented: $navigateToCreateListing) {
+            CreateListingView(navigateToCreateListing: $navigateToCreateListing)
         }
-        .sheet(isPresented: $showProfile) {
-            NavigationView {
-                ProfileView()
-            }
+        .navigationDestination(isPresented: $navigateToProfile) {
+            ProfileView()
         }
-        .sheet(isPresented: $showSearch) {
-            NavigationView {
-                SearchView(showSearch: $showSearch)
-            }
+        .navigationDestination(isPresented: $navigateToSearch) {
+            SearchView(navigateToSearch: $navigateToSearch)
         }
-        .sheet(isPresented: $showMessages) {
-            NavigationView {
-                MessagesView(showMessages: $showMessages)
-            }
+        .navigationDestination(isPresented: $navigateToMessages) {
+            MessagesView(navigateToMessages: $navigateToMessages)
         }
         .onAppear {
             verifySessionAndLoadData()
+            setupNavigationListeners()
         }
+        .onDisappear {
+            removeNavigationListeners()
+        }
+    }
+    
+    func setupNavigationListeners() {
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToSearch"), object: nil, queue: .main) { _ in
+            navigateToSearch = true
+        }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToCreateListing"), object: nil, queue: .main) { _ in
+            navigateToCreateListing = true
+        }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToMessages"), object: nil, queue: .main) { _ in
+            navigateToMessages = true
+        }
+    }
+    
+    func removeNavigationListeners() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToSearch"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToCreateListing"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToMessages"), object: nil)
     }
     
     func verifySessionAndLoadData() {
@@ -148,11 +162,21 @@ struct DashboardView: View {
                         
                         guard let listingId = listingDict["listingId"] as? String,
                               let currency = listingDict["currency"] as? String,
-                              let amount = listingDict["amount"] as? Double,
                               let acceptCurrency = listingDict["acceptCurrency"] as? String,
                               let location = listingDict["location"] as? String,
                               let status = listingDict["status"] as? String else {
-                            print("[Dashboard] Failed to parse listing - listingId type: \(type(of: listingDict["listingId"]))")
+                            print("[Dashboard] Failed to parse listing - missing required fields")
+                            return nil
+                        }
+                        
+                        // Handle amount as either Int or Double
+                        let amount: Double
+                        if let amountInt = listingDict["amount"] as? Int {
+                            amount = Double(amountInt)
+                        } else if let amountDouble = listingDict["amount"] as? Double {
+                            amount = amountDouble
+                        } else {
+                            print("[Dashboard] Failed to parse amount: \(String(describing: listingDict["amount"]))")
                             return nil
                         }
                         
@@ -165,8 +189,8 @@ struct DashboardView: View {
                             location: location,
                             radius: 5,
                             status: status,
-                            createdDate: "",
-                            expiresDate: "",
+                            createdDate: listingDict["createdAt"] as? String ?? "",
+                            expiresDate: listingDict["availableUntil"] as? String ?? "",
                             viewCount: 0,
                             contactCount: 0
                         )
@@ -303,24 +327,24 @@ struct MainDashboardView: View {
     let user: DashboardUserInfo
     let myListings: [Listing]
     let allActiveExchanges: [ActiveExchange]
-    @Binding var showCreateListing: Bool
-    @Binding var showSearch: Bool
-    @Binding var showProfile: Bool
-    @Binding var showMessages: Bool
+    @Binding var navigateToCreateListing: Bool
+    @Binding var navigateToSearch: Bool
+    @Binding var navigateToProfile: Bool
+    @Binding var navigateToMessages: Bool
     var onRefresh: (() -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            DashboardHeader(user: user, showProfile: $showProfile, showMessages: $showMessages)
+            DashboardHeader(user: user, navigateToProfile: $navigateToProfile, navigateToMessages: $navigateToMessages)
             
             ScrollView {
                 VStack(spacing: 24) {
                     // Quick Actions
                     QuickActionsSection(
-                        showCreateListing: $showCreateListing,
-                        showSearch: $showSearch,
-                        showMessages: $showMessages
+                        navigateToCreateListing: $navigateToCreateListing,
+                        navigateToSearch: $navigateToSearch,
+                        navigateToMessages: $navigateToMessages
                     )
                     .padding(.horizontal)
                     .padding(.top, 24)
@@ -330,7 +354,7 @@ struct MainDashboardView: View {
                         .padding(.horizontal)
                     
                     // My Listings
-                    MyListingsSection(listings: myListings, showCreateListing: $showCreateListing, onRefresh: onRefresh)
+                    MyListingsSection(listings: myListings, navigateToCreateListing: $navigateToCreateListing, onRefresh: onRefresh)
                         .padding(.horizontal)
                     
                     Spacer(minLength: 80)
@@ -341,12 +365,7 @@ struct MainDashboardView: View {
             }
             
             // Bottom Navigation
-            BottomNavigationBar(
-                showSearch: $showSearch,
-                showCreateListing: $showCreateListing,
-                showMessages: $showMessages,
-                activeTab: "home"
-            )
+            BottomNavigation(activeTab: "home")
         }
         .background(Color(red: 0.97, green: 0.98, blue: 0.99))
     }
@@ -354,8 +373,8 @@ struct MainDashboardView: View {
 
 struct DashboardHeader: View {
     let user: DashboardUserInfo
-    @Binding var showProfile: Bool
-    @Binding var showMessages: Bool
+    @Binding var navigateToProfile: Bool
+    @Binding var navigateToMessages: Bool
     
     var body: some View {
         HStack {
@@ -390,7 +409,7 @@ struct DashboardHeader: View {
             
             Spacer()
             
-            Button(action: { showProfile = true }) {
+            Button(action: { navigateToProfile = true }) {
                 Image(systemName: "person.circle.fill")
                     .font(.system(size: 24))
                     .foregroundColor(.white.opacity(0.9))
@@ -412,9 +431,9 @@ struct DashboardHeader: View {
 }
 
 struct QuickActionsSection: View {
-    @Binding var showCreateListing: Bool
-    @Binding var showSearch: Bool
-    @Binding var showMessages: Bool
+    @Binding var navigateToCreateListing: Bool
+    @Binding var navigateToSearch: Bool
+    @Binding var navigateToMessages: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -427,19 +446,19 @@ struct QuickActionsSection: View {
                     icon: "💰",
                     text: "List Currency",
                     isPrimary: true,
-                    action: { showCreateListing = true }
+                    action: { navigateToCreateListing = true }
                 )
                 
                 QuickActionButton(
                     icon: "🔍",
                     text: "Search",
-                    action: { showSearch = true }
+                    action: { navigateToSearch = true }
                 )
                 
                 QuickActionButton(
                     icon: "💬",
                     text: "Messages",
-                    action: { showMessages = true }
+                    action: { navigateToMessages = true }
                 )
             }
         }
@@ -607,7 +626,7 @@ struct ActiveExchangeCard: View {
 
 struct MyListingsSection: View {
     let listings: [Listing]
-    @Binding var showCreateListing: Bool
+    @Binding var navigateToCreateListing: Bool
     var onRefresh: (() -> Void)?
     
     var body: some View {
@@ -617,7 +636,7 @@ struct MyListingsSection: View {
                 .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
             
             if listings.isEmpty {
-                EmptyListingsView(showCreateListing: $showCreateListing)
+                EmptyListingsView(navigateToCreateListing: $navigateToCreateListing)
             } else {
                 ForEach(listings) { listing in
                     ListingCard(listing: listing, onDelete: {
@@ -630,7 +649,7 @@ struct MyListingsSection: View {
 }
 
 struct EmptyListingsView: View {
-    @Binding var showCreateListing: Bool
+    @Binding var navigateToCreateListing: Bool
     
     var body: some View {
         VStack(spacing: 16) {
@@ -642,7 +661,7 @@ struct EmptyListingsView: View {
                 .foregroundColor(.gray)
             
             Button("Create Your First Listing") {
-                showCreateListing = true
+                navigateToCreateListing = true
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
@@ -745,61 +764,6 @@ struct ListingCard: View {
     }
 }
 
-struct BottomNavigation: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var showSearch: Bool
-    @Binding var showCreateListing: Bool
-    @Binding var showMessages: Bool
-    
-    var body: some View {
-        HStack {
-            NavItem(icon: "house.fill", label: "Home", isActive: true, action: {})
-            NavItem(icon: "magnifyingglass", label: "Search", action: { showSearch = true })
-            NavItem(icon: "plus.circle.fill", label: "List", action: { showCreateListing = true })
-            NavItem(icon: "message.fill", label: "Messages", action: { showMessages = true })
-            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "Logout", action: logout)
-        }
-        .padding(.vertical, 12)
-        .background(Color.white)
-        .overlay(
-            Rectangle()
-                .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
-                .frame(height: 1),
-            alignment: .top
-        )
-    }
-    
-    func logout() {
-        UserDefaults.standard.removeObject(forKey: "SessionId")
-        UserDefaults.standard.removeObject(forKey: "UserType")
-        
-        // Post notification to reset navigation
-        NotificationCenter.default.post(name: NSNotification.Name("LogoutUser"), object: nil)
-        
-        dismiss()
-    }
-}
-
-struct NavItem: View {
-    let icon: String
-    let label: String
-    var isActive: Bool = false
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                Text(label)
-                    .font(.system(size: 12))
-            }
-            .foregroundColor(isActive ? Color(red: 0.4, green: 0.49, blue: 0.92) : Color.gray)
-            .frame(maxWidth: .infinity)
-        }
-    }
-}
-
 // MARK: - Data Models
 
 struct DashboardUserInfo {
@@ -846,54 +810,7 @@ struct ActiveExchange: Identifiable {
     }
 }
 
-// MARK: - Bottom Navigation (Reusable Component)
-struct BottomNavigationBar: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var showSearch: Bool
-    @Binding var showCreateListing: Bool
-    @Binding var showMessages: Bool
-    var activeTab: String = "home" // "home", "search", "messages"
-    
-    var body: some View {
-        HStack {
-            NavItem(icon: "house.fill", label: "Home", isActive: activeTab == "home", action: {
-                if activeTab != "home" {
-                    dismiss()
-                }
-            })
-            NavItem(icon: "magnifyingglass", label: "Search", isActive: activeTab == "search", action: {
-                if activeTab != "search" {
-                    showSearch = true
-                }
-            })
-            NavItem(icon: "plus.circle.fill", label: "List", action: { showCreateListing = true })
-            NavItem(icon: "message.fill", label: "Messages", isActive: activeTab == "messages", action: {
-                if activeTab != "messages" {
-                    showMessages = true
-                }
-            })
-            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "Logout", action: logout)
-        }
-        .padding(.vertical, 12)
-        .background(Color.white)
-        .overlay(
-            Rectangle()
-                .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
-                .frame(height: 1),
-            alignment: .top
-        )
-    }
-    
-    func logout() {
-        UserDefaults.standard.removeObject(forKey: "SessionId")
-        UserDefaults.standard.removeObject(forKey: "UserType")
-        
-        // Post notification to reset navigation
-        NotificationCenter.default.post(name: NSNotification.Name("LogoutUser"), object: nil)
-        
-        dismiss()
-    }
-}
+// MARK: - Bottom Navigation is in BottomNavigation.swift
 
 #Preview {
     DashboardView()

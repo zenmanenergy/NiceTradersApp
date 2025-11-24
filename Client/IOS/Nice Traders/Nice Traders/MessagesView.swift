@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct PurchasedContact: Identifiable, Codable, Hashable {
-    let id: Int
-    let listingId: Int
+    let id: String
+    let listingId: String
     let purchasedAt: String
     let currency: String
     let amount: Double
@@ -17,7 +17,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
     let location: String?
     let sellerFirstName: String
     let sellerLastName: String
-    let sellerUserId: Int
+    let sellerUserId: String
     let messageCount: Int
     let lastMessage: String?
     let lastMessageTime: String?
@@ -40,137 +40,110 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
 }
 
 struct MessagesView: View {
-    @Binding var showMessages: Bool
+    @Binding var navigateToMessages: Bool
     @State private var purchasedContacts: [PurchasedContact] = []
     @State private var isLoading = true
     @State private var error: String?
     @State private var selectedContact: PurchasedContact?
-    @State private var showSearch = false
-    @State private var showCreateListing = false
+    @State private var navigateToSearch = false
+    @State private var navigateToCreateListing = false
     
     var body: some View {
-        ZStack {
-            Color(hex: "f7fafc")
-                .ignoresSafeArea()
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text("Messages")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(Color(hex: "2d3748"))
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
+            .padding(.bottom, 8)
+            .background(Color.white)
             
-            VStack(spacing: 0) {
-                // Custom header with back button
-                HStack {
-                    Button(action: {
-                        showMessages = false
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Back")
-                                .font(.system(size: 16))
-                        }
-                        .foregroundColor(Color(hex: "667eea"))
+            if isLoading {
+                Spacer()
+                ProgressView()
+                    .scaleEffect(1.5)
+                Text("Loading messages...")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color(hex: "718096"))
+                    .padding(.top)
+                Spacer()
+            } else if let error = error {
+                Spacer()
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 48))
+                        .foregroundColor(Color(hex: "f56565"))
+                    Text(error)
+                        .font(.system(size: 16))
+                        .foregroundColor(Color(hex: "718096"))
+                        .multilineTextAlignment(.center)
+                    Button(action: loadPurchasedContacts) {
+                        Text("Try Again")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(Color(hex: "667eea"))
+                            .cornerRadius(8)
                     }
-                    
-                    Spacer()
-                    
-                    Text("Messages")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(Color(hex: "2d3748"))
-                    
-                    Spacer()
-                    
-                    // Invisible button for spacing
-                    Button(action: {}) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Back")
-                                .font(.system(size: 16))
-                        }
-                    }
-                    .opacity(0)
-                    .disabled(true)
                 }
                 .padding()
-                .background(Color.white)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
-                
-                if isLoading {
-                    Spacer()
-                    ProgressView()
-                        .scaleEffect(1.5)
-                    Text("Loading messages...")
+                Spacer()
+            } else if purchasedContacts.isEmpty {
+                Spacer()
+                VStack(spacing: 16) {
+                    Text("💬")
+                        .font(.system(size: 64))
+                    Text("No Conversations Yet")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(Color(hex: "2d3748"))
+                    Text("Purchase contact access to start chatting with traders")
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
-                        .padding(.top)
-                    Spacer()
-                } else if let error = error {
-                    Spacer()
-                    VStack(spacing: 16) {
-                        Image(systemName: "exclamationmark.triangle")
-                            .font(.system(size: 48))
-                            .foregroundColor(Color(hex: "f56565"))
-                        Text(error)
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(hex: "718096"))
-                            .multilineTextAlignment(.center)
-                        Button(action: loadPurchasedContacts) {
-                            Text("Try Again")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 12)
-                                .background(Color(hex: "667eea"))
-                                .cornerRadius(8)
-                        }
-                    }
-                    .padding()
-                    Spacer()
-                } else if purchasedContacts.isEmpty {
-                    Spacer()
-                    VStack(spacing: 16) {
-                        Text("💬")
-                            .font(.system(size: 64))
-                        Text("No Conversations Yet")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(Color(hex: "2d3748"))
-                        Text("Purchase contact access to start chatting with traders")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(hex: "718096"))
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    Spacer()
-                } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            ForEach(purchasedContacts) { contact in
-                                contactRow(contact)
-                                    .onTapGesture {
-                                        selectedContact = contact
-                                    }
-                                
-                                if contact.id != purchasedContacts.last?.id {
-                                    Divider()
-                                        .padding(.leading, 80)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(purchasedContacts) { contact in
+                            contactRow(contact)
+                                .onTapGesture {
+                                    selectedContact = contact
                                 }
+                            
+                            if contact.id != purchasedContacts.last?.id {
+                                Divider()
+                                    .padding(.leading, 80)
                             }
                         }
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: Color.black.opacity(0.05), radius: 8)
-                        .padding()
                     }
+                    .background(Color.white)
+                    .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.05), radius: 8)
+                    .padding()
+                    .padding(.bottom, 80)
                 }
             }
             
             // Bottom Navigation
-            BottomNavigationBar(
-                showSearch: $showSearch,
-                showCreateListing: $showCreateListing,
-                showMessages: $showMessages,
-                activeTab: "messages"
-            )
+            BottomNavigation(activeTab: "messages")
         }
+        .background(Color(hex: "f7fafc"))
+        .navigationBarHidden(true)
         .navigationDestination(item: $selectedContact) { contact in
             ContactView(contactData: convertToDashboardContactData(contact))
+        }
+        .navigationDestination(isPresented: $navigateToSearch) {
+            SearchView(navigateToSearch: $navigateToSearch)
+        }
+        .navigationDestination(isPresented: $navigateToCreateListing) {
+            CreateListingView(navigateToCreateListing: $navigateToCreateListing)
         }
         .onAppear {
             loadPurchasedContacts()

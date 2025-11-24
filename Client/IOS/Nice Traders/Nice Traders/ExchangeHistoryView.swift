@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Exchange: Identifiable, Codable {
-    let id: Int
+    let id: String
     let date: String
     let currency: String
     let amount: Int

@@ -21,7 +21,7 @@ struct UserProfile: Codable {
 }
 
 struct ExchangeHistoryItem: Identifiable, Codable {
-    let id: Int
+    let id: String
     let date: String
     let currency: String
     let amount: Int
@@ -75,9 +75,9 @@ struct ProfileView: View {
     @State private var isEditing = false
     @State private var editedUser: UserProfile?
     @State private var isLoading = true
-    @State private var showSearch = false
-    @State private var showCreateListing = false
-    @State private var showMessages = false
+    @State private var navigateToSearch = false
+    @State private var navigateToCreateListing = false
+    @State private var navigateToMessages = false
 
     @State private var navigateToExchangeHistory = false
     
@@ -124,18 +124,22 @@ struct ProfileView: View {
             }
             
             // Bottom Navigation
-            BottomNavigationBar(
-                showSearch: $showSearch,
-                showCreateListing: $showCreateListing,
-                showMessages: $showMessages,
-                activeTab: "home"
-            )
+            BottomNavigation(activeTab: "profile")
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToExchangeHistory) {
             // ExchangeHistoryView would go here
             Text("Exchange History")
+        }
+        .navigationDestination(isPresented: $navigateToSearch) {
+            SearchView(navigateToSearch: $navigateToSearch)
+        }
+        .navigationDestination(isPresented: $navigateToCreateListing) {
+            CreateListingView(navigateToCreateListing: $navigateToCreateListing)
+        }
+        .navigationDestination(isPresented: $navigateToMessages) {
+            MessagesView(navigateToMessages: $navigateToMessages)
         }
         .onAppear {
             loadProfileData()
@@ -813,7 +817,7 @@ struct ProfileView: View {
                    let exchanges = json["exchanges"] as? [[String: Any]] {
                     
                     exchangeHistory = exchanges.compactMap { dict -> ExchangeHistoryItem? in
-                        guard let id = dict["id"] as? Int,
+                        guard let id = dict["id"] as? String,
                               let date = dict["date"] as? String,
                               let currency = dict["currency"] as? String,
                               let amount = dict["amount"] as? Int,

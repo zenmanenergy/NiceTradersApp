@@ -11,7 +11,7 @@ import MapKit
 
 // MARK: - Listing Identifiable Location
 struct ListingLocation: Identifiable {
-    let id: Int
+    let id: String
     let listing: SearchListing
     let coordinate: CLLocationCoordinate2D
     let isApproximate: Bool
@@ -278,7 +278,7 @@ struct ListingCalloutView: View {
                 .cornerRadius(8)
             }
             
-            NavigationLink(destination: Text("Contact Trader")) {
+            NavigationLink(destination: ContactPurchaseView(listingId: listing.id)) {
                 Text("Contact Trader")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)

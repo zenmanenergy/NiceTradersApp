@@ -13,17 +13,19 @@ search_bp = Blueprint('search', __name__)
 def SearchListings():
     """Handle listing search requests"""
     try:
-        # Get query parameters
+        # Get query parameters (case-insensitive)
         FilterData = request.args.to_dict()
-        Currency = FilterData.get('currency')
-        AcceptCurrency = FilterData.get('acceptCurrency')
-        Location = FilterData.get('location')
-        MaxDistance = FilterData.get('maxDistance')
-        MinAmount = FilterData.get('minAmount')
-        MaxAmount = FilterData.get('maxAmount')
-        SessionId = FilterData.get('sessionId')
-        Limit = FilterData.get('limit', 20)
-        Offset = FilterData.get('offset', 0)
+        Currency = FilterData.get('Currency') or FilterData.get('currency')
+        AcceptCurrency = FilterData.get('AcceptCurrency') or FilterData.get('acceptCurrency')
+        Location = FilterData.get('Location') or FilterData.get('location')
+        MaxDistance = FilterData.get('MaxDistance') or FilterData.get('maxDistance')
+        UserLatitude = FilterData.get('UserLatitude') or FilterData.get('userLatitude')
+        UserLongitude = FilterData.get('UserLongitude') or FilterData.get('userLongitude')
+        MinAmount = FilterData.get('MinAmount') or FilterData.get('minAmount')
+        MaxAmount = FilterData.get('MaxAmount') or FilterData.get('maxAmount')
+        SessionId = FilterData.get('SessionId') or FilterData.get('sessionId')
+        Limit = FilterData.get('Limit') or FilterData.get('limit', 20)
+        Offset = FilterData.get('Offset') or FilterData.get('offset', 0)
         
         # Call the search function
         result = search_listings(
@@ -31,6 +33,8 @@ def SearchListings():
             AcceptCurrency=AcceptCurrency,
             Location=Location,
             MaxDistance=MaxDistance,
+            UserLatitude=UserLatitude,
+            UserLongitude=UserLongitude,
             MinAmount=MinAmount,
             MaxAmount=MaxAmount,
             SessionId=SessionId,

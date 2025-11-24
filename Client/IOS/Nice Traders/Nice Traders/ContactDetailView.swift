@@ -683,7 +683,7 @@ struct ContactDetailView: View {
                               let isFromUser = dict["is_from_user"] as? Bool else { return nil }
                         
                         return ContactMessage(
-                            id: dict["message_id"] as? Int ?? 0,
+                            id: dict["message_id"] as? String ?? "",
                             messageText: messageText,
                             sentAt: sentAt,
                             isFromUser: isFromUser
@@ -756,7 +756,7 @@ struct ContactDetailView: View {
                     // Parse proposals
                     if let proposalsData = json["proposals"] as? [[String: Any]] {
                         self.meetingProposals = proposalsData.compactMap { dict in
-                            guard let proposalId = dict["proposal_id"] as? Int,
+                            guard let proposalId = dict["proposal_id"] as? String,
                                   let proposedLocation = dict["proposed_location"] as? String,
                                   let proposedTime = dict["proposed_time"] as? String,
                                   let status = dict["status"] as? String,
@@ -860,13 +860,13 @@ struct ContactDetailView: View {
         }.resume()
     }
     
-    private func respondToProposal(_ proposalId: Int, response: String) {
+    private func respondToProposal(_ proposalId: String, response: String) {
         guard let sessionId = SessionManager.shared.sessionId else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
-            URLQueryItem(name: "proposalId", value: String(proposalId)),
+            URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: response)
         ]
         
@@ -926,7 +926,7 @@ struct ContactData {
 }
 
 struct ContactListing {
-    let listingId: Int
+    let listingId: String
     let currency: String
     let amount: Double
     let acceptCurrency: String?
@@ -943,7 +943,7 @@ struct OtherUser {
 }
 
 struct ContactMessage: Identifiable {
-    let id: Int
+    let id: String
     let messageText: String
     let sentAt: String
     let isFromUser: Bool
@@ -951,7 +951,7 @@ struct ContactMessage: Identifiable {
 
 struct MeetingProposal: Identifiable {
     let id = UUID()
-    let proposalId: Int
+    let proposalId: String
     let proposedLocation: String
     let proposedTime: String
     let message: String?

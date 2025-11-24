@@ -3,10 +3,10 @@ import json
 from datetime import datetime
 from decimal import Decimal
 
-def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, MinAmount=None, MaxAmount=None, SessionId=None, Limit=None, Offset=None):
+def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, UserLatitude=None, UserLongitude=None, MinAmount=None, MaxAmount=None, SessionId=None, Limit=None, Offset=None):
     """Search for currency exchange listings with filters"""
     try:
-        print(f"[SearchListings] Searching with filters - Currency: {Currency}, AcceptCurrency: {AcceptCurrency}, Location: {Location}")
+        print(f"[SearchListings] Searching with filters - Currency: {Currency}, AcceptCurrency: {AcceptCurrency}, Location: {Location}, MaxDistance: {MaxDistance}, UserLat: {UserLatitude}, UserLng: {UserLongitude}")
         
         # Connect to database
         cursor, connection = Database.ConnectToDatabase()
@@ -73,6 +73,28 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             # Simple location search - in production would use geographic distance calculation
             conditions.append("l.location LIKE %s")
             params.append(f"%{Location}%")
+        
+        # Distance-based filtering using Haversine formula
+        if MaxDistance and UserLatitude and UserLongitude:
+            try:
+                max_dist_km = float(MaxDistance)
+                user_lat = float(UserLatitude)
+                user_lng = float(UserLongitude)
+                
+                # Haversine formula for distance calculation (in km)
+                # This filters listings within the specified distance
+                distance_condition = f"""
+                    (6371 * acos(
+                        cos(radians({user_lat})) * cos(radians(l.latitude)) *
+                        cos(radians(l.longitude) - radians({user_lng})) +
+                        sin(radians({user_lat})) * sin(radians(l.latitude))
+                    )) <= %s
+                """
+                conditions.append(distance_condition)
+                params.append(max_dist_km)
+                print(f"[SearchListings] Added distance filter: {max_dist_km}km from ({user_lat}, {user_lng})")
+            except (ValueError, TypeError) as e:
+                print(f"[SearchListings] Invalid distance parameters: {e}")
             
         if MinAmount:
             conditions.append("l.amount >= %s")
@@ -146,7 +168,6 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
                 'user': {
                     'firstName': listing['FirstName'],
-                    'lastName': listing['LastName'],
                     'rating': float(listing['Rating']) if listing['Rating'] and isinstance(listing['Rating'], Decimal) else (float(listing['Rating']) if listing['Rating'] else None),
                     'trades': listing['TotalExchanges'] if listing['TotalExchanges'] else None,
                     'verified': (float(listing['Rating']) if isinstance(listing['Rating'], Decimal) else listing['Rating']) >= 4.5 if listing['Rating'] else False
