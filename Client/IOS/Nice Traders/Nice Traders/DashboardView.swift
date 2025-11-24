@@ -7,16 +7,22 @@
 
 import SwiftUI
 
+// Note: ContactData, ContactListing, and OtherUser types are defined in ContactDetailView.swift
+// They should be moved to a shared models file, but for now we reference them here
+
 struct DashboardView: View {
     @State private var user: DashboardUserInfo = DashboardUserInfo(name: "Loading...", rating: 0, totalExchanges: 0, joinDate: "Loading...")
     @State private var myListings: [Listing] = []
     @State private var allActiveExchanges: [ActiveExchange] = []
+    @State private var purchasedContactsData: [[String: Any]] = [] // Store raw data
     @State private var isLoading = true
     @State private var error: String?
     @State private var navigateToCreateListing = false
     @State private var navigateToSearch = false
     @State private var navigateToProfile = false
     @State private var navigateToMessages = false
+    @State private var navigateToContact = false
+    @State private var selectedContactData: ContactData?
     @State private var selectedTab = 0
     
     var body: some View {
@@ -32,6 +38,9 @@ struct DashboardView: View {
                     user: user,
                     myListings: myListings,
                     allActiveExchanges: allActiveExchanges,
+                    purchasedContactsData: purchasedContactsData,
+                    selectedContactData: $selectedContactData,
+                    navigateToContact: $navigateToContact,
                     navigateToCreateListing: $navigateToCreateListing,
                     navigateToSearch: $navigateToSearch,
                     navigateToProfile: $navigateToProfile,
@@ -52,6 +61,11 @@ struct DashboardView: View {
         }
         .navigationDestination(isPresented: $navigateToMessages) {
             MessagesView(navigateToMessages: $navigateToMessages)
+        }
+        .navigationDestination(isPresented: $navigateToContact) {
+            if let contactData = selectedContactData {
+                ContactDetailView(contactData: contactData)
+            }
         }
         .onAppear {
             verifySessionAndLoadData()
@@ -131,6 +145,10 @@ struct DashboardView: View {
         isLoading = true
         error = nil
         
+        // Clear existing data to prevent duplicates
+        allActiveExchanges = []
+        purchasedContactsData = []
+        
         // Get dashboard summary
         getDashboardSummary(sessionId: sessionId) { response in
             print("[Dashboard] Full response: \(response)")
@@ -209,12 +227,82 @@ struct DashboardView: View {
         
         // Get purchased contacts
         getPurchasedContacts(sessionId: sessionId) { contacts in
-            // Process contacts
+            print("[Dashboard] Purchased contacts response: \(contacts.count) contacts")
+            
+            // Store raw data for navigation
+            self.purchasedContactsData = contacts
+            
+            let purchasedExchanges = contacts.compactMap { contact -> ActiveExchange? in
+                guard let listing = contact["listing"] as? [String: Any],
+                      let seller = contact["seller"] as? [String: Any],
+                      let currency = listing["currency"] as? String,
+                      let acceptCurrency = listing["accept_currency"] as? String,
+                      let location = listing["location"] as? String,
+                      let sellerName = seller["name"] as? String,
+                      let listingId = contact["listing_id"] as? String else {
+                    return nil
+                }
+                
+                let amount: Double
+                if let amountInt = listing["amount"] as? Int {
+                    amount = Double(amountInt)
+                } else if let amountDouble = listing["amount"] as? Double {
+                    amount = amountDouble
+                } else {
+                    return nil
+                }
+                
+                return ActiveExchange(
+                    id: listingId,
+                    currencyFrom: currency,
+                    currencyTo: acceptCurrency,
+                    amount: amount,
+                    traderName: sellerName,
+                    location: location,
+                    type: .buyer
+                )
+            }
+            
+            self.allActiveExchanges.append(contentsOf: purchasedExchanges)
+            print("[Dashboard] Total active exchanges: \(self.allActiveExchanges.count)")
         }
         
         // Get listing purchases
         getListingPurchases(sessionId: sessionId) { purchases in
-            // Process purchases
+            print("[Dashboard] Listing purchases response: \(purchases.count) purchases")
+            let sellerExchanges = purchases.compactMap { purchase -> ActiveExchange? in
+                guard let listing = purchase["listing"] as? [String: Any],
+                      let buyer = purchase["buyer"] as? [String: Any],
+                      let currency = listing["currency"] as? String,
+                      let acceptCurrency = listing["accept_currency"] as? String,
+                      let location = listing["location"] as? String,
+                      let buyerName = buyer["name"] as? String,
+                      let listingId = purchase["listing_id"] as? String else {
+                    return nil
+                }
+                
+                let amount: Double
+                if let amountInt = listing["amount"] as? Int {
+                    amount = Double(amountInt)
+                } else if let amountDouble = listing["amount"] as? Double {
+                    amount = amountDouble
+                } else {
+                    return nil
+                }
+                
+                return ActiveExchange(
+                    id: listingId,
+                    currencyFrom: currency,
+                    currencyTo: acceptCurrency,
+                    amount: amount,
+                    traderName: buyerName,
+                    location: location,
+                    type: .seller
+                )
+            }
+            
+            self.allActiveExchanges.append(contentsOf: sellerExchanges)
+            print("[Dashboard] Total active exchanges: \(self.allActiveExchanges.count)")
         }
     }
     
@@ -327,6 +415,9 @@ struct MainDashboardView: View {
     let user: DashboardUserInfo
     let myListings: [Listing]
     let allActiveExchanges: [ActiveExchange]
+    let purchasedContactsData: [[String: Any]]
+    @Binding var selectedContactData: ContactData?
+    @Binding var navigateToContact: Bool
     @Binding var navigateToCreateListing: Bool
     @Binding var navigateToSearch: Bool
     @Binding var navigateToProfile: Bool
@@ -350,8 +441,13 @@ struct MainDashboardView: View {
                     .padding(.top, 24)
                     
                     // Active Exchanges
-                    ActiveExchangesSection(exchanges: allActiveExchanges)
-                        .padding(.horizontal)
+                    ActiveExchangesSection(
+                        exchanges: allActiveExchanges,
+                        purchasedContactsData: purchasedContactsData,
+                        selectedContactData: $selectedContactData,
+                        navigateToContact: $navigateToContact
+                    )
+                    .padding(.horizontal)
                     
                     // My Listings
                     MyListingsSection(listings: myListings, navigateToCreateListing: $navigateToCreateListing, onRefresh: onRefresh)
@@ -504,6 +600,9 @@ struct QuickActionButton: View {
 
 struct ActiveExchangesSection: View {
     let exchanges: [ActiveExchange]
+    let purchasedContactsData: [[String: Any]]
+    @Binding var selectedContactData: ContactData?
+    @Binding var navigateToContact: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -531,6 +630,9 @@ struct ActiveExchangesSection: View {
             } else {
                 ForEach(exchanges) { exchange in
                     ActiveExchangeCard(exchange: exchange)
+                        .onTapGesture {
+                            openContactDetail(for: exchange)
+                        }
                 }
             }
         }
@@ -543,6 +645,61 @@ struct ActiveExchangesSection: View {
             )
         )
         .cornerRadius(16)
+    }
+    
+    private func openContactDetail(for exchange: ActiveExchange) {
+        // Find the purchased contact data for this exchange
+        if let contactDict = purchasedContactsData.first(where: { dict in
+            (dict["listing_id"] as? String) == exchange.id
+        }) {
+            // Parse the contact data into ContactData struct
+            guard let listing = contactDict["listing"] as? [String: Any],
+                  let seller = contactDict["seller"] as? [String: Any],
+                  let currency = listing["currency"] as? String,
+                  let location = listing["location"] as? String,
+                  let sellerFirstName = seller["name"] as? String else {
+                return
+            }
+            
+            let amount: Double
+            if let amountInt = listing["amount"] as? Int {
+                amount = Double(amountInt)
+            } else if let amountDouble = listing["amount"] as? Double {
+                amount = amountDouble
+            } else {
+                return
+            }
+            
+            let nameParts = sellerFirstName.split(separator: " ")
+            let firstName = String(nameParts.first ?? "")
+            let lastName = nameParts.count > 1 ? String(nameParts.dropFirst().joined(separator: " ")) : ""
+            
+            let contactData = ContactData(
+                listing: ContactListing(
+                    listingId: exchange.id,
+                    currency: currency,
+                    amount: amount,
+                    acceptCurrency: listing["accept_currency"] as? String,
+                    preferredCurrency: nil,
+                    meetingPreference: listing["meeting_preference"] as? String,
+                    location: location
+                ),
+                otherUser: OtherUser(
+                    firstName: firstName,
+                    lastName: lastName,
+                    rating: nil,
+                    totalTrades: nil
+                ),
+                lockedAmount: contactDict["locked_amount"] as? Double,
+                exchangeRate: contactDict["exchange_rate"] as? Double,
+                fromCurrency: contactDict["from_currency"] as? String,
+                toCurrency: contactDict["to_currency"] as? String,
+                purchasedAt: contactDict["purchased_at"] as? String
+            )
+            
+            selectedContactData = contactData
+            navigateToContact = true
+        }
     }
 }
 
@@ -797,7 +954,7 @@ struct Listing: Identifiable, Hashable {
 }
 
 struct ActiveExchange: Identifiable {
-    let id = UUID()
+    let id: String // listing_id
     let currencyFrom: String
     let currencyTo: String
     let amount: Double

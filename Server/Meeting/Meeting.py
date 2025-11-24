@@ -8,28 +8,34 @@ from Meeting.GetExactLocation import get_exact_location
 
 blueprint = Blueprint('meeting', __name__)
 
-@blueprint.route("/Meeting/ProposeMeeting", methods=['POST'])
+@blueprint.route("/Meeting/ProposeMeeting", methods=['GET', 'POST'])
 @cross_origin()
 def ProposeMeeting():
     try:
-        request_data = request.get_json()
+        if request.method == 'POST':
+            request_data = request.get_json()
+        else:
+            request_data = request.args.to_dict()
         
         session_id = request_data.get('sessionId')
         listing_id = request_data.get('listingId')
         proposed_location = request_data.get('proposedLocation')
         proposed_time = request_data.get('proposedTime')
-        message = request_data.get('message')
+        message = request_data.get('message', '')
         
         result = propose_meeting(session_id, listing_id, proposed_location, proposed_time, message)
         return result
     except Exception as e:
         return Debugger(e)
 
-@blueprint.route("/Meeting/RespondToMeeting", methods=['POST'])
+@blueprint.route("/Meeting/RespondToMeeting", methods=['GET', 'POST'])
 @cross_origin()
 def RespondToMeeting():
     try:
-        request_data = request.get_json()
+        if request.method == 'POST':
+            request_data = request.get_json()
+        else:
+            request_data = request.args.to_dict()
         
         session_id = request_data.get('sessionId')
         proposal_id = request_data.get('proposalId')

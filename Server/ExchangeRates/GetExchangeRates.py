@@ -73,6 +73,18 @@ def get_exchange_rate(from_currency, to_currency):
     try:
         print(f"[GetExchangeRate] Getting rate from {from_currency} to {to_currency}")
         
+        # Handle same currency - EARLY RETURN
+        if from_currency == to_currency:
+            print(f"[GetExchangeRate] Same currency detected, returning 1.0")
+            return json.dumps({
+                'success': True,
+                'from_currency': from_currency,
+                'to_currency': to_currency,
+                'rate': 1.0,
+                'calculation': f'1 {from_currency} = 1.0 {to_currency}'
+            })
+        
+        print(f"[GetExchangeRate] Connecting to database...")
         cursor, connection = Database.ConnectToDatabase()
         
         # Get latest rates for both currencies
@@ -86,28 +98,46 @@ def get_exchange_rate(from_currency, to_currency):
         cursor.execute(query, (from_currency, to_currency))
         results = cursor.fetchall()
         
-        if len(results) != 2:
-            cursor.close()
-            connection.close()
+        cursor.close()
+        connection.close()
+        
+        if not results or len(results) == 0:
+            print(f"[GetExchangeRate] No rates found for {from_currency} or {to_currency}")
             return json.dumps({
                 'success': False,
                 'error': f'Exchange rates not found for {from_currency} or {to_currency}'
             })
         
-        # Calculate conversion rate
+        # Build rates dictionary
         rates = {row['currency_code']: float(row['rate_to_usd']) for row in results}
         
-        # Convert: from_currency -> USD -> to_currency
+        # Check if we have both rates
+        if from_currency not in rates and from_currency != 'USD':
+            print(f"[GetExchangeRate] Missing rate for {from_currency}")
+            return json.dumps({
+                'success': False,
+                'error': f'Exchange rate not found for {from_currency}'
+            })
+        
+        if to_currency not in rates and to_currency != 'USD':
+            print(f"[GetExchangeRate] Missing rate for {to_currency}")
+            return json.dumps({
+                'success': False,
+                'error': f'Exchange rate not found for {to_currency}'
+            })
+        
+        # Calculate conversion rate
         if from_currency == 'USD':
-            conversion_rate = rates[to_currency]
+            conversion_rate = rates.get(to_currency, 1.0)
         elif to_currency == 'USD':
-            conversion_rate = 1.0 / rates[from_currency]
+            conversion_rate = 1.0 / rates.get(from_currency, 1.0)
         else:
             # Convert through USD: (1 / from_rate) * to_rate
-            conversion_rate = rates[to_currency] / rates[from_currency]
+            from_rate = rates.get(from_currency, 1.0)
+            to_rate = rates.get(to_currency, 1.0)
+            conversion_rate = to_rate / from_rate
         
-        cursor.close()
-        connection.close()
+        print(f"[GetExchangeRate] Calculated rate: {conversion_rate}")
         
         return json.dumps({
             'success': True,
@@ -119,6 +149,8 @@ def get_exchange_rate(from_currency, to_currency):
         
     except Exception as e:
         print(f"[GetExchangeRate] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return json.dumps({
             'success': False,
             'error': f'Failed to get exchange rate: {str(e)}'

@@ -64,12 +64,12 @@
 			if (response.success) {
 				hasActiveContact = true;
 				
-				// Show success message with PayPal transaction details
-				const transactionId = response.payment_details?.transaction_id || 'N/A';
-				alert(`🎉 Payment Successful!\n\nPayPal Transaction: ${transactionId}\n\nYou now have full contact access to ${listing.user.name}. The page will refresh to show contact details.`);
+				// Show success message
+				const transactionId = response.transaction_id || 'N/A';
+				alert(`🎉 Payment Successful!\n\nTransaction: ${transactionId}\n\nYou now have access to contact ${listing.user.name}. Redirecting to your dashboard...`);
 				
-				// Refresh the page to show unlocked contact details
-				window.location.reload();
+				// Redirect to dashboard to see the purchased listing
+				goto('/dashboard');
 			} else {
 				alert(`❌ Payment Failed\n\n${response.error}\n\nPlease try again or contact support if the problem persists.`);
 			}
@@ -328,22 +328,33 @@
 			</h3>
 			
 			{#if hasActiveContact}
-				<div class="contact-details">
-					<div class="contact-item">
-						<span class="contact-label">Phone:</span>
-						<span class="contact-value">+1 (555) 123-4567</span>
+				<div class="messaging-section">
+					<h4 class="subsection-title">Messages</h4>
+					<div class="message-thread">
+						<p class="no-messages">No messages yet. Start a conversation below!</p>
 					</div>
-					<div class="contact-item">
-						<span class="contact-label">Email:</span>
-						<span class="contact-value">sarah.chen@email.com</span>
+					<div class="message-compose">
+						<textarea 
+							class="message-input" 
+							placeholder="Type your message to {listing.user.name}..."
+							rows="3"
+						></textarea>
+						<button class="send-message-button">Send Message</button>
 					</div>
-					<div class="contact-actions">
-						<button class="contact-action-button call">
-							📞 Call Now
-						</button>
-						<button class="contact-action-button message">
-							💬 Send Message
-						</button>
+				</div>
+
+				<div class="meeting-proposal-section">
+					<h4 class="subsection-title">Propose a Meeting</h4>
+					<div class="meeting-form">
+						<div class="form-group">
+							<label class="form-label">Date & Time</label>
+							<input type="datetime-local" class="form-input" />
+						</div>
+						<div class="form-group">
+							<label class="form-label">Meeting Location</label>
+							<input type="text" class="form-input" placeholder="Suggest a meeting place..." />
+						</div>
+						<button class="propose-meeting-button">Propose Meeting</button>
 					</div>
 				</div>
 			{:else}
@@ -724,6 +735,114 @@
 		border-radius: 12px;
 		padding: 1.5rem;
 		border: 1px solid #e2e8f0;
+	}
+
+	.subsection-title {
+		font-size: 1rem;
+		font-weight: 600;
+		color: #2d3748;
+		margin: 0 0 1rem;
+	}
+
+	/* Messaging Section */
+	.messaging-section {
+		margin-bottom: 2rem;
+	}
+
+	.message-thread {
+		background: #f7fafc;
+		border-radius: 8px;
+		padding: 1rem;
+		min-height: 150px;
+		max-height: 300px;
+		overflow-y: auto;
+		margin-bottom: 1rem;
+	}
+
+	.no-messages {
+		color: #a0aec0;
+		text-align: center;
+		font-style: italic;
+		margin: 2rem 0;
+	}
+
+	.message-compose {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.message-input {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #e2e8f0;
+		border-radius: 8px;
+		font-family: inherit;
+		font-size: 0.95rem;
+		resize: vertical;
+	}
+
+	.message-input:focus {
+		border-color: #667eea;
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+
+	.send-message-button {
+		align-self: flex-end;
+		background: #667eea;
+		color: white;
+		border: none;
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.send-message-button:hover {
+		background: #5a67d8;
+	}
+
+	/* Meeting Proposal Section */
+	.meeting-proposal-section {
+		padding-top: 1.5rem;
+		border-top: 1px solid #e2e8f0;
+	}
+
+	.meeting-form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.form-input {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #e2e8f0;
+		border-radius: 8px;
+		font-size: 0.95rem;
+	}
+
+	.form-input:focus {
+		border-color: #667eea;
+		outline: none;
+		box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+	}
+
+	.propose-meeting-button {
+		background: #48bb78;
+		color: white;
+		border: none;
+		padding: 0.875rem;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.2s;
+	}
+
+	.propose-meeting-button:hover {
+		background: #38a169;
 	}
 
 	.contact-details {

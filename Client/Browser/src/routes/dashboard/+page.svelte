@@ -40,17 +40,24 @@
 	let showMessaging = false;
 	
 	function updateAllActiveExchanges() {
+		console.log('[Dashboard] Updating active exchanges');
+		console.log('[Dashboard] purchasedContacts:', purchasedContacts);
+		console.log('[Dashboard] listingPurchases:', listingPurchases);
 		allActiveExchanges = [
 			...purchasedContacts.map(contact => ({...contact, type: 'buyer'})),
 			...listingPurchases.map(purchase => ({...purchase, type: 'seller'}))
 		];
+		console.log('[Dashboard] allActiveExchanges:', allActiveExchanges);
 	}
 	
 	// Load dashboard data on component mount
 	onMount(async () => {
+		console.log('[Dashboard] onMount START');
 		await Session.handleSession();
+		console.log('[Dashboard] Session handled');
 		Session.GetSessionId(); // This sets Session.SessionId
 		const sessionId = Session.SessionId;
+		console.log('[Dashboard] SessionId:', sessionId);
 		
 		if (!sessionId) {
 			goto('/login');
@@ -61,6 +68,9 @@
 		error = null;
 		
 		try {
+			console.log('[Dashboard] Starting to load dashboard data...');
+			console.log('[Dashboard] Session ID:', sessionId);
+			
 			// Load dashboard data
 			handleGetDashboardSummary(sessionId, (response) => {
 				if (response && response.success) {
@@ -103,23 +113,36 @@
 				isLoading = false;
 			});
 			
+			console.log('[Dashboard] About to call handleGetPurchasedContacts...');
 			// Load purchased contacts
 			handleGetPurchasedContacts(sessionId, (response) => {
+				console.log('[Dashboard] GetPurchasedContacts response:', response);
 				if (response && response.success) {
 					purchasedContacts = response.purchased_contacts || [];
+					console.log('[Dashboard] Set purchasedContacts to:', purchasedContacts);
+					console.log('[Dashboard] purchasedContacts length:', purchasedContacts.length);
 					updateAllActiveExchanges();
+				} else {
+					console.error('[Dashboard] Failed to load purchased contacts:', response);
 				}
 			});
 			
+			console.log('[Dashboard] About to call handleGetListingPurchases...');
 			// Load listing purchases (buyers who purchased access to user's listings)
 			handleGetListingPurchases(sessionId, (response) => {
+				console.log('[Dashboard] GetListingPurchases response:', response);
 				if (response && response.success) {
 					listingPurchases = response.listing_purchases || [];
+					console.log('[Dashboard] Set listingPurchases to:', listingPurchases);
 					updateAllActiveExchanges();
+				} else {
+					console.error('[Dashboard] Failed to load listing purchases:', response);
 				}
 			});
 			
 		} catch (err) {
+			console.error('[Dashboard] Error in onMount:', err);
+			console.error('[Dashboard] Error stack:', err.stack);
 			error = 'An error occurred while loading dashboard data';
 			isLoading = false;
 		}
