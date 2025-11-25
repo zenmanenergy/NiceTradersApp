@@ -685,7 +685,7 @@ struct EditListingView: View {
                     }
                     
                     if let from = selectedCurrency, let to = selectedAcceptCurrency {
-                        Text("Market Rate → \(calculateReceiveAmount(from: from.code, to: to.code, amount: amount)) \(to.code)")
+                        Text(localizationManager.localize("MARKET_RATE") + " → \(calculateReceiveAmount(from: from.code, to: to.code, amount: amount)) \(to.code)")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(Color(hex: "667eea"))
                     }

@@ -133,7 +133,7 @@ struct ProfileView: View {
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToExchangeHistory) {
             // ExchangeHistoryView would go here
-            Text("Exchange History")
+            Text(localizationManager.localize("Exchange_History"))
         }
         .navigationDestination(isPresented: $navigateToLanguagePicker) {
             LanguagePickerView()

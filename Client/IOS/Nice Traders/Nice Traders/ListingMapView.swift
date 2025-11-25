@@ -205,6 +205,7 @@ struct ListingMapPin: View {
 struct ListingCalloutView: View {
     let listing: SearchListing
     var showExactLocations: Bool = false
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -214,7 +215,7 @@ struct ListingCalloutView: View {
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("Wants \(listing.acceptCurrency)")
+                    Text(localizationManager.localize("WANTS") + " \(listing.acceptCurrency)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
@@ -256,7 +257,7 @@ struct ListingCalloutView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "location.circle")
                         .foregroundColor(Color(hex: "f6ad55"))
-                    Text("Approximate area - exact location shared after purchase")
+                    Text(localizationManager.localize("APPROXIMATE_AREA_MESSAGE"))
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "718096"))
                         .italic()
@@ -268,7 +269,7 @@ struct ListingCalloutView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(Color(hex: "48bb78"))
-                    Text("Exact location - meeting time confirmed")
+                    Text(localizationManager.localize("EXACT_LOCATION_CONFIRMED"))
                         .font(.system(size: 12))
                         .foregroundColor(Color(hex: "2d3748"))
                         .fontWeight(.medium)
@@ -279,7 +280,7 @@ struct ListingCalloutView: View {
             }
             
             NavigationLink(destination: ContactPurchaseView(listingId: listing.id)) {
-                Text("Contact Trader")
+                Text(localizationManager.localize("CONTACT_TRADER"))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)

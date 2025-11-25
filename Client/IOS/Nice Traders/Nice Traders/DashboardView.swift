@@ -744,6 +744,7 @@ struct EmptyStateView: View {
 
 struct ActiveExchangeCard: View {
     let exchange: ActiveExchange
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -774,7 +775,7 @@ struct ActiveExchangeCard: View {
                 
                 Spacer()
                 
-                Text("💬 Start conversation")
+                Text("💬 " + localizationManager.localize("START_CONVERSATION"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .padding(.horizontal, 12)

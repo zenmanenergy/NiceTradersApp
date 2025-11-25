@@ -208,7 +208,7 @@ struct ContactView: View {
         VStack(spacing: 24) {
             // Exchange Details
             VStack(alignment: .leading, spacing: 16) {
-                Text("Exchange Details")
+                Text(localizationManager.localize("EXCHANGE_DETAILS"))
                     .font(.system(size: 19, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -241,7 +241,7 @@ struct ContactView: View {
             
             // Trader Information
             VStack(alignment: .leading, spacing: 16) {
-                Text("Trader Information")
+                Text(localizationManager.localize("TRADER_INFORMATION"))
                     .font(.system(size: 19, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -256,7 +256,7 @@ struct ContactView: View {
                             .foregroundColor(index < Int(contactData.other_user.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
                     }
                     
-                    Text("(\(contactData.other_user.total_trades ?? 0) trades)")
+                    Text("(\\(contactData.other_user.total_trades ?? 0) " + localizationManager.localize("TRADES") + ")")
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
                 }
@@ -306,12 +306,12 @@ struct ContactView: View {
                         .foregroundColor(Color(hex: "38a169"))
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("📍 Location: \(meeting.location)")
-                        Text("🕒 Time: \(formatDateTime(meeting.time))")
+                        Text("📍 " + localizationManager.localize("LOCATION") + ": \\(meeting.location)")
+                        Text("🕒 " + localizationManager.localize("TIME") + ": \\(formatDateTime(meeting.time))")
                         if let message = meeting.message {
-                            Text("💬 Note: \(message)")
+                            Text("💬 " + localizationManager.localize("NOTE") + ": \\(message)")
                         }
-                        Text("📅 Agreed: \(formatDateTime(meeting.agreed_at))")
+                        Text("📅 " + localizationManager.localize("AGREED") + ": \\(formatDateTime(meeting.agreed_at))")
                     }
                     .font(.system(size: 15))
                     .foregroundColor(Color(hex: "2d3748"))
@@ -333,8 +333,8 @@ struct ContactView: View {
                 Button(action: {
                     showProposeForm.toggle()
                 }) {
-                    Text("📅 Propose Meeting Time & Location")
-                        .font(.system(size: 16, weight: .semibold))
+                    Text("📅 " + localizationManager.localize("PROPOSE_MEETING"))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(16)
@@ -356,8 +356,8 @@ struct ContactView: View {
             // Meeting Proposals
             if !meetingProposals.isEmpty {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Meeting Proposals")
-                        .font(.system(size: 18, weight: .semibold))
+                    Text(localizationManager.localize("MEETING_PROPOSALS"))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
                     ForEach(meetingProposals) { proposal in
@@ -452,7 +452,8 @@ struct ContactView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(localizationManager.localize("OPTIONAL_MESSAGE"))
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color(hex: "4a5568"))                TextEditor(text: $proposalMessage)
+                        .foregroundColor(Color(hex: "4a5568"))
+                    TextEditor(text: $proposalMessage)
                     .frame(height: 80)
                     .padding(8)
                     .background(Color.white)
@@ -523,8 +524,8 @@ struct ContactView: View {
                     Button(action: {
                         respondToProposal(proposal.proposal_id, response: "accepted")
                     }) {
-                        Text("✅ Accept")
-                            .font(.system(size: 14, weight: .semibold))
+                        Text("✅ " + localizationManager.localize("ACCEPT"))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(8)
@@ -535,8 +536,8 @@ struct ContactView: View {
                     Button(action: {
                         respondToProposal(proposal.proposal_id, response: "rejected")
                     }) {
-                        Text("❌ Reject")
-                            .font(.system(size: 14, weight: .semibold))
+                        Text("❌ " + localizationManager.localize("REJECT"))
+                            .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(8)

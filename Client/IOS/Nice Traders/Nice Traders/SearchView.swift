@@ -121,7 +121,7 @@ struct SearchView: View {
     // MARK: - Header View
     var headerView: some View {
         HStack {
-            Text("Search Currency")
+            Text(localizationManager.localize("SEARCH_CURRENCY"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
@@ -165,7 +165,7 @@ struct SearchView: View {
                     .foregroundColor(Color(hex: "4a5568"))
                 
                 Picker("I have", selection: $searchFilters.haveCurrency) {
-                    Text("Select currency").tag("")
+                    Text(localizationManager.localize("SELECT_CURRENCY")).tag("")
                     ForEach(availableCurrencies, id: \.self) { currency in
                         Text(currency).tag(currency)
                     }
@@ -188,7 +188,7 @@ struct SearchView: View {
                     .foregroundColor(Color(hex: "4a5568"))
                 
                 Picker("I want", selection: $searchFilters.wantCurrency) {
-                    Text("Select currency").tag("")
+                    Text(localizationManager.localize("SELECT_CURRENCY")).tag("")
                     ForEach(availableCurrencies, id: \.self) { currency in
                         Text(currency).tag(currency)
                     }
@@ -357,11 +357,9 @@ struct SearchView: View {
             Text("🔍")
                 .font(.system(size: 48))
             
-            Text(localizationManager.localize("NO_LISTINGS_FOUND"))
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(Color(hex: "2d3748"))
-            
             Text("Try adjusting your search or check back later for new listings.")
+                .font(.system(size: 15))
+                .foregroundColor(Color(hex: "718096"))
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "718096"))
                 .multilineTextAlignment(.center)
@@ -384,11 +382,7 @@ struct SearchView: View {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(Int(listing.amount)) \(listing.currency)")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(Color(hex: "2d3748"))
-                    
-                    Text("Wants \(listing.acceptCurrency)")
+                    Text(localizationManager.localize("WANTS") + " \\(listing.acceptCurrency)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
@@ -471,7 +465,7 @@ struct SearchView: View {
             // Details
             VStack(spacing: 8) {
                 HStack {
-                    Text("Meeting:")
+                    Text(localizationManager.localize("MEETING"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "718096"))
                     
@@ -484,7 +478,7 @@ struct SearchView: View {
                 }
                 
                 HStack {
-                    Text("Available until:")
+                    Text(localizationManager.localize("AVAILABLE_UNTIL"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "718096"))
                     
@@ -510,16 +504,6 @@ struct SearchView: View {
                     Text("Contact Trader")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(8)
                 }
             }
         }

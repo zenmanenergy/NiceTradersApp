@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ExchangeRatesView: View {
     @Environment(\.dismiss) var dismiss
+    let localizationManager = LocalizationManager.shared
     @State private var exchangeRates: [String: Double] = [:]
     @State private var isLoading = false
     @State private var errorMessage: String?
@@ -63,7 +64,7 @@ struct ExchangeRatesView: View {
             
             Spacer()
             
-            Text("Exchange Rates")
+            Text(localizationManager.localize("EXCHANGE_RATES"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
             
@@ -94,14 +95,14 @@ struct ExchangeRatesView: View {
     // MARK: - Converter Section
     var converterSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Currency Converter")
+            Text(localizationManager.localize("CURRENCY_CONVERTER"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             VStack(spacing: 16) {
                 // Amount Input
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Amount")
+                    Text(localizationManager.localize("AMOUNT"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "4a5568"))
                     
@@ -119,7 +120,7 @@ struct ExchangeRatesView: View {
                 
                 // From Currency
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("From")
+                    Text(localizationManager.localize("FROM"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "4a5568"))
                     
@@ -143,7 +144,7 @@ struct ExchangeRatesView: View {
                 
                 // To Currency
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("To")
+                    Text(localizationManager.localize("TO"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "4a5568"))
                     
@@ -172,7 +173,7 @@ struct ExchangeRatesView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         } else {
-                            Text("Convert")
+                            Text(localizationManager.localize("CONVERT"))
                         }
                     }
                     .font(.system(size: 16, weight: .semibold))
@@ -193,7 +194,7 @@ struct ExchangeRatesView: View {
                 // Result
                 if let converted = convertedAmount {
                     VStack(spacing: 8) {
-                        Text("Result")
+                        Text(localizationManager.localize("RESULT"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -218,7 +219,7 @@ struct ExchangeRatesView: View {
     var ratesListSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Current Rates")
+                Text(localizationManager.localize("CURRENT_RATES"))
                     .font(.system(size: 19, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -244,11 +245,11 @@ struct ExchangeRatesView: View {
                     Text("📊")
                         .font(.system(size: 48))
                     
-                    Text("No rates available")
+                    Text(localizationManager.localize("NO_RATES_AVAILABLE"))
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(Color(hex: "4a5568"))
                     
-                    Text("Tap refresh to load exchange rates")
+                    Text(localizationManager.localize("TAP_REFRESH_RATES"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
                 }

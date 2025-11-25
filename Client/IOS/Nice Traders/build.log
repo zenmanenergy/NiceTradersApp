@@ -1,0 +1,317 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -scheme "Nice Traders" -configuration Debug -destination "generic/platform=iOS Simulator"
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'Nice Traders' in project 'Nice Traders' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 13b42cdbbe66c362ae3edfc3552d0a6c
+Build description path: /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/XCBuildData/13b42cdbbe66c362ae3edfc3552d0a6c.xcbuilddata
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk /Users/stevenelson/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache
+
+LinkAssetCatalog /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Assets.xcassets (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    builtin-linkAssetCatalog --thinned /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_output/thinned --thinned-dependencies /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_generated_info.plist_thinned --unthinned /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_output/unthinned --unthinned-dependencies /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_generated_info.plist_unthinned --output /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/Nice\ Traders.app --plist-output /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_generated_info.plist
+note: Emplaced /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/Nice Traders.app/Assets.car (in target 'Nice Traders' from project 'Nice Traders')
+
+ProcessInfoPlistFile /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/Nice\ Traders.app/Info.plist /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/empty-Nice\ Traders.plist (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    builtin-infoPlistUtility /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/empty-Nice\ Traders.plist -producttype com.apple.product-type.application -genpkginfo /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/Nice\ Traders.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/assetcatalog_generated_info.plist -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/Nice\ Traders.app/Info.plist
+
+SwiftDriver Nice\ Traders normal arm64 com.apple.xcode.tools.swift.compiler (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Nice_Traders -Onone -enforce-exclusivity\=checked @/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64/Nice\ Traders.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target arm64-apple-ios17.4-simulator -g -module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -F /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64/Nice\ Traders-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64/Nice_Traders.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64/Nice\ Traders_const_extract_protocols.json -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-generated-files.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-own-target-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-project-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources-normal/arm64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/arm64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/arm64/Nice_Traders-Swift.h -working-directory /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders -experimental-emit-module-separately -disable-cmo
+
+SwiftDriver Nice\ Traders normal x86_64 com.apple.xcode.tools.swift.compiler (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name Nice_Traders -Onone -enforce-exclusivity\=checked @/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice\ Traders.SwiftFileList -DDEBUG -default-isolation\=MainActor -enable-bare-slash-regex -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -target x86_64-apple-ios17.4-simulator -g -module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 5 -I /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -F /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -emit-localized-strings -emit-localized-strings-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64 -c -j8 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -output-file-map /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice\ Traders-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -sdk-module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice_Traders.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice\ Traders_const_extract_protocols.json -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-generated-files.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-own-target-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-project-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources-normal/x86_64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/x86_64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources -Xcc -DDEBUG\=1 -emit-objc-header -emit-objc-header-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice_Traders-Swift.h -working-directory /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders -experimental-emit-module-separately -disable-cmo
+
+SwiftCompile normal x86_64 Compiling\ ContentView.swift,\ CreateListingView.swift,\ DashboardView.swift,\ EditListingView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContentView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/CreateListingView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/DashboardView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/EditListingView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContentView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/CreateListingView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/DashboardView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/DashboardView.swift:777:32: error: cannot find 'localizationManager' in scope
+                Text("💬 " + localizationManager.localize("START_CONVERSATION"))
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/EditListingView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+Failed frontend command:
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/BottomNavigation.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactDetailView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactPurchaseView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactView.swift -primary-file /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContentView.swift -primary-file /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/CreateListingView.swift -primary-file /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/DashboardView.swift -primary-file /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/EditListingView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeHistoryView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeMapView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesAPI.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LanguagePickerView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LearnMoreView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ListingMapView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocalizationManager.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocationLanguageDetector.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LoginView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/MessagesView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Nice_TradersApp.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/PrivacyView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ProfileView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SearchView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SessionManager.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Settings.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SharedModels.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SignupView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/TermsView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/UserLocationManager.swift /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/GeneratedAssetSymbols.swift -supplementary-output-file-map /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/supplementaryOutputs-2 -emit-localized-strings -emit-localized-strings-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64 -target x86_64-apple-ios17.4-simulator -module-can-import-version DeveloperToolsSupport 23.0.4 23.0.4 -module-can-import-version SwiftUI 7.1.13.1 7.1.13 -module-can-import-version UIKit 9126.1.12.1 9126.1.12 -disable-cross-import-overlay-search -swift-module-cross-import MapKit /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/MapKit.framework/Modules/MapKit.swiftcrossimport/SwiftUI.swiftoverlay -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libFoundationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#FoundationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libObservationMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#ObservationMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libPreviewsMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#PreviewsMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftMacros -load-resolved-plugin /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins/libSwiftUIMacros.dylib\#/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server\#SwiftUIMacros -disable-implicit-swift-modules -Xcc -fno-implicit-modules -Xcc -fno-implicit-module-maps -explicit-swift-module-map-file /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice_Traders-dependencies-1.json -enable-objc-interop -sdk /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator26.1.sdk -I /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -F /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator -no-color-diagnostics -Xcc -fno-color-diagnostics -enable-testing -g -debug-info-format\=dwarf -dwarf-version\=4 -module-cache-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -profile-generate -profile-coverage-mapping -swift-version 5 -enforce-exclusivity\=checked -Onone -D DEBUG -serialize-debugging-options -const-gather-protocols-file /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/Nice\ Traders_const_extract_protocols.json -enable-upcoming-feature DisableOutwardActorInference -enable-upcoming-feature InferSendableFromCaptures -enable-upcoming-feature GlobalActorIsolatedTypesUsability -enable-upcoming-feature MemberImportVisibility -enable-upcoming-feature InferIsolatedConformances -enable-upcoming-feature NonisolatedNonsendingByDefault -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -default-isolation\=MainActor -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/stevenelson/Library/Developer/Xcode/DerivedData/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders -enable-anonymous-context-mangled-names -file-compilation-dir /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -Xcc -ivfsstatcache -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/SDKStatCaches.noindex/iphonesimulator26.1-23B77-90cf18a4295e390e64c810bc6bd7acbc.sdkstatcache -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-generated-files.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-own-target-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-all-target-headers.hmap -Xcc -iquote -Xcc /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Nice\ Traders-project-headers.hmap -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Products/Debug-iphonesimulator/include -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources-normal/x86_64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/x86_64 -Xcc -I/Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources -Xcc -DDEBUG\=1 -no-auto-bridging-header-chaining -module-name Nice_Traders -frontend-parseable-output -disable-clang-spi -target-sdk-version 26.1 -target-sdk-name iphonesimulator26.1 -clang-target x86_64-apple-ios26.1-simulator -in-process-plugin-server-path /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/ContentView.o -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/CreateListingView.o -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/DashboardView.o -o /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/EditListingView.o -index-unit-output-path /Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/ContentView.o -index-unit-output-path /Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/CreateListingView.o -index-unit-output-path /Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/DashboardView.o -index-unit-output-path /Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/Objects-normal/x86_64/EditListingView.o -index-store-path /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Index.noindex/DataStore -index-system-modules
+SwiftCompile normal x86_64 Compiling\ LanguagePickerView.swift,\ LearnMoreView.swift,\ ListingMapView.swift,\ LocalizationManager.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LanguagePickerView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LearnMoreView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ListingMapView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocalizationManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LanguagePickerView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/LanguagePickerView.swift:104:14: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+            .onChange(of: localizationManager.languageVersion) { newValue in
+             ^
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LearnMoreView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ListingMapView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:96:9: warning: 'init(coordinateRegion:interactionModes:showsUserLocation:userTrackingMode:annotationItems:annotationContent:)' was deprecated in iOS 17.0: Use Map initializers that take a MapContentBuilder instead.
+        Map(coordinateRegion: $region,
+        ^
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:99:13: warning: 'MapAnnotation' was deprecated in iOS 17.0: Use Annotation along with Map initializers that take a MapContentBuilder instead.
+            MapAnnotation(coordinate: location.coordinate) {
+            ^
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:51: warning: string interpolation produces a debug description for an optional value; did you mean to make this explicit?
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ^~~~~~~~~~~~~~~~~~~~~
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:64: note: provide a default value to avoid this warning
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ~~~~~~~~~~~~~^~~~~~~~
+                                                                        ?? <#default value#>
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:64: note: use 'String(describing:)' to silence this warning
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ~~~~~~~~~~~~~^~~~~~~~
+                                                  String(describing:   )
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:50: warning: 'appendInterpolation' is deprecated: Localized string interpolation produces an unlocalized, debug description for this type of value. Use a type supported by LocalizedStringKey.StringInterpolation or initialize a LocalizedStringResource instead with an interpolated value that conforms to CustomLocalizedStringResourceConvertible.
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                 ^
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocalizationManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ ExchangeHistoryView.swift,\ ExchangeMapView.swift,\ ExchangeRatesAPI.swift,\ ExchangeRatesView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeHistoryView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeMapView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesAPI.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeHistoryView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeMapView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesAPI.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ PrivacyView.swift,\ ProfileView.swift,\ SearchView.swift,\ SessionManager.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/PrivacyView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ProfileView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SearchView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SessionManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/PrivacyView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ProfileView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SearchView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SessionManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftEmitModule normal x86_64 Emitting\ module\ for\ Nice_Traders (in target 'Nice Traders' from project 'Nice Traders')
+
+EmitSwiftModule normal x86_64 (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ BottomNavigation.swift,\ ContactDetailView.swift,\ ContactPurchaseView.swift,\ ContactView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/BottomNavigation.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactDetailView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactPurchaseView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactView.swift (in target 'Nice Traders' from project 'Nice Traders')
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/BottomNavigation.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactDetailView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactPurchaseView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ LocationLanguageDetector.swift,\ LoginView.swift,\ MessagesView.swift,\ Nice_TradersApp.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocationLanguageDetector.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LoginView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/MessagesView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Nice_TradersApp.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LocationLanguageDetector.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/LoginView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/MessagesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Nice_TradersApp.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ Settings.swift,\ SharedModels.swift,\ SignupView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Settings.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SharedModels.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SignupView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/Settings.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SharedModels.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SignupView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ Nice_Traders (in target 'Nice Traders' from project 'Nice Traders')
+
+EmitSwiftModule normal arm64 (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 Compiling\ TermsView.swift,\ UserLocationManager.swift,\ GeneratedAssetSymbols.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/TermsView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/UserLocationManager.swift /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/TermsView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/UserLocationManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftCompile normal x86_64 /Users/stevenelson/Library/Developer/Xcode/DerivedData/Nice_Traders-dmabiliqqxoayxenpezpueogwbwx/Build/Intermediates.noindex/Nice\ Traders.build/Debug-iphonesimulator/Nice\ Traders.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling Settings.swift, SharedModels.swift, SignupView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ ProfileView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ProfileView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ProfileView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ProfileView.swift:156:10: warning: 'onChange(of:perform:)' was deprecated in iOS 17.0: Use `onChange` with a two or zero parameter action closure instead.
+        .onChange(of: localizationManager.languageVersion) { newVersion in
+         ^
+
+SwiftCompile normal arm64 Compiling\ ContactView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling LanguagePickerView.swift, LearnMoreView.swift, ListingMapView.swift, LocalizationManager.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ ExchangeRatesView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling LocationLanguageDetector.swift, LoginView.swift, MessagesView.swift, Nice_TradersApp.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ SearchView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SearchView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/SearchView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling TermsView.swift, UserLocationManager.swift, GeneratedAssetSymbols.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ ContactDetailView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactDetailView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ContactDetailView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal x86_64 Compiling ExchangeHistoryView.swift, ExchangeMapView.swift, ExchangeRatesAPI.swift, ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ ListingMapView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ListingMapView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/ListingMapView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:96:9: warning: 'init(coordinateRegion:interactionModes:showsUserLocation:userTrackingMode:annotationItems:annotationContent:)' was deprecated in iOS 17.0: Use Map initializers that take a MapContentBuilder instead.
+        Map(coordinateRegion: $region,
+        ^
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:99:13: warning: 'MapAnnotation' was deprecated in iOS 17.0: Use Annotation along with Map initializers that take a MapContentBuilder instead.
+            MapAnnotation(coordinate: location.coordinate) {
+            ^
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:51: warning: string interpolation produces a debug description for an optional value; did you mean to make this explicit?
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ^~~~~~~~~~~~~~~~~~~~~
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:64: note: provide a default value to avoid this warning
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ~~~~~~~~~~~~~^~~~~~~~
+                                                                        ?? <#default value#>
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:64: note: use 'String(describing:)' to silence this warning
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                  ~~~~~~~~~~~~~^~~~~~~~
+                                                  String(describing:   )
+/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/ListingMapView.swift:229:50: warning: 'appendInterpolation' is deprecated: Localized string interpolation produces an unlocalized, debug description for this type of value. Use a type supported by LocalizedStringKey.StringInterpolation or initialize a LocalizedStringResource instead with an interpolated value that conforms to CustomLocalizedStringResourceConvertible.
+                Text("\(listing.user.firstName) \(listing.user.lastName)")
+                                                 ^
+
+SwiftDriverJobDiscovery normal arm64 Compiling ExchangeRatesView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ EditListingView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/EditListingView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/EditListingView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ListingMapView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 Compiling\ DashboardView.swift /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/DashboardView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftCompile normal arm64 /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders/Nice\ Traders/DashboardView.swift (in target 'Nice Traders' from project 'Nice Traders')
+    cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice\ Traders
+    
+
+SwiftDriverJobDiscovery normal arm64 Compiling ProfileView.swift (in target 'Nice Traders' from project 'Nice Traders')
+
+SwiftDriverJobDiscovery normal arm64 Compiling SearchView.swift (in target 'Nice Traders' from project 'Nice Traders')
+

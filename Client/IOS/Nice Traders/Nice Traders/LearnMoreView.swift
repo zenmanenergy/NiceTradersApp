@@ -10,11 +10,12 @@ import SwiftUI
 struct LearnMoreView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showSignup = false
+    let localizationManager = LocalizationManager.shared
     
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // Header
+                // Header with Back Button
                 ZStack {
                     LinearGradient(
                         gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -22,22 +23,40 @@ struct LearnMoreView: View {
                         endPoint: .bottomTrailing
                     )
                     
-                    VStack(spacing: 12) {
-                        Text("💱")
-                            .font(.system(size: 64))
+                    VStack(spacing: 0) {
+                        // Back Button
+                        HStack {
+                            Button(action: { dismiss() }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 16, weight: .semibold))
+                                    
+                                }
+                                .foregroundColor(.white)
+                            }
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
                         
-                        Text("How Nice Traders Works")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
-                        
-                        Text("The smart way to exchange currency locally")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
+                        // Title Section
+                        VStack(spacing: 12) {
+                            Text("💱")
+                                .font(.system(size: 64))
+                            
+                            Text(localizationManager.localize("HOW_NICE_TRADERS_WORKS"))
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                            
+                            Text(localizationManager.localize("SMART_WAY_EXCHANGE_LOCALLY"))
+                                .font(.system(size: 16))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 24)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 40)
                 }
                 .frame(maxWidth: .infinity)
                 
@@ -45,11 +64,11 @@ struct LearnMoreView: View {
                 VStack(alignment: .leading, spacing: 32) {
                     // Introduction
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("What is Nice Traders?")
+                        Text(localizationManager.localize("WHAT_IS_NICE_TRADERS"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Color(hex: "2d3748"))
                         
-                        Text("Nice Traders is a peer-to-peer platform that connects travelers and locals who want to exchange foreign currency. Instead of paying high fees at banks or exchange kiosks, you can find someone in your neighborhood who has the currency you need and wants what you have.")
+                        Text(localizationManager.localize("NICE_TRADERS_DESCRIPTION"))
                             .font(.system(size: 16))
                             .foregroundColor(Color(hex: "4a5568"))
                             .lineSpacing(6)
@@ -59,68 +78,68 @@ struct LearnMoreView: View {
                     
                     // How It Works Section
                     VStack(alignment: .leading, spacing: 24) {
-                        Text("How It Works")
+                        Text(localizationManager.localize("HOW_IT_WORKS"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Color(hex: "2d3748"))
                             .padding(.horizontal, 24)
                         
-                        ProcessStep(number: "1", icon: "📝", title: "Create Your Listing", description: "Post the currency you have and what you want to exchange it for. Set your location and preferred meeting places.")
+                        ProcessStep(number: "1", icon: "📝", title: localizationManager.localize("CREATE_YOUR_LISTING"), description: localizationManager.localize("CREATE_LISTING_DESCRIPTION"))
                         
-                        ProcessStep(number: "2", icon: "🔍", title: "Search & Match", description: "Browse listings from people nearby who have what you need. Filter by currency, location, and amount.")
+                        ProcessStep(number: "2", icon: "🔍", title: localizationManager.localize("SEARCH_AND_MATCH"), description: localizationManager.localize("SEARCH_LISTING_DESCRIPTION"))
                         
-                        ProcessStep(number: "3", icon: "💬", title: "Connect Securely", description: "Contact other users through our secure messaging system. Discuss exchange rates, amounts, and meeting details.")
+                        ProcessStep(number: "3", icon: "💬", title: localizationManager.localize("CONNECT_SECURELY"), description: localizationManager.localize("CONNECT_DESCRIPTION"))
                         
-                        ProcessStep(number: "4", icon: "🤝", title: "Meet & Exchange", description: "Meet in a safe, public location like a coffee shop or bank lobby. Exchange your currency face-to-face.")
+                        ProcessStep(number: "4", icon: "🤝", title: localizationManager.localize("MEET_AND_EXCHANGE"), description: localizationManager.localize("MEET_DESCRIPTION"))
                         
-                        ProcessStep(number: "5", icon: "⭐", title: "Rate & Review", description: "Rate your exchange partner to help build trust in the community and guide future users.")
+                        ProcessStep(number: "5", icon: "⭐", title: localizationManager.localize("RATE_AND_REVIEW"), description: localizationManager.localize("RATE_DESCRIPTION"))
                     }
                     
                     // Benefits Section
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Why Choose Nice Traders?")
+                        Text(localizationManager.localize("WHY_CHOOSE_NICE_TRADERS"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Color(hex: "2d3748"))
                             .padding(.horizontal, 24)
                         
-                        BenefitCard(icon: "💸", title: "Save Money", description: "Banks and airport kiosks charge 5-15% in fees and markups. With Nice Traders, negotiate rates that work for both parties.", color: Color(hex: "48bb78"))
+                        BenefitCard(icon: "💸", title: localizationManager.localize("SAVE_MONEY"), description: localizationManager.localize("SAVE_MONEY_DESCRIPTION"), color: Color(hex: "48bb78"))
                         
-                        BenefitCard(icon: "⚡", title: "Fast & Convenient", description: "Find currency exchanges happening near you right now. No need to drive to the bank or wait in line at the airport.", color: Color(hex: "4299e1"))
+                        BenefitCard(icon: "⚡", title: localizationManager.localize("FAST_AND_CONVENIENT"), description: localizationManager.localize("FAST_DESCRIPTION"), color: Color(hex: "4299e1"))
                         
-                        BenefitCard(icon: "🌍", title: "Support Your Community", description: "Help fellow travelers while getting the currency you need. Build connections with people in your neighborhood.", color: Color(hex: "9f7aea"))
+                        BenefitCard(icon: "🌍", title: localizationManager.localize("SUPPORT_YOUR_COMMUNITY"), description: localizationManager.localize("COMMUNITY_DESCRIPTION"), color: Color(hex: "9f7aea"))
                         
-                        BenefitCard(icon: "🔒", title: "Safe & Transparent", description: "View user ratings, meet in public places, and communicate through our secure platform. Safety is our priority.", color: Color(hex: "ed8936"))
+                        BenefitCard(icon: "🔒", title: localizationManager.localize("SAFE_AND_TRANSPARENT"), description: localizationManager.localize("SAFE_DESCRIPTION"), color: Color(hex: "ed8936"))
                     }
                     .padding(.bottom, 16)
                     
                     // Safety Guidelines
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Safety First")
+                        Text(localizationManager.localize("SAFETY_FIRST"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Color(hex: "2d3748"))
                             .padding(.horizontal, 24)
                         
-                        SafetyTip(icon: "🏦", text: "Always meet in well-lit public places like coffee shops, bank lobbies, or shopping centers")
-                        SafetyTip(icon: "👥", text: "Bring a friend if possible, especially for larger exchanges")
-                        SafetyTip(icon: "💵", text: "Verify the authenticity of currency before completing the exchange")
-                        SafetyTip(icon: "📱", text: "Keep communication on our platform until you've successfully met")
-                        SafetyTip(icon: "⏰", text: "Meet during daylight hours when possible")
-                        SafetyTip(icon: "🚫", text: "Never share personal financial information or send money in advance")
+                        SafetyTip(icon: "🏦", text: localizationManager.localize("MEET_PUBLIC_PLACES"))
+                        SafetyTip(icon: "👥", text: localizationManager.localize("BRING_A_FRIEND"))
+                        SafetyTip(icon: "💵", text: localizationManager.localize("VERIFY_CURRENCY"))
+                        SafetyTip(icon: "📱", text: localizationManager.localize("KEEP_COMMUNICATION"))
+                        SafetyTip(icon: "⏰", text: localizationManager.localize("MEET_DAYLIGHT"))
+                        SafetyTip(icon: "🚫", text: localizationManager.localize("NO_FINANCIAL_INFO"))
                     }
                     .padding(.bottom, 16)
                     
                     // Pricing Section
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("How Much Does It Cost?")
+                        Text(localizationManager.localize("HOW_MUCH_DOES_IT_COST"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Color(hex: "2d3748"))
                             .padding(.horizontal, 24)
                         
                         VStack(alignment: .leading, spacing: 12) {
-                            PricingRow(label: "Creating Listings", price: "Free")
-                            PricingRow(label: "Searching Listings", price: "Free")
-                            PricingRow(label: "Contact Access Fee", price: "$2.00", description: "One-time fee to unlock contact info for each listing")
+                            PricingRow(label: localizationManager.localize("CREATING_LISTINGS"), price: localizationManager.localize("FREE"))
+                            PricingRow(label: localizationManager.localize("SEARCHING_LISTINGS"), price: localizationManager.localize("FREE"))
+                            PricingRow(label: localizationManager.localize("CONTACT_ACCESS_FEE"), price: localizationManager.localize("CONTACT_FEE_PRICE"), description: localizationManager.localize("CONTACT_FEE_DESCRIPTION"))
                             
-                            Text("The $2.00 contact fee helps prevent spam and ensures serious exchanges. Once paid, you have unlimited messaging with that person.")
+                            Text(localizationManager.localize("CONTACT_FEE_EXPLANATION"))
                                 .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "718096"))
                                 .padding(.top, 8)
@@ -137,7 +156,7 @@ struct LearnMoreView: View {
                         Button(action: {
                             showSignup = true
                         }) {
-                            Text("Get Started")
+                            Text(localizationManager.localize("GET_STARTED"))
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -153,7 +172,7 @@ struct LearnMoreView: View {
                                 .shadow(color: Color(hex: "667eea").opacity(0.4), radius: 15, y: 4)
                         }
                         
-                        Text("Join thousands of smart travelers saving money on currency exchange")
+                        Text(localizationManager.localize("CTA_TAGLINE"))
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "718096"))
                             .multilineTextAlignment(.center)

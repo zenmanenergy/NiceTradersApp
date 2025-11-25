@@ -56,9 +56,9 @@ struct ContactDetailView: View {
                     VStack(alignment: .trailing, spacing: 8) {
                         HStack {
                             Button(action: { dismiss() }) {
+                                
                                 HStack(spacing: 4) {
                                     Image(systemName: "chevron.left")
-                                    Text("Back")
                                 }
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 12)
@@ -166,7 +166,7 @@ struct ContactDetailView: View {
         VStack(spacing: 16) {
             // Exchange Details
             VStack(alignment: .leading, spacing: 16) {
-                Text("Exchange Details")
+                Text(localizationManager.localize("EXCHANGE_DETAILS"))
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -187,7 +187,7 @@ struct ContactDetailView: View {
             
             // Trader Information
             VStack(alignment: .leading, spacing: 12) {
-                Text("Trader Information")
+                Text(localizationManager.localize("TRADER_INFORMATION"))
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -235,7 +235,7 @@ struct ContactDetailView: View {
     
     private var locationView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Meeting Coordination")
+            Text(localizationManager.localize("MEETING_COORDINATION"))
                 .font(.headline)
                 .foregroundColor(Color(hex: "2d3748"))
             
@@ -243,7 +243,7 @@ struct ContactDetailView: View {
             if let meeting = currentMeeting {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("✅ Meeting Agreed")
+                        Text("✅ " + localizationManager.localize("MEETING_AGREED"))
                             .font(.headline)
                             .foregroundColor(Color(hex: "38a169"))
                         Spacer()
@@ -251,24 +251,24 @@ struct ContactDetailView: View {
                     
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("📍 Location:")
+                            Text("📍 " + localizationManager.localize("LOCATION") + ":")
                                 .fontWeight(.semibold)
                             Text(meeting.location)
                         }
                         HStack {
-                            Text("🕒 Time:")
+                            Text("🕒 " + localizationManager.localize("TIME") + ":")
                                 .fontWeight(.semibold)
                             Text(formatDateTime(meeting.time))
                         }
                         if let message = meeting.message {
                             HStack(alignment: .top) {
-                                Text("💬 Note:")
+                                Text("💬 " + localizationManager.localize("NOTE") + ":")
                                     .fontWeight(.semibold)
                                 Text(message)
                             }
                         }
                         HStack {
-                            Text("📅 Agreed:")
+                            Text("📅 " + localizationManager.localize("AGREED") + ":")
                                 .fontWeight(.semibold)
                             Text(formatDateTime(meeting.agreedAt))
                         }
@@ -285,7 +285,7 @@ struct ContactDetailView: View {
             } else {
                 HStack {
                     Spacer()
-                    Text("⏳ No meeting scheduled yet")
+                    Text("⏳ " + localizationManager.localize("NO_MEETING_SCHEDULED"))
                         .foregroundColor(Color(hex: "f59e0b"))
                         .fontWeight(.semibold)
                     Spacer()
@@ -296,7 +296,7 @@ struct ContactDetailView: View {
             // Propose Meeting Button
             if currentMeeting == nil {
                 Button(action: { showProposeForm.toggle() }) {
-                    Text("📅 Propose Meeting Time & Location")
+                    Text("📅 " + localizationManager.localize("PROPOSE_MEETING"))
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -310,12 +310,12 @@ struct ContactDetailView: View {
                 // Propose Meeting Form
                 if showProposeForm {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Propose Meeting Details")
+                        Text(localizationManager.localize("PROPOSE_MEETING_DETAILS"))
                             .font(.headline)
                             .foregroundColor(Color(hex: "2d3748"))
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Meeting Location *")
+                            Text(localizationManager.localize("MEETING_LOCATION_REQUIRED"))
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "4a5568"))
@@ -325,7 +325,7 @@ struct ContactDetailView: View {
                         
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Date *")
+                                Text(localizationManager.localize("DATE_REQUIRED"))
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "4a5568"))
@@ -334,7 +334,7 @@ struct ContactDetailView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Time *")
+                                Text(localizationManager.localize("TIME_REQUIRED"))
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "4a5568"))
@@ -344,7 +344,7 @@ struct ContactDetailView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Optional Message")
+                            Text(localizationManager.localize("OPTIONAL_MESSAGE"))
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "4a5568"))
@@ -358,7 +358,7 @@ struct ContactDetailView: View {
                         
                         HStack(spacing: 12) {
                             Button(action: { showProposeForm = false }) {
-                                Text("Cancel")
+                                Text(localizationManager.localize("CANCEL"))
                                     .fontWeight(.semibold)
                                     .foregroundColor(Color(hex: "4a5568"))
                                     .frame(maxWidth: .infinity)
@@ -368,7 +368,7 @@ struct ContactDetailView: View {
                             }
                             
                             Button(action: proposeMeeting) {
-                                Text("Send Proposal")
+                                Text(localizationManager.localize("SEND_PROPOSAL"))
                                     .fontWeight(.semibold)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -391,10 +391,9 @@ struct ContactDetailView: View {
             // Meeting Proposals History
             if !meetingProposals.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Meeting Proposals")
+                    Text(localizationManager.localize("MEETING_PROPOSALS"))
                         .font(.headline)
                         .foregroundColor(Color(hex: "2d3748"))
-                    
                     ForEach(meetingProposals) { proposal in
                         proposalCard(proposal)
                     }
@@ -403,13 +402,13 @@ struct ContactDetailView: View {
             
             // General Location
             VStack(alignment: .leading, spacing: 8) {
-                Text("General Area")
+                Text(localizationManager.localize("GENERAL_AREA"))
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 Text("📍 \(contactData.listing.location)")
                     .font(.subheadline)
                     .foregroundColor(Color(hex: "4a5568"))
-                Text("Specific meeting locations should be agreed upon through proposals above.")
+                Text(localizationManager.localize("SPECIFIC_MEETING_LOCATIONS_NOTE"))
                     .font(.caption)
                     .foregroundColor(Color(hex: "718096"))
                     .italic()
@@ -453,7 +452,7 @@ struct ContactDetailView: View {
             if !proposal.isFromMe && proposal.status == "pending" {
                 HStack(spacing: 12) {
                     Button(action: { respondToProposal(proposal.proposalId, response: "accepted") }) {
-                        Text("✅ Accept")
+                        Text("✅ " + localizationManager.localize("ACCEPT"))
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -463,7 +462,7 @@ struct ContactDetailView: View {
                     }
                     
                     Button(action: { respondToProposal(proposal.proposalId, response: "rejected") }) {
-                        Text("❌ Reject")
+                        Text("❌ " + localizationManager.localize("REJECT"))
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -577,7 +576,7 @@ struct ContactDetailView: View {
                     .cornerRadius(20)
                 
                 Button(action: sendMessage) {
-                    Text("Send")
+                    Text(localizationManager.localize("SEND"))
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
@@ -639,7 +638,7 @@ struct ContactDetailView: View {
                         .fill(Color(hex: "34d399"))
                         .frame(width: 32, height: 32)
                         .overlay(
-                            Text("You")
+                            Text(localizationManager.localize("YOU"))
                                 .font(.system(size: 8))
                                 .fontWeight(.semibold)
                                 .foregroundColor(.white)

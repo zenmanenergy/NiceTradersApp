@@ -14,12 +14,13 @@ struct ContentView: View {
     @State private var isCheckingSession = true
     @State private var navigateToDashboard = false
     @State private var navigationId = UUID()
+    let localizationManager = LocalizationManager.shared
     
     var body: some View {
         NavigationStack {
             Group {
                 if isCheckingSession {
-                    ProgressView("Checking session...")
+                    ProgressView(localizationManager.localize("CHECKING_SESSION"))
                         .onAppear {
                             checkExistingSession()
                         }
@@ -28,11 +29,11 @@ struct ContentView: View {
                 VStack(spacing: 0) {
                     // Header Section
                 VStack(spacing: 8) {
-                    Text("NICE Traders")
+                    Text(localizationManager.localize("NICE_TRADERS_HEADER"))
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Neighborhood International Currency Exchange")
+                    Text(localizationManager.localize("NEIGHBORHOOD_CURRENCY_EXCHANGE"))
                         .font(.system(size: 14, weight: .light))
                         .foregroundColor(.white.opacity(0.9))
                         .multilineTextAlignment(.center)
@@ -56,12 +57,12 @@ struct ContentView: View {
                         .font(.system(size: 64))
                         .padding(.top, 32)
                     
-                    Text("Exchange Currency Locally")
+                    Text(localizationManager.localize("EXCHANGE_CURRENCY_LOCALLY"))
                         .font(.system(size: 29, weight: .semibold))
                         .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
                         .multilineTextAlignment(.center)
                     
-                    Text("Connect with neighbors to exchange foreign currency safely and affordably. Skip the expensive fees and get the cash you need from your community.")
+                    Text(localizationManager.localize("LANDING_PAGE_DESCRIPTION"))
                         .font(.system(size: 16))
                         .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         .lineSpacing(6)
@@ -72,11 +73,11 @@ struct ContentView: View {
                 
                 // Features Section
                 VStack(spacing: 24) {
-                    FeatureRow(icon: "🗺️", title: "Find Nearby", description: "See currency exchanges happening in your neighborhood")
+                    FeatureRow(icon: "🗺️", title: localizationManager.localize("FIND_NEARBY"), description: localizationManager.localize("FIND_NEARBY_DESC"))
                     
-                    FeatureRow(icon: "💰", title: "Better Rates", description: "Avoid high bank and airport exchange fees")
+                    FeatureRow(icon: "💰", title: localizationManager.localize("BETTER_RATES"), description: localizationManager.localize("BETTER_RATES_DESC"))
                     
-                    FeatureRow(icon: "🛡️", title: "Safe Exchanges", description: "Meet in public places with user ratings for safety")
+                    FeatureRow(icon: "🛡️", title: localizationManager.localize("SAFE_EXCHANGES"), description: localizationManager.localize("SAFE_EXCHANGES_DESC"))
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
@@ -86,7 +87,7 @@ struct ContentView: View {
                     Button(action: {
                         showSignup = true
                     }) {
-                        Text("Get Started")
+                        Text(localizationManager.localize("GET_STARTED"))
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -105,7 +106,7 @@ struct ContentView: View {
                     Button(action: {
                         showLearnMore = true
                     }) {
-                        Text("Learn More")
+                        Text(localizationManager.localize("LEARN_MORE"))
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                             .frame(maxWidth: .infinity)
@@ -122,21 +123,21 @@ struct ContentView: View {
                 
                 // Footer
                 VStack {
-                    Text("Join thousands of travelers saving money on currency exchange")
+                    Text(localizationManager.localize("LANDING_FOOTER"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         .multilineTextAlignment(.center)
                         .padding(.top, 24)
                     
                     HStack(spacing: 4) {
-                        Text("Already have an account?")
+                        Text(localizationManager.localize("ALREADY_HAVE_ACCOUNT"))
                             .font(.system(size: 14))
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         
                         Button(action: {
                             showLogin = true
                         }) {
-                            Text("Sign In")
+                            Text(localizationManager.localize("SIGN_IN"))
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
