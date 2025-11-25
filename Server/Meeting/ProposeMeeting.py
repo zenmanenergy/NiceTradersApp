@@ -2,11 +2,6 @@ from _Lib import Database
 import json
 import uuid
 from datetime import datetime, timedelta
-import sys
-import os
-
-# Add Admin module to path for NotificationService
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def propose_meeting(session_id, listing_id, proposed_location, proposed_time, message=None):
     """Propose a meeting time and location for an exchange"""

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from _Lib.Database import ConnectToDatabase
-from .APNService import APNService
+from APNService.APNService import APNService
 
 blueprint = Blueprint('admin', __name__)
 

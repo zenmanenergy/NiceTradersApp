@@ -11,7 +11,7 @@ struct LanguagePickerView: View {
             VStack(spacing: 20) {
                 // Current Language Display
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Current Language")
+                    Text(localizationManager.localize("CURRENT_LANGUAGE"))
                         .font(.headline)
                         .foregroundColor(.gray)
                     
@@ -36,7 +36,7 @@ struct LanguagePickerView: View {
                 
                 // Language List
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Select Language")
+                    Text(localizationManager.localize("SELECT_LANGUAGE"))
                         .font(.headline)
                         .foregroundColor(.gray)
                         .padding(.horizontal)

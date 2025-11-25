@@ -2,11 +2,6 @@ from _Lib import Database
 import json
 from datetime import datetime
 import uuid
-import sys
-import os
-
-# Add Admin module to path for NotificationService
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def send_interest_message(listing_id, session_id, message='', availability=[]):
     """Send interest message to a trader with availability preferences"""

@@ -81,6 +81,7 @@ struct ProfileView: View {
     @State private var navigateToMessages = false
 
     @State private var navigateToExchangeHistory = false
+    @State private var navigateToLanguagePicker = false
     
     var successRate: Int {
         guard user.totalExchanges > 0 else { return 0 }
@@ -132,6 +133,9 @@ struct ProfileView: View {
         .navigationDestination(isPresented: $navigateToExchangeHistory) {
             // ExchangeHistoryView would go here
             Text("Exchange History")
+        }
+        .navigationDestination(isPresented: $navigateToLanguagePicker) {
+            LanguagePickerView()
         }
         .navigationDestination(isPresented: $navigateToSearch) {
             SearchView(navigateToSearch: $navigateToSearch)
@@ -568,6 +572,38 @@ struct ProfileView: View {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
             )
+            
+            // Language Setting
+            Button(action: {
+                navigateToLanguagePicker = true
+            }) {
+                HStack(spacing: 16) {
+                    Text("🌐")
+                        .font(.system(size: 24))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Language")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        Text(localizationManager.supportedLanguages[localizationManager.currentLanguage] ?? "English")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(Color(hex: "cbd5e0"))
+                }
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
+                )
+            }
         }
     }
     

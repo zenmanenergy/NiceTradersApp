@@ -13,8 +13,11 @@ class LocalizationManager: NSObject, ObservableObject {
     @Published var currentLanguage: String {
         didSet {
             UserDefaults.standard.set(currentLanguage, forKey: "AppLanguage")
+            languageVersion += 1
         }
     }
+    
+    @Published var languageVersion: Int = 0  // Increment this to force view updates
     
     static let shared = LocalizationManager()
     
@@ -97,19 +100,314 @@ class LocalizationManager: NSObject, ObservableObject {
     
     // MARK: - String Localization
     
+    // Hardcoded translations dictionary
+    private let translations: [String: [String: String]] = [
+        "en": [
+            // Common actions
+            "CANCEL": "Cancel",
+            "SEND": "Send",
+            "BACK": "Back",
+            "EDIT": "Edit",
+            "DELETE": "Delete",
+            "SAVE": "Save",
+            "LOADING": "Loading...",
+            "ERROR": "Error",
+            "SUCCESS": "Success",
+            "SEARCH": "Search",
+            "FILTER": "Filter",
+            "SORT": "Sort",
+            "NO_RESULTS": "No Results",
+            "CONFIRMATION": "Confirmation",
+            "OK": "OK",
+            "OR": "Or",
+            
+            // Auth - Sign In
+            "SIGN_IN": "Sign In",
+            "SIGN_UP": "Sign Up",
+            "LOGIN": "Login",
+            "SIGNUP": "Sign Up",
+            "WELCOME_BACK": "Welcome Back",
+            "SIGN_IN_TO_CONTINUE": "Sign in to continue",
+            "SIGNING_IN": "Signing In...",
+            "DONT_HAVE_ACCOUNT": "Don't have an account?",
+            "CONTINUE_WITH_GOOGLE": "Continue with Google",
+            "GOOGLE_SIGN_IN_COMING_SOON": "Google Sign In coming soon!",
+            "INVALID_LOGIN_CREDENTIALS": "Invalid email or password",
+            
+            // Auth - Sign Up
+            "JOIN_NICE_TRADERS": "Join Nice Traders",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Start exchanging with neighbors",
+            "CREATING_ACCOUNT": "Creating Account...",
+            "ALREADY_HAVE_ACCOUNT": "Already have an account?",
+            "TERMS_AND_PRIVACY": "Terms and Privacy",
+            
+            // Form fields
+            "EMAIL": "Email",
+            "PASSWORD": "Password",
+            "CONFIRM_PASSWORD": "Confirm Password",
+            "FIRST_NAME": "First Name",
+            "LAST_NAME": "Last Name",
+            "PHONE_NUMBER": "Phone Number",
+            "FORGOT_PASSWORD": "Forgot Password?",
+            "FORGOT_PASSWORD_COMING_SOON": "Forgot Password feature coming soon!",
+            
+            // Placeholders
+            "ENTER_FIRST_NAME": "Enter first name",
+            "ENTER_LAST_NAME": "Enter last name",
+            "ENTER_EMAIL": "Enter email",
+            "ENTER_PHONE": "Enter phone",
+            "ENTER_PASSWORD": "Enter password",
+            "CREATE_PASSWORD": "Create password",
+            "CONFIRM_PASSWORD_PLACEHOLDER": "Confirm password",
+            
+            // Validation errors
+            "INVALID_EMAIL": "Invalid Email",
+            "PASSWORD_MISMATCH": "Passwords do not match",
+            "FIRST_NAME_REQUIRED": "First name is required",
+            "LAST_NAME_REQUIRED": "Last name is required",
+            "EMAIL_REQUIRED": "Email is required",
+            "PHONE_REQUIRED": "Phone number is required",
+            "PASSWORD_REQUIRED": "Password is required",
+            "PASSWORD_MIN_LENGTH": "Password must be at least 6 characters",
+            
+            // Network errors
+            "INVALID_URL": "Invalid URL",
+            "NETWORK_ERROR": "Network error",
+            "NO_DATA_RECEIVED": "No data received from server",
+            "UNKNOWN_ERROR": "Unknown error occurred",
+            "SIGNUP_FAILED": "Signup failed",
+            "FAILED_PARSE_RESPONSE": "Failed to parse server response",
+            
+            // Map view
+            "YOU": "You",
+            "MEETING_POINT": "Meeting Point",
+            "FINDING_OTHER_USER": "Finding other user...",
+            "LOADING_MAP": "Loading Map",
+            "meeting_point": "Meeting Point",
+            "you": "You",
+            "loading_map": "Loading Map",
+            "finding_other_user": "Finding other user...",
+            "miles": "miles",
+            
+            // Listings
+            "CREATE_LISTING": "Create Listing",
+            "EDIT_LISTING": "Edit Listing",
+            "MY_LISTINGS": "My Listings",
+            "LISTING_DETAILS": "Listing Details",
+            "AMOUNT": "Amount",
+            "CURRENCY": "Currency",
+            "LOCATION": "Location",
+            "DESCRIPTION": "Description",
+            "NO_LISTINGS": "No Listings",
+            
+            // Contact/Payment
+            "PAYMENT_RECEIVED": "Payment Received",
+            "PURCHASE_CONTACT": "Purchase Contact",
+            "SEND_MESSAGE": "Send Message",
+            "NEW_MESSAGE": "New Message",
+            
+            // Meeting
+            "MEETING_PROPOSED": "Meeting Proposed",
+            "PROPOSE_MEETING": "Propose Meeting",
+            "MEETING_TIME": "Meeting Time",
+            "MEETING_LOCATION": "Meeting Location",
+            "ACCEPT_MEETING": "Accept",
+            "DECLINE_MEETING": "Decline",
+            
+            // Profile
+            "MY_PROFILE": "My Profile",
+            "EDIT_PROFILE": "Edit Profile",
+            "SETTINGS": "Settings",
+            "LANGUAGE": "Language",
+            "LOGOUT": "Logout",
+            "DELETE_ACCOUNT": "Delete Account",
+            "RATING": "Rating",
+            "TOTAL_EXCHANGES": "Total Exchanges",
+            
+            // Dashboard
+            "DASHBOARD": "Dashboard",
+            "PURCHASED_CONTACTS": "Purchased Contacts",
+            "RECENT_EXCHANGES": "Recent Exchanges",
+            "EXCHANGE_HISTORY": "Exchange History",
+            
+            // Search
+            "SEARCH_LISTINGS": "Search Listings",
+            "BUYING_LOOKING_FOR": "Looking to Buy",
+            "SELLING_HAVE": "Have to Sell",
+            "FROM_CURRENCY": "From Currency",
+            "TO_CURRENCY": "To Currency"
+        ],
+        "es": [
+            "CANCEL": "Cancelar",
+            "SEND": "Enviar",
+            "BACK": "Atrás",
+            "EDIT": "Editar",
+            "DELETE": "Eliminar",
+            "SAVE": "Guardar",
+            "LOADING": "Cargando...",
+            "ERROR": "Error",
+            "SUCCESS": "Éxito",
+            "SEARCH": "Buscar",
+            "OK": "OK",
+            "OR": "O",
+            "SIGN_IN": "Iniciar Sesión",
+            "SIGN_UP": "Registrarse",
+            "LOGIN": "Iniciar Sesión",
+            "SIGNUP": "Registrarse",
+            "WELCOME_BACK": "Bienvenido de Nuevo",
+            "SIGN_IN_TO_CONTINUE": "Inicia sesión para continuar",
+            "SIGNING_IN": "Iniciando Sesión...",
+            "DONT_HAVE_ACCOUNT": "¿No tienes cuenta?",
+            "JOIN_NICE_TRADERS": "Únete a Nice Traders",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Empieza a intercambiar con vecinos",
+            "CREATING_ACCOUNT": "Creando Cuenta...",
+            "ALREADY_HAVE_ACCOUNT": "¿Ya tienes cuenta?",
+            "EMAIL": "Correo",
+            "PASSWORD": "Contraseña",
+            "CONFIRM_PASSWORD": "Confirmar Contraseña",
+            "FIRST_NAME": "Nombre",
+            "LAST_NAME": "Apellido",
+            "PHONE_NUMBER": "Teléfono",
+            "ENTER_FIRST_NAME": "Ingresa tu nombre",
+            "ENTER_LAST_NAME": "Ingresa tu apellido",
+            "ENTER_EMAIL": "Ingresa tu correo",
+            "ENTER_PHONE": "Ingresa tu teléfono",
+            "ENTER_PASSWORD": "Ingresa tu contraseña",
+            "CREATE_PASSWORD": "Crea una contraseña",
+            "CONFIRM_PASSWORD_PLACEHOLDER": "Confirma tu contraseña",
+            "FIRST_NAME_REQUIRED": "El nombre es requerido",
+            "LAST_NAME_REQUIRED": "El apellido es requerido",
+            "EMAIL_REQUIRED": "El correo es requerido",
+            "PHONE_REQUIRED": "El teléfono es requerido",
+            "PASSWORD_REQUIRED": "La contraseña es requerida",
+            "PASSWORD_MIN_LENGTH": "La contraseña debe tener al menos 6 caracteres"
+        ],
+        "fr": [
+            "CANCEL": "Annuler",
+            "SEND": "Envoyer",
+            "BACK": "Retour",
+            "EDIT": "Modifier",
+            "DELETE": "Supprimer",
+            "SAVE": "Enregistrer",
+            "LOADING": "Chargement...",
+            "ERROR": "Erreur",
+            "SUCCESS": "Succès",
+            "SEARCH": "Rechercher",
+            "OK": "OK",
+            "OR": "Ou",
+            "SIGN_IN": "Se Connecter",
+            "SIGN_UP": "S'inscrire",
+            "LOGIN": "Connexion",
+            "SIGNUP": "Inscription",
+            "WELCOME_BACK": "Bon Retour",
+            "SIGN_IN_TO_CONTINUE": "Connectez-vous pour continuer",
+            "SIGNING_IN": "Connexion...",
+            "DONT_HAVE_ACCOUNT": "Pas de compte?",
+            "JOIN_NICE_TRADERS": "Rejoignez Nice Traders",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Commencez à échanger avec vos voisins",
+            "CREATING_ACCOUNT": "Création du Compte...",
+            "ALREADY_HAVE_ACCOUNT": "Vous avez déjà un compte?",
+            "EMAIL": "Email",
+            "PASSWORD": "Mot de Passe",
+            "CONFIRM_PASSWORD": "Confirmer le Mot de Passe",
+            "FIRST_NAME": "Prénom",
+            "LAST_NAME": "Nom",
+            "PHONE_NUMBER": "Téléphone",
+            "ENTER_FIRST_NAME": "Entrez votre prénom",
+            "ENTER_LAST_NAME": "Entrez votre nom",
+            "ENTER_EMAIL": "Entrez votre email",
+            "ENTER_PHONE": "Entrez votre téléphone",
+            "ENTER_PASSWORD": "Entrez votre mot de passe",
+            "CREATE_PASSWORD": "Créez un mot de passe",
+            "CONFIRM_PASSWORD_PLACEHOLDER": "Confirmez le mot de passe"
+        ],
+        "de": [
+            "CANCEL": "Abbrechen",
+            "SEND": "Senden",
+            "BACK": "Zurück",
+            "EDIT": "Bearbeiten",
+            "DELETE": "Löschen",
+            "SAVE": "Speichern",
+            "LOADING": "Laden...",
+            "ERROR": "Fehler",
+            "SUCCESS": "Erfolg",
+            "SEARCH": "Suchen",
+            "OK": "OK",
+            "OR": "Oder",
+            "SIGN_IN": "Anmelden",
+            "SIGN_UP": "Registrieren",
+            "LOGIN": "Anmeldung",
+            "SIGNUP": "Registrierung",
+            "WELCOME_BACK": "Willkommen Zurück",
+            "SIGN_IN_TO_CONTINUE": "Melden Sie sich an, um fortzufahren",
+            "SIGNING_IN": "Anmeldung...",
+            "DONT_HAVE_ACCOUNT": "Noch kein Konto?",
+            "JOIN_NICE_TRADERS": "Treten Sie Nice Traders bei",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Beginnen Sie mit Ihren Nachbarn zu tauschen",
+            "CREATING_ACCOUNT": "Konto Erstellen...",
+            "ALREADY_HAVE_ACCOUNT": "Haben Sie bereits ein Konto?",
+            "EMAIL": "E-Mail",
+            "PASSWORD": "Passwort",
+            "FIRST_NAME": "Vorname",
+            "LAST_NAME": "Nachname",
+            "PHONE_NUMBER": "Telefon"
+        ],
+        "sk": [
+            "CANCEL": "Zrušiť",
+            "SEND": "Odoslať",
+            "BACK": "Späť",
+            "EDIT": "Upraviť",
+            "DELETE": "Vymazať",
+            "SAVE": "Uložiť",
+            "LOADING": "Načítava sa...",
+            "ERROR": "Chyba",
+            "SUCCESS": "Úspech",
+            "SEARCH": "Hľadať",
+            "OK": "OK",
+            "OR": "Alebo",
+            "SIGN_IN": "Prihlásiť sa",
+            "SIGN_UP": "Registrovať sa",
+            "LOGIN": "Prihlásenie",
+            "SIGNUP": "Registrácia",
+            "WELCOME_BACK": "Vitajte späť",
+            "SIGN_IN_TO_CONTINUE": "Prihláste sa na pokračovanie",
+            "SIGNING_IN": "Prihlasovanie...",
+            "DONT_HAVE_ACCOUNT": "Nemáte účet?",
+            "JOIN_NICE_TRADERS": "Pripojte sa k Nice Traders",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Začnite vymieňať so susedmi",
+            "CREATING_ACCOUNT": "Vytváranie účtu...",
+            "ALREADY_HAVE_ACCOUNT": "Už máte účet?",
+            "EMAIL": "Email",
+            "PASSWORD": "Heslo",
+            "FIRST_NAME": "Meno",
+            "LAST_NAME": "Priezvisko",
+            "PHONE_NUMBER": "Telefón"
+        ]
+    ]
+    
     func localize(_ key: String) -> String {
-        let localizedString = NSLocalizedString(
-            key,
-            tableName: "Localizable",
-            bundle: Bundle.main,
-            comment: ""
-        )
-        return localizedString
+        // Use languageVersion in logic to create dependency for SwiftUI
+        let selectedLanguage = languageVersion > -1 ? currentLanguage : "en"
+        
+        // Try to get translation for selected language
+        if let languageDict = translations[selectedLanguage],
+           let translated = languageDict[key] {
+            return translated
+        }
+        
+        // Fallback to English
+        if let englishDict = translations["en"],
+           let translated = englishDict[key] {
+            return translated
+        }
+        
+        // Last resort: return the key itself
+        return key
     }
     
     // MARK: - Currency Formatting
     
-    func formatCurrency(_ amount: Double, currency: String) -> String {
+    func formatCurrency(amount: Double, currency: String) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = currency
@@ -123,21 +421,21 @@ class LocalizationManager: NSObject, ObservableObject {
     
     // MARK: - Date Formatting
     
-    func formatDate(_ date: Date) -> String {
+    func formatDate(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: currentLanguage)
         formatter.dateStyle = .medium
         return formatter.string(from: date)
     }
     
-    func formatTime(_ date: Date) -> String {
+    func formatTime(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: currentLanguage)
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
     
-    func formatDateTime(_ date: Date) -> String {
+    func formatDateTime(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: currentLanguage)
         formatter.dateStyle = .medium
@@ -147,7 +445,7 @@ class LocalizationManager: NSObject, ObservableObject {
     
     // MARK: - Number Formatting
     
-    func formatNumber(_ number: Double, minimumFractionDigits: Int = 0, maximumFractionDigits: Int = 2) -> String {
+    func formatNumber(number: Double, minimumFractionDigits: Int = 0, maximumFractionDigits: Int = 2) -> String {
         let formatter = NumberFormatter()
         formatter.locale = Locale(identifier: currentLanguage)
         formatter.minimumFractionDigits = minimumFractionDigits

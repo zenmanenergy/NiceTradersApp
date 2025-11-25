@@ -1,11 +1,6 @@
 from _Lib import Database
 import json
 import uuid
-import sys
-import os
-
-# Add Admin module to path for NotificationService
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Admin'))
 
 def simulate_payment_processing(payment_method='paypal'):
     """Simulate PayPal payment processing - always succeeds for testing"""
