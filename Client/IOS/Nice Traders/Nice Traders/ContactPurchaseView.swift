@@ -12,6 +12,7 @@ import Combine
 struct ContactPurchaseView: View {
     let listingId: String
     @Environment(\.dismiss) var dismiss
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     @State private var listing: ListingDetails?
     @State private var contactFee: ContactFee?
@@ -50,7 +51,7 @@ struct ContactPurchaseView: View {
                     
                     Spacer()
                     
-                    Text("Contact Trader")
+                    Text(localizationManager.localize("CONTACT_TRADER"))
                         .font(.headline)
                         .foregroundColor(.white)
                     
@@ -80,13 +81,7 @@ struct ContactPurchaseView: View {
                         listingSummaryView(listing)
                         traderProfileView(listing)
                         contactStatusView(listing)
-                        
-                        if hasActiveContact {
-                            contactDetailsView()
-                        } else {
-                            unlockContactView()
-                        }
-                        
+                        unlockContactView()
                         safetyTipsView
                     }
                     .padding()
@@ -108,7 +103,7 @@ struct ContactPurchaseView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading contact details...")
+            Text(localizationManager.localize("LOADING_CONTACT_DETAILS"))
                 .foregroundColor(Color(hex: "718096"))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -124,7 +119,7 @@ struct ContactPurchaseView: View {
                 .multilineTextAlignment(.center)
             
             Button(action: { loadContactDetails() }) {
-                Text("Try Again")
+                Text(localizationManager.localize("TRY_AGAIN"))
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -149,12 +144,12 @@ struct ContactPurchaseView: View {
                         .cornerRadius(4)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(listing.amount, specifier: "%.2f") \(listing.currency)")
+                        Text(String(format: "%.2f", listing.amount) + " \(listing.currency)")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: "2d3748"))
                         
-                        Text(listing.rate == "market" ? "Market Rate" : "$\(listing.customRate, specifier: "%.4f") per \(listing.currency)")
+                        Text(listing.rate == "market" ? localizationManager.localize("MARKET_RATE") : "$" + String(format: "%.4f", listing.customRate) + " per \(listing.currency)")
                             .font(.subheadline)
                             .foregroundColor(Color(hex: "667eea"))
                             .fontWeight(.medium)
@@ -170,7 +165,7 @@ struct ContactPurchaseView: View {
                         .fontWeight(.medium)
                         .foregroundColor(Color(hex: "4a5568"))
                     
-                    Text("Within \(listing.locationRadius) miles")
+                    Text(localizationManager.localize("WITHIN_N_MILES_RANGE").replacingOccurrences(of: "N", with: String(listing.locationRadius)))
                         .font(.caption)
                         .foregroundColor(Color(hex: "718096"))
                         .padding(.horizontal, 8)
@@ -215,7 +210,7 @@ struct ContactPurchaseView: View {
                                 .foregroundColor(Color(hex: "718096"))
                         }
                         
-                        Text("\(listing.user.trades) completed trades")
+                        Text("\(listing.user.trades) " + localizationManager.localize("COMPLETED_TRADES"))
                             .font(.subheadline)
                             .foregroundColor(Color(hex: "718096"))
                     }
@@ -232,10 +227,10 @@ struct ContactPurchaseView: View {
             Divider()
             
             VStack(spacing: 12) {
-                detailRow(label: "Member since:", value: formatDate(listing.user.joinedDate))
-                detailRow(label: "Response time:", value: listing.user.responseTime)
-                detailRow(label: "Languages:", value: listing.user.languages.joined(separator: ", "))
-                detailRow(label: "Meeting preference:", value: listing.meetingPreference == "public" ? "Public places only" : "Flexible locations")
+                detailRow(label: localizationManager.localize("MEMBER_SINCE_COLON"), value: formatDate(listing.user.joinedDate))
+                detailRow(label: localizationManager.localize("RESPONSE_TIME_COLON"), value: listing.user.responseTime)
+                detailRow(label: localizationManager.localize("LANGUAGES_COLON"), value: listing.user.languages.joined(separator: ", "))
+                detailRow(label: localizationManager.localize("MEETING_PREFERENCE_COLON"), value: listing.meetingPreference == "public" ? localizationManager.localize("PUBLIC_PLACES_ONLY_RECOMMENDED") : localizationManager.localize("FLEXIBLE_MEETING_LOCATIONS"))
             }
         }
         .padding()
@@ -261,10 +256,10 @@ struct ContactPurchaseView: View {
     
     private func contactStatusView(_ listing: ListingDetails) -> some View {
         let statusIcon = hasActiveContact ? "✅" : "💰"
-        let statusTitle = hasActiveContact ? "Contact Access Active" : "Contact Access Required"
+        let statusTitle = hasActiveContact ? localizationManager.localize("CONTACT_ACCESS_ACTIVE") : localizationManager.localize("CONTACT_ACCESS_REQUIRED")
         let statusMessage = hasActiveContact 
-            ? "You can communicate directly with \(listing.user.firstName) \(listing.user.lastName ?? "") and coordinate your exchange."
-            : "Pay $2.00 to contact \(listing.user.firstName) and coordinate your exchange."
+            ? localizationManager.localize("CAN_COMMUNICATE_DIRECTLY").replacingOccurrences(of: "[TRADER_NAME]", with: "\(listing.user.firstName) \(listing.user.lastName ?? "")")
+            : localizationManager.localize("PAY_TO_CONTACT").replacingOccurrences(of: "[TRADER_NAME]", with: listing.user.firstName)
         let backgroundColor = hasActiveContact ? Color(hex: "f0fff4") : Color(hex: "fffaf0")
         let borderColor = hasActiveContact ? Color(hex: "48bb78") : Color(hex: "ed8936")
         
@@ -292,97 +287,40 @@ struct ContactPurchaseView: View {
         .cornerRadius(12)
     }
     
-    // MARK: - Contact Details (if access granted)
-    
-    private func contactDetailsView() -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Direct Contact")
-                .font(.headline)
-                .foregroundColor(Color(hex: "2d3748"))
-            
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Phone:")
-                        .fontWeight(.medium)
-                        .foregroundColor(Color(hex: "4a5568"))
-                    Spacer()
-                    Text("+1 (555) 123-4567")
-                        .fontWeight(.medium)
-                        .foregroundColor(Color(hex: "2d3748"))
-                }
-                .padding()
-                .background(Color(hex: "f7fafc"))
-                .cornerRadius(8)
-                
-                HStack {
-                    Text("Email:")
-                        .fontWeight(.medium)
-                        .foregroundColor(Color(hex: "4a5568"))
-                    Spacer()
-                    Text("sarah.chen@email.com")
-                        .fontWeight(.medium)
-                        .foregroundColor(Color(hex: "2d3748"))
-                }
-                .padding()
-                .background(Color(hex: "f7fafc"))
-                .cornerRadius(8)
-            }
-            
-            HStack(spacing: 12) {
-                Button(action: { /* Call action */ }) {
-                    Text("📞 Call Now")
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(hex: "68d391"))
-                        .cornerRadius(8)
-                }
-                
-                Button(action: { /* Message action */ }) {
-                    Text("💬 Send Message")
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(hex: "667eea"))
-                        .cornerRadius(8)
-                }
-            }
-        }
-        .padding()
-        .background(Color.white)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-    }
+
     
     // MARK: - Unlock Contact View
     
     private func unlockContactView() -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Unlock Full Contact")
+            Text(localizationManager.localize("UNLOCK_FULL_CONTACT"))
                 .font(.headline)
                 .foregroundColor(Color(hex: "2d3748"))
             
-            Text("Pay once to get full contact access and coordinate your exchange")
+            Text(localizationManager.localize("PAY_ONCE_FULL_ACCESS"))
                 .font(.subheadline)
                 .foregroundColor(Color(hex: "718096"))
             
             // Pricing Card
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Contact Access")
+                    Text(localizationManager.localize("CONTACT_ACCESS_TITLE"))
                         .font(.headline)
                         .foregroundColor(Color(hex: "2d3748"))
                     Spacer()
-                    Text("$\(contactFee?.price ?? 2.00, specifier: "%.2f")")
+                    Text("$" + String(format: "%.2f", contactFee?.price ?? 2.00))
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(Color(hex: "667eea"))
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(contactFee?.features ?? ["Direct contact with seller", "Exchange coordination", "Platform protection", "Dispute resolution support"], id: \.self) { feature in
+                    ForEach(contactFee?.features ?? [
+                        localizationManager.localize("FEATURE_DIRECT_CONTACT"),
+                        localizationManager.localize("FEATURE_EXCHANGE_COORDINATION"),
+                        localizationManager.localize("FEATURE_PLATFORM_PROTECTION"),
+                        localizationManager.localize("FEATURE_DISPUTE_RESOLUTION")
+                    ], id: \.self) { feature in
                         HStack(spacing: 8) {
                             Text("✓")
                                 .foregroundColor(Color(hex: "48bb78"))
@@ -403,7 +341,7 @@ struct ContactPurchaseView: View {
             
             // Payment Section
             VStack(spacing: 12) {
-                Text("Secure payment processing through PayPal. You can pay with your PayPal account or credit card.")
+                Text(localizationManager.localize("SECURE_PAYMENT_PROCESSING"))
                     .font(.subheadline)
                     .foregroundColor(Color(hex: "718096"))
                     .multilineTextAlignment(.center)
@@ -413,10 +351,10 @@ struct ContactPurchaseView: View {
                         if isProcessingPayment {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("Processing Payment...")
+                            Text(localizationManager.localize("PROCESSING_PAYMENT"))
                         } else {
                             Image(systemName: "creditcard.fill")
-                            Text("Pay $\(contactFee?.price ?? 2.00, specifier: "%.2f") with PayPal")
+                            Text(localizationManager.localize("PAY_WITH_PAYPAL").replacingOccurrences(of: "[PRICE]", with: String(format: "%.2f", contactFee?.price ?? 2.00)))
                         }
                     }
                     .fontWeight(.semibold)
@@ -428,7 +366,7 @@ struct ContactPurchaseView: View {
                 }
                 .disabled(isProcessingPayment)
                 
-                Text("🔒 Your payment information is secure and encrypted. We never store your payment details.")
+                Text(localizationManager.localize("PAYMENT_SECURE"))
                     .font(.caption)
                     .foregroundColor(Color(hex: "718096"))
                     .multilineTextAlignment(.center)
@@ -444,16 +382,16 @@ struct ContactPurchaseView: View {
     
     private var safetyTipsView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Safety Tips")
+            Text(localizationManager.localize("SAFETY_TIPS"))
                 .font(.headline)
                 .foregroundColor(Color(hex: "2d3748"))
             
             VStack(alignment: .leading, spacing: 8) {
-                safetyTipRow("Always meet in public places during daylight hours")
-                safetyTipRow("Bring a friend or let someone know your plans")
-                safetyTipRow("Verify the currency before completing the exchange")
-                safetyTipRow("Use NICE Traders' dispute resolution if issues arise")
-                safetyTipRow("Never share personal financial information")
+                safetyTipRow(localizationManager.localize("SAFETY_TIP_1"))
+                safetyTipRow(localizationManager.localize("SAFETY_TIP_2"))
+                safetyTipRow(localizationManager.localize("SAFETY_TIP_3"))
+                safetyTipRow(localizationManager.localize("SAFETY_TIP_4"))
+                safetyTipRow(localizationManager.localize("SAFETY_TIP_5"))
             }
         }
         .padding()
@@ -480,18 +418,18 @@ struct ContactPurchaseView: View {
     private func reportModalView() -> some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Help us keep the platform safe by reporting inappropriate listings.")
+                Text(localizationManager.localize("HELP_KEEP_PLATFORM_SAFE"))
                     .font(.subheadline)
                     .foregroundColor(Color(hex: "718096"))
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Reason for reporting:")
+                    Text(localizationManager.localize("REASON_FOR_REPORTING_COLON"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color(hex: "2d3748"))
                     
                     Picker("Report Reason", selection: $reportReason) {
-                        Text("Select a reason").tag("")
+                        Text(localizationManager.localize("SELECT_A_REASON")).tag("")
                         ForEach(getReportReasons(), id: \.value) { reason in
                             Text(reason.label).tag(reason.value)
                         }
@@ -503,7 +441,7 @@ struct ContactPurchaseView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Additional details (optional):")
+                    Text(localizationManager.localize("ADDITIONAL_DETAILS_OPTIONAL_COLON"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color(hex: "2d3748"))
@@ -521,7 +459,7 @@ struct ContactPurchaseView: View {
                 
                 HStack(spacing: 12) {
                     Button(action: { showReportModal = false }) {
-                        Text("Cancel")
+                        Text(localizationManager.localize("CANCEL"))
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: "4a5568"))
                             .frame(maxWidth: .infinity)
@@ -531,7 +469,7 @@ struct ContactPurchaseView: View {
                     }
                     
                     Button(action: submitReport) {
-                        Text("Submit Report")
+                        Text(localizationManager.localize("SUBMIT_REPORT"))
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -543,7 +481,7 @@ struct ContactPurchaseView: View {
                 }
             }
             .padding()
-            .navigationTitle("Report Listing")
+            .navigationTitle(localizationManager.localize("REPORT_LISTING"))
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -552,7 +490,7 @@ struct ContactPurchaseView: View {
     
     private func loadContactDetails() {
         guard let sessionId = SessionManager.shared.sessionId else {
-            loadError = "Session expired. Please log in again."
+            loadError = localizationManager.localize("SESSION_EXPIRED_LOGIN_AGAIN")
             isLoading = false
             return
         }
@@ -579,7 +517,7 @@ struct ContactPurchaseView: View {
         
         guard let url = components.url else {
             DispatchQueue.main.async {
-                self.loadError = "Invalid URL"
+                self.loadError = self.localizationManager.localize("INVALID_URL")
                 self.isLoading = false
             }
             return
@@ -588,7 +526,7 @@ struct ContactPurchaseView: View {
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
                 DispatchQueue.main.async {
-                    self.loadError = "Failed to load contact information"
+                    self.loadError = self.localizationManager.localize("FAILED_LOAD_CONTACT_INFO")
                     self.isLoading = false
                 }
                 return
@@ -596,7 +534,7 @@ struct ContactPurchaseView: View {
             
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                 DispatchQueue.main.async {
-                    self.loadError = "Failed to parse response"
+                    self.loadError = self.localizationManager.localize("FAILED_PARSE_RESPONSE")
                     self.isLoading = false
                 }
                 return
@@ -815,11 +753,11 @@ struct ContactPurchaseView: View {
     
     private func getReportReasons() -> [ReportReason] {
         return [
-            ReportReason(value: "scam", label: "Scam or fraud"),
-            ReportReason(value: "fake", label: "Fake listing"),
-            ReportReason(value: "inappropriate", label: "Inappropriate content"),
-            ReportReason(value: "spam", label: "Spam"),
-            ReportReason(value: "other", label: "Other")
+            ReportReason(value: "scam", label: localizationManager.localize("REPORT_SCAM_OR_FRAUD")),
+            ReportReason(value: "fake", label: localizationManager.localize("REPORT_FAKE_LISTING")),
+            ReportReason(value: "inappropriate", label: localizationManager.localize("REPORT_INAPPROPRIATE_CONTENT")),
+            ReportReason(value: "spam", label: localizationManager.localize("REPORT_SPAM")),
+            ReportReason(value: "other", label: localizationManager.localize("REPORT_OTHER"))
         ]
     }
 }

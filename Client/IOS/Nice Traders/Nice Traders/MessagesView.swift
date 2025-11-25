@@ -41,6 +41,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
 
 struct MessagesView: View {
     @Binding var navigateToMessages: Bool
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var purchasedContacts: [PurchasedContact] = []
     @State private var isLoading = true
     @State private var error: String?
@@ -52,7 +53,7 @@ struct MessagesView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Text("Messages")
+                Text(localizationManager.localize("MESSAGES"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(Color(hex: "2d3748"))
                 Spacer()
@@ -66,7 +67,7 @@ struct MessagesView: View {
                 Spacer()
                 ProgressView()
                     .scaleEffect(1.5)
-                Text("Loading messages...")
+                Text(localizationManager.localize("LOADING_MESSAGES"))
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "718096"))
                     .padding(.top)
@@ -82,7 +83,7 @@ struct MessagesView: View {
                         .foregroundColor(Color(hex: "718096"))
                         .multilineTextAlignment(.center)
                     Button(action: loadPurchasedContacts) {
-                        Text("Try Again")
+                        Text(localizationManager.localize("TRY_AGAIN"))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 24)
@@ -98,10 +99,10 @@ struct MessagesView: View {
                 VStack(spacing: 16) {
                     Text("💬")
                         .font(.system(size: 64))
-                    Text("No Conversations Yet")
+                    Text(localizationManager.localize("NO_CONVERSATIONS_YET"))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(Color(hex: "2d3748"))
-                    Text("Purchase contact access to start chatting with traders")
+                    Text(localizationManager.localize("PURCHASE_CONTACT_ACCESS"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
                         .multilineTextAlignment(.center)
@@ -187,7 +188,7 @@ struct MessagesView: View {
                         .foregroundColor(Color(hex: "718096"))
                         .lineLimit(2)
                 } else {
-                    Text("No messages yet")
+                    Text(localizationManager.localize("NO_MESSAGES_YET"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "a0aec0"))
                         .italic()
@@ -223,7 +224,7 @@ struct MessagesView: View {
         
         if let days = components.day, days > 0 {
             if days == 1 {
-                return "Yesterday"
+                return localizationManager.localize("YESTERDAY")
             } else if days < 7 {
                 return "\(days)d ago"
             } else {

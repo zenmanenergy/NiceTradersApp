@@ -45,13 +45,15 @@ struct EditListingView: View {
         case unset, detecting, detected
     }
     
-    let locationRadiusOptions = [
-        ("1", "Within 1 mile"),
-        ("3", "Within 3 miles"),
-        ("5", "Within 5 miles"),
-        ("10", "Within 10 miles"),
-        ("25", "Within 25 miles")
-    ]
+    var locationRadiusOptions: [(String, String)] {
+        [
+            ("1", localizationManager.localize("WITHIN_1_MILE")),
+            ("3", localizationManager.localize("WITHIN_3_MILES")),
+            ("5", localizationManager.localize("WITHIN_5_MILES")),
+            ("10", localizationManager.localize("WITHIN_10_MILES")),
+            ("25", localizationManager.localize("WITHIN_25_MILES"))
+        ]
+    }
     
     // All currencies (same as CreateListingView)
     let currencies: [Currency] = [
@@ -253,12 +255,15 @@ struct EditListingView: View {
             }
             .background(Color(hex: "f8fafc"))
             .navigationBarHidden(true)
-            .alert("Delete Listing", isPresented: $showDeleteConfirmation) {
+            .alert(localizationManager.localize("DELETE_LISTING_DIALOG_TITLE"), isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive, action: confirmDelete)
             } message: {
-                Text("Are you sure you want to delete this listing? This action cannot be undone.")
+                Text(localizationManager.localize("DELETE_LISTING_CONFIRM_MESSAGE"))
             }
+            
+            // Bottom Navigation
+            BottomNavigation(activeTab: "home")
         .onAppear {
             ExchangeRatesAPI.shared.refreshRatesIfNeeded()
             loadListingData()
@@ -279,7 +284,7 @@ struct EditListingView: View {
             
             Spacer()
             
-            Text("Edit Listing")
+            Text(localizationManager.localize("EDIT_LISTING"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
             
@@ -320,7 +325,7 @@ struct EditListingView: View {
             }
             .frame(height: 6)
             
-            Text("Step \(currentStep) of \(totalSteps)")
+            Text(getStepLabel())
                 .font(.system(size: 14))
                 .foregroundColor(Color(hex: "718096"))
         }
@@ -362,11 +367,11 @@ struct EditListingView: View {
     var step1View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("What currency do you have?")
+                Text(localizationManager.localize("WHAT_CURRENCY_DO_YOU_HAVE"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Select the currency you want to exchange")
+                Text(localizationManager.localize("SELECT_THE_CURRENCY_YOU_WANT_TO_EXCHANGE"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -375,7 +380,7 @@ struct EditListingView: View {
             
             // Currency You Have
             VStack(alignment: .leading, spacing: 8) {
-                Text("Currency You Have")
+                Text(localizationManager.localize("CURRENCY_YOU_HAVE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -391,7 +396,7 @@ struct EditListingView: View {
                     
                     if !showAllCurrencies {
                         Button(action: { showAllCurrencies = true }) {
-                            Text("Show More Currencies")
+                            Text(localizationManager.localize("SHOW_MORE_CURRENCIES"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "667eea"))
                                 .frame(maxWidth: .infinity)
@@ -418,7 +423,7 @@ struct EditListingView: View {
             
             // Amount
             VStack(alignment: .leading, spacing: 8) {
-                Text("Amount You Have")
+                Text(localizationManager.localize("AMOUNT_YOU_HAVE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -445,7 +450,7 @@ struct EditListingView: View {
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "e53e3e"))
                 } else {
-                    Text("How much of this currency do you have available?")
+                    Text(localizationManager.localize("HOW_MUCH_OF_THIS_CURRENCY_AVAILABLE"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
@@ -453,7 +458,7 @@ struct EditListingView: View {
             
             // Accept Currency
             VStack(alignment: .leading, spacing: 8) {
-                Text("What currency will you accept?")
+                Text(localizationManager.localize("WHAT_CURRENCY_WILL_YOU_ACCEPT"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -466,7 +471,7 @@ struct EditListingView: View {
                     
                     if !showAllAcceptCurrencies {
                         Button(action: { showAllAcceptCurrencies = true }) {
-                            Text("Show all currencies")
+                            Text(localizationManager.localize("SHOW_ALL_CURRENCIES"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "667eea"))
                                 .frame(maxWidth: .infinity)
@@ -488,7 +493,7 @@ struct EditListingView: View {
                     }
                 }
                 
-                Text("Select the currency you're willing to accept in exchange")
+                Text(localizationManager.localize("SELECT_CURRENCY_WILLING_TO_ACCEPT_IN_EXCHANGE"))
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "a0aec0"))
             }
@@ -500,11 +505,11 @@ struct EditListingView: View {
     var step2View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("Where can you meet?")
+                Text(localizationManager.localize("WHERE_CAN_YOU_MEET"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Update your meeting preferences")
+                Text(localizationManager.localize("UPDATE_MEETING_PREFERENCES"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -513,20 +518,20 @@ struct EditListingView: View {
             
             // Location (always detected for editing)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Your Location")
+                Text(localizationManager.localize("YOUR_LOCATION"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 locationDetectedView
                 
-                Text("Your exact location stays private - others see general area only")
+                Text(localizationManager.localize("YOUR_EXACT_LOCATION_STAYS_PRIVATE"))
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "a0aec0"))
             }
             
             // Distance Radius
             VStack(alignment: .leading, spacing: 8) {
-                Text("Meeting Distance")
+                Text(localizationManager.localize("MEETING_DISTANCE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -555,14 +560,14 @@ struct EditListingView: View {
                     )
                 }
                 
-                Text("How far are you willing to travel to meet?")
+                Text(localizationManager.localize("HOW_FAR_WILLING_TO_TRAVEL"))
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "a0aec0"))
             }
             
             // Meeting Preference
             VStack(alignment: .leading, spacing: 8) {
-                Text("Meeting Preference")
+                Text(localizationManager.localize("MEETING_PREFERENCE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -574,7 +579,7 @@ struct EditListingView: View {
                             Image(systemName: meetingPreference == "public" ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(meetingPreference == "public" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
                             
-                            Text("Public places only (Recommended)")
+                            Text(localizationManager.localize("PUBLIC_PLACES_ONLY_RECOMMENDED"))
                                 .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "4a5568"))
                             
@@ -596,7 +601,7 @@ struct EditListingView: View {
                             Image(systemName: meetingPreference == "flexible" ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(meetingPreference == "flexible" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
                             
-                            Text("Flexible meeting locations")
+                            Text(localizationManager.localize("FLEXIBLE_MEETING_LOCATIONS"))
                                 .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "4a5568"))
                             
@@ -615,7 +620,7 @@ struct EditListingView: View {
             
             // Available Until
             VStack(alignment: .leading, spacing: 8) {
-                Text("Available Until")
+                Text(localizationManager.localize("AVAILABLE_UNTIL"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -635,7 +640,7 @@ struct EditListingView: View {
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "e53e3e"))
                 } else {
-                    Text("When should this listing expire?")
+                    Text(localizationManager.localize("WHEN_SHOULD_LISTING_EXPIRE"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
@@ -648,11 +653,11 @@ struct EditListingView: View {
     var step3View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("Review your changes")
+                Text(localizationManager.localize("REVIEW_YOUR_CHANGES"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Make sure everything looks correct")
+                Text(localizationManager.localize("MAKE_SURE_EVERYTHING_LOOKS_CORRECT"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -696,31 +701,31 @@ struct EditListingView: View {
                 
                 VStack(spacing: 12) {
                     HStack {
-                        Text("Meeting Distance:")
+                        Text(localizationManager.localize("MEETING_DISTANCE_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
                         Spacer()
                         
-                        Text("Within \(locationRadius) miles")
+                        Text("\(localizationManager.localize("WITHIN_MILES")) \(locationRadius) \(localizationManager.localize("MILES"))")
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "718096"))
                     }
                     
                     HStack {
-                        Text("Meeting:")
+                        Text(localizationManager.localize("MEETING_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
                         Spacer()
                         
-                        Text(meetingPreference == "public" ? "Public places only" : "Flexible locations")
+                        Text(meetingPreference == "public" ? localizationManager.localize("PUBLIC_PLACES_ONLY") : localizationManager.localize("FLEXIBLE_LOCATIONS"))
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "718096"))
                     }
                     
                     HStack {
-                        Text("Available until:")
+                        Text(localizationManager.localize("AVAILABLE_UNTIL_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -748,7 +753,7 @@ struct EditListingView: View {
         HStack(spacing: 16) {
             if currentStep > 1 {
                 Button(action: prevStep) {
-                    Text("Back")
+                    Text(localizationManager.localize("BACK"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "4a5568"))
                         .frame(maxWidth: .infinity)
@@ -760,7 +765,7 @@ struct EditListingView: View {
             
             if currentStep < totalSteps {
                 Button(action: nextStep) {
-                    Text("Next")
+                    Text(localizationManager.localize("NEXT"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -781,9 +786,9 @@ struct EditListingView: View {
                         if isSubmitting {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("Updating...")
+                            Text(localizationManager.localize("UPDATING"))
                         } else {
-                            Text("Update Listing")
+                            Text(localizationManager.localize("UPDATE_LISTING"))
                         }
                     }
                     .font(.system(size: 16, weight: .semibold))
@@ -819,11 +824,11 @@ struct EditListingView: View {
     var deleteSectionView: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 8) {
-                Text("Danger Zone")
+                Text(localizationManager.localize("DANGER_ZONE"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color(hex: "c53030"))
                 
-                Text("Once you delete this listing, there is no going back. Please be certain.")
+                Text(localizationManager.localize("ONCE_YOU_DELETE_NO_GOING_BACK"))
                     .font(.system(size: 14))
                     .foregroundColor(Color(hex: "718096"))
                     .lineSpacing(4)
@@ -836,9 +841,9 @@ struct EditListingView: View {
                     if isDeleting {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        Text("Deleting...")
+                        Text(localizationManager.localize("DELETING"))
                     } else {
-                        Text("Delete This Listing")
+                        Text(localizationManager.localize("DELETE_THIS_LISTING"))
                     }
                 }
                 .font(.system(size: 15, weight: .semibold))
@@ -868,7 +873,7 @@ struct EditListingView: View {
                 .foregroundColor(Color(hex: "a0aec0"))
                 .padding(.leading, 16)
             
-            TextField("Search currencies...", text: searchQuery)
+            TextField(localizationManager.localize("SEARCH_CURRENCIES"), text: searchQuery)
                 .font(.system(size: 16))
                 .padding(.vertical, 14)
                 .padding(.trailing, 16)
@@ -943,7 +948,7 @@ struct EditListingView: View {
             Spacer()
             
             Button(action: onClear) {
-                Text("Change")
+                Text(localizationManager.localize("CHANGE"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(hex: "667eea"))
                     .underline()
@@ -973,7 +978,7 @@ struct EditListingView: View {
             }
             .foregroundColor(.white)
             
-            Text("Amount you'll receive (at market rate)")
+            Text(localizationManager.localize("AMOUNT_YOU_WILL_RECEIVE"))
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.9))
         }
@@ -993,14 +998,14 @@ struct EditListingView: View {
             Text("✅")
                 .font(.system(size: 20))
             
-            Text("Location detected")
+            Text(localizationManager.localize("LOCATION_DETECTED"))
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "276749"))
             
             Spacer()
             
             Button(action: handleUpdateLocation) {
-                Text("Update")
+                Text(localizationManager.localize("UPDATE"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(hex: "667eea"))
                     .underline()
@@ -1195,6 +1200,11 @@ struct EditListingView: View {
                 }
             }
         }.resume()
+    }
+    
+    func getStepLabel() -> String {
+        let key = "PASO_\(currentStep)_DE_\(totalSteps)"
+        return localizationManager.localize(key)
     }
     
     func confirmDelete() {

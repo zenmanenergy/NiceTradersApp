@@ -311,26 +311,44 @@ class LocalizationManager: NSObject, ObservableObject {
     // MARK: - Backend Synchronization
     
     private func saveLanguagePreferenceToBackend(languageCode: String, userId: String) {
-        let backendURL = URLComponents(string: "http://localhost:5000/api/profile/update")?.url ?? URL(fileURLWithPath: "")
+        let backendURL = URLComponents(string: "http://localhost:5000/Profile/UpdateProfile")?.url ?? URL(fileURLWithPath: "")
         var request = URLRequest(url: backendURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let payload: [String: Any] = [
-            "user_id": userId,
+            "SessionId": userId,
             "preferred_language": languageCode
         ]
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
             
-            URLSession.shared.dataTask(with: request) { _, response, error in
+            URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
-                    print("Error saving language preference: \(error.localizedDescription)")
+                    print("❌ [LocalizationManager] Error saving language preference: \(error.localizedDescription)")
+                    return
+                }
+                
+                // Parse response
+                if let data = data {
+                    do {
+                        if let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                           let success = jsonResponse["success"] as? Bool {
+                            if success {
+                                print("✅ [LocalizationManager] Language preference saved to backend: \(languageCode)")
+                            } else {
+                                let errorMsg = jsonResponse["error"] as? String ?? "Unknown error"
+                                print("⚠️ [LocalizationManager] Failed to save language preference: \(errorMsg)")
+                            }
+                        }
+                    } catch {
+                        print("⚠️ [LocalizationManager] Failed to parse response: \(error.localizedDescription)")
+                    }
                 }
             }.resume()
         } catch {
-            print("Error encoding language preference: \(error.localizedDescription)")
+            print("❌ [LocalizationManager] Error encoding language preference: \(error.localizedDescription)")
         }
     }
     

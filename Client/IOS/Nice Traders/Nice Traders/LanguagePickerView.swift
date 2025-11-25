@@ -74,7 +74,7 @@ struct LanguagePickerView: View {
                 
                 // Info Section
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Your language preference is automatically saved", systemImage: "info.circle")
+                    Label(localizationManager.localize("LANGUAGE_PREFERENCE_AUTO_SAVED"), systemImage: "info.circle")
                         .font(.caption)
                         .foregroundColor(.gray)
                 }
@@ -99,7 +99,7 @@ struct LanguagePickerView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Language")
+            .navigationTitle(localizationManager.localize("LANGUAGE"))
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: localizationManager.languageVersion) { newValue in
                 // Force view refresh when language changes

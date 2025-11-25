@@ -33,6 +33,7 @@ struct ExchangeHistoryView: View {
     @State private var isLoading = true
     @State private var filters = ExchangeFilters()
     @State private var availableCurrencies: [String] = []
+    @State private var sessionExpiredAlert = false
     
     var totalExchanges: Int {
         exchangeHistory.count
@@ -69,6 +70,9 @@ struct ExchangeHistoryView: View {
                     .padding(24)
                 }
                 .background(Color(hex: "f8fafc"))
+            
+            // Bottom Navigation
+            BottomNavigation(activeTab: "home")
         }
         .navigationBarHidden(true)
         .onAppear {
@@ -96,7 +100,7 @@ struct ExchangeHistoryView: View {
             
             Spacer()
             
-            Text("Exchange History")
+            Text(localizationManager.localize("EXCHANGE_HISTORY"))
                 .font(.system(size: 24, weight: .semibold))
                 .foregroundColor(.white)
             
@@ -120,10 +124,10 @@ struct ExchangeHistoryView: View {
     // MARK: - Summary Section
     var summarySection: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-            summaryCard(number: totalExchanges, label: "Total Exchanges")
-            summaryCard(number: completedExchanges, label: "Completed")
-            summaryCard(number: boughtExchanges, label: "Bought")
-            summaryCard(number: soldExchanges, label: "Sold")
+            summaryCard(number: totalExchanges, label: localizationManager.localize("TOTAL_EXCHANGES"))
+            summaryCard(number: completedExchanges, label: localizationManager.localize("COMPLETED_EXCHANGES"))
+            summaryCard(number: boughtExchanges, label: localizationManager.localize("BOUGHT_EXCHANGES"))
+            summaryCard(number: soldExchanges, label: localizationManager.localize("SOLD_EXCHANGES"))
         }
     }
     
@@ -148,45 +152,45 @@ struct ExchangeHistoryView: View {
     var filtersSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Filter History")
+                Text(localizationManager.localize("FILTER_HISTORY"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 Spacer()
                 
                 Button(action: clearFilters) {
-                    Text("Clear All")
+                    Text(localizationManager.localize("CLEAR_ALL"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
             }
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                filterGroup(label: "Type", selection: $filters.type) {
-                    Text("All Types").tag("all")
-                    Text("Bought").tag("bought")
-                    Text("Sold").tag("sold")
+                filterGroup(label: localizationManager.localize("FILTER_TYPE"), selection: $filters.type) {
+                    Text(localizationManager.localize("ALL_TYPES")).tag("all")
+                    Text(localizationManager.localize("BUY_LABEL")).tag("bought")
+                    Text(localizationManager.localize("SELL_LABEL")).tag("sold")
                 }
                 
-                filterGroup(label: "Currency", selection: $filters.currency) {
-                    Text("All Currencies").tag("all")
+                filterGroup(label: localizationManager.localize("FILTER_CURRENCY"), selection: $filters.currency) {
+                    Text(localizationManager.localize("ALL_CURRENCIES")).tag("all")
                     ForEach(availableCurrencies, id: \.self) { currency in
                         Text(currency).tag(currency)
                     }
                 }
                 
-                filterGroup(label: "Status", selection: $filters.status) {
-                    Text("All Status").tag("all")
-                    Text("Completed").tag("completed")
-                    Text("Pending").tag("pending")
-                    Text("Cancelled").tag("cancelled")
+                filterGroup(label: localizationManager.localize("FILTER_STATUS"), selection: $filters.status) {
+                    Text(localizationManager.localize("ALL_STATUS")).tag("all")
+                    Text(localizationManager.localize("COMPLETED")).tag("completed")
+                    Text(localizationManager.localize("PENDING")).tag("pending")
+                    Text(localizationManager.localize("CANCELLED")).tag("cancelled")
                 }
                 
-                filterGroup(label: "Timeframe", selection: $filters.timeframe) {
-                    Text("All Time").tag("all")
-                    Text("Last 30 Days").tag("30days")
-                    Text("Last 90 Days").tag("90days")
-                    Text("Last Year").tag("1year")
+                filterGroup(label: localizationManager.localize("FILTER_TIMEFRAME"), selection: $filters.timeframe) {
+                    Text(localizationManager.localize("ALL_TIME")).tag("all")
+                    Text(localizationManager.localize("LAST_30_DAYS")).tag("30days")
+                    Text(localizationManager.localize("LAST_90_DAYS")).tag("90days")
+                    Text(localizationManager.localize("LAST_YEAR")).tag("1year")
                 }
             }
         }
@@ -221,7 +225,7 @@ struct ExchangeHistoryView: View {
     var historySection: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Exchanges (\(filteredHistory.count))")
+                Text(localizationManager.localize("EXCHANGES_COUNT") + " (\(filteredHistory.count))")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -248,7 +252,7 @@ struct ExchangeHistoryView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("Loading exchange history...")
+            Text(localizationManager.localize("LOADING_EXCHANGE_HISTORY"))
                 .font(.system(size: 16))
                 .foregroundColor(Color(hex: "718096"))
         }
@@ -261,13 +265,13 @@ struct ExchangeHistoryView: View {
             Text("📊")
                 .font(.system(size: 48))
             
-            Text("No exchanges found")
+            Text(localizationManager.localize("NO_EXCHANGES_FOUND"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             Text(exchangeHistory.isEmpty ? 
-                "You haven't completed any exchanges yet." :
-                "No exchanges match your current filters.")
+                localizationManager.localize("NO_EXCHANGES_YET") :
+                localizationManager.localize("NO_MATCHING_EXCHANGES"))
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "718096"))
                 .multilineTextAlignment(.center)
@@ -325,7 +329,7 @@ struct ExchangeHistoryView: View {
                     }
                     
                     HStack {
-                        Text("with \(exchange.partner)")
+                        Text(localizationManager.localize("EXCHANGE_WITH") + " \(exchange.partner)")
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "718096"))
                         

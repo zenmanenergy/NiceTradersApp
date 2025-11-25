@@ -37,6 +37,9 @@ struct ExchangeRatesView: View {
                     .padding(24)
                 }
                 .background(Color(hex: "f8fafc"))
+            
+            // Bottom Navigation
+            BottomNavigation(activeTab: "home")
         }
         .navigationBarHidden(true)
         .onAppear {

@@ -154,13 +154,13 @@ struct SearchView: View {
     // MARK: - Quick Search Section
     var quickSearchSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Find Currency Exchange")
+            Text(localizationManager.localize("FIND_CURRENCY_EXCHANGE"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             // Question 1: What currency do you have?
             VStack(alignment: .leading, spacing: 8) {
-                Text("What currency do you have?")
+                Text(localizationManager.localize("WHAT_CURRENCY_HAVE"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "4a5568"))
                 
@@ -183,7 +183,7 @@ struct SearchView: View {
             
             // Question 2: What currency do you want?
             VStack(alignment: .leading, spacing: 8) {
-                Text("What currency do you want?")
+                Text(localizationManager.localize("WHAT_CURRENCY_WANT"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "4a5568"))
                 
@@ -206,17 +206,17 @@ struct SearchView: View {
             
             // Question 3: How far are you willing to travel?
             VStack(alignment: .leading, spacing: 8) {
-                Text("How far are you willing to travel?")
+                Text(localizationManager.localize("HOW_FAR_TRAVEL"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "4a5568"))
                 
                 Picker("Distance", selection: $searchFilters.maxDistance) {
-                    Text("1 mile").tag("1")
-                    Text("5 miles").tag("5")
-                    Text("10 miles").tag("10")
-                    Text("25 miles").tag("25")
-                    Text("50 miles").tag("50")
-                    Text("100 miles").tag("100")
+                    Text(localizationManager.localize("ONE_MILE")).tag("1")
+                    Text(localizationManager.localize("FIVE_MILES")).tag("5")
+                    Text(localizationManager.localize("TEN_MILES")).tag("10")
+                    Text(localizationManager.localize("TWENTY_FIVE_MILES")).tag("25")
+                    Text(localizationManager.localize("FIFTY_MILES")).tag("50")
+                    Text(localizationManager.localize("ONE_HUNDRED_MILES")).tag("100")
                 }
                 .pickerStyle(.menu)
                 .padding(14)
@@ -301,11 +301,11 @@ struct SearchView: View {
     
     var resultTitle: String {
         if isSearching {
-            return "Searching..."
+            return localizationManager.localize("SEARCHING")
         } else if hasSearched {
-            return "\(searchResults.count) Results Found"
+            return "\(searchResults.count) " + localizationManager.localize("RESULTS_FOUND")
         } else {
-            return "Recent Listings"
+            return localizationManager.localize("RECENT_LISTINGS")
         }
     }
     
@@ -314,7 +314,7 @@ struct SearchView: View {
             ProgressView()
                 .scaleEffect(1.5)
             
-            Text("Searching for currency listings...")
+            Text(localizationManager.localize("SEARCHING_FOR_CURRENCY"))
                 .font(.system(size: 16))
                 .foregroundColor(Color(hex: "718096"))
         }
@@ -327,7 +327,7 @@ struct SearchView: View {
             Text("⚠️")
                 .font(.system(size: 48))
             
-            Text("Search Error")
+            Text(localizationManager.localize("SEARCH_ERROR"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
@@ -337,7 +337,7 @@ struct SearchView: View {
                 .multilineTextAlignment(.center)
             
             Button(action: performSearch) {
-                Text("Try Again")
+                Text(localizationManager.localize("TRY_AGAIN"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -357,7 +357,7 @@ struct SearchView: View {
             Text("🔍")
                 .font(.system(size: 48))
             
-            Text("No listings found")
+            Text(localizationManager.localize("NO_LISTINGS_FOUND"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
