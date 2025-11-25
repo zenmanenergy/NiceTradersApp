@@ -399,8 +399,7 @@ CREATE TABLE exchange_history (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (UserId),
     INDEX idx_exchange_date (ExchangeDate),
-    INDEX idx_currency (Currency),
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    INDEX idx_currency (Currency)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create translations table for managing translations
@@ -414,6 +413,43 @@ CREATE TABLE translations (
     INDEX idx_translation_key (translation_key),
     INDEX idx_language_code (language_code),
     UNIQUE KEY unique_translation (translation_key, language_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create user_devices table for storing iOS/Android device tokens
+CREATE TABLE IF NOT EXISTS user_devices (
+    device_id CHAR(39) PRIMARY KEY,
+    UserId CHAR(39) NOT NULL,
+    device_type ENUM('ios', 'android', 'web') NOT NULL,
+    device_token VARCHAR(500) UNIQUE,
+    device_name VARCHAR(255),
+    app_version VARCHAR(50),
+    os_version VARCHAR(50),
+    is_active TINYINT DEFAULT 1,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_user_id (UserId),
+    INDEX idx_device_type (device_type),
+    INDEX idx_is_active (is_active),
+    INDEX idx_registered_at (registered_at),
+    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create APN logs table for tracking push notifications sent
+CREATE TABLE IF NOT EXISTS apn_logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    UserId CHAR(39) NOT NULL,
+    notification_title VARCHAR(255),
+    notification_body TEXT,
+    device_count INT DEFAULT 0,
+    failed_count INT DEFAULT 0,
+    metadata JSON,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_user_id (UserId),
+    INDEX idx_sent_at (sent_at),
+    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Show table creation status

@@ -1,6 +1,6 @@
 <script>
 	import { viewState, userDetailState } from '../../lib/adminStore';
-	import SuperFetch from '../../Session';
+	import SuperFetch from '../../SuperFetch.js';
 
 	let messageTitle = '';
 	let messageBody = '';

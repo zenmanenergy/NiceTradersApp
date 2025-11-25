@@ -17,9 +17,16 @@ def Login():
 		# Extract the Email and Password from the LoginData
 		Email = LoginData.get('Email', None)
 		Password = LoginData.get('Password', None)
+		
+		# Extract optional device information
+		device_token = LoginData.get('deviceToken', None)
+		device_type = LoginData.get('deviceType', 'ios')
+		device_name = LoginData.get('deviceName', None)
+		app_version = LoginData.get('appVersion', None)
+		os_version = LoginData.get('osVersion', None)
 
 		# Call the get_login function from GetLogin.py with the extracted data
-		result = get_login(Email, Password)
+		result = get_login(Email, Password, device_token, device_type, device_name, app_version, os_version)
 
 		return result
 	except Exception as e:

@@ -3,8 +3,11 @@ import CoreLocation
 import Combine
 
 class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+    static let shared = UserLocationManager()
+    
     @Published var location: CLLocation?
     @Published var isTracking = false
+    @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
     
     private let locationManager = CLLocationManager()
     private var updateTimer: Timer?
@@ -14,12 +17,17 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        authorizationStatus = locationManager.authorizationStatus
     }
     
     // MARK: - Location Permissions
     
     func requestLocationPermission() {
         locationManager.requestWhenInUseAuthorization()
+    }
+    
+    func requestLocation() {
+        requestLocationPermission()
     }
     
     // MARK: - Tracking
@@ -45,6 +53,13 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         self.location = locations.last
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        DispatchQueue.main.async {
+            self.authorizationStatus = status
+            print("Location authorization status changed to: \(status)")
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {

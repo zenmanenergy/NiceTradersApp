@@ -20,9 +20,16 @@ def CreateAccount():
 		Email = SignupData.get('email', None)
 		Phone = SignupData.get('phone', None)
 		Password = SignupData.get('password', None)
+		
+		# Extract optional device information
+		device_token = SignupData.get('deviceToken', None)
+		device_type = SignupData.get('deviceType', 'ios')
+		device_name = SignupData.get('deviceName', None)
+		app_version = SignupData.get('appVersion', None)
+		os_version = SignupData.get('osVersion', None)
 
 		# Call the create_account function with the extracted data
-		result = create_account(FirstName, LastName, Email, Phone, Password)
+		result = create_account(FirstName, LastName, Email, Phone, Password, device_token, device_type, device_name, app_version, os_version)
 
 		return result
 	except Exception as e:

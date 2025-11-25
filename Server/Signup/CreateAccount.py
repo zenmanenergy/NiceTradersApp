@@ -2,8 +2,9 @@ from _Lib import Database
 import uuid
 import datetime
 import hashlib
+from Profile.RegisterDevice import register_device
 
-def create_account(FirstName, LastName, Email, Phone, Password):
+def create_account(FirstName, LastName, Email, Phone, Password, device_token=None, device_type='ios', device_name=None, app_version=None, os_version=None):
 	# Validate required fields
 	if not FirstName or not LastName or not Email or not Phone or not Password:
 		return '{"success": false, "error": "All fields are required"}'
@@ -56,8 +57,11 @@ def create_account(FirstName, LastName, Email, Phone, Password):
 		# Close the database connection
 		connection.close()
 		
-		# Return success with session
-		return f'{{"success": true, "sessionId": "{SessionId}", "userType": "standard"}}'
+		# Always register device (token may be None initially, will be updated when APNs provides it)
+		register_device(UserId, device_token, device_type, device_name, app_version, os_version)
+		
+		# Return success with session and user ID
+		return f'{{"success": true, "sessionId": "{SessionId}", "userId": "{UserId}", "userType": "standard"}}'
 		
 	except Exception as e:
 		connection.close()

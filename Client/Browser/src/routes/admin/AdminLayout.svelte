@@ -31,7 +31,7 @@
 		<p>Nice Traders Admin</p>
 	</div>
 	
-	{#if $viewState.breadcrumbs.length > 0}
+	{#if $viewState.breadcrumbs && $viewState.breadcrumbs.length > 0}
 		<div class="breadcrumb-nav">
 			<button class="breadcrumb-btn" on:click={resetToSearch}>🏠 Home</button>
 			{#each $viewState.breadcrumbs as crumb}

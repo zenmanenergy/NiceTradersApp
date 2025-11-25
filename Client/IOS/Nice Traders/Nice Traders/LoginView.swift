@@ -47,7 +47,8 @@ struct LoginView: View {
             .background(
                 LinearGradient(
                     gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, 
-green: 0.29, blue: 0.64)]),                                                                                                    startPoint: .topLeading,
+green: 0.29, blue: 0.64)]),
+                    startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
@@ -68,8 +69,8 @@ green: 0.29, blue: 0.64)]),                                                     
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                             .multilineTextAlignment(.center)
                     }
-                    .padding(.top, 32)
-                    .padding(.bottom, 40)
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
                     
                     // Form
                     VStack(spacing: 24) {
@@ -136,46 +137,6 @@ green: 0.29, blue: 0.64)]),                                                     
                     .opacity(isSubmitting ? 0.7 : 1.0)
                     .padding(.horizontal, 24)
                     
-                    // Divider
-                    HStack {
-                        Rectangle()
-                            .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
-                            .frame(height: 1)
-                        
-                        Text(localizationManager.localize("OR"))
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(red: 0.63, green: 0.68, blue: 0.75))
-                            .padding(.horizontal, 16)
-                        
-                        Rectangle()
-                            .fill(Color(red: 0.89, green: 0.91, blue: 0.94))
-                            .frame(height: 1)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 32)
-                    
-                    // Social Login
-                    Button(action: {
-                        alertMessage = localizationManager.localize("GOOGLE_SIGN_IN_COMING_SOON")
-                        showingAlert = true
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "g.circle.fill")
-                                .font(.system(size: 20))
-                            Text(localizationManager.localize("CONTINUE_WITH_GOOGLE"))
-                                .font(.system(size: 16, weight: .medium))
-                        }
-                        .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color.white)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 2)
-                        )
-                    }
-                    .padding(.horizontal, 24)
-                    
                     // Signup Link
                     HStack(spacing: 4) {
                         Text(localizationManager.localize("DONT_HAVE_ACCOUNT"))
@@ -237,11 +198,17 @@ green: 0.29, blue: 0.64)]),                                                     
         
         isSubmitting = true
         
+        // Get device information
+        let deviceInfo = DeviceTokenManager.shared.getDeviceInfo()
+        
         // Prepare data for API
-        let parameters: [String: String] = [
+        var parameters: [String: String] = [
             "Email": email,
             "Password": password
         ]
+        
+        // Add device information if available
+        parameters.merge(deviceInfo) { (_, new) in new }
         
         // Build query string
         let queryString = parameters.map { key, value in
@@ -294,10 +261,15 @@ green: 0.29, blue: 0.64)]),                                                     
                             UserDefaults.standard.set(sessionId, forKey: "SessionId")
                             UserDefaults.standard.set(userType, forKey: "UserType")
                             
+                            // Save user ID if available
+                            if let userId = json["UserId"] as? String {
+                                UserDefaults.standard.set(userId, forKey: "UserId")
+                            }
+                            
                             print("Login successful! SessionId:", sessionId, "UserType:", userType)
                             
-                            // Load user's language preference from backend
-                            LocalizationManager.shared.loadLanguageFromBackend()
+                            // Send the locally-selected language preference to the backend
+                            LocalizationManager.shared.saveLanguagePreferenceToBackend(languageCode: LocalizationManager.shared.currentLanguage)
                             
                             // Navigate to dashboard
                             navigateToDashboard = true
@@ -305,6 +277,7 @@ green: 0.29, blue: 0.64)]),                                                     
                             // Clear any stored credentials
                             UserDefaults.standard.removeObject(forKey: "SessionId")
                             UserDefaults.standard.removeObject(forKey: "UserType")
+                            UserDefaults.standard.removeObject(forKey: "UserId")
                             
                             alertMessage = localizationManager.localize("INVALID_LOGIN_CREDENTIALS")
                             showingAlert = true

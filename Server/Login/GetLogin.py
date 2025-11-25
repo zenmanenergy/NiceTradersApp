@@ -2,8 +2,10 @@ from _Lib import Database
 import uuid
 import datetime
 import hashlib
+from Profile.RegisterDevice import register_device
+import json
 
-def get_login(Email, Password):
+def get_login(Email, Password, device_token=None, device_type='ios', device_name=None, app_version=None, os_version=None):
 	if not Email or not Password:
 		return '{"success": false, "error": "Email and password are required"}'
 	
@@ -44,9 +46,12 @@ def get_login(Email, Password):
 
 			# Close the database connection
 			connection.close()
+			
+			# Always register device (token may be None initially, will be updated when APNs provides it)
+			register_device(result['UserId'], device_token, device_type, device_name, app_version, os_version)
 
-			# Return success with session data
-			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}"}}'
+			# Return success with session data and user ID
+			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "UserId": "{result["UserId"]}"}}'
 			
 	except Exception as e:
 		connection.close()

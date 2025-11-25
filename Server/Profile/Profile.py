@@ -7,6 +7,7 @@ from .UpdateProfile import update_profile
 from .GetExchangeHistory import get_exchange_history
 from .UpdateSettings import update_settings
 from .DeleteAccount import delete_account
+from .UpdateDeviceToken import update_device_token
 from flask_app import app
 
 blueprint = Blueprint('Profile', __name__)
@@ -79,6 +80,25 @@ def DeleteAccount():
 		SessionId = DeleteData.get('SessionId', None)
 		
 		result = delete_account(SessionId)
+		return result
+	except Exception as e:
+		return Debugger(e)
+
+@blueprint.route("/Profile/UpdateDeviceToken", methods=['GET', 'POST'])
+@cross_origin()
+def UpdateDeviceTokenRoute():
+	try:
+		# Support both GET and POST requests
+		if request.method == 'POST':
+			TokenData = request.get_json() or {}
+		else:
+			TokenData = request.args.to_dict()
+		
+		UserId = TokenData.get('UserId', None)
+		DeviceType = TokenData.get('deviceType', 'ios')
+		DeviceToken = TokenData.get('deviceToken', None)
+		
+		result = update_device_token(UserId, DeviceType, DeviceToken)
 		return result
 	except Exception as e:
 		return Debugger(e)

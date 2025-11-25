@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct Nice_TradersApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     init() {
         print("🟡 [App] Nice_TradersApp initializing...")
         

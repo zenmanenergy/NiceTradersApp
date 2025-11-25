@@ -35,6 +35,17 @@ class SessionManager: ObservableObject {
         }
     }
     
+    var userId: String? {
+        get { UserDefaults.standard.string(forKey: "UserId") }
+        set { 
+            if let value = newValue {
+                UserDefaults.standard.set(value, forKey: "UserId")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "UserId")
+            }
+        }
+    }
+    
     var isLoggedIn: Bool {
         return sessionId != nil
     }
@@ -42,6 +53,7 @@ class SessionManager: ObservableObject {
     func logout() {
         sessionId = nil
         userType = nil
+        userId = nil
     }
     
     func verifySession(completion: @escaping (Bool) -> Void) {

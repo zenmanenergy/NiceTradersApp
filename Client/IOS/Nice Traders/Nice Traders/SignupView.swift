@@ -69,8 +69,8 @@ struct SignupView: View {
                             .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                             .multilineTextAlignment(.center)
                     }
-                    .padding(.top, 32)
-                    .padding(.bottom, 32)
+                    .padding(.top, 16)
+                    .padding(.bottom, 20)
                     
                     // Form
                     VStack(spacing: 24) {
@@ -236,14 +236,20 @@ struct SignupView: View {
         
         isSubmitting = true
         
+        // Get device information
+        let deviceInfo = DeviceTokenManager.shared.getDeviceInfo()
+        
         // Prepare data for API
-        let parameters: [String: String] = [
+        var parameters: [String: String] = [
             "firstName": firstName,
             "lastName": lastName,
             "email": email,
             "phone": phone,
             "password": password
         ]
+        
+        // Add device information if available
+        parameters.merge(deviceInfo) { (_, new) in new }
         
         // Build query string
         let queryString = parameters.map { key, value in
@@ -298,10 +304,15 @@ struct SignupView: View {
                             UserDefaults.standard.set(sessionId, forKey: "SessionId")
                             UserDefaults.standard.set(userType, forKey: "UserType")
                             
+                            // Save user ID if available
+                            if let userId = json["userId"] as? String {
+                                UserDefaults.standard.set(userId, forKey: "UserId")
+                            }
+                            
                             print("Signup successful! SessionId:", sessionId, "UserType:", userType)
                             
-                            // Load user's language preference from backend (will be 'en' for new users)
-                            LocalizationManager.shared.loadLanguageFromBackend()
+                            // Send the locally-selected language preference to the backend
+                            LocalizationManager.shared.saveLanguagePreferenceToBackend(languageCode: LocalizationManager.shared.currentLanguage)
                             
                             // Navigate to dashboard
                             navigateToDashboard = true

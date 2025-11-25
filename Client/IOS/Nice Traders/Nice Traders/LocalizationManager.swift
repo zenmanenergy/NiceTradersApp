@@ -381,14 +381,18 @@ class LocalizationManager: NSObject, ObservableObject {
         }
     }
     
-    private func saveLanguagePreferenceToBackend(languageCode: String) {
+    func saveLanguagePreferenceToBackend(languageCode: String) {
         // Get sessionId from UserDefaults (safe access without SessionManager dependency)
         guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
             print("ℹ️ [LocalizationManager] User not logged in, language preference not saved to backend")
             return
         }
         
-        let backendURL = URLComponents(string: "\(baseURL)/Profile/UpdateProfile")?.url ?? URL(fileURLWithPath: "")
+        guard let backendURL = URLComponents(string: "\(baseURL)/Profile/UpdateProfile")?.url else {
+            print("⚠️ [LocalizationManager] Invalid backend URL for language preference")
+            return
+        }
+        
         var request = URLRequest(url: backendURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
