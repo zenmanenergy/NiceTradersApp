@@ -82,6 +82,7 @@ struct ProfileView: View {
 
     @State private var navigateToExchangeHistory = false
     @State private var navigateToLanguagePicker = false
+    @State private var profileRefreshId = UUID()
     
     var successRate: Int {
         guard user.totalExchanges > 0 else { return 0 }
@@ -147,8 +148,16 @@ struct ProfileView: View {
             MessagesView(navigateToMessages: $navigateToMessages)
         }
         .onAppear {
+            print("🟢 [ProfileView] onAppear - currentLanguage: \(localizationManager.currentLanguage), version: \(localizationManager.languageVersion)")
+            let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
+            print("🟢 [ProfileView] onAppear - UserDefaults.AppLanguage: \(savedInDefaults ?? "nil")")
             loadProfileData()
         }
+        .onChange(of: localizationManager.languageVersion) { newVersion in
+            print("🟢 [ProfileView] onChange triggered - version changed to: \(newVersion)")
+            profileRefreshId = UUID()
+        }
+        .id(profileRefreshId)
     }
     
     // MARK: - Header View
@@ -167,7 +176,7 @@ struct ProfileView: View {
             
             Spacer()
             
-            Text("Profile")
+            Text(localizationManager.localize("MY_PROFILE"))
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(.white)
             
@@ -275,7 +284,7 @@ struct ProfileView: View {
                     
                     HStack(spacing: 12) {
                         Button(action: saveChanges) {
-                            Text("Save Changes")
+                            Text(localizationManager.localize("SAVE_CHANGES"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -285,7 +294,7 @@ struct ProfileView: View {
                         }
                         
                         Button(action: cancelEdit) {
-                            Text("Cancel")
+                            Text(localizationManager.localize("CANCEL"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "4a5568"))
                                 .frame(maxWidth: .infinity)
@@ -317,7 +326,7 @@ struct ProfileView: View {
                         
                         HStack(spacing: 8) {
                             Text("📅")
-                            Text("Member since \(user.joinDate)")
+                            Text("\(localizationManager.localize("MEMBER_SINCE")) \(user.joinDate)")
                                 .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "718096"))
                         }
@@ -335,7 +344,7 @@ struct ProfileView: View {
     // MARK: - Stats Section
     var statsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Exchange Stats")
+            Text(localizationManager.localize("EXCHANGE_STATS"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
@@ -346,7 +355,7 @@ struct ProfileView: View {
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(Color(hex: "667eea"))
                     
-                    Text("Rating")
+                    Text(localizationManager.localize("RATING"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "718096"))
                     
@@ -370,10 +379,10 @@ struct ProfileView: View {
                 // Total Exchanges
                 VStack(spacing: 8) {
                     Text("\(user.totalExchanges)")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(Color(hex: "667eea"))
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("Total Exchanges")
+                    Text(localizationManager.localize("TOTAL_EXCHANGES"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "718096"))
                         .multilineTextAlignment(.center)
@@ -390,10 +399,10 @@ struct ProfileView: View {
                 // Success Rate
                 VStack(spacing: 8) {
                     Text("\(successRate)%")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(Color(hex: "667eea"))
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("Success Rate")
+                    Text(localizationManager.localize("SUCCESS_RATE"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "718096"))
                         .multilineTextAlignment(.center)
@@ -420,11 +429,11 @@ struct ProfileView: View {
                     .font(.system(size: 24))
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("View Exchange History")
+                    Text(localizationManager.localize("VIEW_EXCHANGE_HISTORY"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("See all your past exchanges")
+                    Text(localizationManager.localize("SEE_ALL_PAST_EXCHANGES"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
                 }
@@ -447,14 +456,14 @@ struct ProfileView: View {
     // MARK: - Contact Section
     var contactSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Contact Information")
+            Text(localizationManager.localize("CONTACT_INFORMATION"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             VStack(spacing: 16) {
                 if isEditing, let editedUser = editedUser {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Email")
+                        Text(localizationManager.localize("EMAIL"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -475,7 +484,7 @@ struct ProfileView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Phone")
+                        Text(localizationManager.localize("PHONE_NUMBER"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -495,7 +504,7 @@ struct ProfileView: View {
                     }
                 } else {
                     HStack {
-                        Text("Email")
+                        Text(localizationManager.localize("EMAIL"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -507,7 +516,7 @@ struct ProfileView: View {
                     }
                     
                     HStack {
-                        Text("Phone")
+                        Text(localizationManager.localize("PHONE_NUMBER"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -532,20 +541,20 @@ struct ProfileView: View {
     // MARK: - Settings Section
     var settingsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Settings")
+            Text(localizationManager.localize("SETTINGS"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             // Notifications
             VStack(alignment: .leading, spacing: 0) {
-                Text("Notifications")
+                Text(localizationManager.localize("NOTIFICATIONS"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                     .padding(.bottom, 16)
                 
-                settingToggle("New Messages", isOn: $notificationSettings.newMessages)
-                settingToggle("Exchange Updates", isOn: $notificationSettings.exchangeUpdates)
-                settingToggle("Push Notifications", isOn: $notificationSettings.pushNotifications)
+                settingToggle(localizationManager.localize("NEW_MESSAGES"), isOn: $notificationSettings.newMessages)
+                settingToggle(localizationManager.localize("EXCHANGE_UPDATES"), isOn: $notificationSettings.exchangeUpdates)
+                settingToggle(localizationManager.localize("PUSH_NOTIFICATIONS"), isOn: $notificationSettings.pushNotifications)
             }
             .padding(24)
             .background(Color.white)
@@ -557,13 +566,13 @@ struct ProfileView: View {
             
             // Privacy
             VStack(alignment: .leading, spacing: 0) {
-                Text("Privacy")
+                Text(localizationManager.localize("PRIVACY"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                     .padding(.bottom, 16)
                 
-                settingToggle("Show Location", isOn: $privacySettings.showLocation)
-                settingToggle("Allow Direct Messages", isOn: $privacySettings.allowDirectMessages)
+                settingToggle(localizationManager.localize("SHOW_LOCATION"), isOn: $privacySettings.showLocation)
+                settingToggle(localizationManager.localize("ALLOW_DIRECT_MESSAGES"), isOn: $privacySettings.allowDirectMessages)
             }
             .padding(24)
             .background(Color.white)
@@ -582,7 +591,7 @@ struct ProfileView: View {
                         .font(.system(size: 24))
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Language")
+                        Text(localizationManager.localize("LANGUAGE"))
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(Color(hex: "2d3748"))
                         
@@ -611,7 +620,7 @@ struct ProfileView: View {
     var recentExchangesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Recent Exchanges")
+                Text(localizationManager.localize("RECENT_EXCHANGES"))
                     .font(.system(size: 19, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -620,7 +629,7 @@ struct ProfileView: View {
                 Button(action: {
                     navigateToExchangeHistory = true
                 }) {
-                    Text("View All")
+                    Text(localizationManager.localize("VIEW_ALL"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
@@ -698,7 +707,7 @@ struct ProfileView: View {
             Button(action: handleLogout) {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.portrait.and.arrow.right")
-                    Text("Logout")
+                    Text(localizationManager.localize("LOGOUT"))
                 }
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.white)

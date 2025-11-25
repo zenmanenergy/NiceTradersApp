@@ -11,7 +11,8 @@ def get_profile(SessionId):
 		# Get user ID from session
 		session_query = """
 			SELECT users.UserId, users.FirstName, users.LastName, users.Email, users.Phone, 
-				   users.DateCreated, users.Location, users.Bio, users.Rating, users.TotalExchanges
+				   users.DateCreated, users.Location, users.Bio, users.Rating, users.TotalExchanges,
+				   users.PreferredLanguage
 			FROM usersessions 
 			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
@@ -34,7 +35,8 @@ def get_profile(SessionId):
 				"rating": float(user_result['Rating']) if user_result['Rating'] else 0.0,
 				"totalExchanges": int(user_result['TotalExchanges']) if user_result['TotalExchanges'] else 0,
 				"location": user_result['Location'] or '',
-				"bio": user_result['Bio'] or ''
+				"bio": user_result['Bio'] or '',
+				"preferredLanguage": user_result.get('PreferredLanguage', 'en') or 'en'
 			}
 		}
 		

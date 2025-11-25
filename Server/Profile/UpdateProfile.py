@@ -60,7 +60,7 @@ def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, 
 		if PreferredLanguage:
 			# Validate language code (must be 2-5 characters)
 			if len(PreferredLanguage) <= 5 and PreferredLanguage.isalnum():
-				update_fields.append("preferred_language = %s")
+				update_fields.append("PreferredLanguage = %s")
 				update_values.append(PreferredLanguage)
 			else:
 				connection.close()

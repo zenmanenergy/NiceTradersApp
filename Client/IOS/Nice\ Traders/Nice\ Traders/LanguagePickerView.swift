@@ -5,9 +5,11 @@ struct LanguagePickerView: View {
     @State private var isLoading = false
     @State private var showSuccessMessage = false
     @State private var successMessageText = ""
+    @State private var refreshId = UUID()
     
     var body: some View {
-        NavigationView {
+        print("🟡 DEBUG: LanguagePickerView body rendered, currentLanguage=\(localizationManager.currentLanguage), languageVersion=\(localizationManager.languageVersion)")
+        return NavigationView {
             VStack(spacing: 20) {
                 // Current Language Display
                 VStack(alignment: .leading, spacing: 8) {
@@ -33,7 +35,6 @@ struct LanguagePickerView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top)
-                .id(localizationManager.languageVersion)
                 
                 // Language List
                 VStack(alignment: .leading, spacing: 0) {
@@ -71,7 +72,6 @@ struct LanguagePickerView: View {
                         }
                     }
                 }
-                .id(localizationManager.languageVersion)
                 
                 // Info Section
                 VStack(alignment: .leading, spacing: 8) {
@@ -102,7 +102,14 @@ struct LanguagePickerView: View {
             }
             .navigationTitle("Language")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: localizationManager.languageVersion) { newValue in
+                // Force view refresh when language changes
+                print("🟣 DEBUG: onChange detected languageVersion changed to \(newValue)")
+                refreshId = UUID()
+                print("🟣 DEBUG: refreshId updated to \(refreshId)")
+            }
         }
+        .id(refreshId)
     }
     
     // MARK: - Helper Methods
@@ -125,10 +132,14 @@ struct LanguagePickerView: View {
     }
     
     private func selectLanguage(_ languageCode: String) {
+        print("🔵 DEBUG: selectLanguage called with '\(languageCode)'")
         isLoading = true
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            print("🔵 DEBUG: About to set currentLanguage to '\(languageCode)'")
             localizationManager.currentLanguage = languageCode
+            print("🔵 DEBUG: currentLanguage set, localizationManager.languageVersion=\(localizationManager.languageVersion)")
+            
             successMessageText = "Language changed to \(localizationManager.supportedLanguages[languageCode] ?? languageCode)"
             showSuccessMessage = true
             isLoading = false

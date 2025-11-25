@@ -12,8 +12,11 @@ import Combine
 class LocalizationManager: NSObject, ObservableObject {
     @Published var currentLanguage: String {
         didSet {
+            print("🔴 [LocalizationManager] currentLanguage changed: '\(oldValue)' → '\(currentLanguage)'")
             UserDefaults.standard.set(currentLanguage, forKey: "AppLanguage")
+            print("🔴 [LocalizationManager] Saved to UserDefaults: \(currentLanguage)")
             languageVersion += 1
+            print("🔴 [LocalizationManager] languageVersion incremented to: \(languageVersion)")
             objectWillChange.send()
             // Also save to backend via SessionManager if user is authenticated
             if let userId = SessionManager.shared.userId {
@@ -253,16 +256,24 @@ class LocalizationManager: NSObject, ObservableObject {
     ]
     
     private init() {
+        super.init()
+        
+        print("🟠 [LocalizationManager] Initializing...")
+        
         // Try to load saved language preference
         if let savedLanguage = UserDefaults.standard.string(forKey: "AppLanguage") {
+            print("🟠 [LocalizationManager] Found saved language in UserDefaults: \(savedLanguage)")
             self.currentLanguage = savedLanguage
         } else {
+            print("🟠 [LocalizationManager] No saved language, auto-detecting...")
             // Auto-detect from system locale first
             let systemLocale = Locale.preferredLanguages.first ?? "en"
             let languageCode = String(systemLocale.prefix(2))
             self.currentLanguage = supportedLanguages[languageCode] != nil ? languageCode : "en"
+            print("🟠 [LocalizationManager] Auto-detected language: \(self.currentLanguage)")
         }
-        super.init()
+        
+        print("🟠 [LocalizationManager] Initialized with language: \(self.currentLanguage), version: \(self.languageVersion)")
     }
     
     // MARK: - Localization

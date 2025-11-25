@@ -11,6 +11,7 @@ import SwiftUI
 // They should be moved to a shared models file, but for now we reference them here
 
 struct DashboardView: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var user: DashboardUserInfo = DashboardUserInfo(name: "Loading...", rating: 0, totalExchanges: 0, joinDate: "Loading...")
     @State private var myListings: [Listing] = []
     @State private var allActiveExchanges: [ActiveExchange] = []
@@ -377,30 +378,33 @@ struct DashboardView: View {
 // MARK: - Supporting Views
 
 struct LoadingView: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
+    
     var body: some View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading your dashboard...")
+            Text(localizationManager.localize("LOADING_DASHBOARD"))
                 .foregroundColor(.gray)
         }
     }
 }
 
 struct ErrorView: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     let error: String
     let retry: () -> Void
     
     var body: some View {
         VStack(spacing: 16) {
-            Text("Error Loading Dashboard")
+            Text(localizationManager.localize("ERROR_LOADING_DASHBOARD"))
                 .font(.headline)
                 .foregroundColor(.red)
             Text(error)
                 .foregroundColor(.gray)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            Button("Retry", action: retry)
+            Button(localizationManager.localize("RETRY"), action: retry)
                 .padding(.horizontal, 32)
                 .padding(.vertical, 12)
                 .background(Color(red: 0.4, green: 0.49, blue: 0.92))
@@ -468,6 +472,7 @@ struct MainDashboardView: View {
 }
 
 struct DashboardHeader: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     let user: DashboardUserInfo
     @Binding var navigateToProfile: Bool
     @Binding var navigateToMessages: Bool
@@ -487,7 +492,7 @@ struct DashboardHeader: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Welcome, \(user.firstName)")
+                    Text("\(localizationManager.localize("WELCOME")), \(user.firstName)")
                         .font(.system(size: 21, weight: .semibold))
                         .foregroundColor(.white)
                     
@@ -496,7 +501,7 @@ struct DashboardHeader: View {
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.9))
                         
-                        Text("\(user.totalExchanges) exchanges")
+                        Text("\(user.totalExchanges) \(localizationManager.localize("EXCHANGES"))")
                             .font(.system(size: 14))
                             .foregroundColor(.white.opacity(0.9))
                     }
@@ -527,33 +532,34 @@ struct DashboardHeader: View {
 }
 
 struct QuickActionsSection: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToCreateListing: Bool
     @Binding var navigateToSearch: Bool
     @Binding var navigateToMessages: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Actions")
+            Text(localizationManager.localize("QUICK_ACTIONS"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
             
             HStack(spacing: 12) {
                 QuickActionButton(
                     icon: "💰",
-                    text: "List Currency",
+                    text: localizationManager.localize("LIST_CURRENCY"),
                     isPrimary: true,
                     action: { navigateToCreateListing = true }
                 )
                 
                 QuickActionButton(
                     icon: "🔍",
-                    text: "Search",
+                    text: localizationManager.localize("SEARCH"),
                     action: { navigateToSearch = true }
                 )
                 
                 QuickActionButton(
                     icon: "💬",
-                    text: "Messages",
+                    text: localizationManager.localize("MESSAGES"),
                     action: { navigateToMessages = true }
                 )
             }
@@ -599,6 +605,7 @@ struct QuickActionButton: View {
 }
 
 struct ActiveExchangesSection: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     let exchanges: [ActiveExchange]
     let purchasedContactsData: [[String: Any]]
     @Binding var selectedContactData: ContactData?
@@ -607,13 +614,13 @@ struct ActiveExchangesSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("🤝 All Active Exchanges (\(exchanges.count))")
+                Text("🤝 \(localizationManager.localize("ALL_ACTIVE_EXCHANGES")) (\(exchanges.count))")
                     .font(.system(size: 19, weight: .semibold))
                     .foregroundColor(.white)
                 
                 Spacer()
                 
-                Text("PRIORITY")
+                Text(localizationManager.localize("PRIORITY"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
@@ -623,7 +630,7 @@ struct ActiveExchangesSection: View {
             }
             
             if exchanges.isEmpty {
-                Text("No active exchanges yet")
+                Text(localizationManager.localize("NO_ACTIVE_EXCHANGES"))
                     .font(.system(size: 15))
                     .foregroundColor(.white.opacity(0.7))
                     .padding()
@@ -704,6 +711,7 @@ struct ActiveExchangesSection: View {
 }
 
 struct EmptyStateView: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var showSearch: Bool
     
     var body: some View {
@@ -711,16 +719,16 @@ struct EmptyStateView: View {
             Text("💱")
                 .font(.system(size: 60))
             
-            Text("No Active Exchanges Yet")
+            Text(localizationManager.localize("NO_ACTIVE_EXCHANGES_YET"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.white)
             
-            Text("Browse listings and purchase contact access to start exchanging currencies")
+            Text(localizationManager.localize("BROWSE_LISTINGS_MESSAGE"))
                 .font(.system(size: 15))
                 .foregroundColor(.white.opacity(0.9))
                 .multilineTextAlignment(.center)
             
-            Button("Browse Listings") {
+            Button(localizationManager.localize("BROWSE_LISTINGS")) {
                 showSearch = true
             }
             .padding(.horizontal, 32)
@@ -782,13 +790,14 @@ struct ActiveExchangeCard: View {
 }
 
 struct MyListingsSection: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     let listings: [Listing]
     @Binding var navigateToCreateListing: Bool
     var onRefresh: (() -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("My Active Listings (\(listings.count))")
+            Text("\(localizationManager.localize("MY_ACTIVE_LISTINGS")) (\(listings.count))")
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
             
@@ -806,6 +815,7 @@ struct MyListingsSection: View {
 }
 
 struct EmptyListingsView: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToCreateListing: Bool
     
     var body: some View {
@@ -813,11 +823,11 @@ struct EmptyListingsView: View {
             Text("📝")
                 .font(.system(size: 48))
             
-            Text("No active listings yet")
+            Text(localizationManager.localize("NO_ACTIVE_LISTINGS"))
                 .font(.system(size: 16))
                 .foregroundColor(.gray)
             
-            Button("Create Your First Listing") {
+            Button(localizationManager.localize("CREATE_FIRST_LISTING")) {
                 navigateToCreateListing = true
             }
             .padding(.horizontal, 24)
@@ -840,6 +850,7 @@ struct EmptyListingsView: View {
 }
 
 struct ListingCard: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
     let listing: Listing
     @State private var showEditListing = false
     var onDelete: (() -> Void)?
@@ -860,7 +871,7 @@ struct ListingCard: View {
                 
                 Spacer()
                 
-                Text("ACTIVE")
+                Text(localizationManager.localize("ACTIVE"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 8)
@@ -892,7 +903,7 @@ struct ListingCard: View {
             }) {
                 HStack {
                     Image(systemName: "pencil")
-                    Text("Edit Listing")
+                    Text(localizationManager.localize("EDIT_LISTING"))
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)

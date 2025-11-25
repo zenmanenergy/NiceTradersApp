@@ -296,6 +296,9 @@ green: 0.29, blue: 0.64)]),                                                     
                             
                             print("Login successful! SessionId:", sessionId, "UserType:", userType)
                             
+                            // Load user's language preference from backend
+                            LocalizationManager.shared.loadLanguageFromBackend()
+                            
                             // Navigate to dashboard
                             navigateToDashboard = true
                         } else {

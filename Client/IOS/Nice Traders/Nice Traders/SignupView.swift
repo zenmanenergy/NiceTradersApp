@@ -300,6 +300,9 @@ struct SignupView: View {
                             
                             print("Signup successful! SessionId:", sessionId, "UserType:", userType)
                             
+                            // Load user's language preference from backend (will be 'en' for new users)
+                            LocalizationManager.shared.loadLanguageFromBackend()
+                            
                             // Navigate to dashboard
                             navigateToDashboard = true
                         } else {

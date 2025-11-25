@@ -14,11 +14,11 @@ struct BottomNavigation: View {
     
     var body: some View {
         HStack {
-            NavItem(icon: "house.fill", label: "Home", isActive: activeTab == "home", action: goHome)
-            NavItem(icon: "magnifyingglass", label: "Search", isActive: activeTab == "search", action: goSearch)
-            NavItem(icon: "plus.circle.fill", label: "List", isActive: activeTab == "create", action: goCreateListing)
-            NavItem(icon: "message.fill", label: "Messages", isActive: activeTab == "messages", action: goMessages)
-            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "Logout", action: logout)
+            NavItem(icon: "house.fill", label: "HOME", isActive: activeTab == "home", action: goHome)
+            NavItem(icon: "magnifyingglass", label: "SEARCH", isActive: activeTab == "search", action: goSearch)
+            NavItem(icon: "plus.circle.fill", label: "LIST", isActive: activeTab == "create", action: goCreateListing)
+            NavItem(icon: "message.fill", label: "MESSAGES", isActive: activeTab == "messages", action: goMessages)
+            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "LOGOUT", action: logout)
         }
         .padding(.vertical, 12)
         .background(Color.white)
@@ -66,6 +66,7 @@ struct NavItem: View {
     let label: String
     var isActive: Bool = false
     let action: () -> Void
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
         Button(action: action) {
@@ -74,7 +75,7 @@ struct NavItem: View {
                     .font(.system(size: 22))
                     .foregroundColor(isActive ? Color(red: 0.4, green: 0.49, blue: 0.92) : Color.gray)
                 
-                Text(label)
+                Text(localizationManager.localize(label))
                     .font(.system(size: 10))
                     .foregroundColor(isActive ? Color(red: 0.4, green: 0.49, blue: 0.92) : Color.gray)
             }

@@ -289,7 +289,7 @@ struct CreateListingView: View {
     // MARK: - Header View
     var headerView: some View {
         HStack {
-            Text("Create Listing")
+            Text(localizationManager.localize("CREATE_LISTING"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)
             
@@ -328,7 +328,7 @@ struct CreateListingView: View {
             }
             .frame(height: 6)
             
-            Text("Step \(currentStep) of \(totalSteps)")
+            Text("\(localizationManager.localize("STEP")) \(currentStep) \(localizationManager.localize("OF")) \(totalSteps)")
                 .font(.system(size: 14))
                 .foregroundColor(Color(hex: "718096"))
         }
@@ -370,11 +370,11 @@ struct CreateListingView: View {
     var step1View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("What currency do you have?")
+                Text(localizationManager.localize("WHAT_CURRENCY_DO_YOU_HAVE"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Select the currency you want to exchange")
+                Text(localizationManager.localize("SELECT_CURRENCY_TO_EXCHANGE"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -383,7 +383,7 @@ struct CreateListingView: View {
             
             // Currency You Have
             VStack(alignment: .leading, spacing: 8) {
-                Text("Currency You Have")
+                Text(localizationManager.localize("CURRENCY_YOU_HAVE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -399,7 +399,7 @@ struct CreateListingView: View {
                     
                     if !showAllCurrencies {
                         Button(action: { showAllCurrencies = true }) {
-                            Text("Show More Currencies")
+                            Text(localizationManager.localize("SHOW_MORE_CURRENCIES"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "667eea"))
                                 .frame(maxWidth: .infinity)
@@ -426,7 +426,7 @@ struct CreateListingView: View {
             
             // Amount
             VStack(alignment: .leading, spacing: 8) {
-                Text("Amount You Have")
+                Text(localizationManager.localize("AMOUNT_YOU_HAVE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -453,7 +453,7 @@ struct CreateListingView: View {
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "e53e3e"))
                 } else {
-                    Text("How much of this currency do you have available?")
+                    Text(localizationManager.localize("HOW_MUCH_CURRENCY_AVAILABLE"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
@@ -461,7 +461,7 @@ struct CreateListingView: View {
             
             // Accept Currency
             VStack(alignment: .leading, spacing: 8) {
-                Text("What currency will you accept?")
+                Text(localizationManager.localize("WHAT_CURRENCY_WILL_YOU_ACCEPT"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -474,7 +474,7 @@ struct CreateListingView: View {
                     
                     if !showAllAcceptCurrencies {
                         Button(action: { showAllAcceptCurrencies = true }) {
-                            Text("Show all currencies")
+                            Text(localizationManager.localize("SHOW_ALL_CURRENCIES"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(hex: "667eea"))
                                 .frame(maxWidth: .infinity)
@@ -496,7 +496,7 @@ struct CreateListingView: View {
                     }
                 }
                 
-                Text("Select the currency you're willing to accept in exchange")
+                Text(localizationManager.localize("SELECT_CURRENCY_WILLING_TO_ACCEPT"))
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "a0aec0"))
             }
@@ -508,11 +508,11 @@ struct CreateListingView: View {
     var step2View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("Where can you meet?")
+                Text(localizationManager.localize("WHERE_CAN_YOU_MEET"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Help others find you for the exchange")
+                Text(localizationManager.localize("HELP_OTHERS_FIND_YOU"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -521,7 +521,7 @@ struct CreateListingView: View {
             
             // Location
             VStack(alignment: .leading, spacing: 8) {
-                Text("Your Location")
+                Text(localizationManager.localize("YOUR_LOCATION"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -538,7 +538,7 @@ struct CreateListingView: View {
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "e53e3e"))
                 } else {
-                    Text("Your exact location stays private - others see general area only")
+                    Text(localizationManager.localize("LOCATION_PRIVACY_MESSAGE"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
@@ -547,7 +547,7 @@ struct CreateListingView: View {
             // Distance Radius
             if locationStatus == .detected {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Meeting Distance")
+                    Text(localizationManager.localize("MEETING_DISTANCE"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "2d3748"))
                     
@@ -576,7 +576,7 @@ struct CreateListingView: View {
                         )
                     }
                     
-                    Text("How far are you willing to travel to meet?")
+                    Text(localizationManager.localize("HOW_FAR_WILLING_TO_TRAVEL"))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
@@ -584,7 +584,7 @@ struct CreateListingView: View {
             
             // Meeting Preference
             VStack(alignment: .leading, spacing: 8) {
-                Text("Meeting Preference")
+                Text(localizationManager.localize("MEETING_PREFERENCE"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -596,7 +596,7 @@ struct CreateListingView: View {
                             Image(systemName: meetingPreference == "public" ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(meetingPreference == "public" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
                             
-                            Text("Public places only (Recommended)")
+                            Text(localizationManager.localize("PUBLIC_PLACES_ONLY_RECOMMENDED"))
                                 .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "4a5568"))
                             
@@ -618,7 +618,7 @@ struct CreateListingView: View {
                             Image(systemName: meetingPreference == "flexible" ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(meetingPreference == "flexible" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
                             
-                            Text("Flexible meeting locations")
+                            Text(localizationManager.localize("FLEXIBLE_MEETING_LOCATIONS"))
                                 .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "4a5568"))
                             
@@ -637,7 +637,7 @@ struct CreateListingView: View {
             
             // Available Until
             VStack(alignment: .leading, spacing: 8) {
-                Text("Available Until")
+                Text(localizationManager.localize("AVAILABLE_UNTIL"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(Color(hex: "2d3748"))
                 
@@ -666,11 +666,11 @@ struct CreateListingView: View {
     var step3View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
-                Text("Review your listing")
+                Text(localizationManager.localize("REVIEW_YOUR_LISTING"))
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                Text("Make sure everything looks correct")
+                Text(localizationManager.localize("MAKE_SURE_EVERYTHING_CORRECT"))
                     .font(.system(size: 16))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -697,7 +697,7 @@ struct CreateListingView: View {
                             .foregroundColor(Color(hex: "2d3748"))
                     }
                     
-                    Text("Market Rate")
+                    Text(localizationManager.localize("MARKET_RATE"))
                         .font(.system(size: 15, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
@@ -712,7 +712,7 @@ struct CreateListingView: View {
                 
                 VStack(spacing: 12) {
                     HStack {
-                        Text("Location:")
+                        Text(localizationManager.localize("LOCATION_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -724,7 +724,7 @@ struct CreateListingView: View {
                     }
                     
                     HStack {
-                        Text("Meeting:")
+                        Text(localizationManager.localize("MEETING_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -736,7 +736,7 @@ struct CreateListingView: View {
                     }
                     
                     HStack {
-                        Text("Available until:")
+                        Text(localizationManager.localize("AVAILABLE_UNTIL_COLON"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(Color(hex: "4a5568"))
                         
@@ -764,7 +764,7 @@ struct CreateListingView: View {
         HStack(spacing: 16) {
             if currentStep > 1 {
                 Button(action: prevStep) {
-                    Text("Previous")
+                    Text(localizationManager.localize("PREVIOUS"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "4a5568"))
                         .frame(maxWidth: .infinity)
@@ -776,7 +776,7 @@ struct CreateListingView: View {
             
             if currentStep < totalSteps {
                 Button(action: nextStep) {
-                    Text("Next")
+                    Text(localizationManager.localize("NEXT"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -797,9 +797,9 @@ struct CreateListingView: View {
                         if isSubmitting {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            Text("Creating...")
+                            Text(localizationManager.localize("CREATING"))
                         } else {
-                            Text("Create Listing")
+                            Text(localizationManager.localize("CREATE_LISTING"))
                         }
                     }
                     .font(.system(size: 16, weight: .semibold))
@@ -913,7 +913,7 @@ struct CreateListingView: View {
             Spacer()
             
             Button(action: onClear) {
-                Text("Change")
+                Text(localizationManager.localize("CHANGE"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(hex: "667eea"))
                     .underline()
@@ -943,7 +943,7 @@ struct CreateListingView: View {
             }
             .foregroundColor(.white)
             
-            Text("Amount you'll receive (at market rate)")
+            Text(localizationManager.localize("AMOUNT_YOULL_RECEIVE_MARKET_RATE"))
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.9))
         }
@@ -965,18 +965,18 @@ struct CreateListingView: View {
                     .font(.system(size: 32))
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Use your current location")
+                    Text(localizationManager.localize("USE_YOUR_CURRENT_LOCATION"))
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("We'll detect your location to help others find you nearby")
+                    Text(localizationManager.localize("WELL_DETECT_YOUR_LOCATION"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "718096"))
                 }
             }
             
             Button(action: handleUseLocation) {
-                Text("Detect My Location")
+                Text(localizationManager.localize("DETECT_MY_LOCATION"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -1004,7 +1004,7 @@ struct CreateListingView: View {
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "667eea")))
             
-            Text("Detecting your location...")
+            Text(localizationManager.localize("DETECTING_YOUR_LOCATION"))
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "4a5568"))
         }
@@ -1019,7 +1019,7 @@ struct CreateListingView: View {
             Text("✅")
                 .font(.system(size: 20))
             
-            Text("Location detected")
+            Text(localizationManager.localize("LOCATION_DETECTED"))
                 .font(.system(size: 15))
                 .foregroundColor(Color(hex: "276749"))
             
@@ -1029,7 +1029,7 @@ struct CreateListingView: View {
                 locationStatus = .unset
                 location = ""
             }) {
-                Text("Change")
+                Text(localizationManager.localize("CHANGE"))
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(Color(hex: "667eea"))
                     .underline()

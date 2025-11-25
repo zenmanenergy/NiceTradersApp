@@ -18,6 +18,7 @@ from Contact import Contact
 from ExchangeRates import ExchangeRates
 from Meeting import Meeting
 from Admin import Admin
+from Translations import Translations, AdminTranslations
 
 app.register_blueprint(Login.blueprint)
 app.register_blueprint(Signup.blueprint)
@@ -29,6 +30,8 @@ app.register_blueprint(Contact.contact_bp)
 app.register_blueprint(ExchangeRates.exchange_rates_bp)
 app.register_blueprint(Meeting.blueprint)
 app.register_blueprint(Admin.blueprint)
+app.register_blueprint(Translations.translations_bp)
+app.register_blueprint(AdminTranslations.admin_translations_bp)
 
 
 

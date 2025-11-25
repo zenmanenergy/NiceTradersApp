@@ -5,13 +5,14 @@ struct LanguagePickerView: View {
     @State private var isLoading = false
     @State private var showSuccessMessage = false
     @State private var successMessageText = ""
+    @State private var refreshId = UUID()
     
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
                 // Current Language Display
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Current Language")
+                    Text(localizationManager.localize("CURRENT_LANGUAGE"))
                         .font(.headline)
                         .foregroundColor(.gray)
                     
@@ -36,7 +37,7 @@ struct LanguagePickerView: View {
                 
                 // Language List
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Select Language")
+                    Text(localizationManager.localize("SELECT_LANGUAGE"))
                         .font(.headline)
                         .foregroundColor(.gray)
                         .padding(.horizontal)
@@ -100,7 +101,12 @@ struct LanguagePickerView: View {
             }
             .navigationTitle("Language")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: localizationManager.languageVersion) { newValue in
+                // Force view refresh when language changes
+                refreshId = UUID()
+            }
         }
+        .id(refreshId)
     }
     
     // MARK: - Helper Methods
@@ -123,10 +129,18 @@ struct LanguagePickerView: View {
     }
     
     private func selectLanguage(_ languageCode: String) {
+        print("🔵 [LanguagePicker] User tapped language: \(languageCode)")
         isLoading = true
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            print("🔵 [LanguagePicker] Setting currentLanguage to: \(languageCode)")
             localizationManager.currentLanguage = languageCode
+            print("🔵 [LanguagePicker] After setting - currentLanguage: \(localizationManager.currentLanguage), version: \(localizationManager.languageVersion)")
+            
+            // Check if it was actually saved
+            let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
+            print("🔵 [LanguagePicker] Verification - UserDefaults.AppLanguage: \(savedInDefaults ?? "nil")")
+            
             successMessageText = "Language changed to \(localizationManager.supportedLanguages[languageCode] ?? languageCode)"
             showSuccessMessage = true
             isLoading = false
