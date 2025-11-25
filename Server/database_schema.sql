@@ -36,10 +36,12 @@ CREATE TABLE users (
     IsActive TINYINT DEFAULT 1,
     Location TEXT,
     Bio TEXT,
+    PreferredLanguage VARCHAR(10) DEFAULT 'en',
     Rating DECIMAL(3,2) DEFAULT 0.00,
     TotalExchanges INT DEFAULT 0,
     INDEX idx_email (Email),
     INDEX idx_is_active (IsActive),
+    INDEX idx_preferred_language (PreferredLanguage),
     INDEX idx_rating (Rating)
 );
 
@@ -399,6 +401,19 @@ CREATE TABLE exchange_history (
     INDEX idx_exchange_date (ExchangeDate),
     INDEX idx_currency (Currency),
     FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Create translations table for managing translations
+CREATE TABLE translations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    translation_key VARCHAR(255) NOT NULL,
+    language_code VARCHAR(10) NOT NULL,
+    translation_value LONGTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_translation_key (translation_key),
+    INDEX idx_language_code (language_code),
+    UNIQUE KEY unique_translation (translation_key, language_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Show table creation status

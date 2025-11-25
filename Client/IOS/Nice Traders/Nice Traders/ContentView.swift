@@ -25,130 +25,132 @@ struct ContentView: View {
                             checkExistingSession()
                         }
                 } else {
-                    ScrollView {
-                VStack(spacing: 0) {
-                    // Header Section
-                VStack(spacing: 8) {
-                    Text(localizationManager.localize("NICE_TRADERS_HEADER"))
-                        .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    Text(localizationManager.localize("NEIGHBORHOOD_CURRENCY_EXCHANGE"))
-                        .font(.system(size: 14, weight: .light))
-                        .foregroundColor(.white.opacity(0.9))
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, 24)
-                .padding(.top, 60)
-                .padding(.bottom, 48)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 30))
-                
-                // Hero Section
-                VStack(spacing: 16) {
-                    Text("💱")
-                        .font(.system(size: 64))
-                        .padding(.top, 32)
-                    
-                    Text(localizationManager.localize("EXCHANGE_CURRENCY_LOCALLY"))
-                        .font(.system(size: 29, weight: .semibold))
-                        .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
-                        .multilineTextAlignment(.center)
-                    
-                    Text(localizationManager.localize("LANDING_PAGE_DESCRIPTION"))
-                        .font(.system(size: 16))
-                        .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
-                        .lineSpacing(6)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-                .padding(.bottom, 32)
-                
-                // Features Section
-                VStack(spacing: 24) {
-                    FeatureRow(icon: "🗺️", title: localizationManager.localize("FIND_NEARBY"), description: localizationManager.localize("FIND_NEARBY_DESC"))
-                    
-                    FeatureRow(icon: "💰", title: localizationManager.localize("BETTER_RATES"), description: localizationManager.localize("BETTER_RATES_DESC"))
-                    
-                    FeatureRow(icon: "🛡️", title: localizationManager.localize("SAFE_EXCHANGES"), description: localizationManager.localize("SAFE_EXCHANGES_DESC"))
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
-                
-                // CTA Section
-                VStack(spacing: 16) {
-                    Button(action: {
-                        showSignup = true
-                    }) {
-                        Text(localizationManager.localize("GET_STARTED"))
-                            .font(.system(size: 18, weight: .semibold))
+                    VStack(spacing: 0) {
+                        // Header Section
+                        VStack(spacing: 8) {
+                        Text(localizationManager.localize("NICE_TRADERS_HEADER"))
+                            .font(.system(size: 40, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(12)
-                            .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y: 4)
-                    }
-                    
-                    Button(action: {
-                        showLearnMore = true
-                    }) {
-                        Text(localizationManager.localize("LEARN_MORE"))
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.clear)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(red: 0.4, green: 0.49, blue: 0.92), lineWidth: 2)
-                            )
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
-                
-                // Footer
-                VStack {
-                    Text(localizationManager.localize("LANDING_FOOTER"))
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 24)
-                    
-                    HStack(spacing: 4) {
-                        Text(localizationManager.localize("ALREADY_HAVE_ACCOUNT"))
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
                         
-                        Button(action: {
-                            showLogin = true
-                        }) {
-                            Text(localizationManager.localize("SIGN_IN"))
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
+                        Text(localizationManager.localize("NEIGHBORHOOD_CURRENCY_EXCHANGE"))
+                            .font(.system(size: 14, weight: .light))
+                            .foregroundColor(.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 60)
+                    .padding(.bottom, 48)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .ignoresSafeArea()
+                    
+                    ScrollView {
+                        VStack(spacing: 0) {
+                    
+                            // Hero Section
+                            VStack(spacing: 16) {
+                                Text("💱")
+                                    .font(.system(size: 64))
+                                    .padding(.top, 32)
+                                
+                                Text(localizationManager.localize("EXCHANGE_CURRENCY_LOCALLY"))
+                                    .font(.system(size: 29, weight: .semibold))
+                                    .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
+                                    .multilineTextAlignment(.center)
+                                
+                                Text(localizationManager.localize("LANDING_PAGE_DESCRIPTION"))
+                                    .font(.system(size: 16))
+                                    .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
+                                    .lineSpacing(6)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 24)
+                            }
+                            .padding(.bottom, 32)
+                    
+                            // Features Section
+                            VStack(spacing: 24) {
+                                FeatureRow(icon: "🗺️", title: localizationManager.localize("FIND_NEARBY"), description: localizationManager.localize("FIND_NEARBY_DESC"))
+                                
+                                FeatureRow(icon: "💰", title: localizationManager.localize("BETTER_RATES"), description: localizationManager.localize("BETTER_RATES_DESC"))
+                                
+                                FeatureRow(icon: "🛡️", title: localizationManager.localize("SAFE_EXCHANGES"), description: localizationManager.localize("SAFE_EXCHANGES_DESC"))
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 32)
+                    
+                            // CTA Section
+                            VStack(spacing: 16) {
+                                Button(action: {
+                                    showSignup = true
+                                }) {
+                                    Text(localizationManager.localize("GET_STARTED"))
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [Color(red: 0.4, green: 0.49, blue: 0.92), Color(red: 0.46, green: 0.29, blue: 0.64)]),
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .cornerRadius(12)
+                                        .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y: 4)
+                                }
+                                
+                                Button(action: {
+                                    showLearnMore = true
+                                }) {
+                                    Text(localizationManager.localize("LEARN_MORE"))
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 16)
+                                        .background(Color.clear)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color(red: 0.4, green: 0.49, blue: 0.92), lineWidth: 2)
+                                        )
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 32)
+                    
+                            // Footer
+                            VStack {
+                                Text(localizationManager.localize("LANDING_FOOTER"))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.top, 24)
+                                
+                                HStack(spacing: 4) {
+                                    Text(localizationManager.localize("ALREADY_HAVE_ACCOUNT"))
+                                        .font(.system(size: 14))
+                                        .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
+                                    
+                                    Button(action: {
+                                        showLogin = true
+                                    }) {
+                                        Text(localizationManager.localize("SIGN_IN"))
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
+                                    }
+                                }
+                                .padding(.bottom, 24)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .background(Color(red: 0.97, green: 0.98, blue: 0.99))
                         }
                     }
-                    .padding(.bottom, 24)
-                }
-                .frame(maxWidth: .infinity)
-                .background(Color(red: 0.97, green: 0.98, blue: 0.99))
-            }
-            .background(Color.white)
-                    }
+                    .background(Color.white)
                 }
             }
             .navigationDestination(isPresented: $showSignup) {
