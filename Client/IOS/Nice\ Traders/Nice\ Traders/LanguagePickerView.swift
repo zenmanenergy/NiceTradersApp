@@ -33,6 +33,7 @@ struct LanguagePickerView: View {
                 }
                 .padding(.horizontal)
                 .padding(.top)
+                .id(localizationManager.languageVersion)
                 
                 // Language List
                 VStack(alignment: .leading, spacing: 0) {
@@ -70,6 +71,7 @@ struct LanguagePickerView: View {
                         }
                     }
                 }
+                .id(localizationManager.languageVersion)
                 
                 // Info Section
                 VStack(alignment: .leading, spacing: 8) {
