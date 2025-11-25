@@ -3,6 +3,7 @@
 //  Nice Traders
 //
 //  Handles all localization and internationalization for the app
+//  Uses API-based translations from backend with smart caching
 //
 
 import Foundation
@@ -18,6 +19,12 @@ class LocalizationManager: NSObject, ObservableObject {
             languageVersion += 1
             print("🔴 [LocalizationManager] languageVersion incremented to: \(languageVersion)")
             objectWillChange.send()
+            
+            // Download translations for new language
+            Task {
+                await downloadTranslations(language: currentLanguage)
+            }
+            
             // Also save to backend via SessionManager if user is authenticated
             if let userId = SessionManager.shared.userId {
                 self.saveLanguagePreferenceToBackend(languageCode: currentLanguage, userId: userId)
@@ -29,22 +36,11 @@ class LocalizationManager: NSObject, ObservableObject {
     
     static let shared = LocalizationManager()
     
-    let supportedLanguages = [
-        "en": "English 🇺🇸",
-        "es": "Español 🇪🇸",
-        "fr": "Français 🇫🇷",
-        "de": "Deutsch 🇩🇪",
-        "pt": "Português 🇵🇹",
-        "ja": "日本語 🇯🇵",
-        "zh": "中文 🇨🇳",
-        "ru": "Русский 🇷🇺",
-        "ar": "العربية 🇸🇦",
-        "hi": "हिन्दी 🇮🇳",
-        "sk": "Slovenčina 🇸🇰"
-    ]
+    // In-memory cache of translations
+    private var cachedTranslations: [String: String] = [:]
     
-    // Translation dictionary
-    private let translations: [String: [String: String]] = [
+    // Fallback hardcoded translations for when API is unavailable
+    private let fallbackTranslations: [String: [String: String]] = [
         "en": [
             "CANCEL": "Cancel",
             "SEND": "Send",
@@ -124,136 +120,24 @@ class LocalizationManager: NSObject, ObservableObject {
             "SELLING_HAVE": "Have to Sell",
             "FROM_CURRENCY": "From Currency",
             "TO_CURRENCY": "To Currency"
-        ],
-        "es": [
-            "CANCEL": "Cancelar",
-            "SEND": "Enviar",
-            "BACK": "Atrás",
-            "EDIT": "Editar",
-            "DELETE": "Eliminar",
-            "SAVE": "Guardar",
-            "LOADING": "Cargando...",
-            "ERROR": "Error",
-            "SUCCESS": "Éxito",
-            "SEARCH": "Buscar",
-            "FILTER": "Filtro",
-            "SORT": "Ordenar",
-            "NO_RESULTS": "Sin resultados",
-            "CONFIRMATION": "Confirmación",
-            "CURRENT_LANGUAGE": "Idioma Actual",
-            "SELECT_LANGUAGE": "Seleccionar Idioma",
-            "LANGUAGE": "Idioma",
-            
-            "WELCOME_BACK": "Bienvenido de vuelta",
-            "SIGN_IN": "Iniciar sesión",
-            "SIGN_UP": "Registrarse",
-            "SIGN_IN_TO_CONTINUE": "Inicia sesión en tu cuenta para continuar",
-            "EMAIL": "Correo electrónico",
-            "PASSWORD": "Contraseña",
-            "CONFIRM_PASSWORD": "Confirmar contraseña",
-            "FIRST_NAME": "Nombre",
-            "LAST_NAME": "Apellido",
-            "FORGOT_PASSWORD": "¿Olvidó su contraseña?",
-            "INVALID_EMAIL": "Correo inválido",
-            "PASSWORD_MISMATCH": "Las contraseñas no coinciden"
-        ],
-        "fr": [
-            "CANCEL": "Annuler",
-            "SEND": "Envoyer",
-            "BACK": "Retour",
-            "EDIT": "Modifier",
-            "DELETE": "Supprimer",
-            "SAVE": "Enregistrer",
-            "LOADING": "Chargement...",
-            "ERROR": "Erreur",
-            "SUCCESS": "Succès",
-            "SEARCH": "Rechercher",
-            "FILTER": "Filtre",
-            "SORT": "Trier",
-            "NO_RESULTS": "Aucun résultat",
-            "CONFIRMATION": "Confirmation",
-            "CURRENT_LANGUAGE": "Langue actuelle",
-            "SELECT_LANGUAGE": "Sélectionner la langue",
-            "LANGUAGE": "Langue",
-            
-            "WELCOME_BACK": "Bienvenue",
-            "SIGN_IN": "Connexion",
-            "SIGN_UP": "S'inscrire",
-            "SIGN_IN_TO_CONTINUE": "Connectez-vous à votre compte pour continuer",
-            "EMAIL": "Email",
-            "PASSWORD": "Mot de passe",
-            "CONFIRM_PASSWORD": "Confirmer le mot de passe",
-            "FIRST_NAME": "Prénom",
-            "LAST_NAME": "Nom",
-            "FORGOT_PASSWORD": "Mot de passe oublié ?",
-            "INVALID_EMAIL": "Email invalide",
-            "PASSWORD_MISMATCH": "Les mots de passe ne correspondent pas"
-        ],
-        "de": [
-            "CANCEL": "Abbrechen",
-            "SEND": "Senden",
-            "BACK": "Zurück",
-            "EDIT": "Bearbeiten",
-            "DELETE": "Löschen",
-            "SAVE": "Speichern",
-            "LOADING": "Wird geladen...",
-            "ERROR": "Fehler",
-            "SUCCESS": "Erfolg",
-            "SEARCH": "Suche",
-            "FILTER": "Filter",
-            "SORT": "Sortieren",
-            "NO_RESULTS": "Keine Ergebnisse",
-            "CONFIRMATION": "Bestätigung",
-            "CURRENT_LANGUAGE": "Aktuelle Sprache",
-            "SELECT_LANGUAGE": "Sprache wählen",
-            "LANGUAGE": "Sprache",
-            
-            "WELCOME_BACK": "Willkommen zurück",
-            "SIGN_IN": "Anmelden",
-            "SIGN_UP": "Registrieren",
-            "SIGN_IN_TO_CONTINUE": "Melden Sie sich an, um fortzufahren",
-            "EMAIL": "E-Mail",
-            "PASSWORD": "Passwort",
-            "CONFIRM_PASSWORD": "Passwort bestätigen",
-            "FIRST_NAME": "Vorname",
-            "LAST_NAME": "Nachname",
-            "FORGOT_PASSWORD": "Passwort vergessen?",
-            "INVALID_EMAIL": "Ungültige E-Mail",
-            "PASSWORD_MISMATCH": "Passwörter stimmen nicht überein"
-        ],
-        "sk": [
-            "CANCEL": "Zrušiť",
-            "SEND": "Poslať",
-            "BACK": "Späť",
-            "EDIT": "Upraviť",
-            "DELETE": "Odstrániť",
-            "SAVE": "Uložiť",
-            "LOADING": "Načítavanie...",
-            "ERROR": "Chyba",
-            "SUCCESS": "Úspech",
-            "SEARCH": "Hľadať",
-            "FILTER": "Filter",
-            "SORT": "Zoradiť",
-            "NO_RESULTS": "Žiadne výsledky",
-            "CONFIRMATION": "Potvrdenie",
-            "CURRENT_LANGUAGE": "Aktuálny jazyk",
-            "SELECT_LANGUAGE": "Vybrať jazyk",
-            "LANGUAGE": "Jazyk",
-            
-            "WELCOME_BACK": "Vitajte späť",
-            "SIGN_IN": "Prihlásiť sa",
-            "SIGN_UP": "Zaregistrujte sa",
-            "SIGN_IN_TO_CONTINUE": "Prihláste sa do svojho konta",
-            "EMAIL": "E-mail",
-            "PASSWORD": "Heslo",
-            "CONFIRM_PASSWORD": "Potvrdiť heslo",
-            "FIRST_NAME": "Meno",
-            "LAST_NAME": "Priezvisko",
-            "FORGOT_PASSWORD": "Zabudli ste heslo?",
-            "INVALID_EMAIL": "Neplatný e-mail",
-            "PASSWORD_MISMATCH": "Heslá sa nezhodujú"
         ]
     ]
+    
+    let supportedLanguages = [
+        "en": "English 🇺🇸",
+        "es": "Español 🇪🇸",
+        "fr": "Français 🇫🇷",
+        "de": "Deutsch 🇩🇪",
+        "pt": "Português 🇵🇹",
+        "ja": "日本語 🇯🇵",
+        "zh": "中文 🇨🇳",
+        "ru": "Русский 🇷🇺",
+        "ar": "العربية 🇸🇦",
+        "hi": "हिन्दी 🇮🇳",
+        "sk": "Slovenčina 🇸🇰"
+    ]
+    
+    private let baseURL = "http://localhost:5000"
     
     private init() {
         super.init()
@@ -274,6 +158,18 @@ class LocalizationManager: NSObject, ObservableObject {
         }
         
         print("🟠 [LocalizationManager] Initialized with language: \(self.currentLanguage), version: \(self.languageVersion)")
+        
+        // Load cached translations and check for updates
+        Task {
+            // First load from cache
+            if let cached = loadFromCache(language: self.currentLanguage) {
+                self.cachedTranslations = cached
+                print("📦 [LocalizationManager] Loaded \(cached.count) cached translations")
+            }
+            
+            // Then check for server updates in background
+            await checkForUpdates(language: self.currentLanguage)
+        }
     }
     
     // MARK: - Localization
@@ -282,20 +178,114 @@ class LocalizationManager: NSObject, ObservableObject {
         // Use languageVersion in logic to create dependency for SwiftUI
         let selectedLanguage = languageVersion > -1 ? currentLanguage : "en"
         
-        // Try to get translation for selected language
-        if let languageDict = translations[selectedLanguage],
+        // Try cached translations first
+        if let translated = cachedTranslations[key] {
+            return translated
+        }
+        
+        // Fallback to hardcoded translations
+        if let languageDict = fallbackTranslations[selectedLanguage],
            let translated = languageDict[key] {
             return translated
         }
         
-        // Fallback to English
-        if let englishDict = translations["en"],
+        if let englishDict = fallbackTranslations["en"],
            let translated = englishDict[key] {
             return translated
         }
         
         // Last resort: return the key itself
         return key
+    }
+    
+    // MARK: - Server Communication
+    
+    /// Download translations for a specific language from the API
+    private func downloadTranslations(language: String) async {
+        let endpoint = "\(baseURL)/Translations/GetTranslations"
+        guard let url = URL(string: "\(endpoint)?language=\(language)") else {
+            print("⚠️ [LocalizationManager] Invalid URL: \(endpoint)")
+            return
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(TranslationsResponse.self, from: data)
+            
+            if response.success {
+                self.cachedTranslations = response.translations
+                self.saveToCache(translations: response.translations, 
+                               language: language, 
+                               timestamp: response.last_updated)
+                print("✅ [LocalizationManager] Downloaded \(response.count) translations for \(language)")
+                DispatchQueue.main.async {
+                    self.languageVersion += 1
+                }
+            } else {
+                print("⚠️ [LocalizationManager] Server returned error for language: \(language)")
+            }
+        } catch {
+            print("⚠️ [LocalizationManager] Error downloading translations: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Check if translations on server are newer than cached version
+    private func checkForUpdates(language: String) async {
+        let endpoint = "\(baseURL)/Translations/GetLastUpdated"
+        guard let url = URL(string: endpoint) else {
+            print("⚠️ [LocalizationManager] Invalid URL: \(endpoint)")
+            return
+        }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(LastUpdatedResponse.self, from: data)
+            
+            if response.success,
+               let serverTimestamp = response.last_updated[language],
+               let cachedTimestamp = getCachedTimestamp(language: language) {
+                
+                // If server is newer, download updates
+                if serverTimestamp > cachedTimestamp {
+                    print("🔄 [LocalizationManager] Translations are outdated, downloading new version")
+                    await downloadTranslations(language: language)
+                }
+            } else if response.success && getCachedTimestamp(language: language) == nil {
+                // No cached version, download from server
+                await downloadTranslations(language: language)
+            }
+        } catch {
+            print("⚠️ [LocalizationManager] Error checking translation updates: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Caching
+    
+    private func saveToCache(translations: [String: String], 
+                            language: String, 
+                            timestamp: String?) {
+        let key = "translations_\(language)"
+        let timestampKey = "translations_\(language)_timestamp"
+        
+        UserDefaults.standard.setValue(translations, forKey: key)
+        if let timestamp = timestamp {
+            UserDefaults.standard.setValue(timestamp, forKey: timestampKey)
+        }
+        print("📦 [LocalizationManager] Cached \(translations.count) translations for \(language)")
+    }
+    
+    private func loadFromCache(language: String) -> [String: String]? {
+        let key = "translations_\(language)"
+        let cached = UserDefaults.standard.dictionary(forKey: key) as? [String: String]
+        if cached != nil {
+            print("📥 [LocalizationManager] Loaded cached translations for \(language)")
+        }
+        return cached
+    }
+    
+    private func getCachedTimestamp(language: String) -> String? {
+        let key = "translations_\(language)_timestamp"
+        return UserDefaults.standard.string(forKey: key)
     }
     
     /// Detect user's language based on their current GPS location
@@ -478,6 +468,21 @@ class LocalizationManager: NSObject, ObservableObject {
     var sellingHave: String { localize("SELLING_HAVE") }
     var fromCurrency: String { localize("FROM_CURRENCY") }
     var toCurrency: String { localize("TO_CURRENCY") }
+}
+
+// MARK: - API Data Structures
+
+struct TranslationsResponse: Codable {
+    let success: Bool
+    let language: String
+    let translations: [String: String]
+    let last_updated: String
+    let count: Int
+}
+
+struct LastUpdatedResponse: Codable {
+    let success: Bool
+    let last_updated: [String: String]
 }
 
 // Extension for easier access in SwiftUI views
