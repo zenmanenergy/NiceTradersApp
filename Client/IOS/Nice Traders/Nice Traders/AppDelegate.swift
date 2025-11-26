@@ -40,6 +40,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         print("❌ [AppDelegate] *** didFailToRegisterForRemoteNotificationsWithError CALLED ***")
         print("❌ [AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
+        // Mark registration as complete so app doesn't wait
+        DeviceTokenManager.shared.setRegistrationFailed()
     }
     
     // Called when app receives a remote notification

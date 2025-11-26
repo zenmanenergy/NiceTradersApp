@@ -101,7 +101,7 @@ struct ExchangeMapView: View {
     }
     
     private func fetchOtherUserLocation() {
-        let url = URL(string: "http://localhost:5000/api/meeting/get-location/\(proposalId)")!
+        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/Location/Get?proposalId=\(proposalId)&sessionId=\(sessionId)")!
         var request = URLRequest(url: url)
         request.setValue(sessionId, forHTTPHeaderField: "Session-ID")
         

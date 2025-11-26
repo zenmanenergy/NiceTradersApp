@@ -1,5 +1,5 @@
 import { baseURL } from '../../Settings.js';
-import { SuperFetch } from '../../SuperFetch.js';
+import SuperFetch from '../../SuperFetch.js';
 
 export async function handleGetProfile(SessionId, callback) {
 	const Data = {

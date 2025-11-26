@@ -15,6 +15,7 @@ class DeviceTokenManager: ObservableObject {
     
     @Published var deviceToken: String?
     @Published var isNotificationPermissionGranted = false
+    @Published var registrationComplete = false // Track if APNs registration completed (success or failure)
     
     private init() {
         requestNotificationPermission()
@@ -62,6 +63,7 @@ class DeviceTokenManager: ObservableObject {
         
         DispatchQueue.main.async {
             self.deviceToken = deviceToken
+            self.registrationComplete = true
             print("✓ [DeviceTokenManager] Device token stored locally: \(deviceToken)")
             
             // Update the backend with the device token
@@ -90,7 +92,7 @@ class DeviceTokenManager: ObservableObject {
         print("🔵 [DeviceTokenManager] Device info - appVersion: \(appVersion), osVersion: \(osVersion)")
         
         // Build query parameters
-        var components = URLComponents(string: "http://localhost:5000/Profile/UpdateDeviceToken")
+        var components = URLComponents(string: "\(Settings.shared.baseURL)/Profile/UpdateDeviceToken")
         components?.queryItems = [
             URLQueryItem(name: "UserId", value: userId),
             URLQueryItem(name: "deviceToken", value: token),
@@ -130,6 +132,14 @@ class DeviceTokenManager: ObservableObject {
                 }
             }
         }.resume()
+    }
+    
+    /// Called when APNs registration fails
+    func setRegistrationFailed() {
+        DispatchQueue.main.async {
+            self.registrationComplete = true
+            print("✓ [DeviceTokenManager] Registration marked as complete (failed)")
+        }
     }
     
     /// Get device information

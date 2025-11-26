@@ -34,6 +34,11 @@ struct ContentView: View {
         notificationsGranted && locationGranted
     }
     
+    var permissionsReadyToProceed: Bool {
+        // Just check location - notification registration can happen in background
+        locationGranted
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -217,36 +222,13 @@ struct ContentView: View {
     }
     
     func checkPermissionsAndSession() {
-        // Wait for both permissions to be granted
-        let maxWaitTime = 30.0 // 30 seconds max
-        let startTime = Date()
-        
-        func checkPermissions() {
-            let elapsedTime = Date().timeIntervalSince(startTime)
-            
-            if bothPermissionsGranted {
-                // Both permissions granted, proceed to check session
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    isCheckingPermissions = false
-                    isCheckingSession = true
-                    checkExistingSession()
-                }
-            } else if elapsedTime < maxWaitTime {
-                // Still waiting, check again after a short delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    checkPermissions()
-                }
-            } else {
-                // Timeout - proceed anyway (user may have denied)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    isCheckingPermissions = false
-                    isCheckingSession = true
-                    checkExistingSession()
-                }
-            }
+        // Skip permission waiting - just proceed directly to session check
+        // Permissions can be requested/granted later when needed
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isCheckingPermissions = false
+            isCheckingSession = true
+            checkExistingSession()
         }
-        
-        checkPermissions()
     }
     
     func checkExistingSession() {

@@ -71,7 +71,7 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
     private func sendLocationUpdate(proposalId: String, sessionId: String) {
         guard let location = location else { return }
         
-        let url = URL(string: "http://localhost:5000/api/meeting/update-location")!
+        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/Location/Update")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

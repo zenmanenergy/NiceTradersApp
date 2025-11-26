@@ -1,5 +1,5 @@
 import { baseURL } from '../../Settings';
-import { SuperFetch } from '../../SuperFetch';
+import SuperFetch from '../../SuperFetch';
 
 export async function handleLogin(Email, Password, formValid, callback) {
 	console.log("handleLogin", Email, Password, formValid);
