@@ -39,6 +39,7 @@ struct SearchView: View {
     @StateObject private var locationManager = LocationManager()
     @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var availableCurrencies: [String] = []
+    @State private var availableAcceptCurrencies: [String] = []
     @State private var availableLocations: [String] = []
     @State private var searchResults: [SearchListing] = []
     @State private var searchFilters = SearchFilters()
@@ -189,7 +190,7 @@ struct SearchView: View {
                 
                 Picker("I want", selection: $searchFilters.wantCurrency) {
                     Text(localizationManager.localize("SELECT_CURRENCY")).tag("")
-                    ForEach(availableCurrencies, id: \.self) { currency in
+                    ForEach(availableAcceptCurrencies, id: \.self) { currency in
                         Text(currency).tag(currency)
                     }
                 }
@@ -664,6 +665,7 @@ struct SearchView: View {
                    let success = json["success"] as? Bool, success {
                     
                     availableCurrencies = json["currencies"] as? [String] ?? []
+                    availableAcceptCurrencies = json["acceptCurrencies"] as? [String] ?? []
                     availableLocations = json["locations"] as? [String] ?? []
                 }
             }

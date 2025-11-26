@@ -121,22 +121,37 @@
 ## 🟡 High Priority - Should Have for MVP
 
 ### Push Notifications
-- [x] **iOS Push Notifications**
+- [ ] **Apple Developer Account Setup (READY TO CONFIGURE)**
+  - [ ] Create App ID in Apple Developer Portal with Push Notifications capability
+  - [ ] Generate APNs Authentication Key (.p8 file)
+    - Download Key ID, Team ID, and .p8 file
+    - Store .p8 file securely on server
+    - Add to environment variables: APNS_CERTIFICATE_PATH, APNS_KEY_ID, APNS_TEAM_ID
+  - [ ] Configure Xcode project with correct Bundle ID and Team
+  - [ ] Enable Push Notifications capability in Xcode (already has entitlements file)
+  - [ ] Test on physical device (push notifications don't work in simulator)
+
+- [x] **iOS Push Notifications - Code Complete**
   - [x] Set up Apple Push Notification service (APNs)
   - [x] Register device tokens (user_devices table)
   - [x] Send notifications for new messages
   - [x] Send notifications for meeting proposals
   - [x] Send notifications for payment received (PayPal)
+  - [x] AppDelegate with device token handling
+  - [x] DeviceTokenManager for registration flow
+  - [ ] Handle notification taps (userDidReceiveNotification)
   - [ ] Send notifications for nearby listings
-  - [ ] Handle notification taps
+  - [ ] Switch to production APNs environment (currently development)
 
-- [x] **Backend Notification System**
+- [x] **Backend Notification System - Code Complete**
   - [x] Create notification service (NotificationService.py)
   - [x] Store device tokens (user_devices table with APNs support)
   - [x] Send push notifications via APNs (APNService.py)
   - [x] Multi-language notification support (i18n integration)
   - [x] Track notification delivery (apn_logs table)
   - [x] Deep links for session management and navigation
+  - [ ] Install apns2 library on production server (pip install apns2)
+  - [ ] Configure certificate path on production server
 
 ### User Experience Improvements
 - [ ] **Onboarding Flow**
@@ -242,6 +257,13 @@
   - [ ] Automated spam detection
 
 ### Documentation
+- [x] **Project Documentation**
+  - [x] GitHub Copilot custom instructions created (.github/copilot-instructions.md)
+  - [x] Database connection guidelines with PyMySQL
+  - [x] i18n implementation patterns documented
+  - [x] Translation workflow and naming conventions
+  - [x] Project structure overview
+
 - [ ] **API Documentation**
   - [ ] Create OpenAPI/Swagger docs
   - [ ] Document all endpoints
@@ -269,6 +291,9 @@
   - [x] Date/time format localization
   - [x] Text direction support (RTL for Arabic)
   - [x] Integration with notification system
+  - [x] Translation caching system (GetAllTranslations API - downloads all languages once)
+  - [x] Client-side language switching (instant, no server calls)
+  - [x] Translation timestamp-based update checking
 - [x] **iOS Localization** (Complete - All Views Localized)
   - [x] LocalizationManager.swift for all localization
   - [x] 11 Localizable.strings files (en, es, fr, de, pt, ja, zh, ru, ar, hi, sk)
@@ -281,6 +306,7 @@
   - [x] DashboardView, SearchView, ProfileView, MessagesView, Settings all localized
   - [x] All 10+ view files integrated with LocalizationManager
   - [x] Common UI strings replaced with localized versions across app
+  - [x] Local caching of all translations for offline language switching
 - [x] **Web Internationalization**
   - [x] Web admin dashboard remains English-only (per requirements)
 
@@ -430,4 +456,4 @@
 
 ---
 
-**Last Updated:** November 24, 2025 (iOS View Localization Complete - All 11 Languages Fully Integrated)
+**Last Updated:** November 26, 2025 (Custom Instructions Added, i18n Caching Documented)

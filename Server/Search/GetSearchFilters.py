@@ -9,22 +9,8 @@ def get_search_filters():
         # Connect to database
         cursor, connection = Database.ConnectToDatabase()
         
-        # Get distinct currencies (excluding sold/completed listings)
-        cursor.execute("""
-            SELECT DISTINCT currency 
-            FROM listings l
-            WHERE l.status = 'active' 
-            AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
-            ORDER BY currency
-        """)
-        currencies = [row['currency'] for row in cursor.fetchall()]
-        
-        # Get distinct accept currencies (excluding sold/completed listings)
+        # Get distinct currencies for "I have" dropdown (what sellers will accept)
+        # When a user has currency X, they want listings where accept_currency = X
         cursor.execute("""
             SELECT DISTINCT accept_currency 
             FROM listings l
@@ -37,7 +23,23 @@ def get_search_filters():
             )
             ORDER BY accept_currency
         """)
-        accept_currencies = [row['accept_currency'] for row in cursor.fetchall()]
+        currencies = [row['accept_currency'] for row in cursor.fetchall()]
+        
+        # Get distinct currencies for "I want" dropdown (what sellers have)
+        # When a user wants currency Y, they want listings where currency = Y
+        cursor.execute("""
+            SELECT DISTINCT currency 
+            FROM listings l
+            WHERE l.status = 'active' 
+            AND l.available_until > NOW()
+            AND NOT EXISTS (
+                SELECT 1 FROM exchange_transactions et 
+                WHERE et.listing_id = l.listing_id 
+                AND et.status = 'completed'
+            )
+            ORDER BY currency
+        """)
+        accept_currencies = [row['currency'] for row in cursor.fetchall()]
         
         # Get distinct locations (excluding sold/completed listings)
         cursor.execute("""
