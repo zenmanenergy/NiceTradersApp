@@ -261,13 +261,14 @@ struct EditListingView: View {
             } message: {
                 Text(localizationManager.localize("DELETE_LISTING_CONFIRM_MESSAGE"))
             }
+            .onAppear {
+                print("[EditListingView] onAppear called")
+                ExchangeRatesAPI.shared.refreshRatesIfNeeded()
+                loadListingData()
+            }
             
             // Bottom Navigation
             BottomNavigation(activeTab: "home")
-        .onAppear {
-            ExchangeRatesAPI.shared.refreshRatesIfNeeded()
-            loadListingData()
-        }
     }
     
     // MARK: - Header View
@@ -1094,27 +1095,149 @@ struct EditListingView: View {
     }
     
     func loadListingData() {
-        guard SessionManager.shared.sessionId != nil else {
+        print("[EditListingView] loadListingData called")
+        print("[EditListingView] listingId: \(listingId)")
+        
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("[EditListingView] ERROR: No session ID")
             errorMessage = "Session not found"
             showError = true
             isLoading = false
             return
         }
         
-        // In a real app, fetch listing data from API
-        // For now, using mock data
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Mock data population
-            selectedCurrency = currencies.first { $0.code == "USD" }
-            amount = "500"
-            selectedAcceptCurrency = currencies.first { $0.code == "EUR" }
-            location = "37.7749, -122.4194"
-            locationRadius = "5"
-            meetingPreference = "public"
-            availableUntil = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
-            
+        print("[EditListingView] sessionId: \(sessionId)")
+        
+        var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/GetListingById")!
+        components.queryItems = [
+            URLQueryItem(name: "ListingId", value: listingId)
+        ]
+        
+        guard let url = components.url else {
+            print("[EditListingView] ERROR: Invalid URL")
+            errorMessage = "Invalid URL"
+            showError = true
             isLoading = false
+            return
         }
+        
+        print("[EditListingView] Fetching listing from: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            print("[EditListingView] Response received")
+            
+            if let error = error {
+                print("[EditListingView] ERROR: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    isLoading = false
+                    errorMessage = "Network error: \(error.localizedDescription)"
+                    showError = true
+                }
+                return
+            }
+            
+            guard let data = data else {
+                print("[EditListingView] ERROR: No data received")
+                DispatchQueue.main.async {
+                    isLoading = false
+                    errorMessage = "No response from server"
+                    showError = true
+                }
+                return
+            }
+            
+            print("[EditListingView] Data received: \(String(data: data, encoding: .utf8) ?? "unable to decode")")
+            
+            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                print("[EditListingView] ERROR: Failed to parse JSON")
+                DispatchQueue.main.async {
+                    isLoading = false
+                    errorMessage = "Invalid response format"
+                    showError = true
+                }
+                return
+            }
+            
+            print("[EditListingView] JSON parsed: \(json)")
+            
+            guard let success = json["success"] as? Bool, success else {
+                let error = json["error"] as? String ?? "Unknown error"
+                print("[EditListingView] ERROR: API returned success=false: \(error)")
+                DispatchQueue.main.async {
+                    isLoading = false
+                    errorMessage = error
+                    showError = true
+                }
+                return
+            }
+            
+            guard let listingData = json["listing"] as? [String: Any] else {
+                print("[EditListingView] ERROR: No listing data in response")
+                DispatchQueue.main.async {
+                    isLoading = false
+                    errorMessage = "Failed to load listing data"
+                    showError = true
+                }
+                return
+            }
+            
+            print("[EditListingView] Listing data: \(listingData)")
+            
+            DispatchQueue.main.async {
+                // Populate form fields
+                if let currencyCode = listingData["currency"] as? String {
+                    print("[EditListingView] Setting currency: \(currencyCode)")
+                    selectedCurrency = currencies.first { $0.code == currencyCode }
+                }
+                
+                if let amountValue = listingData["amount"] as? Double {
+                    amount = String(format: "%.2f", amountValue)
+                    print("[EditListingView] Setting amount: \(amount)")
+                } else if let amountValue = listingData["amount"] as? Int {
+                    amount = String(amountValue)
+                    print("[EditListingView] Setting amount: \(amount)")
+                }
+                
+                if let acceptCurrencyCode = listingData["acceptCurrency"] as? String {
+                    print("[EditListingView] Setting accept currency: \(acceptCurrencyCode)")
+                    selectedAcceptCurrency = currencies.first { $0.code == acceptCurrencyCode }
+                }
+                
+                if let lat = listingData["latitude"] as? Double,
+                   let lng = listingData["longitude"] as? Double {
+                    location = "\(lat), \(lng)"
+                    print("[EditListingView] Setting location: \(location)")
+                } else if let locationStr = listingData["location"] as? String {
+                    location = locationStr
+                    print("[EditListingView] Setting location: \(location)")
+                }
+                
+                if let radius = listingData["locationRadius"] as? String {
+                    locationRadius = radius
+                    print("[EditListingView] Setting radius: \(locationRadius)")
+                } else if let radius = listingData["locationRadius"] as? Int {
+                    locationRadius = String(radius)
+                    print("[EditListingView] Setting radius: \(locationRadius)")
+                }
+                
+                if let preference = listingData["meetingPreference"] as? String {
+                    meetingPreference = preference
+                    print("[EditListingView] Setting meeting preference: \(meetingPreference)")
+                }
+                
+                if let availableUntilStr = listingData["availableUntil"] as? String {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                    if let date = formatter.date(from: availableUntilStr) {
+                        availableUntil = date
+                        print("[EditListingView] Setting availableUntil: \(availableUntil)")
+                    }
+                }
+                
+                print("[EditListingView] Setting isLoading = false")
+                isLoading = false
+            }
+        }.resume()
     }
     
     func handleSubmit() {

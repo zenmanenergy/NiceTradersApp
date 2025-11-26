@@ -1,8 +1,4 @@
 
-import logging
-from logging.handlers import RotatingFileHandler
-import os
-import sys
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
 
@@ -10,61 +6,6 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.debug = True
-
-# Setup logging - will not crash if it fails
-def setup_logging():
-    try:
-        # Try to determine the script directory
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        log_dir = os.path.join(script_dir, 'logs')
-        
-        # Create log directory
-        os.makedirs(log_dir, mode=0o755, exist_ok=True)
-        
-        # Create file handlers
-        file_handler = RotatingFileHandler(
-            os.path.join(log_dir, 'flask_app.log'),
-            maxBytes=10485760,
-            backupCount=10
-        )
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logging.Formatter(
-            '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
-        ))
-        
-        error_handler = RotatingFileHandler(
-            os.path.join(log_dir, 'error.log'),
-            maxBytes=10485760,
-            backupCount=10
-        )
-        error_handler.setLevel(logging.ERROR)
-        error_handler.setFormatter(logging.Formatter(
-            '[%(asctime)s] %(levelname)s in %(module)s [%(pathname)s:%(lineno)d]: %(message)s'
-        ))
-        
-        app.logger.addHandler(file_handler)
-        app.logger.addHandler(error_handler)
-        app.logger.setLevel(logging.INFO)
-        
-        app.logger.info(f'File logging enabled: {log_dir}')
-        return True
-        
-    except Exception as e:
-        # If file logging fails, just continue without it
-        print(f'File logging disabled: {e}', file=sys.stderr)
-        return False
-
-# Try to setup file logging, but don't fail if it doesn't work
-setup_logging()
-
-# Always log to console
-console_handler = logging.StreamHandler(sys.stderr)
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(logging.Formatter('[%(asctime)s] %(message)s'))
-app.logger.addHandler(console_handler)
-app.logger.setLevel(logging.INFO)
-
-app.logger.info('Flask application starting...')
 
 from Login import Login
 from Signup import Signup
