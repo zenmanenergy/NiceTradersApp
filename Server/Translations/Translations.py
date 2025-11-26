@@ -92,3 +92,51 @@ def get_last_updated():
             'success': False,
             'message': f'Error fetching last updated: {str(e)}'
         }), 500
+
+
+@translations_bp.route('/GetAllTranslations', methods=['GET'])
+def get_all_translations():
+    """Get all translations for all languages in a single call"""
+    try:
+        cursor, connection = Database.ConnectToDatabase()
+        
+        # Get all translations
+        query = """
+            SELECT language_code, translation_key, translation_value
+            FROM translations
+            ORDER BY language_code, translation_key
+        """
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        # Get the most recent update timestamp
+        cursor.execute("SELECT MAX(updated_at) as last_updated FROM translations")
+        timestamp_result = cursor.fetchone()
+        last_updated = timestamp_result['last_updated'].isoformat() if timestamp_result and timestamp_result['last_updated'] else None
+        
+        connection.close()
+        
+        # Group translations by language
+        translations_by_language = {}
+        for row in results:
+            lang = row['language_code']
+            key = row['translation_key']
+            value = row['translation_value']
+            
+            if lang not in translations_by_language:
+                translations_by_language[lang] = {}
+            
+            translations_by_language[lang][key] = value
+        
+        return json.dumps({
+            'success': True,
+            'translations': translations_by_language,
+            'last_updated': last_updated,
+            'total_count': len(results)
+        }), 200
+        
+    except Exception as e:
+        return json.dumps({
+            'success': False,
+            'message': f'Error fetching all translations: {str(e)}'
+        }), 500

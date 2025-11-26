@@ -10,8 +10,8 @@ import sys
 def connect_to_database():
     """Connect to the MySQL database"""
     endpoint = "localhost"
-    username = "stevenelson"
-    password = "mwitcitw711"
+    username = "root"
+    password = "L@miaafm33!!"
     database_name = "nicetraders"
     
     try:

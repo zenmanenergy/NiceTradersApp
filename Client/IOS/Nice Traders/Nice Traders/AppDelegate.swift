@@ -13,11 +13,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        print("✓ AppDelegate: Application did finish launching")
+        print("🔵 [AppDelegate] Application did finish launching")
         
         // Initialize device token manager and request notification permissions
+        print("🔵 [AppDelegate] Initializing DeviceTokenManager...")
         _ = DeviceTokenManager.shared
-        print("✓ AppDelegate: DeviceTokenManager initialized")
+        print("✓ [AppDelegate] DeviceTokenManager initialized")
         
         return true
     }
@@ -27,7 +28,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
     ) {
-        print("✓ AppDelegate: Received device token from APNs")
+        print("✅ [AppDelegate] *** didRegisterForRemoteNotificationsWithDeviceToken CALLED ***")
+        print("✅ [AppDelegate] Device token received from APNs: \(deviceToken.map { String(format: "%02.2hhx", $0) }.joined())")
         DeviceTokenManager.shared.setDeviceToken(deviceToken)
     }
     
@@ -36,7 +38,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFailToRegisterForRemoteNotificationsWithError error: Error
     ) {
-        print("✗ AppDelegate: Failed to register for remote notifications: \(error.localizedDescription)")
+        print("❌ [AppDelegate] *** didFailToRegisterForRemoteNotificationsWithError CALLED ***")
+        print("❌ [AppDelegate] Failed to register for remote notifications: \(error.localizedDescription)")
     }
     
     // Called when app receives a remote notification

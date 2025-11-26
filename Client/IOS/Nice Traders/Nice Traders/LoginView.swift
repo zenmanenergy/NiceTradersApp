@@ -38,7 +38,7 @@ struct LoginView: View {
                     Spacer()
                 }
                 
-                Text(localizationManager.signIn)
+                Text(localizationManager.localize("SIGN_IN"))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -75,7 +75,7 @@ green: 0.29, blue: 0.64)]),
                     // Form
                     VStack(spacing: 24) {
                         FormField(
-                            label: localizationManager.email,
+                            label: localizationManager.localize("EMAIL"),
                             text: $email,
                             placeholder: localizationManager.localize("ENTER_EMAIL"),
                             keyboardType: .emailAddress,
@@ -83,7 +83,7 @@ green: 0.29, blue: 0.64)]),
                         )
                         
                         FormField(
-                            label: localizationManager.password,
+                            label: localizationManager.localize("PASSWORD"),
                             text: $password,
                             placeholder: localizationManager.localize("ENTER_PASSWORD"),
                             isSecure: true,
@@ -99,7 +99,7 @@ green: 0.29, blue: 0.64)]),
                             alertMessage = localizationManager.localize("FORGOT_PASSWORD_COMING_SOON")
                             showingAlert = true
                         }) {
-                            Text(localizationManager.forgotPassword)
+                            Text(localizationManager.localize("FORGOT_PASSWORD"))
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
@@ -117,7 +117,7 @@ green: 0.29, blue: 0.64)]),
                                     .scaleEffect(0.8)
                                 Text(localizationManager.localize("SIGNING_IN"))
                             } else {
-                                Text(localizationManager.signIn)
+                                Text(localizationManager.localize("SIGN_IN"))
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -147,7 +147,7 @@ green: 0.29, blue: 0.64)]),
                             // Navigate to signup - will be handled by parent
                             dismiss()
                         }) {
-                            Text(localizationManager.signUp)
+                            Text(localizationManager.localize("SIGN_UP"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }
@@ -183,7 +183,7 @@ green: 0.29, blue: 0.64)]),
         if email.trimmingCharacters(in: .whitespaces).isEmpty {
             errors["email"] = localizationManager.localize("EMAIL_REQUIRED")
         } else if !email.contains("@") || !email.contains(".") {
-            errors["email"] = localizationManager.invalidEmail
+            errors["email"] = localizationManager.localize("INVALID_EMAIL")
         }
         
         if password.isEmpty {
@@ -249,7 +249,7 @@ green: 0.29, blue: 0.64)]),
                         print("Response:", json)
                         
                         if let errorMessage = json["ErrorMessage"] as? String {
-                            alertMessage = localizationManager.error + ": \(errorMessage)"
+                            alertMessage = localizationManager.localize("ERROR") + ": \(errorMessage)"
                             showingAlert = true
                             return
                         }

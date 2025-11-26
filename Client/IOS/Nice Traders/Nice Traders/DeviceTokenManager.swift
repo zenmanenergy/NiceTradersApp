@@ -22,20 +22,33 @@ class DeviceTokenManager: ObservableObject {
     
     /// Request notification permission from user
     func requestNotificationPermission() {
+        print("🔵 [DeviceTokenManager] Requesting notification permission...")
+        
+        // First check current authorization status
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            print("🔵 [DeviceTokenManager] Current authorization status: \(settings.authorizationStatus.rawValue)")
+            print("🔵 [DeviceTokenManager] Alert setting: \(settings.alertSetting.rawValue)")
+            print("🔵 [DeviceTokenManager] Badge setting: \(settings.badgeSetting.rawValue)")
+            print("🔵 [DeviceTokenManager] Sound setting: \(settings.soundSetting.rawValue)")
+        }
+        
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            print("🔵 [DeviceTokenManager] requestAuthorization callback - granted: \(granted)")
+            
             DispatchQueue.main.async {
                 self.isNotificationPermissionGranted = granted
                 
                 if granted {
-                    print("✓ Notification permission granted")
+                    print("✓ [DeviceTokenManager] Notification permission granted - calling registerForRemoteNotifications")
                     DispatchQueue.main.async {
                         UIApplication.shared.registerForRemoteNotifications()
+                        print("✓ [DeviceTokenManager] registerForRemoteNotifications called")
                     }
                 } else {
                     if let error = error {
-                        print("✗ Notification permission denied: \(error.localizedDescription)")
+                        print("✗ [DeviceTokenManager] Notification permission denied with error: \(error.localizedDescription)")
                     } else {
-                        print("✗ Notification permission denied by user")
+                        print("✗ [DeviceTokenManager] Notification permission denied by user")
                     }
                 }
             }
@@ -45,26 +58,36 @@ class DeviceTokenManager: ObservableObject {
     /// Set the device token when received from APNs
     func setDeviceToken(_ token: Data) {
         let deviceToken = token.map { String(format: "%02.2hhx", $0) }.joined()
+        print("🔵 [DeviceTokenManager] setDeviceToken called with token: \(deviceToken)")
+        
         DispatchQueue.main.async {
             self.deviceToken = deviceToken
-            print("✓ Device token registered: \(deviceToken)")
+            print("✓ [DeviceTokenManager] Device token stored locally: \(deviceToken)")
             
             // Update the backend with the device token
+            print("🔵 [DeviceTokenManager] Calling updateBackendWithDeviceToken...")
             self.updateBackendWithDeviceToken(deviceToken)
         }
     }
     
     /// Send device token to backend to update user_devices table
     private func updateBackendWithDeviceToken(_ token: String) {
+        print("🔵 [DeviceTokenManager] updateBackendWithDeviceToken called with token: \(token)")
+        
         // Get user ID from SessionManager
         guard let userId = SessionManager.shared.userId else {
-            print("⚠ Cannot update device token: User ID not available")
+            print("⚠ [DeviceTokenManager] Cannot update device token: User ID not available")
+            print("⚠ [DeviceTokenManager] SessionManager.shared.userId is nil")
             return
         }
+        
+        print("✓ [DeviceTokenManager] User ID found: \(userId)")
         
         let device = UIDevice.current
         let appVersion = Bundle.main.appVersion ?? "unknown"
         let osVersion = device.systemVersion
+        
+        print("🔵 [DeviceTokenManager] Device info - appVersion: \(appVersion), osVersion: \(osVersion)")
         
         // Build query parameters
         var components = URLComponents(string: "http://localhost:5000/Profile/UpdateDeviceToken")
@@ -77,9 +100,11 @@ class DeviceTokenManager: ObservableObject {
         ]
         
         guard let url = components?.url else {
-            print("✗ Invalid URL for device token update")
+            print("✗ [DeviceTokenManager] Invalid URL for device token update")
             return
         }
+        
+        print("🔵 [DeviceTokenManager] Making request to: \(url.absoluteString)")
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -87,15 +112,21 @@ class DeviceTokenManager: ObservableObject {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("✗ Failed to update device token: \(error.localizedDescription)")
+                print("✗ [DeviceTokenManager] Failed to update device token: \(error.localizedDescription)")
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
+                print("🔵 [DeviceTokenManager] Response status code: \(httpResponse.statusCode)")
+                
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("🔵 [DeviceTokenManager] Response body: \(responseString)")
+                }
+                
                 if httpResponse.statusCode == 200 {
-                    print("✓ Device token successfully updated on backend")
+                    print("✓ [DeviceTokenManager] Device token successfully updated on backend")
                 } else {
-                    print("✗ Device token update failed with status: \(httpResponse.statusCode)")
+                    print("✗ [DeviceTokenManager] Device token update failed with status: \(httpResponse.statusCode)")
                 }
             }
         }.resume()

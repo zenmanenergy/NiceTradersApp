@@ -43,7 +43,7 @@ struct SignupView: View {
                     Spacer()
                 }
                 
-                Text(localizationManager.signUp)
+                Text(localizationManager.localize("SIGN_UP"))
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
             }
@@ -77,14 +77,14 @@ struct SignupView: View {
                         // Name Row
                         HStack(spacing: 16) {
                             FormField(
-                                label: localizationManager.firstName,
+                                label: localizationManager.localize("FIRST_NAME"),
                                 text: $firstName,
                                 placeholder: localizationManager.localize("ENTER_FIRST_NAME"),
                                 error: errors["firstName"]
                             )
                             
                             FormField(
-                                label: localizationManager.lastName,
+                                label: localizationManager.localize("LAST_NAME"),
                                 text: $lastName,
                                 placeholder: localizationManager.localize("ENTER_LAST_NAME"),
                                 error: errors["lastName"]
@@ -92,7 +92,7 @@ struct SignupView: View {
                         }
                         
                         FormField(
-                            label: localizationManager.email,
+                            label: localizationManager.localize("EMAIL"),
                             text: $email,
                             placeholder: localizationManager.localize("ENTER_EMAIL"),
                             keyboardType: .emailAddress,
@@ -108,7 +108,7 @@ struct SignupView: View {
                         )
                         
                         FormField(
-                            label: localizationManager.password,
+                            label: localizationManager.localize("PASSWORD"),
                             text: $password,
                             placeholder: localizationManager.localize("CREATE_PASSWORD"),
                             isSecure: true,
@@ -116,7 +116,7 @@ struct SignupView: View {
                         )
                         
                         FormField(
-                            label: localizationManager.confirmPassword,
+                            label: localizationManager.localize("CONFIRM_PASSWORD"),
                             text: $confirmPassword,
                             placeholder: localizationManager.localize("CONFIRM_PASSWORD_PLACEHOLDER"),
                             isSecure: true,
@@ -134,7 +134,7 @@ struct SignupView: View {
                                     .scaleEffect(0.8)
                                 Text(localizationManager.localize("CREATING_ACCOUNT"))
                             } else {
-                                Text(localizationManager.signUp)
+                                Text(localizationManager.localize("SIGN_UP"))
                             }
                         }
                         .font(.system(size: 18, weight: .semibold))
@@ -164,7 +164,7 @@ struct SignupView: View {
                         Button(action: {
                             showLogin = true
                         }) {
-                            Text(localizationManager.signIn)
+                            Text(localizationManager.localize("SIGN_IN"))
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                         }

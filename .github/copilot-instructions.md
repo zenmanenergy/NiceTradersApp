@@ -1,0 +1,139 @@
+# GitHub Copilot Custom Instructions for NiceTradersApp
+
+## Database Connection
+
+**IMPORTANT:** When you need to connect to the MySQL database, use these credentials:
+
+### Connection Details
+- **Host:** localhost
+- **User:** stevenelson
+- **Password:** mwitcitw711
+- **Database:** nicetraders
+- **Library:** PyMySQL (NOT mysql-connector)
+
+### Always Use Virtual Environment
+```bash
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server
+source venv/bin/activate
+```
+
+### Standard Connection Template
+```python
+import pymysql
+
+db = pymysql.connect(
+    host='localhost',
+    user='stevenelson',
+    password='mwitcitw711',
+    database='nicetraders'
+)
+cursor = db.cursor()
+
+# Your SQL here
+cursor.execute("SELECT * FROM table_name")
+results = cursor.fetchall()
+
+db.commit()
+cursor.close()
+db.close()
+```
+
+### Common Mistakes to AVOID
+- ❌ DO NOT use `mysql.connector` - it's not installed
+- ❌ DO NOT use `root` user with `root` password - wrong credentials
+- ❌ DO NOT forget to activate venv first
+- ✅ ALWAYS use PyMySQL
+- ✅ ALWAYS activate venv before running Python scripts
+- ✅ ALWAYS use credentials from above (stevenelson/mwitcitw711)
+
+### Reference
+The canonical connection code is in: `Server/_Lib/Database.py`
+
+## Project Structure
+
+### Backend (Flask)
+- **Location:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server`
+- **Port:** 9000
+- **Run:** `./run.sh` or `flask --app flask_app run --host=0.0.0.0 --port=9000 --reload`
+
+### iOS App
+- **Location:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders`
+- **i18n:** Uses `LocalizationManager.shared.localize("KEY")` pattern
+- **Translations:** Stored in database `translations` table, cached locally
+
+### Migrations
+- **Location:** `Server/migrations/`
+- **Naming:** `00X_description.sql`
+
+## i18n (Internationalization)
+
+### iOS Pattern
+All user-facing strings must use:
+```swift
+@ObservedObject var localizationManager = LocalizationManager.shared
+
+Text(localizationManager.localize("TRANSLATION_KEY"))
+```
+
+**CRITICAL: When adding ANY new text to iOS views:**
+1. NEVER use hardcoded strings like `Text("Welcome")`
+2. ALWAYS use `localizationManager.localize("KEY_NAME")`
+3. IMMEDIATELY add translations to database for ALL languages:
+   - English (en)
+   - Japanese (ja)
+   - Spanish (es)
+   - French (fr)
+   - German (de)
+   - Arabic (ar)
+   - Hindi (hi)
+   - Portuguese (pt)
+   - Russian (ru)
+   - Slovak (sk)
+   - Chinese (zh)
+
+### Adding New Translations (REQUIRED FOR ALL NEW TEXT)
+1. **Database:** Add to `translations` table with ALL language codes
+2. **Fallback:** Add English fallback to `LocalizationManager.swift` in `fallbackTranslations` dictionary
+3. **Naming:** Use UPPERCASE_SNAKE_CASE for translation keys (e.g., `WELCOME_BACK`, `SIGN_IN`)
+4. **Script:** Run `Server/fix_missing_translations.py` to verify all translations exist
+
+### Translation Insertion Template
+```python
+# Use this to add translations for new text
+import pymysql
+db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders')
+cursor = db.cursor()
+
+translations = [
+    ("NEW_KEY", "en", "English text"),
+    ("NEW_KEY", "ja", "日本語テキスト"),
+    ("NEW_KEY", "es", "Texto en español"),
+    ("NEW_KEY", "fr", "Texte français"),
+    ("NEW_KEY", "de", "Deutscher Text"),
+    # Add ar, hi, pt, ru, sk, zh as well
+]
+
+for key, lang, value in translations:
+    cursor.execute("INSERT INTO translations (translation_key, language_code, translation_value) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE translation_value = %s", (key, lang, value, value))
+
+db.commit()
+cursor.close()
+db.close()
+```
+
+### Backend API
+- `GET /Translations/GetAllTranslations` - **PRIMARY:** Get all translations for all languages (single call)
+- `GET /Translations/GetTranslations?language=XX` - Legacy: Get translations for specific language
+- `GET /Translations/GetLastUpdated` - Check translation timestamps
+- `POST /Admin/Translations/Add` - Add new translation
+
+### How i18n Caching Works
+1. **First load:** App calls `/Translations/GetAllTranslations` and caches ALL languages locally
+2. **Language switch:** App uses cached data instantly (no server call)
+3. **Update check:** App periodically checks `max(updated_at)` timestamp
+4. **Re-download:** Only downloads all translations if timestamp is newer than cache
+
+This means translations for all languages are downloaded once and stored locally. Changing languages is instant using client-side data.
+
+## Shell Commands
+Default shell is **zsh** - generate commands for zsh, not bash.
