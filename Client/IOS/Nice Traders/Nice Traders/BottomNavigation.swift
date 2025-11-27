@@ -18,7 +18,6 @@ struct BottomNavigation: View {
             NavItem(icon: "magnifyingglass", label: "SEARCH", isActive: activeTab == "search", action: goSearch)
             NavItem(icon: "plus.circle.fill", label: "LIST", isActive: activeTab == "create", action: goCreateListing)
             NavItem(icon: "message.fill", label: "MESSAGES", isActive: activeTab == "messages", action: goMessages)
-            NavItem(icon: "rectangle.portrait.and.arrow.right", label: "LOGOUT", action: logout)
         }
         .padding(.vertical, 12)
         .background(Color.white)

@@ -122,6 +122,19 @@ struct SearchView: View {
     // MARK: - Header View
     var headerView: some View {
         HStack {
+            Button(action: {
+                navigateToSearch = false
+            }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(8)
+            }
+            
+            Spacer()
+            
             Text(localizationManager.localize("SEARCH_CURRENCY"))
                 .font(.system(size: 24, weight: .bold))
                 .foregroundColor(.white)

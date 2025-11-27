@@ -1045,7 +1045,7 @@ struct EditListingView: View {
                 fieldErrors["currency"] = "Please select a currency"
                 return false
             }
-            if amount.isEmpty || Int(amount) ?? 0 <= 0 {
+            if amount.isEmpty || Double(amount) ?? 0 <= 0 {
                 fieldErrors["amount"] = "Please enter a valid amount"
                 return false
             }
@@ -1110,7 +1110,7 @@ struct EditListingView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/GetListingById")!
         components.queryItems = [
-            URLQueryItem(name: "ListingId", value: listingId)
+            URLQueryItem(name: "listingId", value: listingId)
         ]
         
         guard let url = components.url else {

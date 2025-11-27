@@ -31,18 +31,7 @@ struct ExchangeHistoryItem: Identifiable, Codable {
     let status: String
 }
 
-struct NotificationSettings: Codable {
-    var newMessages: Bool
-    var exchangeUpdates: Bool
-    var marketingEmails: Bool
-    var pushNotifications: Bool
-}
 
-struct PrivacySettings: Codable {
-    var showLocation: Bool
-    var showExchangeHistory: Bool
-    var allowDirectMessages: Bool
-}
 
 struct ProfileView: View {
     @Environment(\.dismiss) var dismiss
@@ -61,17 +50,6 @@ struct ProfileView: View {
     )
     
     @State private var exchangeHistory: [ExchangeHistoryItem] = []
-    @State private var notificationSettings = NotificationSettings(
-        newMessages: true,
-        exchangeUpdates: true,
-        marketingEmails: false,
-        pushNotifications: true
-    )
-    @State private var privacySettings = PrivacySettings(
-        showLocation: true,
-        showExchangeHistory: false,
-        allowDirectMessages: true
-    )
     
     @State private var isEditing = false
     @State private var editedUser: UserProfile?
@@ -544,43 +522,6 @@ struct ProfileView: View {
             Text(localizationManager.localize("SETTINGS"))
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
-            
-            // Notifications
-            VStack(alignment: .leading, spacing: 0) {
-                Text(localizationManager.localize("NOTIFICATIONS"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(hex: "2d3748"))
-                    .padding(.bottom, 16)
-                
-                settingToggle(localizationManager.localize("NEW_MESSAGES"), isOn: $notificationSettings.newMessages)
-                settingToggle(localizationManager.localize("EXCHANGE_UPDATES"), isOn: $notificationSettings.exchangeUpdates)
-                settingToggle(localizationManager.localize("PUSH_NOTIFICATIONS"), isOn: $notificationSettings.pushNotifications)
-            }
-            .padding(24)
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-            )
-            
-            // Privacy
-            VStack(alignment: .leading, spacing: 0) {
-                Text(localizationManager.localize("PRIVACY"))
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(hex: "2d3748"))
-                    .padding(.bottom, 16)
-                
-                settingToggle(localizationManager.localize("SHOW_LOCATION"), isOn: $privacySettings.showLocation)
-                settingToggle(localizationManager.localize("ALLOW_DIRECT_MESSAGES"), isOn: $privacySettings.allowDirectMessages)
-            }
-            .padding(24)
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-            )
             
             // Language Setting
             Button(action: {

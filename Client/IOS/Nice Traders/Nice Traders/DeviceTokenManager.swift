@@ -42,8 +42,13 @@ class DeviceTokenManager: ObservableObject {
                 if granted {
                     print("✓ [DeviceTokenManager] Notification permission granted - calling registerForRemoteNotifications")
                     DispatchQueue.main.async {
+                        #if targetEnvironment(simulator)
+                        print("⚠ [DeviceTokenManager] Running in simulator - skipping registerForRemoteNotifications")
+                        self.registrationComplete = true
+                        #else
                         UIApplication.shared.registerForRemoteNotifications()
                         print("✓ [DeviceTokenManager] registerForRemoteNotifications called")
+                        #endif
                     }
                 } else {
                     if let error = error {

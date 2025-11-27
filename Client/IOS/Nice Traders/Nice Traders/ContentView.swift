@@ -14,7 +14,8 @@ struct ContentView: View {
     @State private var showLearnMore = false
     @State private var isCheckingSession = true
     @State private var navigateToDashboard = false
-    @State private var isCheckingPermissions = true
+    @State private var isCheckingPermissions = false
+    @State private var showingSplash = true
     @State private var navigationId = UUID()
     
     @ObservedObject var localizationManager = LocalizationManager.shared
@@ -42,15 +43,12 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if isCheckingPermissions {
-                    // Show nothing while waiting for permissions
-                    Color.clear
-                        .ignoresSafeArea()
+                if showingSplash {
+                    // Show splash screen while loading
+                    SplashScreenView()
                         .onAppear {
                             checkPermissionsAndSession()
                         }
-                } else if isCheckingSession {
-                    ProgressView(localizationManager.localize("CHECKING_SESSION"))
                 } else if SessionManager.shared.isLoggedIn {
                     // User is logged in - go to dashboard
                     DashboardView()
@@ -225,7 +223,6 @@ struct ContentView: View {
         // Skip permission waiting - just proceed directly to session check
         // Permissions can be requested/granted later when needed
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            isCheckingPermissions = false
             isCheckingSession = true
             checkExistingSession()
         }
@@ -238,6 +235,7 @@ struct ContentView: View {
                 navigateToDashboard = true
             }
             isCheckingSession = false
+            showingSplash = false
         }
     }
 }
