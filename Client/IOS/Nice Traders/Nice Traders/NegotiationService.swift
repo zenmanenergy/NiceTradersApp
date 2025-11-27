@@ -264,10 +264,19 @@ class NegotiationService {
                 return
             }
             
+            // Debug: print raw response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[PaymentService] Raw response: \(jsonString)")
+            }
+            
             do {
                 let result = try JSONDecoder().decode(PaymentResponse.self, from: data)
                 completion(.success(result))
             } catch {
+                print("[PaymentService] Decode error: \(error)")
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("[PaymentService] Failed to decode: \(jsonString)")
+                }
                 completion(.failure(error))
             }
         }.resume()
@@ -349,14 +358,7 @@ class NegotiationService {
 extension NegotiationService {
     /// Format a date string from the API into a user-friendly format
     static func formatDate(_ dateString: String) -> String {
-        let isoFormatter = ISO8601DateFormatter()
-        if let date = isoFormatter.date(from: dateString) {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
-        }
-        return dateString
+        return DateFormatters.formatCompact(dateString)
     }
     
     /// Get remaining time until payment deadline

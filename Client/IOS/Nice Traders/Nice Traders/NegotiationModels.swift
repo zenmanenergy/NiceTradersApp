@@ -210,8 +210,92 @@ struct PaymentResponse: Codable {
 
 struct NegotiationDetailResponse: Codable {
     let success: Bool
-    let negotiation: NegotiationDetail?
+    let negotiation: NegotiationInfo?
+    let listing: ListingInfo?
+    let buyer: UserInfo?
+    let seller: UserInfo?
+    let userRole: String?
+    let history: [NegotiationHistoryEntry]?
     let error: String?
+    
+    struct NegotiationInfo: Codable {
+        let negotiationId: String
+        let listingId: String
+        let status: NegotiationStatus
+        let currentProposedTime: String
+        let proposedBy: String
+        let buyerPaid: Bool
+        let sellerPaid: Bool
+        let agreementReachedAt: String?
+        let paymentDeadline: String?
+        let createdAt: String
+        let updatedAt: String
+    }
+    
+    struct ListingInfo: Codable {
+        let currency: String
+        let amount: Double
+        let acceptCurrency: String
+        let location: String
+    }
+    
+    struct UserInfo: Codable {
+        let userId: String
+        let firstName: String
+        let lastName: String
+        let rating: Double
+        let totalExchanges: Int
+    }
+    
+    // Convert to NegotiationDetail
+    func toNegotiationDetail() -> NegotiationDetail? {
+        guard let negotiation = negotiation,
+              let listing = listing,
+              let buyer = buyer,
+              let seller = seller,
+              let userRole = userRole,
+              let history = history else {
+            return nil
+        }
+        
+        return NegotiationDetail(
+            negotiation: NegotiationDetail.NegotiationInfo(
+                negotiationId: negotiation.negotiationId,
+                listingId: negotiation.listingId,
+                status: negotiation.status,
+                currentProposedTime: negotiation.currentProposedTime,
+                proposedBy: negotiation.proposedBy,
+                buyerPaid: negotiation.buyerPaid,
+                sellerPaid: negotiation.sellerPaid,
+                agreementReachedAt: negotiation.agreementReachedAt,
+                paymentDeadline: negotiation.paymentDeadline,
+                createdAt: negotiation.createdAt,
+                updatedAt: negotiation.updatedAt
+            ),
+            listing: NegotiationDetail.ListingInfo(
+                currency: listing.currency,
+                amount: listing.amount,
+                acceptCurrency: listing.acceptCurrency,
+                location: listing.location
+            ),
+            buyer: NegotiationDetail.UserInfo(
+                userId: buyer.userId,
+                firstName: buyer.firstName,
+                lastName: buyer.lastName,
+                rating: buyer.rating,
+                totalExchanges: buyer.totalExchanges
+            ),
+            seller: NegotiationDetail.UserInfo(
+                userId: seller.userId,
+                firstName: seller.firstName,
+                lastName: seller.lastName,
+                rating: seller.rating,
+                totalExchanges: seller.totalExchanges
+            ),
+            userRole: userRole,
+            history: history
+        )
+    }
 }
 
 struct MyNegotiationsResponse: Codable {

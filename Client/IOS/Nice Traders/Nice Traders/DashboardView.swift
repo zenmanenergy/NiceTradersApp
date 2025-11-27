@@ -16,6 +16,7 @@ struct DashboardView: View {
     @State private var myListings: [Listing] = []
     @State private var allActiveExchanges: [ActiveExchange] = []
     @State private var purchasedContactsData: [[String: Any]] = [] // Store raw data
+    @State private var pendingNegotiations: [PendingNegotiation] = []
     @State private var isLoading = true
     @State private var error: String?
     @State private var navigateToCreateListing = false
@@ -40,6 +41,7 @@ struct DashboardView: View {
                     myListings: myListings,
                     allActiveExchanges: allActiveExchanges,
                     purchasedContactsData: purchasedContactsData,
+                    pendingNegotiations: pendingNegotiations,
                     selectedContactData: $selectedContactData,
                     navigateToContact: $navigateToContact,
                     navigateToCreateListing: $navigateToCreateListing,
@@ -149,6 +151,7 @@ struct DashboardView: View {
         // Clear existing data to prevent duplicates
         allActiveExchanges = []
         purchasedContactsData = []
+        pendingNegotiations = []
         
         // Get dashboard summary
         getDashboardSummary(sessionId: sessionId) { response in
@@ -305,6 +308,48 @@ struct DashboardView: View {
             self.allActiveExchanges.append(contentsOf: sellerExchanges)
             print("[Dashboard] Total active exchanges: \(self.allActiveExchanges.count)")
         }
+        
+        // Get pending negotiations (for both buyers and sellers)
+        getNegotiations(sessionId: sessionId) { negotiations in
+            print("[Dashboard] Negotiations response: \(negotiations.count) negotiations")
+            let pending = negotiations.filter { neg in
+                guard let userRole = neg["userRole"] as? String else { return false }
+                // Show negotiations where status is proposed/countered (for both buyers and sellers)
+                let status = neg["status"] as? String ?? ""
+                return status == "proposed" || status == "countered"
+            }.compactMap { neg -> PendingNegotiation? in
+                guard let negId = neg["negotiationId"] as? String,
+                      let listing = neg["listing"] as? [String: Any],
+                      let otherUser = neg["otherUser"] as? [String: Any],
+                      let proposedTime = neg["currentProposedTime"] as? String,
+                      let currency = listing["currency"] as? String,
+                      let acceptCurrency = listing["acceptCurrency"] as? String,
+                      let buyerName = otherUser["name"] as? String else {
+                    return nil
+                }
+                
+                let amount: Double
+                if let amountInt = listing["amount"] as? Int {
+                    amount = Double(amountInt)
+                } else if let amountDouble = listing["amount"] as? Double {
+                    amount = amountDouble
+                } else {
+                    return nil
+                }
+                
+                return PendingNegotiation(
+                    id: negId,
+                    buyerName: buyerName,
+                    currency: currency,
+                    amount: amount,
+                    acceptCurrency: acceptCurrency,
+                    proposedTime: proposedTime
+                )
+            }
+            
+            self.pendingNegotiations = pending
+            print("[Dashboard] Pending negotiations: \(self.pendingNegotiations.count)")
+        }
     }
     
     func getDashboardSummary(sessionId: String, completion: @escaping ([String: Any]) -> Void) {
@@ -369,6 +414,29 @@ struct DashboardView: View {
         }.resume()
     }
     
+    func getNegotiations(sessionId: String, completion: @escaping ([[String: Any]]) -> Void) {
+        let urlString = "\(Settings.shared.baseURL)/Negotiations/GetMyNegotiations?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        guard let url = URL(string: urlString) else {
+            completion([])
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                guard let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let success = json["success"] as? Bool,
+                      success,
+                      let negotiations = json["negotiations"] as? [[String: Any]] else {
+                    completion([])
+                    return
+                }
+                completion(negotiations)
+            }
+        }.resume()
+    }
+    
     func formatJoinDate(_ dateString: String) -> String {
         // Simple date formatting
         return "Member since 2025"
@@ -420,6 +488,7 @@ struct MainDashboardView: View {
     let myListings: [Listing]
     let allActiveExchanges: [ActiveExchange]
     let purchasedContactsData: [[String: Any]]
+    let pendingNegotiations: [PendingNegotiation]
     @Binding var selectedContactData: ContactData?
     @Binding var navigateToContact: Bool
     @Binding var navigateToCreateListing: Bool
@@ -443,6 +512,12 @@ struct MainDashboardView: View {
                     )
                     .padding(.horizontal)
                     .padding(.top, 24)
+                    
+                    // Pending Negotiations (for sellers)
+                    if !pendingNegotiations.isEmpty {
+                        PendingNegotiationsSection(negotiations: pendingNegotiations)
+                            .padding(.horizontal)
+                    }
                     
                     // Active Exchanges
                     ActiveExchangesSection(
@@ -976,6 +1051,112 @@ struct ActiveExchange: Identifiable {
     
     enum ExchangeType {
         case buyer, seller
+    }
+}
+
+struct PendingNegotiation: Identifiable {
+    let id: String // negotiation_id
+    let buyerName: String
+    let currency: String
+    let amount: Double
+    let acceptCurrency: String
+    let proposedTime: String
+}
+
+// MARK: - Pending Negotiations Section
+
+struct PendingNegotiationsSection: View {
+    @ObservedObject var localizationManager = LocalizationManager.shared
+    let negotiations: [PendingNegotiation]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("⏰ Pending Proposals (\(negotiations.count))")
+                    .font(.system(size: 19, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Text("ACTION REQUIRED")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    .background(Color.orange)
+                    .cornerRadius(12)
+            }
+            
+            ForEach(negotiations) { negotiation in
+                NavigationLink(destination: NegotiationDetailView(negotiationId: negotiation.id)) {
+                    PendingNegotiationCard(negotiation: negotiation)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(20)
+        .background(
+            LinearGradient(
+                gradient: Gradient(colors: [Color.orange.opacity(0.8), Color.red.opacity(0.6)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
+    }
+}
+
+struct PendingNegotiationCard: View {
+    let negotiation: PendingNegotiation
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("\(negotiation.currency) → \(negotiation.acceptCurrency)")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Text("$\(negotiation.amount, specifier: "%.0f")")
+                    .font(.system(size: 21, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            
+            HStack {
+                Image(systemName: "person.circle.fill")
+                    .foregroundColor(.white.opacity(0.9))
+                Text(negotiation.buyerName)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+            
+            HStack {
+                Image(systemName: "calendar")
+                    .foregroundColor(.white.opacity(0.9))
+                Text(formatProposedTime(negotiation.proposedTime))
+                    .font(.system(size: 15))
+                    .foregroundColor(.white.opacity(0.9))
+            }
+            
+            HStack {
+                Text("💬 Review & Respond")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.white.opacity(0.7))
+            }
+        }
+        .padding(16)
+        .background(Color.white.opacity(0.2))
+        .cornerRadius(12)
+    }
+    
+    private func formatProposedTime(_ isoString: String) -> String {
+        return DateFormatters.formatCompact(isoString)
     }
 }
 

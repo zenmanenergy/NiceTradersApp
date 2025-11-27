@@ -211,34 +211,7 @@ struct MessagesView: View {
     }
     
     func formatTime(_ isoString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
-        guard let date = formatter.date(from: isoString) else {
-            return ""
-        }
-        
-        let now = Date()
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.day, .hour, .minute], from: date, to: now)
-        
-        if let days = components.day, days > 0 {
-            if days == 1 {
-                return localizationManager.localize("YESTERDAY")
-            } else if days < 7 {
-                return "\(days)d ago"
-            } else {
-                let weekFormatter = DateFormatter()
-                weekFormatter.dateFormat = "MMM d"
-                return weekFormatter.string(from: date)
-            }
-        } else if let hours = components.hour, hours > 0 {
-            return "\(hours)h ago"
-        } else if let minutes = components.minute, minutes > 0 {
-            return "\(minutes)m ago"
-        } else {
-            return "Just now"
-        }
+        return DateFormatters.formatRelative(isoString)
     }
     
     func convertToDashboardContactData(_ contact: PurchasedContact) -> DashboardContactData {

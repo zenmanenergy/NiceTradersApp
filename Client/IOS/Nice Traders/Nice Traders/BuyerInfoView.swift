@@ -224,13 +224,7 @@ struct BuyerInfoView: View {
     }
     
     private func formatMemberSince(_ dateString: String) -> String {
-        let isoFormatter = ISO8601DateFormatter()
-        if let date = isoFormatter.date(from: dateString) {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            return formatter.string(from: date)
-        }
-        return dateString
+        return DateFormatters.formatCompact(dateString)
     }
 }
 

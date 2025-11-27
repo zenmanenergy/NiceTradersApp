@@ -447,15 +447,7 @@ struct ExchangeHistoryView: View {
     }
     
     func formatDate(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        guard let date = formatter.date(from: dateString) else {
-            return dateString
-        }
-        
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
+        return DateFormatters.formatCompact(dateString)
     }
     
     func getStatusColor(_ status: String) -> Color {

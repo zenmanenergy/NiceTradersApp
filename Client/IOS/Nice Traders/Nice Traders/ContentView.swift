@@ -208,13 +208,19 @@ struct ContentView: View {
         }
         .id(navigationId)
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("LogoutUser"))) { _ in
+            // Clear session
+            SessionManager.shared.logout()
+            
             // Reset all navigation state
             showSignup = false
             showLogin = false
             showLearnMore = false
             navigateToDashboard = false
             isCheckingSession = false
-            navigationId = UUID() // Force NavigationStack to reset
+            showingSplash = false // Don't show splash on logout
+            
+            // Force NavigationStack to reset and return to landing page
+            navigationId = UUID()
         }
         .edgesIgnoringSafeArea(.all)
     }

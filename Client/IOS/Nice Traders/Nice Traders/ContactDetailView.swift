@@ -903,22 +903,11 @@ struct ContactDetailView: View {
     // MARK: - Helper Functions
     
     private func formatDate(_ dateString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: dateString) else { return dateString }
-        
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateStyle = .medium
-        return displayFormatter.string(from: date)
+        return DateFormatters.formatCompact(dateString)
     }
     
     private func formatDateTime(_ dateString: String) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: dateString) else { return dateString }
-        
-        let displayFormatter = DateFormatter()
-        displayFormatter.dateStyle = .medium
-        displayFormatter.timeStyle = .short
-        return displayFormatter.string(from: date)
+        return DateFormatters.formatCompact(dateString)
     }
 }
 

@@ -46,6 +46,9 @@ struct NegotiationDetailView: View {
             } else if let negotiation = negotiation {
                 ScrollView {
                     VStack(spacing: 20) {
+                        // Proposed Time (moved to top)
+                        proposedTimeCard(negotiation)
+                        
                         // Status Header
                         statusHeader(negotiation)
                         
@@ -54,9 +57,6 @@ struct NegotiationDetailView: View {
                         
                         // Other User Info
                         otherUserInfo(negotiation)
-                        
-                        // Proposed Time
-                        proposedTimeCard(negotiation)
                         
                         // Payment Status (if agreed)
                         if negotiation.negotiation.status == .agreed || negotiation.negotiation.status == .paidPartial {
@@ -151,15 +151,6 @@ struct NegotiationDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 Spacer()
-            }
-            
-            Divider()
-            
-            HStack {
-                Image(systemName: "location.fill")
-                    .foregroundColor(.secondary)
-                Text(negotiation.listing.location)
-                    .font(.subheadline)
             }
         }
         .padding()
@@ -390,7 +381,7 @@ struct NegotiationDetailView: View {
                 
                 switch result {
                 case .success(let response):
-                    if response.success, let neg = response.negotiation {
+                    if response.success, let neg = response.toNegotiationDetail() {
                         negotiation = neg
                     } else {
                         errorMessage = response.error ?? localizationManager.localize("UNKNOWN_ERROR")

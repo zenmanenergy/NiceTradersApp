@@ -26,23 +26,6 @@ struct ProposeTimeView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header with back button
-            HStack {
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .frame(width: 40, height: 40)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
-                Spacer()
-            }
-            .padding(.horizontal)
-            .padding(.top)
-            
             // Progress bar
             VStack(spacing: 8) {
                 GeometryReader { geometry in
