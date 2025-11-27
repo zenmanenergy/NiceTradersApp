@@ -3,6 +3,10 @@
 	import { searchState, viewState, userDetailState } from '../../lib/adminStore.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
 	
+	export let viewUser;
+	export let viewListing;
+	export let viewTransaction;
+	
 	async function search() {
 		if (!$searchState.searchTerm.trim()) return;
 		
@@ -35,43 +39,6 @@
 				searchResults: response.success ? (response.data || []) : [],
 				error: response.success ? null : (response.error || 'Search failed'),
 				loading: false
-			}));
-		} catch (err) {
-			searchState.update(state => ({ ...state, error: err.message, loading: false }));
-		}
-	}
-	
-	async function viewUser(userId, userName = 'User') {
-		searchState.update(state => ({ ...state, loading: true, error: null }));
-		
-		try {
-			// Get user details
-			const userResponse = await SuperFetch('/Admin/GetUserById', { userId });
-			if (!userResponse.success) throw new Error('Failed to load user');
-			
-			const currentUser = userResponse.user;
-			
-			// Get user's listings
-			const listingsResponse = await SuperFetch('/Admin/GetUserListings', { userId });
-			const userListings = listingsResponse.success ? listingsResponse.listings : [];
-			
-			// Get user's purchases
-			const purchasesResponse = await SuperFetch('/Admin/GetUserPurchases', { userId });
-			const userPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
-			
-			// Get user's messages
-			const messagesResponse = await SuperFetch('/Admin/GetUserMessages', { userId });
-			const userMessages = messagesResponse.success ? messagesResponse.messages : [];
-			
-			// Get user's ratings
-			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { userId });
-			const userRatings = ratingsResponse.success ? ratingsResponse.ratings : [];
-			
-			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings });
-			
-			viewState.update(state => ({
-				currentView: 'user',
-				breadcrumbs: [...state.breadcrumbs, { type: 'user', id: userId, label: userName }]
 			}));
 		} catch (err) {
 			searchState.update(state => ({ ...state, error: err.message, loading: false }));
@@ -151,7 +118,7 @@
 							<div class="result-arrow">→</div>
 						</div>
 					{:else if $searchState.searchType === 'listings'}
-						<div class="result-card" on:click={() => {}}>
+						<div class="result-card" on:click={() => viewListing(result.listing_id, `${result.currency} → ${result.accept_currency}`)}>
 							<div class="result-icon">💱</div>
 							<div class="result-info">
 								<h4>{result.currency} → {result.accept_currency}</h4>
@@ -161,7 +128,7 @@
 							<div class="result-arrow">→</div>
 						</div>
 					{:else if $searchState.searchType === 'transactions'}
-						<div class="result-card" on:click={() => {}}>
+						<div class="result-card" on:click={() => viewTransaction(result.access_id, `Purchase ${result.access_id.substring(0, 8)}`)}>
 							<div class="result-icon">💰</div>
 							<div class="result-info">
 								<h4>Purchase: {formatCurrency(result.amount_paid, result.currency)}</h4>

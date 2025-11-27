@@ -11,13 +11,50 @@
 - **Database:** nicetraders
 - **Library:** PyMySQL (NOT mysql-connector)
 
-### Always Use Virtual Environment
+### Virtual Environment Location
+The virtual environment is at the **PROJECT ROOT**, not in the Server directory:
 ```bash
-cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server
-source venv/bin/activate
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
+.venv/bin/python3
 ```
 
-### Standard Connection Template
+### Running SQL Queries from Terminal
+To execute SQL queries on the local database, use this pattern:
+```bash
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
+.venv/bin/python3 -c "
+import pymysql
+db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders')
+cursor = db.cursor()
+cursor.execute('YOUR SQL HERE')
+results = cursor.fetchall()
+for row in results:
+    print(row)
+db.commit()
+cursor.close()
+db.close()
+"
+```
+
+For queries with DictCursor (returns dictionaries):
+```bash
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
+.venv/bin/python3 -c "
+import pymysql
+import pymysql.cursors
+db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders', cursorclass=pymysql.cursors.DictCursor)
+cursor = db.cursor()
+cursor.execute('YOUR SQL HERE')
+results = cursor.fetchall()
+for row in results:
+    print(row)
+db.commit()
+cursor.close()
+db.close()
+"
+```
+
+### Standard Connection Template (for Python scripts)
 ```python
 import pymysql
 
@@ -41,9 +78,11 @@ db.close()
 ### Common Mistakes to AVOID
 - ❌ DO NOT use `mysql.connector` - it's not installed
 - ❌ DO NOT use `root` user with `root` password - wrong credentials
-- ❌ DO NOT forget to activate venv first
+- ❌ DO NOT use `python3` directly - it doesn't have pymysql installed
+- ❌ DO NOT look for venv in Server directory - it's at project root
+- ❌ DO NOT create diagnostic Flask routes for database testing
+- ✅ ALWAYS use `.venv/bin/python3` from project root
 - ✅ ALWAYS use PyMySQL
-- ✅ ALWAYS activate venv before running Python scripts
 - ✅ ALWAYS use credentials from above (stevenelson/mwitcitw711)
 
 ### Reference

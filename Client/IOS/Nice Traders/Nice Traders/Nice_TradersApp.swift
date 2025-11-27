@@ -14,6 +14,11 @@ struct Nice_TradersApp: App {
     init() {
         print("🟡 [App] Nice_TradersApp initializing...")
         
+        // Disable text field haptic feedback
+        UserDefaults.standard.set(false, forKey: "_UITextInputHapticFeedbackEnabled")
+        UserDefaults.standard.set(false, forKey: "UIFeedbackGenerator")
+        UserDefaults.standard.set(0, forKey: "AppleTextInputHapticFeedback")
+        
         // Force LocalizationManager to initialize early
         let initialLang = LocalizationManager.shared.currentLanguage
         print("🟡 [App] LocalizationManager loaded with language: \(initialLang)")
@@ -23,11 +28,6 @@ struct Nice_TradersApp: App {
             print("🟡 [App] User is logged in, loading language from backend...")
             LocalizationManager.shared.loadLanguageFromBackend()
         }
-        
-        // Suppress haptic feedback warnings in simulator
-        #if targetEnvironment(simulator)
-        UserDefaults.standard.set(false, forKey: "UIFeedbackGenerator")
-        #endif
         
         print("🟡 [App] Nice_TradersApp initialization complete")
     }

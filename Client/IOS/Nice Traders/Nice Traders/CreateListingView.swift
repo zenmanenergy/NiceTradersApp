@@ -51,7 +51,7 @@ struct CreateListingView: View {
     @State private var navigateToSearch = false
     @State private var navigateToMessages = false
     
-    let totalSteps = 3
+    let totalSteps = 4
     
     enum LocationStatus {
         case unset, detecting, detected
@@ -207,7 +207,7 @@ struct CreateListingView: View {
             let matchesSearch = searchQuery.isEmpty ||
                 currency.code.lowercased().contains(searchQuery.lowercased()) ||
                 currency.name.lowercased().contains(searchQuery.lowercased())
-            let showPopular = !showAllCurrencies ? currency.popular : true
+            let showPopular = searchQuery.isEmpty && !showAllCurrencies ? currency.popular : true
             return matchesSearch && showPopular
         }
     }
@@ -217,7 +217,7 @@ struct CreateListingView: View {
             let matchesSearch = searchQueryAccept.isEmpty ||
                 currency.code.lowercased().contains(searchQueryAccept.lowercased()) ||
                 currency.name.lowercased().contains(searchQueryAccept.lowercased())
-            let showPopular = !showAllAcceptCurrencies ? currency.popular : true
+            let showPopular = searchQueryAccept.isEmpty && !showAllAcceptCurrencies ? currency.popular : true
             let notSameCurrency = currency.code != selectedCurrency?.code
             return matchesSearch && showPopular && notSameCurrency
         }
@@ -244,6 +244,8 @@ struct CreateListingView: View {
                             step2View
                         } else if currentStep == 3 {
                             step3View
+                        } else if currentStep == 4 {
+                            step4View
                         }
                     }
                     .padding(.top, 32)
@@ -441,6 +443,8 @@ struct CreateListingView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(fieldErrors["amount"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                     
                     Text(selectedCurrency?.code ?? "Currency")
                         .font(.system(size: 16, weight: .medium))
@@ -458,13 +462,27 @@ struct CreateListingView: View {
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
             }
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    // MARK: - Step 2: Currency You Will Accept
+    var step2View: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(spacing: 8) {
+                Text(localizationManager.localize("WHAT_CURRENCY_WILL_YOU_ACCEPT"))
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(Color(hex: "2d3748"))
+                
+                Text(localizationManager.localize("SELECT_CURRENCY_WILLING_TO_ACCEPT"))
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(hex: "718096"))
+            }
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
             
             // Accept Currency
             VStack(alignment: .leading, spacing: 8) {
-                Text(localizationManager.localize("WHAT_CURRENCY_WILL_YOU_ACCEPT"))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "2d3748"))
-                
                 if selectedAcceptCurrency == nil {
                     currencySearchField(searchQuery: $searchQueryAccept)
                     currencyGrid(currencies: filteredAcceptCurrencies, onSelect: { currency in
@@ -495,17 +513,13 @@ struct CreateListingView: View {
                         exchangePreview(from: from, to: to, amount: amount)
                     }
                 }
-                
-                Text(localizationManager.localize("SELECT_CURRENCY_WILLING_TO_ACCEPT"))
-                    .font(.system(size: 13))
-                    .foregroundColor(Color(hex: "a0aec0"))
             }
         }
         .padding(.horizontal, 24)
     }
     
-    // MARK: - Step 2: Location and Preferences
-    var step2View: some View {
+    // MARK: - Step 3: Location and Preferences
+    var step3View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
                 Text(localizationManager.localize("WHERE_CAN_YOU_MEET"))
@@ -651,6 +665,8 @@ struct CreateListingView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(fieldErrors["availableUntil"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                 
                 if let error = fieldErrors["availableUntil"] {
                     Text(error)
@@ -662,8 +678,8 @@ struct CreateListingView: View {
         .padding(.horizontal, 24)
     }
     
-    // MARK: - Step 3: Review and Submit
-    var step3View: some View {
+    // MARK: - Step 4: Review and Submit
+    var step4View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
                 Text(localizationManager.localize("REVIEW_YOUR_LISTING"))
@@ -697,9 +713,17 @@ struct CreateListingView: View {
                             .foregroundColor(Color(hex: "2d3748"))
                     }
                     
-                    Text(localizationManager.localize("MARKET_RATE"))
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(Color(hex: "667eea"))
+                    if let from = selectedCurrency, let to = selectedAcceptCurrency, !amount.isEmpty {
+                        VStack(spacing: 4) {
+                            Text("\(localizationManager.localize("MARKET_RATE")): \(calculateReceiveAmount(from: from.code, to: to.code, amount: amount)) \(to.code)")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(Color(hex: "667eea"))
+                            
+                            Text(localizationManager.localize("ACCEPTING") + " \(to.name)")
+                                .font(.system(size: 13))
+                                .foregroundColor(Color(hex: "718096"))
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 16)
@@ -842,6 +866,8 @@ struct CreateListingView: View {
                 .font(.system(size: 16))
                 .padding(.vertical, 14)
                 .padding(.trailing, 16)
+                .onTapGesture { }
+                .simultaneousGesture(TapGesture().onEnded { })
         }
         .background(Color.white)
         .cornerRadius(12)
@@ -1019,10 +1045,6 @@ struct CreateListingView: View {
             Text("✅")
                 .font(.system(size: 20))
             
-            Text(localizationManager.localize("LOCATION_DETECTED"))
-                .font(.system(size: 15))
-                .foregroundColor(Color(hex: "276749"))
-            
             Spacer()
             
             Button(action: {
@@ -1075,11 +1097,12 @@ struct CreateListingView: View {
                 fieldErrors["amount"] = "Please enter a valid amount"
                 return false
             }
+        } else if currentStep == 2 {
             if selectedAcceptCurrency == nil {
                 fieldErrors["acceptCurrency"] = "Please select what currency you will accept"
                 return false
             }
-        } else if currentStep == 2 {
+        } else if currentStep == 3 {
             if locationStatus != .detected {
                 fieldErrors["location"] = "Please detect your location first"
                 return false

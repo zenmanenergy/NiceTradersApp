@@ -65,8 +65,8 @@ def reject_negotiation(negotiation_id, session_id):
             WHERE negotiation_id = %s
         """, (negotiation_id,))
         
-        # Log to history
-        history_id = f"HIS-{uuid.uuid4()}"
+        # Log to history (39 chars: HIS- + 35 char UUID)
+        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, action, proposed_by

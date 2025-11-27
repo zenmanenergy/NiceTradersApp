@@ -321,6 +321,8 @@ struct ContactDetailView: View {
                                 .foregroundColor(Color(hex: "4a5568"))
                             TextField("e.g., Starbucks on 5th Street", text: $proposedLocation)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .onTapGesture { }
+                                .simultaneousGesture(TapGesture().onEnded { })
                         }
                         
                         HStack(spacing: 12) {
@@ -331,6 +333,8 @@ struct ContactDetailView: View {
                                     .foregroundColor(Color(hex: "4a5568"))
                                 DatePicker("", selection: $proposedDate, in: Date()..., displayedComponents: .date)
                                     .labelsHidden()
+                                    .onTapGesture { }
+                                    .simultaneousGesture(TapGesture().onEnded { })
                             }
                             
                             VStack(alignment: .leading, spacing: 4) {
@@ -340,6 +344,8 @@ struct ContactDetailView: View {
                                     .foregroundColor(Color(hex: "4a5568"))
                                 DatePicker("", selection: $proposedTime, displayedComponents: .hourAndMinute)
                                     .labelsHidden()
+                                    .onTapGesture { }
+                                    .simultaneousGesture(TapGesture().onEnded { })
                             }
                         }
                         
@@ -354,6 +360,8 @@ struct ContactDetailView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                                 )
+                                .onTapGesture { }
+                                .simultaneousGesture(TapGesture().onEnded { })
                         }
                         
                         HStack(spacing: 12) {
@@ -574,6 +582,8 @@ struct ContactDetailView: View {
                     .padding(.vertical, 8)
                     .background(Color(hex: "f8fafc"))
                     .cornerRadius(20)
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                 
                 Button(action: sendMessage) {
                     Text(localizationManager.localize("SEND"))

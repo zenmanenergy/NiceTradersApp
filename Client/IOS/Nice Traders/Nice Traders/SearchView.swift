@@ -392,11 +392,18 @@ struct SearchView: View {
     }
     
     func listingCard(_ listing: SearchListing) -> some View {
+        NavigationLink(destination: ProposeTimeView(
+            listingId: listing.listingId,
+            currency: listing.currency,
+            amount: listing.amount,
+            acceptCurrency: listing.acceptCurrency,
+            sellerName: listing.user.firstName
+        )) {
         VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(localizationManager.localize("WANTS") + " \\(listing.acceptCurrency)")
+                    Text(localizationManager.localize("WANTS") + " \(listing.acceptCurrency)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(Color(hex: "667eea"))
                 }
@@ -454,19 +461,15 @@ struct SearchView: View {
                 
                 Spacer()
                 
-                Button(action: {
-                    // View profile action
-                }) {
-                    Text("👤")
-                        .font(.system(size: 18))
-                        .frame(width: 40, height: 40)
-                        .background(Color(hex: "f7fafc"))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
-                        )
-                }
+                Text("👤")
+                    .font(.system(size: 18))
+                    .frame(width: 40, height: 40)
+                    .background(Color(hex: "f7fafc"))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
+                    )
             }
             .padding(.bottom, 8)
             .overlay(
@@ -498,7 +501,7 @@ struct SearchView: View {
                     
                     Spacer()
                     
-                    Text(formatDate(listing.availableUntil ?? ""))
+                    Text(formatAvailableUntil(listing.availableUntil ?? ""))
                         .font(.system(size: 14))
                         .foregroundColor(Color(hex: "4a5568"))
                 }
@@ -507,18 +510,16 @@ struct SearchView: View {
             // Footer
             HStack {
                 if let createdAt = listing.createdAt {
-                    Text(formatDate(createdAt))
+                    Text(formatRelativeDate(createdAt))
                         .font(.system(size: 13))
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
                 
                 Spacer()
                 
-                NavigationLink(destination: ContactPurchaseView(listingId: listing.listingId)) {
-                    Text("Contact Trader")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.white)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(hex: "cbd5e0"))
             }
         }
         .padding(24)
@@ -528,6 +529,7 @@ struct SearchView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
         )
+        }
     }
     
     var loadMoreButton: some View {
@@ -689,14 +691,91 @@ struct SearchView: View {
         guard !dateString.isEmpty else { return "Not specified" }
         
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "UTC")
         
         if let date = formatter.date(from: dateString) {
             formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            formatter.timeZone = TimeZone.current
+            return formatter.string(from: date)
+        }
+        
+        // Try just date format
+        formatter.dateFormat = "yyyy-MM-dd"
+        if let date = formatter.date(from: dateString) {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
             return formatter.string(from: date)
         }
         
         return dateString
+    }
+    
+    func formatRelativeDate(_ dateString: String) -> String {
+        guard !dateString.isEmpty else { return "Recently" }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        
+        guard let date = formatter.date(from: dateString) else {
+            return "Recently"
+        }
+        
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(date)
+        let days = Int(timeInterval / 86400)
+        let hours = Int(timeInterval / 3600)
+        let minutes = Int(timeInterval / 60)
+        
+        if days > 0 {
+            return "\(days)d ago"
+        } else if hours > 0 {
+            return "\(hours)h ago"
+        } else if minutes > 0 {
+            return "\(minutes)m ago"
+        } else {
+            return "Just now"
+        }
+    }
+    
+    func formatAvailableUntil(_ dateString: String) -> String {
+        guard !dateString.isEmpty else { return "Not specified" }
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        
+        guard let date = formatter.date(from: dateString) else {
+            // Try simple date format
+            formatter.dateFormat = "yyyy-MM-dd"
+            if let date = formatter.date(from: dateString) {
+                formatter.dateStyle = .medium
+                formatter.timeStyle = .none
+                return formatter.string(from: date)
+            }
+            return dateString
+        }
+        
+        let now = Date()
+        let timeInterval = date.timeIntervalSince(now)
+        let days = Int(timeInterval / 86400)
+        
+        if timeInterval < 0 {
+            return "Expired"
+        } else if days == 0 {
+            return "Today"
+        } else if days == 1 {
+            return "Tomorrow"
+        } else if days < 7 {
+            return "\(days) days"
+        } else {
+            formatter.dateStyle = .medium
+            formatter.timeStyle = .none
+            formatter.timeZone = TimeZone.current
+            return formatter.string(from: date)
+        }
     }
     
     func getCurrencyFlag(_ code: String) -> String {

@@ -54,9 +54,6 @@ struct ProfileView: View {
     @State private var isEditing = false
     @State private var editedUser: UserProfile?
     @State private var isLoading = true
-    @State private var navigateToSearch = false
-    @State private var navigateToCreateListing = false
-    @State private var navigateToMessages = false
 
     @State private var navigateToExchangeHistory = false
     @State private var navigateToLanguagePicker = false
@@ -68,6 +65,7 @@ struct ProfileView: View {
     }
     
     var body: some View {
+        NavigationStack {
         VStack(spacing: 0) {
             // Header
             headerView
@@ -116,15 +114,6 @@ struct ProfileView: View {
         .navigationDestination(isPresented: $navigateToLanguagePicker) {
             LanguagePickerView()
         }
-        .navigationDestination(isPresented: $navigateToSearch) {
-            SearchView(navigateToSearch: $navigateToSearch)
-        }
-        .navigationDestination(isPresented: $navigateToCreateListing) {
-            CreateListingView(navigateToCreateListing: $navigateToCreateListing)
-        }
-        .navigationDestination(isPresented: $navigateToMessages) {
-            MessagesView(navigateToMessages: $navigateToMessages)
-        }
         .onAppear {
             print("🟢 [ProfileView] onAppear - currentLanguage: \(localizationManager.currentLanguage), version: \(localizationManager.languageVersion)")
             let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
@@ -136,6 +125,7 @@ struct ProfileView: View {
             profileRefreshId = UUID()
         }
         .id(profileRefreshId)
+        }
     }
     
     // MARK: - Header View
@@ -232,6 +222,8 @@ struct ProfileView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                     
                     TextEditor(text: Binding(
                         get: { editedUser.bio },
@@ -246,6 +238,8 @@ struct ProfileView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                     
                     TextField("Location", text: Binding(
                         get: { editedUser.location },
@@ -259,6 +253,8 @@ struct ProfileView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                     
                     HStack(spacing: 12) {
                         Button(action: saveChanges) {
@@ -459,6 +455,8 @@ struct ProfileView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
@@ -479,6 +477,8 @@ struct ProfileView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                     }
                 } else {
                     HStack {

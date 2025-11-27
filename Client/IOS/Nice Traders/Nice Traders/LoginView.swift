@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
@@ -156,6 +157,7 @@ green: 0.29, blue: 0.64)]),
                     .padding(.bottom, 32)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .navigationBarHidden(true)
         .background(Color.white)

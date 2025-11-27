@@ -85,8 +85,8 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
             WHERE negotiation_id = %s
         """, (proposed_datetime, user_id, negotiation_id))
         
-        # Log to history
-        history_id = f"HIS-{uuid.uuid4()}"
+        # Log to history (39 chars: HIS- + 35 char UUID)
+        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, action, proposed_time, proposed_by

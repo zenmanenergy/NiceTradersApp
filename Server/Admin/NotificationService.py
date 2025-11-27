@@ -1,7 +1,7 @@
 """
 Notification Service - Centralized module for triggering APN and other notifications
 """
-from Admin.APNService import APNService
+from APNService.APNService import APNService
 from _Lib.Database import ConnectToDatabase
 from _Lib.i18n import get_translation, format_currency, format_datetime
 
@@ -191,6 +191,8 @@ class NotificationService:
         except Exception as e:
             print(f"Error getting user language: {e}")
             return 'en'
+    
+    def get_user_session(self, user_id):
         """
         Get the user's last session ID for auto-login
         Args:
@@ -215,6 +217,45 @@ class NotificationService:
         except Exception as e:
             print(f"Error getting user session: {e}")
             return None
+    
+    def send_negotiation_proposal_notification(self, seller_id, buyer_name, proposed_time, 
+                                               listing_id, negotiation_id, session_id):
+        """
+        Send notification when a buyer proposes a negotiation
+        Args:
+            seller_id: ID of the seller receiving the proposal
+            buyer_name: Name of the buyer
+            proposed_time: Proposed meeting time (ISO format)
+            listing_id: ID of the listing
+            negotiation_id: ID of the negotiation
+            session_id: Session ID for auto-login
+        """
+        # Get seller's preferred language
+        seller_lang = self.get_user_language(seller_id)
+        
+        # Format the time nicely
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
+            formatted_time = dt.strftime('%b %d at %I:%M %p')
+        except:
+            formatted_time = proposed_time
+        
+        title = get_translation(seller_lang, 'NEGOTIATION_PROPOSAL')
+        body = f"{buyer_name} wants to meet on {formatted_time}"
+        
+        result = self.apn_service.send_notification(
+            user_id=seller_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='negotiation',
+            deep_link_id=negotiation_id
+        )
+        
+        return result
 
 
 # Global instance

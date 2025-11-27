@@ -122,8 +122,8 @@ def pay_negotiation_fee(negotiation_id, session_id):
                     WHERE credit_id = %s
                 """, (negotiation_id, credit_id_used))
         
-        # Create transaction record
-        transaction_id = f"TXN-{uuid.uuid4()}"
+        # Create transaction record (39 chars: TXN- + 35 char UUID)
+        transaction_id = f"TXN-{str(uuid.uuid4())[:-1]}"
         cursor.execute("""
             INSERT INTO transactions (
                 transaction_id, user_id, listing_id, negotiation_id,
@@ -201,8 +201,8 @@ def pay_negotiation_fee(negotiation_id, session_id):
             new_status = 'paid_partial'
             message = 'Payment successful! Waiting for other party to pay.'
         
-        # Log to history
-        history_id = f"HIS-{uuid.uuid4()}"
+        # Log to history (39 chars: HIS- + 35 char UUID)
+        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
         action = 'buyer_paid' if is_buyer else 'seller_paid'
         cursor.execute("""
             INSERT INTO negotiation_history (

@@ -22,152 +22,202 @@ struct ProposeTimeView: View {
     @State private var errorMessage: String?
     @State private var showSuccess = false
     @State private var negotiationId: String?
+    @State private var convertedAmount: String = "..."
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color(UIColor.systemGroupedBackground)
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Header Info
-                        VStack(spacing: 12) {
-                            Text(localizationManager.localize("PROPOSE_MEETING_TIME"))
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text(localizationManager.localize("PROPOSE_MEETING_SUBTITLE"))
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
-                        }
-                        .padding(.top)
+        VStack(spacing: 0) {
+            // Header with back button
+            HStack {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .frame(width: 40, height: 40)
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(8)
+                }
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.top)
+            
+            // Progress bar
+            VStack(spacing: 8) {
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 6)
                         
-                        // Listing Info Card
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(localizationManager.localize("TRADING_WITH"))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(sellerName)
-                                        .font(.headline)
-                                }
-                                Spacer()
-                            }
-                            
-                            Divider()
-                            
-                            HStack {
-                                Text(localizationManager.localize("LISTING"))
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(Color.blue)
+                            .frame(width: geometry.size.width * 1 / 3, height: 6)
+                    }
+                }
+                .frame(height: 6)
+                
+                Text("Step 1 of 3")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 16)
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Instructions
+                    VStack(spacing: 12) {
+                        Text("Step 1: Propose a Meeting Time")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Choose a convenient date and time to meet \(sellerName). Once they agree, you'll both pay $2 to unlock messaging.")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    .padding(.top)
+                    
+                    // Listing Info Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Trading with")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                Spacer()
-                                HStack(spacing: 4) {
-                                    Text("\(String(format: "%.2f", amount)) \(currency)")
-                                        .font(.headline)
-                                    Image(systemName: "arrow.right")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(acceptCurrency)
-                                        .font(.headline)
-                                }
+                                Text(sellerName)
+                                    .font(.headline)
+                            }
+                            Spacer()
+                        }
+                        
+                        Divider()
+                        
+                        HStack {
+                            Text("Exchange")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Text("\(String(format: "%.2f", amount)) \(currency)")
+                                    .font(.headline)
+                                Image(systemName: "arrow.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(convertedAmount) \(acceptCurrency)")
+                                    .font(.headline)
                             }
                         }
+                    }
+                    .padding()
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .onAppear {
+                        calculateConversion()
+                    }
+                    
+                    // Date/Time Picker
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Select Meeting Date & Time")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        DatePicker(
+                            "Choose when to meet",
+                            selection: $proposedDate,
+                            in: Date()...,
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .datePickerStyle(.graphical)
                         .padding()
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                         .padding(.horizontal)
-                        
-                        // Date/Time Picker
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text(localizationManager.localize("PROPOSED_MEETING_TIME"))
-                                .font(.headline)
-                                .padding(.horizontal)
-                            
-                            DatePicker(
-                                localizationManager.localize("SELECT_DATE_TIME"),
-                                selection: $proposedDate,
-                                in: Date()...,
-                                displayedComponents: [.date, .hourAndMinute]
-                            )
-                            .datePickerStyle(.graphical)
-                            .padding()
-                            .background(Color(UIColor.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .padding(.horizontal)
-                        }
-                        
-                        // Info Box
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "info.circle.fill")
-                                .foregroundColor(.blue)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(localizationManager.localize("PROPOSAL_INFO_TITLE"))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                Text(localizationManager.localize("PROPOSAL_INFO_MESSAGE"))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(12)
-                        .padding(.horizontal)
-                        
-                        // Error Message
-                        if let errorMessage = errorMessage {
-                            Text(errorMessage)
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
+                    }
+                    
+                    // Info Box
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(.blue)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("What happens next?")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Text("The seller can accept, reject, or propose a different time. Once you both agree, you'll each pay $2 within 2 hours to unlock messaging and share exact locations.")
                                 .font(.caption)
-                                .foregroundColor(.red)
-                                .padding(.horizontal)
+                                .foregroundColor(.secondary)
                         }
-                        
-                        // Propose Button
-                        Button(action: proposeTime) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
-                                    Text(localizationManager.localize("SEND_PROPOSAL"))
-                                        .fontWeight(.semibold)
-                                }
+                    }
+                    .padding()
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    
+                    // Error Message
+                    if let errorMessage = errorMessage {
+                        Text(errorMessage)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Propose Button
+                    Button(action: proposeTime) {
+                        HStack {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else {
+                                Text("Send Proposal")
+                                    .fontWeight(.semibold)
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
                         }
-                        .disabled(isLoading)
-                        .padding(.horizontal)
-                        .padding(.bottom)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
                     }
+                    .disabled(isLoading)
+                    .padding(.horizontal)
+                    .padding(.bottom)
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(localizationManager.localize("CANCEL")) {
-                        dismiss()
-                    }
-                }
-            }
-            .alert(localizationManager.localize("SUCCESS"), isPresented: $showSuccess) {
-                Button(localizationManager.localize("OK")) {
+            .background(Color(UIColor.systemGroupedBackground))
+            .alert("Proposal Sent!", isPresented: $showSuccess) {
+                Button("OK") {
                     dismiss()
                 }
             } message: {
-                Text(localizationManager.localize("PROPOSAL_SENT_MESSAGE"))
+                Text("Your meeting time proposal has been sent to \(sellerName). You'll be notified when they respond.")
+            }
+        }
+    }
+    
+    
+    private func calculateConversion() {
+        ExchangeRatesAPI.shared.convertAmount(amount, from: currency, to: acceptCurrency) { result, error in
+            DispatchQueue.main.async {
+                if let result = result {
+                    convertedAmount = String(format: "%.2f", result)
+                } else {
+                    convertedAmount = "~"
+                }
             }
         }
     }
     
     private func proposeTime() {
+        print("[ProposeTimeView] 🚀 Starting negotiation proposal")
+        print("[ProposeTimeView] Listing ID: \(listingId)")
+        print("[ProposeTimeView] Proposed Date: \(proposedDate)")
+        
         isLoading = true
         errorMessage = nil
         
@@ -175,15 +225,22 @@ struct ProposeTimeView: View {
             DispatchQueue.main.async {
                 isLoading = false
                 
+                print("[ProposeTimeView] 📬 Received response")
+                
                 switch result {
                 case .success(let response):
+                    print("[ProposeTimeView] ✅ Success response: \(response)")
                     if response.success, let negId = response.negotiationId {
+                        print("[ProposeTimeView] 🎉 Negotiation created: \(negId)")
                         negotiationId = negId
                         showSuccess = true
                     } else {
-                        errorMessage = response.error ?? localizationManager.localize("UNKNOWN_ERROR")
+                        let error = response.error ?? localizationManager.localize("UNKNOWN_ERROR")
+                        print("[ProposeTimeView] ⚠️ Success=false, error: \(error)")
+                        errorMessage = error
                     }
                 case .failure(let error):
+                    print("[ProposeTimeView] ❌ Failure: \(error.localizedDescription)")
                     errorMessage = error.localizedDescription
                 }
             }

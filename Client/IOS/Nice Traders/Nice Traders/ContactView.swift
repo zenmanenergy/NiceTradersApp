@@ -413,6 +413,8 @@ struct ContactView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
             }
             
             HStack(spacing: 12) {
@@ -430,6 +432,8 @@ struct ContactView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                 }
                 
                 VStack(alignment: .leading, spacing: 8) {
@@ -446,6 +450,8 @@ struct ContactView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                 }
             }
             
@@ -462,6 +468,8 @@ struct ContactView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
             }
             
             HStack(spacing: 12) {
@@ -697,6 +705,8 @@ struct ContactView: View {
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
                 )
+                .onTapGesture { }
+                .simultaneousGesture(TapGesture().onEnded { })
             
             Button(action: sendMessage) {
                 Text(localizationManager.localize("SEND_MESSAGE"))

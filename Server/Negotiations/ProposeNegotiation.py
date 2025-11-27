@@ -2,6 +2,7 @@ import json
 import uuid
 from datetime import datetime
 from _Lib import Database
+from Admin.NotificationService import NotificationService
 
 def propose_negotiation(listing_id, session_id, proposed_time):
     """
@@ -18,9 +19,13 @@ def propose_negotiation(listing_id, session_id, proposed_time):
     cursor, connection = Database.ConnectToDatabase()
     
     try:
+        print(f"[Negotiations] ProposeNegotiation called with listing_id={listing_id}, session_id={session_id}, proposed_time={proposed_time}")
+        
         # Verify session and get buyer user_id
         cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
+        
+        print(f"[Negotiations] Session lookup result: {session_result}")
         
         if not session_result:
             return json.dumps({
@@ -29,6 +34,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
             })
         
         buyer_id = session_result['UserId']
+        print(f"[Negotiations] Buyer ID: {buyer_id}")
         
         # Get listing details and verify it exists
         cursor.execute("""
@@ -95,8 +101,8 @@ def propose_negotiation(listing_id, session_id, proposed_time):
                 'error': 'Proposed time must be in the future'
             })
         
-        # Create negotiation
-        negotiation_id = f"NEG-{uuid.uuid4()}"
+        # Create negotiation (39 chars: NEG- + 35 char UUID)
+        negotiation_id = f"NEG-{str(uuid.uuid4())[:-1]}"
         
         cursor.execute("""
             INSERT INTO exchange_negotiations (
@@ -105,8 +111,8 @@ def propose_negotiation(listing_id, session_id, proposed_time):
             ) VALUES (%s, %s, %s, %s, 'proposed', %s, %s)
         """, (negotiation_id, listing_id, buyer_id, seller_id, proposed_datetime, buyer_id))
         
-        # Log to negotiation history
-        history_id = f"HIS-{uuid.uuid4()}"
+        # Log to negotiation history (39 chars: HIS- + 35 char UUID)
+        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, action, proposed_time, proposed_by
@@ -114,6 +120,31 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         """, (history_id, negotiation_id, proposed_datetime, buyer_id))
         
         connection.commit()
+        
+        # Get buyer's name for notification
+        cursor.execute("""
+            SELECT FirstName, LastName
+            FROM users
+            WHERE UserId = %s
+        """, (buyer_id,))
+        buyer = cursor.fetchone()
+        buyer_name = f"{buyer['FirstName']} {buyer['LastName']}" if buyer else "A buyer"
+        
+        # Send APN notification to seller
+        try:
+            notification_service = NotificationService()
+            notification_service.send_negotiation_proposal_notification(
+                seller_id=seller_id,
+                buyer_name=buyer_name,
+                proposed_time=proposed_time,
+                listing_id=listing_id,
+                negotiation_id=negotiation_id,
+                session_id=session_id
+            )
+            print(f"[Negotiations] Sent APN notification to seller {seller_id}")
+        except Exception as notif_error:
+            print(f"[Negotiations] Failed to send notification: {str(notif_error)}")
+            # Don't fail the negotiation if notification fails
         
         return json.dumps({
             'success': True,
@@ -130,7 +161,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         print(f"[Negotiations] Traceback: {traceback.format_exc()}")
         return json.dumps({
             'success': False,
-            'error': 'Failed to create negotiation proposal'
+            'error': f'Failed to create negotiation proposal: {str(e)}'
         })
     
     finally:

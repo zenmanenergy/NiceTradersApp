@@ -18,5 +18,13 @@
 		<key>UIImageRespectsSafeAreaInsets</key>
 		<false/>
 	</dict>
+	<key>UITextInteractionMode</key>
+	<string>standard</string>
+	<key>UISupportsHapticFeedback</key>
+	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

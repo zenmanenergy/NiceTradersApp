@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct SignupView: View {
     @Environment(\.dismiss) private var dismiss
@@ -181,6 +182,7 @@ struct SignupView: View {
                         .padding(.bottom, 32)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .navigationBarHidden(true)
         .background(Color.white)
@@ -346,12 +348,13 @@ struct FormField: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
             
-            Group {
+            ZStack {
                 if isSecure {
-                    SecureField(placeholder, text: $text)
+                    NoHapticSecureField(placeholder: placeholder, text: $text)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled(true)
                 } else {
-                    TextField(placeholder, text: $text)
-                        .keyboardType(keyboardType)
+                    NoHapticTextField(placeholder: placeholder, text: $text, keyboardType: keyboardType)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled(true)
                 }
@@ -361,7 +364,8 @@ struct FormField: View {
             .background(Color.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 2)                                                                                    )
+                    .stroke(error != nil ? Color(red: 0.9, green: 0.24, blue: 0.24) : Color(red: 0.89, green: 0.91, blue: 0.94), lineWidth: 2)
+            )
             .cornerRadius(12)
             .font(.system(size: 16))
             
@@ -370,6 +374,89 @@ struct FormField: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 0.9, green: 0.24, blue: 0.24))
             }
+        }
+    }
+}
+
+struct NoHapticTextField: UIViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType
+    
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.keyboardType = keyboardType
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.delegate = context.coordinator
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
+        textField.font = UIFont.systemFont(ofSize: 16)
+        return textField
+    }
+    
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        uiView.text = text
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+    
+    class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding var text: String
+        
+        init(text: Binding<String>) {
+            _text = text
+        }
+        
+        @objc func textChanged(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+        
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            // Override to prevent default behavior
+        }
+    }
+}
+
+struct NoHapticSecureField: UIViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+    
+    func makeUIView(context: Context) -> UITextField {
+        let textField = UITextField()
+        textField.placeholder = placeholder
+        textField.isSecureTextEntry = true
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.delegate = context.coordinator
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
+        textField.font = UIFont.systemFont(ofSize: 16)
+        return textField
+    }
+    
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        uiView.text = text
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+    
+    class Coordinator: NSObject, UITextFieldDelegate {
+        @Binding var text: String
+        
+        init(text: Binding<String>) {
+            _text = text
+        }
+        
+        @objc func textChanged(_ textField: UITextField) {
+            text = textField.text ?? ""
+        }
+        
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            // Override to prevent default behavior
         }
     }
 }

@@ -18,7 +18,7 @@ from ExchangeRates import ExchangeRates
 from Meeting import Meeting
 from Admin import Admin
 from Translations import Translations, AdminTranslations
-from Negotiations import Negotiations
+from Negotiations.Negotiations import negotiations_bp
 
 app.register_blueprint(Login.blueprint)
 app.register_blueprint(Signup.blueprint)
@@ -32,7 +32,7 @@ app.register_blueprint(Meeting.blueprint)
 app.register_blueprint(Admin.blueprint)
 app.register_blueprint(Translations.translations_bp)
 app.register_blueprint(AdminTranslations.admin_translations_bp)
-app.register_blueprint(Negotiations.negotiations_bp)
+app.register_blueprint(negotiations_bp)
 
 @app.route("/")
 @cross_origin()

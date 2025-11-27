@@ -116,6 +116,8 @@ struct ExchangeRatesView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                 }
                 
                 // From Currency

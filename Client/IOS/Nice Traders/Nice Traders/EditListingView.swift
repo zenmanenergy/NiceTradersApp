@@ -439,6 +439,8 @@ struct EditListingView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(fieldErrors["amount"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                     
                     Text(selectedCurrency?.code ?? "Currency")
                         .font(.system(size: 16, weight: .medium))
@@ -635,6 +637,8 @@ struct EditListingView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(fieldErrors["availableUntil"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                     )
+                    .onTapGesture { }
+                    .simultaneousGesture(TapGesture().onEnded { })
                 
                 if let error = fieldErrors["availableUntil"] {
                     Text(error)
@@ -878,6 +882,8 @@ struct EditListingView: View {
                 .font(.system(size: 16))
                 .padding(.vertical, 14)
                 .padding(.trailing, 16)
+                .onTapGesture { }
+                .simultaneousGesture(TapGesture().onEnded { })
         }
         .background(Color.white)
         .cornerRadius(12)

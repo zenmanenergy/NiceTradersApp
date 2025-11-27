@@ -453,6 +453,8 @@ struct ContactPurchaseView: View {
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
                         )
+                        .onTapGesture { }
+                        .simultaneousGesture(TapGesture().onEnded { })
                 }
                 
                 Spacer()

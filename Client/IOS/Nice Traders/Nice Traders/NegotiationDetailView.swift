@@ -500,6 +500,8 @@ struct CounterProposalSheet: View {
                     displayedComponents: [.date, .hourAndMinute]
                 )
                 .datePickerStyle(.graphical)
+                .onTapGesture { }
+                .simultaneousGesture(TapGesture().onEnded { })
                 
                 if let errorMessage = errorMessage {
                     Text(errorMessage)
