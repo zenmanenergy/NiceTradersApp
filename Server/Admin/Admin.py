@@ -7,8 +7,19 @@ from datetime import datetime
 
 blueprint = Blueprint('admin', __name__)
 
-# Initialize APN Service
-apn_service = APNService()
+# Initialize APN Service with credentials
+# Get the path to the APN key file (in Server directory)
+APN_KEY_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'AuthKey_LST3TZH33S.p8')
+APN_KEY_ID = 'LST3TZH33S'
+APN_TEAM_ID = 'J7S264TV3T'
+APN_TOPIC = 'NiceTraders.Nice-Traders'
+
+apn_service = APNService(
+    certificate_path=APN_KEY_PATH,
+    key_id=APN_KEY_ID,
+    team_id=APN_TEAM_ID,
+    topic=APN_TOPIC
+)
 
 @blueprint.route('/Admin/SearchUsers', methods=['GET', 'POST'])
 @cross_origin()
