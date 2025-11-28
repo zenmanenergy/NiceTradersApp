@@ -51,7 +51,10 @@
 	}
 
 	function sendApnMessage() {
-		viewState.set('apn-message');
+		viewState.update(state => ({
+			...state,
+			currentView: 'apn-message'
+		}));
 	}
 	
 	function viewListing(listingId, listingName) {
