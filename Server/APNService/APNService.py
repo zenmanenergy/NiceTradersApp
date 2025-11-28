@@ -196,8 +196,13 @@ class APNService:
             else:
                 return {
                     'success': True,
-                    'message': f'Successfully sent to {len(tokens)} device(s)'
+                    'message': f'Successfully sent to {len(tokens)} device(s)',
+                    'tokens_sent': len(tokens)
                 }
         
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            return {
+                'success': False,
+                'error': f'Exception in send_notification: {str(e)}',
+                'error_type': type(e).__name__
+            }
