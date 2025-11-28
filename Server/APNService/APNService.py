@@ -52,7 +52,6 @@ class APNService:
         Returns:
             dict with success status and message
         """
-        print(f"DEBUG: HAS_APNS = {HAS_APNS}")
         if not HAS_APNS:
             return {
                 'success': False,
@@ -110,6 +109,7 @@ class APNService:
                 return {
                     'success': False,
                     'error': f'No iOS device tokens found for user {user_id}',
+                    'requested_device_id': device_id,
                     'devices_found': len(all_devices),
                     'devices_with_tokens': len(tokens),
                     'device_details': device_info
