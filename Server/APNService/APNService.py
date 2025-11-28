@@ -137,9 +137,6 @@ class APNService:
                 except Exception as e:
                     failed_tokens.append({'token': token, 'error': str(e)})
             
-            # Close APNs connection
-            await apns.close()
-            
             # Log the notification
             notification_log = {
                 'user_id': user_id,
