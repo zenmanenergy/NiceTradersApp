@@ -31,7 +31,7 @@
 				body: messageBody,
 				badge: badge,
 				sound: sound
-			}, 'POST');
+			});
 
 			if (response && response.success) {
 				sendResult = {

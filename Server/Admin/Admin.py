@@ -408,16 +408,16 @@ def get_transaction_by_id():
         return jsonify({'success': False, 'error': str(e)})
 
 
-@blueprint.route('/Admin/SendApnMessage', methods=['POST'])
+@blueprint.route('/Admin/SendApnMessage', methods=['GET', 'POST'])
 @cross_origin()
 def send_apn_message():
     """Send an Apple Push Notification (APN) to a user"""
     try:
-        params = request.get_json()
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
         user_id = params.get('user_id')
         title = params.get('title')
         body = params.get('body')
-        badge = params.get('badge', 1)
+        badge = int(params.get('badge', 1))
         sound = params.get('sound', 'default')
         
         if not user_id or not title or not body:
