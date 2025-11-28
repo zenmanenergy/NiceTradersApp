@@ -128,13 +128,45 @@ class APNService:
                 }
             
             # Create APNs client
-            apns = APNs(
-                key=self.certificate_path,
-                key_id=self.key_id,
-                team_id=self.team_id,
-                topic=self.topic,
-                use_sandbox=self.use_sandbox
-            )
+            try:
+                apns = APNs(
+                    key=self.certificate_path,
+                    key_id=self.key_id,
+                    team_id=self.team_id,
+                    topic=self.topic,
+                    use_sandbox=self.use_sandbox
+                )
+            except Exception as apns_init_error:
+                import os as os_module
+                cert_exists = os_module.path.exists(self.certificate_path)
+                cert_readable = os_module.path.exists(self.certificate_path) and os_module.access(self.certificate_path, os_module.R_OK)
+                cert_size = os_module.path.getsize(self.certificate_path) if cert_exists else 0
+                
+                # Try to read the file content for debugging
+                cert_content = None
+                try:
+                    with open(self.certificate_path, 'r') as f:
+                        cert_content = f.read()[:100]  # First 100 chars
+                except Exception as read_err:
+                    cert_content = f"Error reading: {str(read_err)}"
+                
+                return {
+                    'success': False,
+                    'error': f'Failed to initialize APNs: {str(apns_init_error)}',
+                    'error_type': type(apns_init_error).__name__,
+                    'debug': {
+                        'certificate_path': self.certificate_path,
+                        'certificate_exists': cert_exists,
+                        'certificate_readable': cert_readable,
+                        'certificate_size': cert_size,
+                        'certificate_content_preview': cert_content,
+                        'key_id': self.key_id,
+                        'team_id': self.team_id,
+                        'topic': self.topic,
+                        'use_sandbox': self.use_sandbox
+                    }
+                }
+
             
             # Build alert payload
             alert = {
