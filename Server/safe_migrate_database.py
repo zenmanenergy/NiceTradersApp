@@ -197,12 +197,13 @@ def migrate_database(schema_file_path):
 
 if __name__ == "__main__":
     import sys
+    import os
     
-    # Schema file path
-    schema_file = '/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/database_schema.sql'
+    # Schema file path - use relative path from script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    schema_file = os.path.join(script_dir, 'database_schema.sql')
     
     # Check if file exists
-    import os
     if not os.path.exists(schema_file):
         print(f"Error: Schema file not found at {schema_file}")
         sys.exit(1)
