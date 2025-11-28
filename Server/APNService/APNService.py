@@ -81,13 +81,13 @@ class APNService:
             # If specific device_id provided, get only that device
             if device_id:
                 cursor.execute(
-                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
+                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios' AND device_token IS NOT NULL",
                     (user_id, device_id)
                 )
             else:
-                # Otherwise get all active iOS devices
+                # Otherwise get all iOS devices with tokens (regardless of is_active status)
                 cursor.execute(
-                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
+                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL",
                     (user_id,)
                 )
             tokens = [row['device_token'] for row in cursor.fetchall()]
