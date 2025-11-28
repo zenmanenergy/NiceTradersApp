@@ -65,7 +65,7 @@ class APNService:
             # Get user's device tokens from database
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios'",
+                "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
                 (user_id,)
             )
             tokens = [row['device_token'] for row in cursor.fetchall()]
@@ -75,7 +75,7 @@ class APNService:
                 connection.close()
                 return {
                     'success': False,
-                    'error': f'No iOS device tokens found for user {user_id}'
+                    'error': f'No active iOS device tokens found for user {user_id}. User may need to log in on a physical device.'
                 }
             
             # Create payload
