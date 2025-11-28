@@ -95,6 +95,16 @@ class APNService:
             # Filter for devices with tokens
             tokens = [row['device_token'] for row in all_devices if row.get('device_token')]
             
+            # Always return debug info
+            debug_info = {
+                'query_executed': True,
+                'user_id': user_id,
+                'device_id': device_id,
+                'devices_found': len(all_devices),
+                'tokens_found': len(tokens),
+                'all_devices': [{'id': d.get('device_id'), 'has_token': bool(d.get('device_token'))} for d in all_devices]
+            }
+            
             if not tokens:
                 cursor.close()
                 connection.close()
@@ -113,7 +123,8 @@ class APNService:
                     'query_type': 'specific_device' if device_id else 'all_devices',
                     'devices_found': len(all_devices),
                     'devices_with_tokens': len(tokens),
-                    'device_details': device_info
+                    'device_details': device_info,
+                    'debug': debug_info
                 }
             
             # Create APNs client
