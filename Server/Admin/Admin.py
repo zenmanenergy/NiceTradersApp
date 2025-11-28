@@ -525,6 +525,9 @@ def send_apn_message():
                     'db_available': db_available,
                     'apn_service_configured': bool(apn_service.certificate_path and apn_service.key_id and apn_service.team_id),
                     'certificate_path': apn_service.certificate_path,
+                    'certificate_exists': os.path.exists(apn_service.certificate_path) if apn_service.certificate_path else False,
+                    'certificate_readable': os.access(apn_service.certificate_path, os.R_OK) if apn_service.certificate_path else False,
+                    'certificate_size': os.path.getsize(apn_service.certificate_path) if apn_service.certificate_path and os.path.exists(apn_service.certificate_path) else 0,
                     'key_id': apn_service.key_id,
                     'team_id': apn_service.team_id
                 },
