@@ -35,7 +35,7 @@ class APNService:
         self.use_sandbox = True  # Set to False for production
     
     def send_notification(self, user_id, title, body, badge=1, sound='default', 
-                         session_id=None, deep_link_type=None, deep_link_id=None):
+                         session_id=None, deep_link_type=None, deep_link_id=None, device_id=None):
         """
         Send a push notification to a user
         Args:
@@ -47,6 +47,7 @@ class APNService:
             session_id: Optional session ID for auto-login
             deep_link_type: Type of deep link (listing, meeting, message, etc.)
             deep_link_id: ID to deep link to
+            device_id: Optional specific device ID to send to (if not provided, sends to all active devices)
         
         Returns:
             dict with success status and message
@@ -67,19 +68,28 @@ class APNService:
         # Run async send in sync context
         return asyncio.run(self._async_send_notification(
             user_id, title, body, badge, sound, 
-            session_id, deep_link_type, deep_link_id
+            session_id, deep_link_type, deep_link_id, device_id
         ))
     
     async def _async_send_notification(self, user_id, title, body, badge, sound,
-                                       session_id, deep_link_type, deep_link_id):
+                                       session_id, deep_link_type, deep_link_id, device_id=None):
         """Async implementation of send_notification"""
         try:
             # Get user's device tokens from database
             cursor, connection = ConnectToDatabase()
-            cursor.execute(
-                "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
-                (user_id,)
-            )
+            
+            # If specific device_id provided, get only that device
+            if device_id:
+                cursor.execute(
+                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
+                    (user_id, device_id)
+                )
+            else:
+                # Otherwise get all active iOS devices
+                cursor.execute(
+                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL AND is_active = 1",
+                    (user_id,)
+                )
             tokens = [row['device_token'] for row in cursor.fetchall()]
             
             if not tokens:

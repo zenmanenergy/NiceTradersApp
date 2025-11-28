@@ -430,6 +430,7 @@ def send_apn_message():
         body = params.get('body')
         badge = int(params.get('badge', 1))
         sound = params.get('sound', 'default')
+        device_id = params.get('device_id')  # Optional: specific device to send to
         
         # Debug: Check if apns2 is available
         import sys
@@ -448,7 +449,8 @@ def send_apn_message():
             title=title,
             body=body,
             badge=badge,
-            sound=sound
+            sound=sound,
+            device_id=device_id
         )
         
         # Add debug info to response

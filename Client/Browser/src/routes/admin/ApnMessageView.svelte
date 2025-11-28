@@ -42,12 +42,18 @@
 			return;
 		}
 
+		if (!selectedDeviceId) {
+			alert('Please select a device to send to');
+			return;
+		}
+
 		isSending = true;
 		showResult = false;
 
 		try {
 			const response = await SuperFetch('/Admin/SendApnMessage', {
 				user_id: $userDetailState.currentUser.UserId,
+				device_id: selectedDeviceId,
 				title: messageTitle,
 				body: messageBody,
 				badge: badge,
