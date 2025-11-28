@@ -10,9 +10,10 @@ try:
     from apns2.payload import Payload
     HAS_APNS = True
     print("✓ apns2 imported successfully!")
-except ImportError as e:
+except Exception as e:
     HAS_APNS = False
     print(f"✗ Failed to import apns2: {e}")
+    APNsException = Exception  # Fallback to avoid undefined reference
 
 from _Lib.Database import ConnectToDatabase
 

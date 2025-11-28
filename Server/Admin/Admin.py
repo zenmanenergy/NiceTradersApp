@@ -420,10 +420,15 @@ def send_apn_message():
         badge = int(params.get('badge', 1))
         sound = params.get('sound', 'default')
         
+        # Debug: Check if apns2 is available
+        import sys
+        apns2_available = 'apns2' in sys.modules
+        
         if not user_id or not title or not body:
             return jsonify({
                 'success': False,
-                'error': 'user_id, title, and body are required'
+                'error': 'user_id, title, and body are required',
+                'debug_apns2_in_modules': apns2_available
             }), 400
         
         # Send the notification
@@ -435,10 +440,14 @@ def send_apn_message():
             sound=sound
         )
         
+        # Add debug info to response
+        result['debug_apns2_in_modules'] = apns2_available
+        
         if result['success']:
             return jsonify({
                 'success': True,
-                'message': result['message']
+                'message': result['message'],
+                'debug_apns2_in_modules': apns2_available
             })
         else:
             return jsonify({
