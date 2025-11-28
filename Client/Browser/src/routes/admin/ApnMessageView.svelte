@@ -9,13 +9,22 @@
 	let isSending = false;
 	let sendResult = null;
 	let showResult = false;
+	let selectedDeviceId = null;
 
+	// Get all iOS devices (whether active or not)
+	$: iosDevices = $userDetailState.userDevices.filter(d => d.device_type === 'ios');
+	
 	// Get active iOS devices
 	$: activeIOSDevices = $userDetailState.userDevices.filter(d => 
 		d.device_type === 'ios' && d.device_token && d.is_active === 1
 	);
 
 	$: hasActiveDevices = activeIOSDevices.length > 0;
+	
+	// Set default selection if not already set
+	$: if (selectedDeviceId === null && activeIOSDevices.length > 0 && !selectedDeviceId) {
+		selectedDeviceId = activeIOSDevices[0].device_id;
+	}
 
 	async function sendMessage() {
 		if (!messageTitle.trim()) {
@@ -167,6 +176,28 @@
 
 		<!-- Message Form -->
 		<div class="form-group">
+			<label for="device">Select Device to Send To</label>
+			<select 
+				id="device" 
+				bind:value={selectedDeviceId}
+				disabled={isSending || !hasActiveDevices}
+			>
+				{#if !hasActiveDevices}
+					<option value={null}>No active devices available</option>
+				{:else}
+					{#each activeIOSDevices as device}
+						<option value={device.device_id}>
+							{device.device_name || `Device ${device.device_id.substring(0, 8)}`}
+							{#if device.is_active === 1}
+								✓
+							{/if}
+						</option>
+					{/each}
+				{/if}
+			</select>
+		</div>
+
+		<div class="form-group">
 			<label for="title">Notification Title</label>
 			<input
 				id="title"
@@ -218,11 +249,11 @@
 			<button on:click={goBack} disabled={isSending} class="btn-cancel">Cancel</button>
 			<button 
 				on:click={sendMessage} 
-				disabled={isSending || !hasActiveDevices} 
+				disabled={isSending || !hasActiveDevices || !selectedDeviceId} 
 				class="btn-send"
-				title={!hasActiveDevices ? 'No active devices available' : 'Send notification'}
+				title={!hasActiveDevices ? 'No active devices available' : selectedDeviceId ? 'Send notification' : 'Select a device'}
 			>
-				{isSending ? 'Sending...' : `Send to ${activeIOSDevices.length} Device(s)`}
+				{isSending ? 'Sending...' : `Send to Selected Device`}
 			</button>
 		</div>
 
