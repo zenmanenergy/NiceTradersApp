@@ -129,8 +129,12 @@ class APNService:
             
             # Create APNs client
             try:
+                # Read the key file content instead of passing the path
+                with open(self.certificate_path, 'r') as key_file:
+                    key_content = key_file.read()
+                
                 apns = APNs(
-                    key=self.certificate_path,
+                    key=key_content,
                     key_id=self.key_id,
                     team_id=self.team_id,
                     topic=self.topic,
