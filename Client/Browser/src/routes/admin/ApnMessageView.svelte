@@ -10,6 +10,13 @@
 	let sendResult = null;
 	let showResult = false;
 
+	// Get active iOS devices
+	$: activeIOSDevices = $userDetailState.userDevices.filter(d => 
+		d.device_type === 'ios' && d.device_token && d.is_active === 1
+	);
+
+	$: hasActiveDevices = activeIOSDevices.length > 0;
+
 	async function sendMessage() {
 		if (!messageTitle.trim()) {
 			alert('Please enter a notification title');
@@ -18,6 +25,11 @@
 
 		if (!messageBody.trim()) {
 			alert('Please enter a notification message');
+			return;
+		}
+
+		if (!hasActiveDevices) {
+			alert('No active iOS devices found for this user. Devices must be marked as active and have a valid device token.');
 			return;
 		}
 
@@ -80,6 +92,80 @@
 	</div>
 
 	<div class="form-container">
+		<!-- Device Status Section -->
+		<div class="device-status-section">
+			<h3>📱 Registered iOS Devices</h3>
+			{#if $userDetailState.userDevices.length === 0}
+				<div class="alert alert-warning">
+					⚠️ No devices registered for this user
+				</div>
+			{:else}
+				<div class="devices-info">
+					{#each $userDetailState.userDevices as device}
+						<div class="device-item {device.device_type === 'ios' ? 'ios' : 'other'}">
+							<div class="device-header-row">
+								<div class="device-type-badge">
+									{#if device.device_type === 'ios'}
+										📱 iOS
+									{:else if device.device_type === 'android'}
+										🤖 Android
+									{:else}
+										🌐 {device.device_type}
+									{/if}
+								</div>
+								<div class="device-status">
+									{#if device.device_type === 'ios' && device.is_active === 1 && device.device_token}
+										<span class="badge badge-success">✓ Ready</span>
+									{:else}
+										<span class="badge badge-warning">⚠ Not Ready</span>
+									{/if}
+								</div>
+							</div>
+							<div class="device-details">
+								{#if device.device_name}
+									<div><strong>Name:</strong> {device.device_name}</div>
+								{/if}
+								<div><strong>Type:</strong> {device.device_type}</div>
+								{#if device.app_version}
+									<div><strong>App:</strong> {device.app_version}</div>
+								{/if}
+								<div>
+									<strong>Token:</strong>
+									<span class="device-token-indicator {device.device_token ? 'has-token' : 'no-token'}">
+										{device.device_token ? '✓ Registered' : '✗ Missing'}
+									</span>
+								</div>
+								<div>
+									<strong>Active:</strong>
+									<span class="active-indicator {device.is_active ? 'active' : 'inactive'}">
+										{device.is_active ? 'Yes' : 'No'}
+									</span>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+
+				{#if !hasActiveDevices}
+					<div class="alert alert-error">
+						❌ No active iOS devices with valid tokens. Cannot send notification.
+						<br/>
+						The user needs to:
+						<ul>
+							<li>Install the app on an iOS device</li>
+							<li>Log in and allow push notifications</li>
+							<li>Device must be marked as active in the database</li>
+						</ul>
+					</div>
+				{:else}
+					<div class="alert alert-success">
+						✓ {activeIOSDevices.length} active device(s) ready to receive notifications
+					</div>
+				{/if}
+			{/if}
+		</div>
+
+		<!-- Message Form -->
 		<div class="form-group">
 			<label for="title">Notification Title</label>
 			<input
@@ -87,7 +173,7 @@
 				type="text"
 				bind:value={messageTitle}
 				placeholder="Enter notification title"
-				disabled={isSending}
+				disabled={isSending || !hasActiveDevices}
 				maxlength="100"
 			/>
 			<span class="char-count">{messageTitle.length}/100</span>
@@ -100,7 +186,7 @@
 				bind:value={messageBody}
 				placeholder="Enter notification message"
 				rows="5"
-				disabled={isSending}
+				disabled={isSending || !hasActiveDevices}
 				maxlength="500"
 			></textarea>
 			<span class="char-count">{messageBody.length}/500</span>
@@ -115,13 +201,13 @@
 					bind:value={badge}
 					min="0"
 					max="999"
-					disabled={isSending}
+					disabled={isSending || !hasActiveDevices}
 				/>
 			</div>
 
 			<div class="form-group">
 				<label for="sound">Sound</label>
-				<select id="sound" bind:value={sound} disabled={isSending}>
+				<select id="sound" bind:value={sound} disabled={isSending || !hasActiveDevices}>
 					<option value="default">Default</option>
 					<option value="silent">Silent</option>
 				</select>
@@ -130,8 +216,13 @@
 
 		<div class="button-group">
 			<button on:click={goBack} disabled={isSending} class="btn-cancel">Cancel</button>
-			<button on:click={sendMessage} disabled={isSending} class="btn-send">
-				{isSending ? 'Sending...' : 'Send Notification'}
+			<button 
+				on:click={sendMessage} 
+				disabled={isSending || !hasActiveDevices} 
+				class="btn-send"
+				title={!hasActiveDevices ? 'No active devices available' : 'Send notification'}
+			>
+				{isSending ? 'Sending...' : `Send to ${activeIOSDevices.length} Device(s)`}
 			</button>
 		</div>
 
@@ -202,6 +293,155 @@
 	.form-container {
 		padding: 32px;
 		max-width: 600px;
+	}
+
+	.device-status-section {
+		margin-bottom: 32px;
+		padding-bottom: 32px;
+		border-bottom: 2px solid #e0e0e0;
+	}
+
+	.device-status-section h3 {
+		margin: 0 0 16px 0;
+		color: #333;
+		font-size: 1.1rem;
+	}
+
+	.devices-info {
+		display: grid;
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	.device-item {
+		padding: 14px;
+		background: #f8f9fa;
+		border: 2px solid #e2e8f0;
+		border-radius: 6px;
+		transition: all 0.2s;
+	}
+
+	.device-item.ios {
+		border-color: #667eea;
+		background: #f0f3ff;
+	}
+
+	.device-item.other {
+		opacity: 0.6;
+	}
+
+	.device-header-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 10px;
+	}
+
+	.device-type-badge {
+		font-weight: 600;
+		color: #333;
+	}
+
+	.device-status {
+		display: flex;
+		gap: 8px;
+	}
+
+	.badge {
+		padding: 4px 10px;
+		border-radius: 4px;
+		font-size: 0.8rem;
+		font-weight: 600;
+	}
+
+	.badge-success {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.badge-warning {
+		background: #fef3c7;
+		color: #92400e;
+	}
+
+	.device-details {
+		font-size: 0.85rem;
+		color: #666;
+		display: grid;
+		gap: 6px;
+	}
+
+	.device-details div {
+		display: flex;
+		gap: 8px;
+	}
+
+	.device-details strong {
+		color: #333;
+		min-width: 70px;
+	}
+
+	.device-token-indicator,
+	.active-indicator {
+		padding: 2px 6px;
+		border-radius: 3px;
+		font-size: 0.8rem;
+		font-weight: 500;
+	}
+
+	.device-token-indicator.has-token {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.device-token-indicator.no-token {
+		background: #fee2e2;
+		color: #991b1b;
+	}
+
+	.active-indicator.active {
+		background: #dcfce7;
+		color: #166534;
+	}
+
+	.active-indicator.inactive {
+		background: #fecaca;
+		color: #991b1b;
+	}
+
+	.alert {
+		padding: 12px 16px;
+		border-radius: 6px;
+		font-size: 0.9rem;
+		line-height: 1.5;
+		margin-bottom: 16px;
+	}
+
+	.alert ul {
+		margin: 8px 0 0 20px;
+		padding: 0;
+	}
+
+	.alert li {
+		margin: 4px 0;
+	}
+
+	.alert-warning {
+		background: #fef3c7;
+		border-left: 4px solid #f59e0b;
+		color: #92400e;
+	}
+
+	.alert-error {
+		background: #fee2e2;
+		border-left: 4px solid #ef4444;
+		color: #991b1b;
+	}
+
+	.alert-success {
+		background: #dcfce7;
+		border-left: 4px solid #22c55e;
+		color: #166534;
 	}
 
 	.form-group {
