@@ -432,15 +432,66 @@ def send_apn_message():
         sound = params.get('sound', 'default')
         device_id = params.get('device_id')  # Optional: specific device to send to
         
-        # Debug: Check if apns2 is available
+        # Debug: Check library imports
         import sys
+        aioapns_available = 'aioapns' in sys.modules
         apns2_available = 'apns2' in sys.modules
+        
+        # Check database connection
+        try:
+            from _Lib.Database import ConnectToDatabase
+            cursor, connection = ConnectToDatabase()
+            db_available = True
+            # Test if user exists
+            cursor.execute("SELECT UserId FROM users WHERE UserId = %s", (user_id,))
+            user_exists = cursor.fetchone() is not None
+            
+            # Get device count
+            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE UserId = %s", (user_id,))
+            device_count_result = cursor.fetchone()
+            total_devices = device_count_result['count'] if device_count_result else 0
+            
+            # Get iOS device count
+            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE UserId = %s AND device_type = 'ios'", (user_id,))
+            ios_count_result = cursor.fetchone()
+            ios_devices = ios_count_result['count'] if ios_count_result else 0
+            
+            # Get device details
+            cursor.execute(
+                "SELECT device_id, device_type, device_name, device_token, is_active FROM user_devices WHERE UserId = %s ORDER BY last_used_at DESC",
+                (user_id,)
+            )
+            devices_list = cursor.fetchall()
+            device_details = []
+            for dev in devices_list:
+                device_details.append({
+                    'device_id': dev.get('device_id'),
+                    'device_type': dev.get('device_type'),
+                    'device_name': dev.get('device_name'),
+                    'has_token': bool(dev.get('device_token')),
+                    'token_preview': dev.get('device_token', '')[:20] if dev.get('device_token') else None,
+                    'is_active': dev.get('is_active')
+                })
+            
+            cursor.close()
+            connection.close()
+        except Exception as db_err:
+            db_available = False
+            user_exists = False
+            total_devices = 0
+            ios_devices = 0
+            device_details = []
+            db_error_msg = str(db_err)
         
         if not user_id or not title or not body:
             return jsonify({
                 'success': False,
                 'error': 'user_id, title, and body are required',
-                'debug_apns2_in_modules': apns2_available
+                'debug': {
+                    'aioapns_available': aioapns_available,
+                    'apns2_available': apns2_available,
+                    'db_available': db_available
+                }
             }), 400
         
         # Send the notification
@@ -453,23 +504,65 @@ def send_apn_message():
             device_id=device_id
         )
         
-        # Add debug info to response
-        result['debug_apns2_in_modules'] = apns2_available
+        # Build comprehensive debug response
+        debug_response = {
+            'success': result.get('success', False),
+            'message': result.get('message', ''),
+            'error': result.get('error'),
+            'debug_apns2_in_modules': apns2_available,
+            'debug': {
+                'request': {
+                    'user_id': user_id,
+                    'device_id': device_id,
+                    'title': title,
+                    'body': body,
+                    'badge': badge,
+                    'sound': sound
+                },
+                'environment': {
+                    'aioapns_available': aioapns_available,
+                    'apns2_available': apns2_available,
+                    'db_available': db_available,
+                    'apn_service_configured': bool(apn_service.certificate_path and apn_service.key_id and apn_service.team_id),
+                    'certificate_path': apn_service.certificate_path,
+                    'key_id': apn_service.key_id,
+                    'team_id': apn_service.team_id
+                },
+                'database': {
+                    'user_exists': user_exists,
+                    'total_devices': total_devices,
+                    'ios_devices': ios_devices,
+                    'device_details': device_details,
+                    'error': db_error_msg if db_available == False else None
+                },
+                'apn_service_response': {
+                    'tokens_found': result.get('tokens_found'),
+                    'devices_found': result.get('devices_found'),
+                    'tokens_sent': result.get('tokens_sent'),
+                    'failed_tokens': result.get('failed'),
+                    'device_id_in_response': result.get('device_id'),
+                    'query_type': result.get('query_type'),
+                    'requested_device_id': result.get('requested_device_id'),
+                    'full_debug': result.get('debug', {})
+                }
+            }
+        }
         
         if result['success']:
-            return jsonify({
-                'success': True,
-                'message': result['message'],
-                'debug_apns2_in_modules': apns2_available
-            })
+            return jsonify(debug_response), 200
         else:
-            return jsonify({
-                'success': False,
-                'error': result.get('error', 'Failed to send notification')
-            }), 400
+            return jsonify(debug_response), 400
     
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'debug': {
+                'exception_trace': traceback.format_exc()
+            }
+        }), 500
 
 
 @blueprint.route('/Admin/GetLogs', methods=['GET', 'POST'])
