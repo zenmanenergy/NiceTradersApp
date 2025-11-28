@@ -32,7 +32,11 @@
 			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { userId });
 			const userRatings = ratingsResponse.success ? ratingsResponse.ratings : [];
 			
-			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings });
+			// Get user's devices
+			const devicesResponse = await SuperFetch('/Admin/GetUserDevices', { userId });
+			const userDevices = devicesResponse.success ? devicesResponse.devices : [];
+			
+			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings, userDevices });
 			
 			viewState.update(state => ({
 				currentView: 'user',

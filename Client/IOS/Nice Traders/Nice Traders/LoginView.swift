@@ -266,6 +266,12 @@ green: 0.29, blue: 0.64)]),
                             // Save user ID if available
                             if let userId = json["UserId"] as? String {
                                 UserDefaults.standard.set(userId, forKey: "UserId")
+                                
+                                // If device token is already available, update it now
+                                if let deviceToken = DeviceTokenManager.shared.deviceToken {
+                                    print("✓ [LoginView] Device token available at login - updating backend")
+                                    DeviceTokenManager.shared.updateDeviceTokenForUser(userId: userId, deviceToken: deviceToken)
+                                }
                             }
                             
                             print("Login successful! SessionId:", sessionId, "UserType:", userType)

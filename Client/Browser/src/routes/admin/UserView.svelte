@@ -222,6 +222,65 @@
 				</div>
 			{/if}
 		</div>
+
+		<div class="section">
+			<h3>📱 Registered Devices ({$userDetailState.userDevices.length})</h3>
+			{#if $userDetailState.userDevices.length === 0}
+				<p class="empty-state">No registered devices</p>
+			{:else}
+				<div class="devices-list">
+					{#each $userDetailState.userDevices as device}
+						<div class="device-card">
+							<div class="device-header">
+								<div class="device-type">
+									{#if device.device_type === 'ios'}
+										📱 iOS
+									{:else if device.device_type === 'android'}
+										🤖 Android
+									{:else}
+										🌐 Web
+									{/if}
+									{device.device_name ? ` - ${device.device_name}` : ''}
+								</div>
+								<span class="status-badge {device.is_active ? 'active' : 'inactive'}">
+									{device.is_active ? 'Active' : 'Inactive'}
+								</span>
+							</div>
+							<div class="device-info">
+								<div class="info-row">
+									<strong>Device Token:</strong>
+									<span class="device-token" title={device.device_token || 'No token'}>
+										{device.device_token ? device.device_token.substring(0, 40) + '...' : 'Not yet registered'}
+									</span>
+								</div>
+								<div class="info-row">
+									<strong>Device ID:</strong>
+									<span class="device-id">{device.device_id}</span>
+								</div>
+								{#if device.app_version}
+									<div class="info-row">
+										<strong>App Version:</strong> {device.app_version}
+									</div>
+								{/if}
+								{#if device.os_version}
+									<div class="info-row">
+										<strong>OS Version:</strong> {device.os_version}
+									</div>
+								{/if}
+								<div class="info-row">
+									<strong>Registered:</strong> {formatDate(device.registered_at)}
+								</div>
+								{#if device.last_used_at}
+									<div class="info-row">
+										<strong>Last Used:</strong> {formatDate(device.last_used_at)}
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 {/if}
 
@@ -536,6 +595,75 @@
 
 	.form-feedback.error {
 		color: #c53030;
+	}
+
+	.devices-list {
+		display: grid;
+		gap: 16px;
+	}
+
+	.device-card {
+		background: #f8f9fa;
+		padding: 18px;
+		border-radius: 10px;
+		border: 2px solid #e2e8f0;
+		transition: all 0.2s;
+	}
+
+	.device-card:hover {
+		border-color: #667eea;
+		box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+	}
+
+	.device-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 12px;
+		padding-bottom: 12px;
+		border-bottom: 1px solid #e2e8f0;
+	}
+
+	.device-type {
+		font-weight: 600;
+		font-size: 1.05rem;
+		color: #333;
+	}
+
+	.device-info {
+		display: grid;
+		gap: 8px;
+	}
+
+	.device-info .info-row {
+		display: flex;
+		gap: 8px;
+		align-items: flex-start;
+		font-size: 0.9rem;
+	}
+
+	.device-info .info-row strong {
+		color: #666;
+		min-width: 120px;
+		flex-shrink: 0;
+	}
+
+	.device-token {
+		font-family: 'Monaco', 'Courier New', monospace;
+		font-size: 0.85rem;
+		color: #667eea;
+		word-break: break-all;
+		background: white;
+		padding: 4px 8px;
+		border-radius: 4px;
+		border: 1px solid #e2e8f0;
+		cursor: help;
+	}
+
+	.device-id {
+		font-family: 'Monaco', 'Courier New', monospace;
+		font-size: 0.85rem;
+		color: #555;
 	}
 
 	@media (max-width: 768px) {

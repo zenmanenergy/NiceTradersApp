@@ -284,6 +284,34 @@ def get_user_ratings():
         return jsonify({'success': False, 'error': str(e)})
 
 
+@blueprint.route('/Admin/GetUserDevices', methods=['GET', 'POST'])
+@cross_origin()
+def get_user_devices():
+    """Get all registered devices for a user"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        user_id = params.get('userId')
+        
+        cursor, connection = ConnectToDatabase()
+        
+        query = """
+            SELECT device_id, UserId, device_type, device_token, device_name, 
+                   app_version, os_version, is_active, registered_at, last_used_at, updated_at
+            FROM user_devices 
+            WHERE UserId = %s 
+            ORDER BY last_used_at DESC, registered_at DESC
+        """
+        cursor.execute(query, (user_id,))
+        devices = cursor.fetchall()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({'success': True, 'devices': devices})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
 @blueprint.route('/Admin/GetListingById', methods=['GET', 'POST'])
 @cross_origin()
 def get_listing_by_id():

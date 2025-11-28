@@ -6,7 +6,7 @@ from _Lib import Database
 import json
 
 
-def update_device_token(user_id, device_type, device_token):
+def update_device_token(user_id, device_type, device_token, app_version=None, os_version=None):
 	"""
 	Update the device token for a user's device
 	Called after APNs provides the token asynchronously
@@ -15,6 +15,8 @@ def update_device_token(user_id, device_type, device_token):
 		user_id: User ID
 		device_type: Type of device ('ios', 'android', or 'web')
 		device_token: The device token from APNs/Firebase
+		app_version: Optional app version to update
+		os_version: Optional OS version to update
 	
 	Returns:
 		JSON string with success status
@@ -35,9 +37,27 @@ def update_device_token(user_id, device_type, device_token):
 		existing = cursor.fetchone()
 		
 		if existing:
-			# Token already registered for this user, just update timestamp
-			update_query = "UPDATE user_devices SET last_used_at = NOW(), updated_at = NOW() WHERE device_id = %s"
-			cursor.execute(update_query, (existing['device_id'],))
+			# Token already registered for this user, just update timestamp and version info
+			update_query = """
+				UPDATE user_devices 
+				SET last_used_at = NOW(), updated_at = NOW()
+			"""
+			update_params = []
+			
+			# Add app_version if provided
+			if app_version is not None:
+				update_query = update_query.rstrip() + ", app_version = %s"
+				update_params.append(app_version)
+			
+			# Add os_version if provided
+			if os_version is not None:
+				update_query = update_query.rstrip() + ", os_version = %s"
+				update_params.append(os_version)
+			
+			update_query += " WHERE device_id = %s"
+			update_params.append(existing['device_id'])
+			
+			cursor.execute(update_query, tuple(update_params))
 			connection.commit()
 			connection.close()
 			return '{"success": true, "message": "Device token already registered"}'
@@ -58,13 +78,27 @@ def update_device_token(user_id, device_type, device_token):
 		pending_device = cursor.fetchone()
 		
 		if pending_device:
-			# Update the pending device with the new token
+			# Update the pending device with the new token and version info
 			update_query = """
 				UPDATE user_devices 
 				SET device_token = %s, updated_at = NOW()
-				WHERE device_id = %s
 			"""
-			cursor.execute(update_query, (device_token, pending_device['device_id']))
+			update_params = [device_token]
+			
+			# Add app_version if provided
+			if app_version is not None:
+				update_query = update_query.rstrip() + ", app_version = %s"
+				update_params.append(app_version)
+			
+			# Add os_version if provided
+			if os_version is not None:
+				update_query = update_query.rstrip() + ", os_version = %s"
+				update_params.append(os_version)
+			
+			update_query += " WHERE device_id = %s"
+			update_params.append(pending_device['device_id'])
+			
+			cursor.execute(update_query, tuple(update_params))
 		else:
 			# No pending device found, this is an update to an existing device
 			# Try to find any device of the same type for this user
@@ -73,13 +107,27 @@ def update_device_token(user_id, device_type, device_token):
 			existing_device = cursor.fetchone()
 			
 			if existing_device:
-				# Update existing device
+				# Update existing device with token and version info
 				update_query = """
 					UPDATE user_devices 
 					SET device_token = %s, updated_at = NOW()
-					WHERE device_id = %s
 				"""
-				cursor.execute(update_query, (device_token, existing_device['device_id']))
+				update_params = [device_token]
+				
+				# Add app_version if provided
+				if app_version is not None:
+					update_query = update_query.rstrip() + ", app_version = %s"
+					update_params.append(app_version)
+				
+				# Add os_version if provided
+				if os_version is not None:
+					update_query = update_query.rstrip() + ", os_version = %s"
+					update_params.append(os_version)
+				
+				update_query += " WHERE device_id = %s"
+				update_params.append(existing_device['device_id'])
+				
+				cursor.execute(update_query, tuple(update_params))
 			else:
 				# This shouldn't happen - no device entry exists, but handle it anyway
 				# This means user logged in without device info, just update generic entry

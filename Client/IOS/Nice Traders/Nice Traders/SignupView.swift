@@ -309,6 +309,12 @@ struct SignupView: View {
                             // Save user ID if available
                             if let userId = json["userId"] as? String {
                                 UserDefaults.standard.set(userId, forKey: "UserId")
+                                
+                                // If device token is already available, update it now
+                                if let deviceToken = DeviceTokenManager.shared.deviceToken {
+                                    print("✓ [SignupView] Device token available at signup - updating backend")
+                                    DeviceTokenManager.shared.updateDeviceTokenForUser(userId: userId, deviceToken: deviceToken)
+                                }
                             }
                             
                             print("Signup successful! SessionId:", sessionId, "UserType:", userType)

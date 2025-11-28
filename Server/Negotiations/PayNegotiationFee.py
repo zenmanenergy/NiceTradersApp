@@ -168,7 +168,7 @@ def pay_negotiation_fee(negotiation_id, session_id):
         """, (negotiation_id,))
         
         updated_negotiation = cursor.fetchone()
-        both_paid = updated_negotiation['buyer_paid'] and updated_negotiation['seller_paid']
+        both_paid = bool(updated_negotiation['buyer_paid'] and updated_negotiation['seller_paid'])
         
         if both_paid:
             # Both paid - mark as paid_complete and auto-reject other negotiations

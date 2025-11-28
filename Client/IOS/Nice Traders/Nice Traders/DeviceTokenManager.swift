@@ -77,18 +77,27 @@ class DeviceTokenManager: ObservableObject {
         }
     }
     
+    /// Public method to update device token for a specific user
+    /// Called when we have both userId and deviceToken available
+    func updateDeviceTokenForUser(userId: String, deviceToken: String) {
+        print("🔵 [DeviceTokenManager] updateDeviceTokenForUser called - userId: \(userId), token: \(deviceToken)")
+        updateBackendWithDeviceToken(deviceToken, userId: userId)
+    }
+    
     /// Send device token to backend to update user_devices table
-    private func updateBackendWithDeviceToken(_ token: String) {
+    private func updateBackendWithDeviceToken(_ token: String, userId: String? = nil) {
         print("🔵 [DeviceTokenManager] updateBackendWithDeviceToken called with token: \(token)")
         
-        // Get user ID from SessionManager
-        guard let userId = SessionManager.shared.userId else {
+        // Use provided userId or get from SessionManager
+        let userIdToUse = userId ?? SessionManager.shared.userId
+        
+        guard let userIdToUse = userIdToUse else {
             print("⚠ [DeviceTokenManager] Cannot update device token: User ID not available")
-            print("⚠ [DeviceTokenManager] SessionManager.shared.userId is nil")
+            print("⚠ [DeviceTokenManager] SessionManager.shared.userId is nil and no userId provided")
             return
         }
         
-        print("✓ [DeviceTokenManager] User ID found: \(userId)")
+        print("✓ [DeviceTokenManager] User ID found: \(userIdToUse)")
         
         let device = UIDevice.current
         let appVersion = Bundle.main.appVersion ?? "unknown"
@@ -99,7 +108,7 @@ class DeviceTokenManager: ObservableObject {
         // Build query parameters
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Profile/UpdateDeviceToken")
         components?.queryItems = [
-            URLQueryItem(name: "UserId", value: userId),
+            URLQueryItem(name: "UserId", value: userIdToUse),
             URLQueryItem(name: "deviceToken", value: token),
             URLQueryItem(name: "deviceType", value: "ios"),
             URLQueryItem(name: "appVersion", value: appVersion),

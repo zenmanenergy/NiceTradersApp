@@ -97,8 +97,10 @@ def UpdateDeviceTokenRoute():
 		UserId = TokenData.get('UserId', None)
 		DeviceType = TokenData.get('deviceType', 'ios')
 		DeviceToken = TokenData.get('deviceToken', None)
+		AppVersion = TokenData.get('appVersion', None)
+		OsVersion = TokenData.get('osVersion', None)
 		
-		result = update_device_token(UserId, DeviceType, DeviceToken)
+		result = update_device_token(UserId, DeviceType, DeviceToken, AppVersion, OsVersion)
 		return result
 	except Exception as e:
 		return Debugger(e)

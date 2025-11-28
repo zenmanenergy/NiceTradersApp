@@ -21,7 +21,8 @@ export const userDetailState = writable({
 	userListings: [],
 	userPurchases: [],
 	userMessages: [],
-	userRatings: []
+	userRatings: [],
+	userDevices: []
 });
 
 // Listing detail state

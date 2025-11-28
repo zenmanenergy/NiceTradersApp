@@ -177,7 +177,9 @@ struct NegotiationDetailView: View {
         if currency == "USD" {
             return amount
         }
-        return ExchangeRatesAPI.shared.calculateReceiveAmount(from: currency, to: "USD", amount: amount)
+        let amountString = String(amount)
+        let result = ExchangeRatesAPI.shared.calculateReceiveAmount(from: currency, to: "USD", amount: amountString)
+        return Double(result)
     }
     
     private func otherUserInfo(_ negotiation: NegotiationDetail) -> some View {
