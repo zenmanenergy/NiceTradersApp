@@ -5,14 +5,19 @@ Compares current database structure with desired schema and:
 1. Adds missing tables
 2. Adds missing columns to existing tables
 3. Does NOT drop or modify existing data
+
+Usage:
+  python3 safe_migrate_database.py                                    # Use default localhost
+  python3 safe_migrate_database.py --host SERVER_IP --user USER --password PASS --database DB
 """
 
 import pymysql
 import pymysql.cursors
 import re
 from datetime import datetime
+import argparse
 
-# Database connection details
+# Default database connection details (can be overridden by command line)
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'stevenelson',
@@ -199,6 +204,20 @@ if __name__ == "__main__":
     import sys
     import os
     
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Safely migrate database schema')
+    parser.add_argument('--host', default='localhost', help='Database host (default: localhost)')
+    parser.add_argument('--user', default='stevenelson', help='Database user (default: stevenelson)')
+    parser.add_argument('--password', default='mwitcitw711', help='Database password')
+    parser.add_argument('--database', default='nicetraders', help='Database name (default: nicetraders)')
+    args = parser.parse_args()
+    
+    # Update DB_CONFIG with command line arguments
+    DB_CONFIG['host'] = args.host
+    DB_CONFIG['user'] = args.user
+    DB_CONFIG['password'] = args.password
+    DB_CONFIG['database'] = args.database
+    
     # Schema file path - use relative path from script location
     script_dir = os.path.dirname(os.path.abspath(__file__))
     schema_file = os.path.join(script_dir, 'database_schema.sql')
@@ -207,6 +226,8 @@ if __name__ == "__main__":
     if not os.path.exists(schema_file):
         print(f"Error: Schema file not found at {schema_file}")
         sys.exit(1)
+    
+    print(f"Connecting to: {args.user}@{args.host}/{args.database}\n")
     
     # Run migration
     try:
