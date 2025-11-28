@@ -55,7 +55,7 @@ class APNService:
         if not HAS_APNS:
             return {
                 'success': False,
-                'error': 'aioapns library not installed. Install with: pip install aioapns'
+                'error': 'aioapns library not available. Check that aioapns is properly installed.'
             }
         
         if not self.certificate_path or not self.key_id or not self.team_id:
@@ -110,6 +110,7 @@ class APNService:
                     'success': False,
                     'error': f'No iOS device tokens found for user {user_id}',
                     'requested_device_id': device_id,
+                    'query_type': 'specific_device' if device_id else 'all_devices',
                     'devices_found': len(all_devices),
                     'devices_with_tokens': len(tokens),
                     'device_details': device_info
