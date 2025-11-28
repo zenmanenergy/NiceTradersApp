@@ -202,13 +202,31 @@ class APNService:
                 return {
                     'success': True,
                     'message': f'Sent to {len(tokens) - len(failed_tokens)} devices',
-                    'failed': failed_tokens
+                    'failed': failed_tokens,
+                    'debug': {
+                        'tokens_count': len(tokens),
+                        'failed_count': len(failed_tokens),
+                        'user_id': user_id,
+                        'device_id': device_id,
+                        'devices_found': len(all_devices),
+                        'all_devices_info': [{'id': d.get('device_id'), 'has_token': bool(d.get('device_token')), 'token_preview': d.get('device_token', '')[:20] if d.get('device_token') else None} for d in all_devices],
+                        'tokens_list_preview': [t[:20] for t in tokens]
+                    }
                 }
             else:
                 return {
                     'success': True,
                     'message': f'Successfully sent to {len(tokens)} device(s)',
-                    'tokens_sent': len(tokens)
+                    'tokens_sent': len(tokens),
+                    'debug': {
+                        'tokens_count': len(tokens),
+                        'failed_count': 0,
+                        'user_id': user_id,
+                        'device_id': device_id,
+                        'devices_found': len(all_devices),
+                        'all_devices_info': [{'id': d.get('device_id'), 'has_token': bool(d.get('device_token')), 'token_preview': d.get('device_token', '')[:20] if d.get('device_token') else None} for d in all_devices],
+                        'tokens_list_preview': [t[:20] for t in tokens]
+                    }
                 }
         
         except Exception as e:
