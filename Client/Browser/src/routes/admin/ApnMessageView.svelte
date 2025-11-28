@@ -28,7 +28,7 @@
 			const response = await SuperFetch('/Admin/SendApnMessage', {
 				method: 'POST',
 				body: {
-					user_id: $userDetailState.user.UserId,
+					user_id: $userDetailState.currentUser.UserId,
 					title: messageTitle,
 					body: messageBody,
 					badge: badge,
@@ -65,7 +65,10 @@
 	}
 
 	function goBack() {
-		viewState.set('user-detail');
+		viewState.update(state => ({
+			...state,
+			currentView: 'user'
+		}));
 	}
 </script>
 
@@ -74,8 +77,8 @@
 		<button class="back-btn" on:click={goBack}>← Back</button>
 		<h2>Send APN Message</h2>
 		<div class="user-info">
-			<strong>{$userDetailState.user.FirstName} {$userDetailState.user.LastName}</strong>
-			<span class="email">{$userDetailState.user.Email}</span>
+			<strong>{$userDetailState.currentUser.FirstName} {$userDetailState.currentUser.LastName}</strong>
+			<span class="email">{$userDetailState.currentUser.Email}</span>
 		</div>
 	</div>
 
@@ -102,7 +105,7 @@
 				rows="5"
 				disabled={isSending}
 				maxlength="500"
-			/>
+			></textarea>
 			<span class="char-count">{messageBody.length}/500</span>
 		</div>
 

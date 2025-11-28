@@ -17,7 +17,14 @@ class DeviceTokenManager: ObservableObject {
     @Published var isNotificationPermissionGranted = false
     @Published var registrationComplete = false // Track if APNs registration completed (success or failure)
     
+    private let tokenKey = "SavedDeviceToken"
+    
     private init() {
+        // Load saved token from UserDefaults
+        if let savedToken = UserDefaults.standard.string(forKey: tokenKey) {
+            self.deviceToken = savedToken
+            print("🔵 [DeviceTokenManager] Loaded saved token from UserDefaults: \(savedToken)")
+        }
         requestNotificationPermission()
     }
     
@@ -69,9 +76,12 @@ class DeviceTokenManager: ObservableObject {
         DispatchQueue.main.async {
             self.deviceToken = deviceToken
             self.registrationComplete = true
-            print("✓ [DeviceTokenManager] Device token stored locally: \(deviceToken)")
             
-            // Update the backend with the device token
+            // Save token to UserDefaults for persistence
+            UserDefaults.standard.set(deviceToken, forKey: self.tokenKey)
+            print("✓ [DeviceTokenManager] Device token saved to UserDefaults: \(deviceToken)")
+            
+            // Try to send to backend if user is logged in
             print("🔵 [DeviceTokenManager] Calling updateBackendWithDeviceToken...")
             self.updateBackendWithDeviceToken(deviceToken)
         }
@@ -93,11 +103,12 @@ class DeviceTokenManager: ObservableObject {
         
         guard let userIdToUse = userIdToUse else {
             print("⚠ [DeviceTokenManager] Cannot update device token: User ID not available")
-            print("⚠ [DeviceTokenManager] SessionManager.shared.userId is nil and no userId provided")
+            print("⚠ [DeviceTokenManager] Token is saved in UserDefaults and will be sent when user logs in")
             return
         }
         
         print("✓ [DeviceTokenManager] User ID found: \(userIdToUse)")
+        print("🔵 [DeviceTokenManager] Sending device token to backend...")
         
         let device = UIDevice.current
         let appVersion = Bundle.main.appVersion ?? "unknown"
