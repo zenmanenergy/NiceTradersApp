@@ -51,6 +51,7 @@ class APNService:
         Returns:
             dict with success status and message
         """
+        print(f"DEBUG: HAS_APNS = {HAS_APNS}")
         if not HAS_APNS:
             return {
                 'success': False,
