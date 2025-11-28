@@ -188,6 +188,26 @@ def pay_negotiation_fee(negotiation_id, session_id):
                 AND status IN ('proposed', 'countered', 'agreed', 'paid_partial')
             """, (negotiation['listing_id'], negotiation_id))
             
+            # Create contact_access entries for both buyer and seller
+            buyer_access_id = f"CAC-{str(uuid.uuid4())[:-1]}"
+            seller_access_id = f"CAC-{str(uuid.uuid4())[:-1]}"
+            
+            # Buyer gets access to listing
+            cursor.execute("""
+                INSERT INTO contact_access (
+                    access_id, user_id, listing_id, purchased_at, 
+                    status, amount_paid, currency
+                ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
+            """, (buyer_access_id, negotiation['buyer_id'], negotiation['listing_id'], amount_to_charge))
+            
+            # Seller gets access to listing  
+            cursor.execute("""
+                INSERT INTO contact_access (
+                    access_id, user_id, listing_id, purchased_at,
+                    status, amount_paid, currency
+                ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
+            """, (seller_access_id, negotiation['seller_id'], negotiation['listing_id'], amount_to_charge))
+            
             new_status = 'paid_complete'
             message = 'Payment successful! Both parties have paid. Messaging and location coordination now unlocked.'
         else:

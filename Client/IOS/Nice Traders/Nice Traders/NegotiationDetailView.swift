@@ -146,9 +146,16 @@ struct NegotiationDetailView: View {
                     Text("\(String(format: "%.2f", negotiation.listing.amount)) \(negotiation.listing.currency)")
                         .font(.title3)
                         .fontWeight(.semibold)
-                    Text("→ \(negotiation.listing.acceptCurrency)")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    
+                    if let usdValue = calculateUSDValue(amount: negotiation.listing.amount, currency: negotiation.listing.currency) {
+                        Text("→ \(negotiation.listing.acceptCurrency) (≈ $\(String(format: "%.2f", usdValue)) USD)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("→ \(negotiation.listing.acceptCurrency)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 Spacer()
             }
@@ -156,6 +163,21 @@ struct NegotiationDetailView: View {
         .padding()
         .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(12)
+        .onAppear {
+            // Convert to USD for display
+            if negotiation.listing.currency != "USD" {
+                ExchangeRatesAPI.shared.convertAmount(negotiation.listing.amount, from: negotiation.listing.currency, to: "USD") { _, _ in
+                    // Trigger view update
+                }
+            }
+        }
+    }
+    
+    private func calculateUSDValue(amount: Double, currency: String) -> Double? {
+        if currency == "USD" {
+            return amount
+        }
+        return ExchangeRatesAPI.shared.calculateReceiveAmount(from: currency, to: "USD", amount: amount)
     }
     
     private func otherUserInfo(_ negotiation: NegotiationDetail) -> some View {

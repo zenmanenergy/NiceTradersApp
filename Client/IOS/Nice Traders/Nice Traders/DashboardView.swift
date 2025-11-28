@@ -314,9 +314,9 @@ struct DashboardView: View {
             print("[Dashboard] Negotiations response: \(negotiations.count) negotiations")
             let pending = negotiations.filter { neg in
                 guard let userRole = neg["userRole"] as? String else { return false }
-                // Show negotiations where status is proposed/countered (for both buyers and sellers)
+                // Show negotiations where status is proposed/countered/agreed/paid_partial (not complete or rejected)
                 let status = neg["status"] as? String ?? ""
-                return status == "proposed" || status == "countered"
+                return status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
             }.compactMap { neg -> PendingNegotiation? in
                 guard let negId = neg["negotiationId"] as? String,
                       let listing = neg["listing"] as? [String: Any],

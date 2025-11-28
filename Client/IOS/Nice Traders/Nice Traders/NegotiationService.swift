@@ -270,13 +270,36 @@ class NegotiationService {
             }
             
             do {
-                let result = try JSONDecoder().decode(PaymentResponse.self, from: data)
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .useDefaultKeys
+                let result = try decoder.decode(PaymentResponse.self, from: data)
+                print("[PaymentService] Successfully decoded: success=\(result.success), status=\(result.status ?? "nil"), bothPaid=\(result.bothPaid ?? false)")
                 completion(.success(result))
-            } catch {
-                print("[PaymentService] Decode error: \(error)")
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("[PaymentService] Failed to decode: \(jsonString)")
+            } catch let decodingError as DecodingError {
+                print("[PaymentService] Decoding error: \(decodingError)")
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    print("  Missing key: \(key.stringValue)")
+                    print("  Context: \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("  Type mismatch for type: \(type)")
+                    print("  Context: \(context.debugDescription)")
+                    print("  Coding path: \(context.codingPath.map { $0.stringValue })")
+                case .valueNotFound(let type, let context):
+                    print("  Value not found for type: \(type)")
+                    print("  Context: \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    print("  Data corrupted")
+                    print("  Context: \(context.debugDescription)")
+                @unknown default:
+                    print("  Unknown decoding error")
                 }
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("[PaymentService] Failed JSON: \(jsonString)")
+                }
+                completion(.failure(decodingError))
+            } catch {
+                print("[PaymentService] General error: \(error)")
                 completion(.failure(error))
             }
         }.resume()

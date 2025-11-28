@@ -9,27 +9,42 @@ import Foundation
 
 struct DateFormatters {
     
-    /// Format a date/time in compact format: "Nov 27 @ 3:30 PM"
+    /// Format a date/time in compact format: "Nov 27 @ 3:30PM"
     static func formatCompact(_ dateString: String) -> String {
-        // Try ISO8601 first
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        
         var date: Date?
         
+        // Try ISO8601 with timezone and fractional seconds
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let isoDate = isoFormatter.date(from: dateString) {
             date = isoDate
-        } else {
-            // Try without fractional seconds
+        }
+        
+        // Try ISO8601 with timezone, no fractional seconds
+        if date == nil {
             isoFormatter.formatOptions = [.withInternetDateTime]
             if let isoDate = isoFormatter.date(from: dateString) {
                 date = isoDate
-            } else {
-                // Try other common formats
-                let fallbackFormatter = DateFormatter()
-                fallbackFormatter.dateFormat = "yyyy-MM-dd"
+            }
+        }
+        
+        // Try common formats without timezone
+        if date == nil {
+            let fallbackFormatter = DateFormatter()
+            fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+            
+            let formats = [
+                "yyyy-MM-dd'T'HH:mm:ss",      // 2025-11-28T20:13:25
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",  // with milliseconds
+                "yyyy-MM-dd HH:mm:ss",         // space instead of T
+                "yyyy-MM-dd"                   // date only
+            ]
+            
+            for format in formats {
+                fallbackFormatter.dateFormat = format
                 if let fallbackDate = fallbackFormatter.date(from: dateString) {
                     date = fallbackDate
+                    break
                 }
             }
         }

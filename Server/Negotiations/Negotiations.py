@@ -130,22 +130,35 @@ def CounterProposal():
 def PayNegotiationFee():
     """Pay $2 negotiation fee (applies credits automatically)"""
     try:
-        from flask import request
+        from flask import request, Response
+        import json
         negotiation_id = request.args.get('negotiationId')
         session_id = request.args.get('sessionId')
         
         if not all([negotiation_id, session_id]):
-            import json
-            return json.dumps({
-                'success': False,
-                'error': 'negotiationId and sessionId are required'
-            })
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'negotiationId and sessionId are required'
+                }),
+                mimetype='application/json'
+            )
         
         result = pay_negotiation_fee(negotiation_id, session_id)
-        return result
+        return Response(result, mimetype='application/json')
         
     except Exception as e:
-        return Debugger(e)
+        import json
+        print(f"[Negotiations/Pay] Exception: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            json.dumps({
+                'success': False,
+                'error': f'Payment processing failed: {str(e)}'
+            }),
+            mimetype='application/json'
+        )
 
 @negotiations_bp.route('/Negotiations/GetMyNegotiations', methods=['GET'])
 @cross_origin()
