@@ -6,18 +6,16 @@ Dump current database structure for comparison
 import pymysql
 import pymysql.cursors
 
-# Database connection details
-DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'nicetraders',
-    'cursorclass': pymysql.cursors.DictCursor
-}
-
 def dump_database_structure():
     """Dump all tables and their columns"""
-    db = pymysql.connect(**DB_CONFIG)
+    # Use same credentials as Database.py
+    db = pymysql.connect(
+        host='localhost',
+        user='stevenelson',
+        password='mwitcitw711',
+        database='nicetraders',
+        cursorclass=pymysql.cursors.DictCursor
+    )
     cursor = db.cursor()
     
     # Get all tables
@@ -26,7 +24,7 @@ def dump_database_structure():
     
     print("="*70)
     print(f"DATABASE STRUCTURE DUMP")
-    print(f"Database: {DB_CONFIG['database']}")
+    print(f"Database: nicetraders")
     print(f"Total tables: {len(tables)}")
     print("="*70)
     
@@ -51,4 +49,9 @@ def dump_database_structure():
     db.close()
 
 if __name__ == "__main__":
-    dump_database_structure()
+    try:
+        dump_database_structure()
+    except Exception as e:
+        print(f"Error: {e}")
+        import sys
+        sys.exit(1)
