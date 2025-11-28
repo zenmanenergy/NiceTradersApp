@@ -81,23 +81,38 @@ class APNService:
             # If specific device_id provided, get only that device
             if device_id:
                 cursor.execute(
-                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios' AND device_token IS NOT NULL",
+                    "SELECT device_token, device_id, device_name FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios'",
                     (user_id, device_id)
                 )
             else:
-                # Otherwise get all iOS devices with tokens (regardless of is_active status)
+                # Otherwise get all iOS devices
                 cursor.execute(
-                    "SELECT device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios' AND device_token IS NOT NULL",
+                    "SELECT device_token, device_id, device_name FROM user_devices WHERE UserId = %s AND device_type = 'ios'",
                     (user_id,)
                 )
-            tokens = [row['device_token'] for row in cursor.fetchall()]
+            
+            all_devices = cursor.fetchall()
+            
+            # Filter for devices with tokens
+            tokens = [row['device_token'] for row in all_devices if row.get('device_token')]
             
             if not tokens:
                 cursor.close()
                 connection.close()
+                device_info = []
+                for device in all_devices:
+                    device_info.append({
+                        'device_id': device.get('device_id'),
+                        'device_name': device.get('device_name', 'Unknown'),
+                        'has_token': 'YES' if device.get('device_token') else 'NO',
+                        'token_preview': device.get('device_token', '')[:20] if device.get('device_token') else None
+                    })
                 return {
                     'success': False,
-                    'error': f'No active iOS device tokens found for user {user_id}. User may need to log in on a physical device.'
+                    'error': f'No iOS device tokens found for user {user_id}',
+                    'devices_found': len(all_devices),
+                    'devices_with_tokens': len(tokens),
+                    'device_details': device_info
                 }
             
             # Create APNs client
