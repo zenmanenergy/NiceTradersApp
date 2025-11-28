@@ -26,20 +26,17 @@
 
 		try {
 			const response = await SuperFetch('/Admin/SendApnMessage', {
-				method: 'POST',
-				body: {
-					user_id: $userDetailState.currentUser.UserId,
-					title: messageTitle,
-					body: messageBody,
-					badge: badge,
-					sound: sound
-				}
-			});
+				user_id: $userDetailState.currentUser.UserId,
+				title: messageTitle,
+				body: messageBody,
+				badge: badge,
+				sound: sound
+			}, 'POST');
 
-			if (response.ok) {
+			if (response && response.success) {
 				sendResult = {
 					success: true,
-					message: response.data.message || 'Message sent successfully'
+					message: response.message || 'Message sent successfully'
 				};
 				messageTitle = '';
 				messageBody = '';
@@ -47,7 +44,7 @@
 			} else {
 				sendResult = {
 					success: false,
-					message: response.data.error || 'Failed to send message'
+					message: response?.error || 'Failed to send message'
 				};
 			}
 		} catch (error) {
