@@ -6,4 +6,4 @@ urlquote
 requests==2.31.0
 schedule==1.2.0
 colorama
-apns2==0.7.2
+aioapns

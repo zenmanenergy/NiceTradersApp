@@ -2,18 +2,16 @@
 Apple Push Notification (APN) service for sending push notifications to iOS devices
 """
 import json
+import asyncio
 from datetime import datetime
 
 try:
-    from apns2.client import APNsClient
-    from apns2.errors import APNsException
-    from apns2.payload import Payload
+    from aioapns import APNs, NotificationRequest, PushType
     HAS_APNS = True
-    print("✓ apns2 imported successfully!")
+    print("✓ aioapns imported successfully!")
 except Exception as e:
     HAS_APNS = False
-    print(f"✗ Failed to import apns2: {e}")
-    APNsException = Exception  # Fallback to avoid undefined reference
+    print(f"✗ Failed to import aioapns: {e}")
 
 from _Lib.Database import ConnectToDatabase
 
@@ -21,19 +19,20 @@ from _Lib.Database import ConnectToDatabase
 class APNService:
     """Service for sending APN messages to users"""
     
-    def __init__(self, certificate_path=None):
+    def __init__(self, certificate_path=None, key_id=None, team_id=None, topic=None):
         """
         Initialize APN service
         Args:
-            certificate_path: Path to Apple's APNS certificate file (.p8)
+            certificate_path: Path to Apple's APNS .p8 key file
+            key_id: Your 10-character Key ID from Apple
+            team_id: Your 10-character Team ID from Apple
+            topic: Your app's bundle ID (e.g., NiceTraders.Nice-Traders)
         """
         self.certificate_path = certificate_path
-        self.client = None
-        if HAS_APNS and certificate_path:
-            try:
-                self.client = APNsClient(certificate=certificate_path)
-            except Exception as e:
-                print(f"Failed to initialize APNs client: {e}")
+        self.key_id = key_id
+        self.team_id = team_id
+        self.topic = topic or "NiceTraders.Nice-Traders"
+        self.use_sandbox = True  # Set to False for production
     
     def send_notification(self, user_id, title, body, badge=1, sound='default', 
                          session_id=None, deep_link_type=None, deep_link_id=None):
@@ -56,15 +55,24 @@ class APNService:
         if not HAS_APNS:
             return {
                 'success': False,
-                'error': 'apns2 library not installed. Install with: pip install apns2'
+                'error': 'aioapns library not installed. Install with: pip install aioapns'
             }
         
-        if not self.client:
+        if not self.certificate_path or not self.key_id or not self.team_id:
             return {
                 'success': False,
-                'error': 'APN certificate not configured. Set APNS_CERTIFICATE_PATH environment variable.'
+                'error': 'APN credentials not configured. Need certificate_path, key_id, and team_id.'
             }
         
+        # Run async send in sync context
+        return asyncio.run(self._async_send_notification(
+            user_id, title, body, badge, sound, 
+            session_id, deep_link_type, deep_link_id
+        ))
+    
+    async def _async_send_notification(self, user_id, title, body, badge, sound,
+                                       session_id, deep_link_type, deep_link_id):
+        """Async implementation of send_notification"""
         try:
             # Get user's device tokens from database
             cursor, connection = ConnectToDatabase()
@@ -82,33 +90,55 @@ class APNService:
                     'error': f'No active iOS device tokens found for user {user_id}. User may need to log in on a physical device.'
                 }
             
-            # Create payload
-            payload = Payload(
-                alert={
-                    'title': title,
-                    'body': body
-                },
-                badge=badge,
-                sound=sound,
-                custom={
-                    'timestamp': datetime.now().isoformat()
-                }
+            # Create APNs client
+            apns = APNs(
+                key=self.certificate_path,
+                key_id=self.key_id,
+                team_id=self.team_id,
+                topic=self.topic,
+                use_sandbox=self.use_sandbox
             )
             
-            # Add deep linking data if provided
+            # Build alert payload
+            alert = {
+                'title': title,
+                'body': body
+            }
+            
+            # Build custom data
+            custom_data = {
+                'timestamp': datetime.now().isoformat()
+            }
             if session_id:
-                payload.custom['sessionId'] = session_id
+                custom_data['sessionId'] = session_id
             if deep_link_type and deep_link_id:
-                payload.custom['deepLinkType'] = deep_link_type
-                payload.custom['deepLinkId'] = deep_link_id
+                custom_data['deepLinkType'] = deep_link_type
+                custom_data['deepLinkId'] = deep_link_id
             
             # Send to all device tokens
             failed_tokens = []
             for token in tokens:
                 try:
-                    self.client.send_notification(token, payload)
-                except APNsException as e:
+                    request = NotificationRequest(
+                        device_token=token,
+                        message={
+                            'aps': {
+                                'alert': alert,
+                                'badge': badge,
+                                'sound': sound
+                            },
+                            **custom_data
+                        },
+                        push_type=PushType.ALERT
+                    )
+                    response = await apns.send_notification(request)
+                    if not response.is_successful:
+                        failed_tokens.append({'token': token, 'error': response.description})
+                except Exception as e:
                     failed_tokens.append({'token': token, 'error': str(e)})
+            
+            # Close APNs connection
+            await apns.close()
             
             # Log the notification
             notification_log = {
