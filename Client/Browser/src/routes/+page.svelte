@@ -5,6 +5,7 @@
 	import ListingView from './admin/ListingView.svelte';
 	import TransactionView from './admin/TransactionView.svelte';
 	import ApnMessageView from './admin/ApnMessageView.svelte';
+	import LogsView from './admin/LogsView.svelte';
 	import SuperFetch from '../SuperFetch.js';
 	import { viewState, userDetailState, listingDetailState, transactionDetailState } from '../lib/adminStore.js';
 	
@@ -121,6 +122,8 @@
 		<TransactionView {viewUser} {viewListing} />
 	{:else if $viewState.currentView === 'apn-message'}
 		<ApnMessageView />
+	{:else if $viewState.currentView === 'logs'}
+		<LogsView />
 	{/if}
 </AdminLayout>
 

@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from _Lib.Database import ConnectToDatabase
 from APNService.APNService import APNService
+import os
+from datetime import datetime
 
 blueprint = Blueprint('admin', __name__)
 
@@ -446,3 +448,112 @@ def send_apn_message():
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@blueprint.route('/Admin/GetLogs', methods=['GET', 'POST'])
+@cross_origin()
+def get_logs():
+    """Get server logs for debugging"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        log_type = params.get('type', 'flask')  # 'flask' or 'error'
+        lines = int(params.get('lines', 100))  # Default to last 100 lines
+        search = params.get('search', '')  # Optional search filter
+        
+        # Security: Limit to reasonable number of lines
+        lines = min(lines, 1000)
+        
+        # Determine log file path
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        if log_type == 'error':
+            log_file = os.path.join(log_dir, 'error.log')
+        else:
+            log_file = os.path.join(log_dir, 'flask_app.log')
+        
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify({
+                'success': False,
+                'error': f'Log file not found: {log_file}'
+            })
+        
+        # Read the log file
+        try:
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                all_lines = f.readlines()
+            
+            # Get last N lines
+            recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+            
+            # Apply search filter if provided
+            if search:
+                recent_lines = [line for line in recent_lines if search.lower() in line.lower()]
+            
+            # Get file metadata
+            file_stats = os.stat(log_file)
+            file_size = file_stats.st_size
+            last_modified = datetime.fromtimestamp(file_stats.st_mtime).isoformat()
+            
+            return jsonify({
+                'success': True,
+                'log_type': log_type,
+                'log_file': log_file,
+                'total_lines': len(all_lines),
+                'returned_lines': len(recent_lines),
+                'file_size_bytes': file_size,
+                'last_modified': last_modified,
+                'logs': ''.join(recent_lines)
+            })
+        
+        except Exception as read_error:
+            return jsonify({
+                'success': False,
+                'error': f'Error reading log file: {str(read_error)}'
+            })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@blueprint.route('/Admin/ClearLogs', methods=['POST'])
+@cross_origin()
+def clear_logs():
+    """Clear server logs (use with caution)"""
+    try:
+        params = request.get_json()
+        log_type = params.get('type', 'flask')  # 'flask' or 'error'
+        
+        # Determine log file path
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        if log_type == 'error':
+            log_file = os.path.join(log_dir, 'error.log')
+        else:
+            log_file = os.path.join(log_dir, 'flask_app.log')
+        
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify({
+                'success': False,
+                'error': f'Log file not found: {log_file}'
+            })
+        
+        # Clear the log file
+        try:
+            with open(log_file, 'w') as f:
+                f.write('')
+            
+            return jsonify({
+                'success': True,
+                'message': f'{log_type} log cleared successfully',
+                'log_file': log_file
+            })
+        
+        except Exception as clear_error:
+            return jsonify({
+                'success': False,
+                'error': f'Error clearing log file: {str(clear_error)}'
+            })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+

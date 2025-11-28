@@ -8,6 +8,13 @@
 		};
 	}
 	
+	function goToLogs() {
+		$viewState = {
+			currentView: 'logs',
+			breadcrumbs: []
+		};
+	}
+	
 	function goBack() {
 		if ($viewState.breadcrumbs.length > 0) {
 			$viewState.breadcrumbs.pop();
@@ -27,8 +34,13 @@
 
 <main class="admin-container">
 	<div class="admin-header">
-		<h1>🔧 Admin Dashboard</h1>
-		<p>Nice Traders Admin</p>
+		<div class="header-content">
+			<div>
+				<h1>🔧 Admin Dashboard</h1>
+				<p>Nice Traders Admin</p>
+			</div>
+			<button class="logs-btn" on:click={goToLogs}>📋 View Logs</button>
+		</div>
 	</div>
 	
 	{#if $viewState.breadcrumbs && $viewState.breadcrumbs.length > 0}
@@ -68,6 +80,13 @@
 		box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 	}
 
+	.header-content {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 20px;
+	}
+
 	.admin-header h1 {
 		margin: 0 0 10px 0;
 		font-size: 2rem;
@@ -76,6 +95,25 @@
 	.admin-header p {
 		margin: 0;
 		opacity: 0.9;
+	}
+
+	.logs-btn {
+		padding: 10px 20px;
+		border: 2px solid white;
+		background: rgba(255, 255, 255, 0.2);
+		color: white;
+		border-radius: 8px;
+		cursor: pointer;
+		font-weight: 600;
+		font-size: 0.95rem;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+	.logs-btn:hover {
+		background: white;
+		color: #667eea;
+		transform: translateY(-2px);
 	}
 
 	.breadcrumb-nav {
