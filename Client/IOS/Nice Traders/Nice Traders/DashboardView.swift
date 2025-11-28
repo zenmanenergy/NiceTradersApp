@@ -89,12 +89,30 @@ struct DashboardView: View {
         NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToMessages"), object: nil, queue: .main) { _ in
             navigateToMessages = true
         }
+        
+        // Handle deep links from push notifications
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToListing"), object: nil, queue: .main) { notification in
+            if let listingId = notification.userInfo?["listingId"] as? String {
+                print("✓ DashboardView: Navigating to listing \(listingId)")
+                navigateToSearch = true
+            }
+        }
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToNegotiations"), object: nil, queue: .main) { notification in
+            if let negotiationId = notification.userInfo?["negotiationId"] as? String {
+                print("✓ DashboardView: Navigating to negotiation \(negotiationId)")
+                // Set selected tab to My Negotiations (usually tab 3 or 4, depending on your structure)
+                selectedTab = 3  // Adjust based on your actual tab structure
+            }
+        }
     }
     
     func removeNavigationListeners() {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToSearch"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToCreateListing"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToMessages"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToListing"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToNegotiations"), object: nil)
     }
     
     func verifySessionAndLoadData() {

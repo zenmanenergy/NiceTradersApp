@@ -11,7 +11,7 @@ class NotificationService:
     def __init__(self):
         self.apn_service = APNService()
     
-    def send_payment_received_notification(self, seller_id, buyer_name, amount, currency, listing_id, session_id):
+    def send_payment_received_notification(self, seller_id, buyer_name, amount, currency, listing_id, session_id=None):
         """
         Send notification when a buyer has paid for contact access
         Args:
@@ -20,10 +20,14 @@ class NotificationService:
             amount: Amount paid
             currency: Currency of payment
             listing_id: ID of the listing
-            session_id: Last session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
         # Get seller's preferred language
         seller_lang = self.get_user_language(seller_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(seller_id)
         
         title = get_translation(seller_lang, 'payment_received')
         currency_str = format_currency(amount, currency)
@@ -43,7 +47,7 @@ class NotificationService:
         return result
     
     def send_meeting_proposal_notification(self, recipient_id, proposer_name, proposed_time, 
-                                          listing_id, proposal_id, session_id):
+                                          listing_id, proposal_id, session_id=None):
         """
         Send notification when a meeting is proposed
         Args:
@@ -52,10 +56,14 @@ class NotificationService:
             proposed_time: Time of the proposed meeting (formatted string)
             listing_id: ID of the listing
             proposal_id: ID of the proposal
-            session_id: Last session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
         # Get recipient's preferred language
         recipient_lang = self.get_user_language(recipient_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(recipient_id)
         
         title = get_translation(recipient_lang, 'meeting_proposed')
         body = f"{proposer_name} {get_translation(recipient_lang, 'meeting_proposed_text')} {proposed_time}"
@@ -74,7 +82,7 @@ class NotificationService:
         return result
     
     def send_message_received_notification(self, recipient_id, sender_name, message_preview, 
-                                          listing_id, message_id, session_id):
+                                          listing_id, message_id, session_id=None):
         """
         Send notification when a message is received
         Args:
@@ -83,10 +91,14 @@ class NotificationService:
             message_preview: First 50 chars of message
             listing_id: ID of the listing
             message_id: ID of the message
-            session_id: Last session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
         # Get recipient's preferred language
         recipient_lang = self.get_user_language(recipient_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(recipient_id)
         
         title = get_translation(recipient_lang, 'new_message')
         body = f"{sender_name} {get_translation(recipient_lang, 'message_from')}: {message_preview[:50]}"
@@ -112,8 +124,12 @@ class NotificationService:
             listing_id: ID of the listing
             status: New status (flagged, removed, expired, etc.)
             reason: Optional reason for the change
-            session_id: Last session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(seller_id)
+        
         status_messages = {
             'flagged': '🚩 Your listing has been flagged for review',
             'removed': '❌ Your listing has been removed',
@@ -145,8 +161,12 @@ class NotificationService:
             rater_name: Name of the user giving the rating
             rating: Rating value (1-5)
             listing_id: Related listing ID
-            session_id: Last session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
         stars = "⭐" * rating
         title = f"You got a rating! {stars}"
         body = f"{rater_name} gave you a {rating}-star rating"
@@ -219,7 +239,7 @@ class NotificationService:
             return None
     
     def send_negotiation_proposal_notification(self, seller_id, buyer_name, proposed_time, 
-                                               listing_id, negotiation_id, session_id):
+                                               listing_id, negotiation_id, session_id=None):
         """
         Send notification when a buyer proposes a negotiation
         Args:
@@ -228,10 +248,14 @@ class NotificationService:
             proposed_time: Proposed meeting time (ISO format)
             listing_id: ID of the listing
             negotiation_id: ID of the negotiation
-            session_id: Session ID for auto-login
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
         # Get seller's preferred language
         seller_lang = self.get_user_language(seller_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(seller_id)
         
         # Format the time nicely
         try:

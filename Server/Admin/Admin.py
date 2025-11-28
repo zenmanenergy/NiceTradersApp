@@ -495,13 +495,29 @@ def send_apn_message():
             }), 400
         
         # Send the notification
+        # Get the user's latest session ID for auto-login
+        try:
+            cursor, connection = ConnectToDatabase()
+            cursor.execute(
+                "SELECT SessionId FROM usersessions WHERE UserId = %s ORDER BY DateAdded DESC LIMIT 1",
+                (user_id,)
+            )
+            session_result = cursor.fetchone()
+            session_id = session_result['SessionId'] if session_result else None
+            cursor.close()
+            connection.close()
+        except Exception as sess_err:
+            session_id = None
+            print(f"Error fetching session ID: {sess_err}")
+        
         result = apn_service.send_notification(
             user_id=user_id,
             title=title,
             body=body,
             badge=badge,
             sound=sound,
-            device_id=device_id
+            device_id=device_id,
+            session_id=session_id  # Auto-include session ID for auto-login
         )
         
         # Build comprehensive debug response
@@ -546,6 +562,7 @@ def send_apn_message():
                     'device_id_in_response': result.get('device_id'),
                     'query_type': result.get('query_type'),
                     'requested_device_id': result.get('requested_device_id'),
+                    'session_id_sent': session_id,
                     'full_debug': result.get('debug', {})
                 }
             }

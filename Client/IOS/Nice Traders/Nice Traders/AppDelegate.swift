@@ -59,6 +59,39 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             print("  Body: \(alert["body"] ?? "")")
         }
         
+        // Handle notification tap with deep linking and session ID
+        handleNotificationTap(userInfo: userInfo)
+        
         completionHandler(.newData)
+    }
+    
+    // Handle notification tap with auto-login and deep linking
+    private func handleNotificationTap(userInfo: [AnyHashable: Any]) {
+        // Extract session ID for auto-login
+        if let sessionId = userInfo["sessionId"] as? String {
+            print("✓ AppDelegate: Session ID found in notification: \(sessionId)")
+            DispatchQueue.main.async {
+                SessionManager.shared.sessionId = sessionId
+            }
+        }
+        
+        // Extract deep link information
+        if let deepLinkType = userInfo["deepLinkType"] as? String,
+           let deepLinkId = userInfo["deepLinkId"] as? String {
+            print("✓ AppDelegate: Deep link detected - Type: \(deepLinkType), ID: \(deepLinkId)")
+            
+            // Post notification to trigger navigation in the app
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("DeepLinkNotification"),
+                    object: nil,
+                    userInfo: [
+                        "deepLinkType": deepLinkType,
+                        "deepLinkId": deepLinkId,
+                        "sessionId": userInfo["sessionId"] as? String ?? ""
+                    ]
+                )
+            }
+        }
     }
 }

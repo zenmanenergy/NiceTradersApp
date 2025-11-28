@@ -17,6 +17,7 @@ struct ContentView: View {
     @State private var isCheckingPermissions = false
     @State private var showingSplash = true
     @State private var navigationId = UUID()
+    @State private var deepLinkPath: String? = nil
     
     @ObservedObject var localizationManager = LocalizationManager.shared
     @ObservedObject var locationManager = UserLocationManager.shared
@@ -222,7 +223,68 @@ struct ContentView: View {
             // Force NavigationStack to reset and return to landing page
             navigationId = UUID()
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeepLinkNotification"))) { notification in
+            // Handle deep link from notification tap
+            if let userInfo = notification.userInfo,
+               let deepLinkType = userInfo["deepLinkType"] as? String,
+               let deepLinkId = userInfo["deepLinkId"] as? String {
+                print("✓ ContentView: Deep link notification received - Type: \(deepLinkType), ID: \(deepLinkId)")
+                
+                // If session ID was provided, it's already set by AppDelegate
+                // Navigate based on deep link type
+                DispatchQueue.main.async {
+                    navigateToDeepLink(type: deepLinkType, id: deepLinkId)
+                }
+            }
+        }
         .edgesIgnoringSafeArea(.all)
+    }
+    
+    func navigateToDeepLink(type: String, id: String) {
+        // Ensure user is logged in
+        if !SessionManager.shared.isLoggedIn {
+            // Session wasn't in the notification, can't auto-login
+            print("✗ ContentView: No session available for deep link")
+            return
+        }
+        
+        print("✓ ContentView: Navigating to \(type) with ID: \(id)")
+        
+        // Navigate based on type using DashboardView's existing notification pattern
+        // These notifications are listened to by DashboardView
+        switch type {
+        case "listing":
+            // Navigate to search and filter by listing ID
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToListing"),
+                object: nil,
+                userInfo: ["listingId": id]
+            )
+            navigateToDashboard = true
+            
+        case "message":
+            // Navigate to messages
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToMessages"),
+                object: nil,
+                userInfo: ["messageId": id]
+            )
+            navigateToDashboard = true
+            
+        case "meeting", "negotiation":
+            // Navigate to my negotiations view (meetings are part of negotiations)
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToNegotiations"),
+                object: nil,
+                userInfo: ["negotiationId": id]
+            )
+            navigateToDashboard = true
+            
+        default:
+            print("✗ ContentView: Unknown deep link type: \(type)")
+            navigateToDashboard = true
+        }
+    }
     }
     
     func checkPermissionsAndSession() {
