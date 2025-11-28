@@ -10,6 +10,7 @@
 	let metadata = null;
 	let autoRefresh = false;
 	let refreshInterval = null;
+	let debugInfo = null;
 	
 	async function loadLogs() {
 		loading = true;
@@ -22,6 +23,16 @@
 				search: search
 			});
 			
+			console.log('GetLogs response:', response);
+			
+			// Store debug info
+			debugInfo = {
+				success: response.success,
+				hasLogs: !!response.logs,
+				logsLength: response.logs ? response.logs.length : 0,
+				error: response.error
+			};
+			
 			if (response.success) {
 				logs = response.logs;
 				metadata = {
@@ -33,9 +44,12 @@
 				};
 			} else {
 				error = response.error || 'Failed to load logs';
+				logs = '';
 			}
 		} catch (err) {
-			error = err.message;
+			console.error('Error loading logs:', err);
+			error = err.message || 'Network error loading logs';
+			logs = '';
 		} finally {
 			loading = false;
 		}
@@ -167,6 +181,18 @@
 		</div>
 	{/if}
 	
+	{#if debugInfo}
+		<div class="debug-panel">
+			<strong>Debug:</strong>
+			Success: {debugInfo.success ? '✓' : '✗'} |
+			Has Logs: {debugInfo.hasLogs ? 'Yes' : 'No'} |
+			Length: {debugInfo.logsLength} chars
+			{#if debugInfo.error}
+				| Error: {debugInfo.error}
+			{/if}
+		</div>
+	{/if}
+	
 	{#if error}
 		<div class="error-message">
 			❌ {error}
@@ -174,10 +200,20 @@
 	{/if}
 	
 	<div class="logs-container">
-		{#if logs}
+		{#if loading && !logs}
+			<div class="loading-state">
+				⏳ Loading logs...
+			</div>
+		{:else if logs}
 			<pre class="logs-content">{logs}</pre>
 		{:else}
-			<div class="empty-state">No logs available</div>
+			<div class="empty-state">
+				{#if error}
+					Check error message above
+				{:else}
+					No logs available or log file is empty
+				{/if}
+			</div>
 		{/if}
 	</div>
 </div>
@@ -314,6 +350,17 @@
 		color: #333;
 	}
 
+	.debug-panel {
+		padding: 10px 16px;
+		background: #fff3cd;
+		border: 1px solid #ffc107;
+		border-radius: 6px;
+		margin-bottom: 16px;
+		font-size: 0.85rem;
+		color: #856404;
+		font-family: monospace;
+	}
+
 	.error-message {
 		padding: 12px 16px;
 		background: #fed7d7;
@@ -349,6 +396,13 @@
 		text-align: center;
 		color: #999;
 		font-style: italic;
+	}
+
+	.loading-state {
+		padding: 60px 20px;
+		text-align: center;
+		color: #667eea;
+		font-size: 1.1rem;
 	}
 
 	@media (max-width: 768px) {
