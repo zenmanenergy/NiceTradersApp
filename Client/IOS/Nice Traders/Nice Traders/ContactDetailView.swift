@@ -28,6 +28,20 @@ struct ContactDetailView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     
+    // Real-time polling states
+    @State private var pollingTimer: Timer?
+    @State private var lastMessageCount: Int = 0
+    @State private var isPolling: Bool = false
+    @State private var lastPollTime: Date?
+    @State private var messageDeliveryStatus: [String: MessageDeliveryStatus] = [:] // Track delivery status by message ID
+    
+    enum MessageDeliveryStatus {
+        case sending
+        case sent
+        case delivered
+        case failed
+    }
+    
     enum ContactTab: String, CaseIterable {
         case details = "Details"
         case location = "Location"
@@ -45,20 +59,15 @@ struct ContactDetailView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Header
-                ZStack {
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    
-                    VStack(alignment: .trailing, spacing: 8) {
+                if activeTab == .messages {
+                    // CHAT TAB - Minimal header with back button
+                    VStack(spacing: 0) {
                         HStack {
                             Button(action: { dismiss() }) {
-                                
-                                HStack(spacing: 4) {
+                                HStack(spacing: 6) {
                                     Image(systemName: "chevron.left")
+                                    Text(contactData.otherUser.firstName)
+                                        .fontWeight(.semibold)
                                 }
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 12)
@@ -67,89 +76,127 @@ struct ContactDetailView: View {
                                 .cornerRadius(8)
                             }
                             Spacer()
-                        }
-                        
-                        Spacer()
-                        
-                        HStack {
-                            Spacer()
-                            VStack(alignment: .trailing) {
-                                HStack(spacing: 8) {
-                                    Text(contactData.listing.currency)
-                                    Text("→")
-                                    Text(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")
-                                }
-                                .font(.title)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                
-                                Text("$\(String(format: "%.2f", contactData.listing.amount))")
-                                    .font(.title2)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(Color(hex: "FFD700"))
-                            }
-                        }
-                    }
-                    .padding()
-                    .padding(.top, 40)
-                }
-                .frame(height: 160)
-            
-            // Tab Navigation
-            HStack(spacing: 12) {
-                ForEach(ContactTab.allCases, id: \.self) { tab in
-                    Button(action: { activeTab = tab }) {
-                        VStack(spacing: 8) {
-                            Text(tab.icon)
-                                .font(.title2)
-                            Text(tab == .messages ? "\(tab.rawValue) (\(messages.count))" : tab.rawValue)
+                            Text("\(contactData.listing.currency) → \(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")")
                                 .font(.caption)
-                                .fontWeight(.medium)
+                                .foregroundColor(.white.opacity(0.8))
                         }
-                        .frame(maxWidth: .infinity)
                         .padding()
                         .background(
-                            activeTab == tab ?
-                            LinearGradient(gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]), startPoint: .topLeading, endPoint: .bottomTrailing) :
-                            LinearGradient(gradient: Gradient(colors: [.white, .white]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                        .foregroundColor(activeTab == tab ? .white : Color(hex: "4a5568"))
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(activeTab == tab ? Color.clear : Color(hex: "e2e8f0"), lineWidth: 2)
-                        )
+                    }
+                    .padding(.top, 0)
+                    
+                    // Chat messages take full screen
+                    messagesView
+                } else {
+                    // OTHER TABS - Full layout with header and navigation
+                    VStack(spacing: 0) {
+                        // Header
+                        ZStack {
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            
+                            VStack(alignment: .trailing, spacing: 8) {
+                                HStack {
+                                    Button(action: { dismiss() }) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "chevron.left")
+                                        }
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color.white.opacity(0.2))
+                                        .cornerRadius(8)
+                                    }
+                                    Spacer()
+                                }
+                                
+                                Spacer()
+                                
+                                HStack {
+                                    Spacer()
+                                    VStack(alignment: .trailing, spacing: 4) {
+                                        HStack(spacing: 8) {
+                                            Text(contactData.listing.currency)
+                                            Text("→")
+                                            Text(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")
+                                        }
+                                        .font(.title)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.white)
+                                        
+                                        Text("$\(String(format: "%.2f", contactData.listing.amount))")
+                                            .font(.title2)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(Color(hex: "FFD700"))
+                                    }
+                                }
+                            }
+                            .padding()
+                            .padding(.top, 40)
+                        }
+                        .frame(height: 160)
+                    
+                        // Tab Navigation (only for non-chat tabs)
+                        HStack(spacing: 12) {
+                            ForEach(ContactTab.allCases, id: \.self) { tab in
+                                Button(action: { activeTab = tab }) {
+                                    VStack(spacing: 8) {
+                                        Text(tab.icon)
+                                            .font(.title2)
+                                        Text(tab == .messages ? "\(tab.rawValue) (\(messages.count))" : tab.rawValue)
+                                            .font(.caption)
+                                            .fontWeight(.medium)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(
+                                        activeTab == tab ?
+                                        LinearGradient(gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]), startPoint: .topLeading, endPoint: .bottomTrailing) :
+                                        LinearGradient(gradient: Gradient(colors: [.white, .white]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    )
+                                    .foregroundColor(activeTab == tab ? .white : Color(hex: "4a5568"))
+                                    .cornerRadius(12)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(activeTab == tab ? Color.clear : Color(hex: "e2e8f0"), lineWidth: 2)
+                                    )
+                                }
+                            }
+                        }
+                        .padding()
+                        
+                        // Content based on active tab
+                        ScrollView {
+                            switch activeTab {
+                            case .details:
+                                detailsView
+                            case .location:
+                                locationView
+                            case .messages:
+                                EmptyView()
+                            }
+                        }
+                        
+                        Spacer(minLength: 80)
                     }
                 }
             }
-            .padding()
             
-            // Content based on active tab
-            ScrollView {
-                switch activeTab {
-                case .details:
-                    detailsView
-                case .location:
-                    locationView
-                case .messages:
-                    EmptyView() // Messages handled separately
+            // Bottom Navigation (only show for non-chat tabs)
+            if activeTab != .messages {
+                VStack {
+                    Spacer()
+                    BottomNavigation(activeTab: "messages")
                 }
-            }
-            .frame(maxHeight: activeTab == .messages ? 0 : .infinity)
-            .opacity(activeTab == .messages ? 0 : 1)
-            
-                // Messages view (separate from ScrollView for fixed input)
-                if activeTab == .messages {
-                    messagesView
-                }
-                
-                Spacer(minLength: 80)
-            }
-            
-            // Bottom Navigation
-            VStack {
-                Spacer()
-                BottomNavigation(activeTab: "messages")
             }
         }
         .navigationBarHidden(true)
@@ -157,6 +204,17 @@ struct ContactDetailView: View {
         .onAppear {
             loadMessages()
             loadMeetingProposals()
+            startPollingIfNeeded()
+        }
+        .onChange(of: activeTab) { newTab in
+            if newTab == .messages {
+                startPollingIfNeeded()
+            } else {
+                stopPolling()
+            }
+        }
+        .onDisappear {
+            stopPolling()
         }
     }
     
@@ -550,55 +608,95 @@ struct ContactDetailView: View {
     
     private var messagesView: some View {
         VStack(spacing: 0) {
+            // Real-time indicator (minimal)
+            HStack(spacing: 8) {
+                if isPolling {
+                    Circle()
+                        .fill(Color(hex: "34d399"))
+                        .frame(width: 6, height: 6)
+                    
+                    Text("Live")
+                        .font(.caption2)
+                        .foregroundColor(Color(hex: "34d399"))
+                } else {
+                    Circle()
+                        .fill(Color.gray.opacity(0.4))
+                        .frame(width: 6, height: 6)
+                    
+                    Text("Offline")
+                        .font(.caption2)
+                        .foregroundColor(Color.gray.opacity(0.6))
+                }
+                
+                Spacer()
+                
+                if let lastPoll = lastPollTime {
+                    Text(formatRelativeTime(lastPoll))
+                        .font(.caption2)
+                        .foregroundColor(Color.gray.opacity(0.6))
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(hex: "f8fafc").opacity(0.8))
+            
+            // Messages ScrollView - auto scroll to bottom
             ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 12) {
+                ScrollView(.vertical, showsIndicators: true) {
+                    VStack(alignment: .leading, spacing: 12) {
                         ForEach(messages) { message in
                             messageRow(message)
                                 .id(message.id)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .onChange(of: messages.count) {
-                    if let lastMessage = messages.last {
-                        withAnimation {
+                .onChange(of: messages.count) { _ in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        if let lastMessage = messages.last {
                             proxy.scrollTo(lastMessage.id, anchor: .bottom)
                         }
                     }
                 }
                 .onAppear {
-                    if let lastMessage = messages.last {
-                        proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        if let lastMessage = messages.last {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                            }
+                        }
                     }
                 }
             }
             
             // Message Input
-            HStack(spacing: 8) {
-                TextField("Type your message...", text: $newMessage)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(hex: "f8fafc"))
-                    .cornerRadius(20)
-                    .onTapGesture { }
-                    .simultaneousGesture(TapGesture().onEnded { })
-                
-                Button(action: sendMessage) {
-                    Text(localizationManager.localize("SEND"))
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    TextField("Message...", text: $newMessage)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 12)
                         .padding(.vertical, 10)
-                        .background(newMessage.isEmpty ? Color(hex: "a0aec0") : Color(hex: "007AFF"))
+                        .background(Color(hex: "f8fafc"))
                         .cornerRadius(20)
+                        .lineLimit(4)
+                    
+                    Button(action: sendMessage) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(newMessage.isEmpty ? Color(hex: "a0aec0") : Color(hex: "007AFF"))
+                            .cornerRadius(20)
+                    }
+                    .disabled(newMessage.isEmpty)
                 }
-                .disabled(newMessage.isEmpty)
             }
-            .padding()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
             .background(Color.white)
-            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: -2)
+            .shadow(color: Color.black.opacity(0.05), radius: 3, x: 0, y: -1)
         }
     }
     
@@ -632,9 +730,40 @@ struct ContactDetailView: View {
                         .cornerRadius(18)
                         .cornerRadius(message.isFromUser ? 8 : 18, corners: message.isFromUser ? [.bottomRight] : [.bottomLeft])
                     
-                    Text(formatDateTime(message.sentAt))
-                        .font(.caption2)
-                        .foregroundColor(Color.black.opacity(0.5))
+                    HStack(spacing: 4) {
+                        Text(formatDateTime(message.sentAt))
+                            .font(.caption2)
+                            .foregroundColor(Color.black.opacity(0.5))
+                        
+                        if message.isFromUser {
+                            // Show delivery status for user's messages
+                            if let status = messageDeliveryStatus[message.id] {
+                                switch status {
+                                case .sending:
+                                    Image(systemName: "clock.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(Color.gray.opacity(0.6))
+                                case .sent:
+                                    Image(systemName: "checkmark")
+                                        .font(.caption2)
+                                        .foregroundColor(Color.gray.opacity(0.6))
+                                case .delivered:
+                                    HStack(spacing: 0) {
+                                        Image(systemName: "checkmark")
+                                            .font(.caption2)
+                                            .foregroundColor(Color.blue)
+                                        Image(systemName: "checkmark")
+                                            .font(.caption2)
+                                            .foregroundColor(Color.blue)
+                                    }
+                                case .failed:
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.caption2)
+                                        .foregroundColor(Color.red)
+                                }
+                            }
+                        }
+                    }
                 }
                 .frame(maxWidth: geometry.size.width * 0.75, alignment: message.isFromUser ? .trailing : .leading)
                 
@@ -656,7 +785,6 @@ struct ContactDetailView: View {
                 }
             }
         }
-        .frame(height: 60)
     }
     
     // MARK: - API Functions
@@ -710,6 +838,22 @@ struct ContactDetailView: View {
         let messageToSend = newMessage
         newMessage = ""
         
+        // Create a temporary message ID for tracking
+        let tempMessageId = UUID().uuidString
+        
+        // Immediately add message to UI and mark as sending
+        let tempMessage = ContactMessage(
+            id: tempMessageId,
+            messageText: messageToSend,
+            sentAt: ISO8601DateFormatter().string(from: Date()),
+            isFromUser: true
+        )
+        
+        DispatchQueue.main.async {
+            self.messages.append(tempMessage)
+            self.messageDeliveryStatus[tempMessageId] = .sending
+        }
+        
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/SendContactMessage")!
         components.queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
@@ -719,20 +863,34 @@ struct ContactDetailView: View {
         
         guard let url = components.url else {
             print("Error: Invalid URL")
+            DispatchQueue.main.async {
+                self.messageDeliveryStatus[tempMessageId] = .failed
+            }
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                print("Error sending message: \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-            
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let success = json["success"] as? Bool, success {
+            DispatchQueue.main.async {
+                if error != nil {
+                    // Mark as failed
+                    self.messageDeliveryStatus[tempMessageId] = .failed
+                    return
+                }
                 
-                DispatchQueue.main.async {
-                    loadMessages() // Reload to get complete conversation
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    
+                    // Mark as sent, then reload for actual server message
+                    self.messageDeliveryStatus[tempMessageId] = .sent
+                    
+                    // Reload messages to get the actual message with server timestamp
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        self.loadMessages()
+                    }
+                } else {
+                    // Mark as failed
+                    self.messageDeliveryStatus[tempMessageId] = .failed
                 }
             }
         }.resume()
@@ -908,6 +1066,57 @@ struct ContactDetailView: View {
     
     private func formatDateTime(_ dateString: String) -> String {
         return DateFormatters.formatCompact(dateString)
+    }
+    
+    private func formatRelativeTime(_ date: Date) -> String {
+        let elapsed = Date().timeIntervalSince(date)
+        
+        if elapsed < 60 {
+            return "now"
+        } else if elapsed < 3600 {
+            let minutes = Int(elapsed / 60)
+            return "\(minutes)m ago"
+        } else if elapsed < 86400 {
+            let hours = Int(elapsed / 3600)
+            return "\(hours)h ago"
+        } else {
+            let days = Int(elapsed / 86400)
+            return "\(days)d ago"
+        }
+    }
+    
+    // MARK: - Real-Time Polling
+    
+    private func startPollingIfNeeded() {
+        guard pollingTimer == nil else { return }
+        guard activeTab == .messages else { return }
+        
+        // Initial load
+        loadMessages()
+        lastMessageCount = messages.count
+        isPolling = true
+        lastPollTime = Date()
+        
+        // Start polling every 1.5 seconds
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { _ in
+            self.pollMessages()
+        }
+    }
+    
+    private func stopPolling() {
+        pollingTimer?.invalidate()
+        pollingTimer = nil
+        isPolling = false
+    }
+    
+    private func pollMessages() {
+        guard activeTab == .messages else {
+            stopPolling()
+            return
+        }
+        
+        loadMessages()
+        lastPollTime = Date()
     }
 }
 

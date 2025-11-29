@@ -274,11 +274,15 @@ struct DashboardView: View {
                     return nil
                 }
                 
+                // Calculate converted amount using exchange rates
+                let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                
                 return ActiveExchange(
                     id: listingId,
                     currencyFrom: currency,
                     currencyTo: acceptCurrency,
                     amount: amount,
+                    convertedAmount: convertedAmount,
                     traderName: sellerName,
                     location: location,
                     type: .buyer
@@ -312,11 +316,15 @@ struct DashboardView: View {
                     return nil
                 }
                 
+                // Calculate converted amount using exchange rates
+                let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                
                 return ActiveExchange(
                     id: listingId,
                     currencyFrom: currency,
                     currencyTo: acceptCurrency,
                     amount: amount,
+                    convertedAmount: convertedAmount,
                     traderName: buyerName,
                     location: location,
                     type: .seller
@@ -355,13 +363,16 @@ struct DashboardView: View {
                     return nil
                 }
                 
+                let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                
                 return PendingNegotiation(
                     id: negId,
                     buyerName: buyerName,
                     currency: currency,
                     amount: amount,
                     acceptCurrency: acceptCurrency,
-                    proposedTime: proposedTime
+                    proposedTime: proposedTime,
+                    convertedAmount: convertedAmount
                 )
             }
             
@@ -841,16 +852,37 @@ struct ActiveExchangeCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Main exchange display
             HStack {
-                Text("\(exchange.currencyFrom) → \(exchange.currencyTo)")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(String(Int(exchange.amount)))
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                        Text(exchange.currencyFrom)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        Text("→")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                        
+                        if let convertedAmount = exchange.convertedAmount {
+                            Text(String(Int(convertedAmount)))
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                            Text(exchange.currencyTo)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.9))
+                        } else {
+                            Text(exchange.currencyTo)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.9))
+                        }
+                    }
+                }
                 
                 Spacer()
-                
-                Text("$\(exchange.amount, specifier: "%.0f")")
-                    .font(.system(size: 21, weight: .bold))
-                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
             }
             
             Text(exchange.traderName)
@@ -947,6 +979,7 @@ struct ListingCard: View {
     @ObservedObject var localizationManager = LocalizationManager.shared
     let listing: Listing
     @State private var showEditListing = false
+    @State private var convertedAmount: Double? = nil
     var onDelete: (() -> Void)?
     
     var body: some View {
@@ -959,8 +992,13 @@ struct ListingCard: View {
                     Text("→")
                         .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                     
-                    Text(listing.wantCurrency)
-                        .font(.system(size: 14, weight: .semibold))
+                    if let converted = convertedAmount {
+                        Text("\(String(Int(converted))) \(listing.wantCurrency)")
+                            .font(.system(size: 14, weight: .semibold))
+                    } else {
+                        Text(listing.wantCurrency)
+                            .font(.system(size: 14, weight: .semibold))
+                    }
                 }
                 
                 Spacer()
@@ -1023,6 +1061,9 @@ struct ListingCard: View {
                 onDelete?()
             }
         }
+        .onAppear {
+            convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(listing.haveAmount, from: listing.haveCurrency, to: listing.wantCurrency)
+        }
     }
 }
 
@@ -1063,6 +1104,7 @@ struct ActiveExchange: Identifiable {
     let currencyFrom: String
     let currencyTo: String
     let amount: Double
+    let convertedAmount: Double?
     let traderName: String
     let location: String
     let type: ExchangeType
@@ -1079,6 +1121,7 @@ struct PendingNegotiation: Identifiable {
     let amount: Double
     let acceptCurrency: String
     let proposedTime: String
+    let convertedAmount: Double?
 }
 
 // MARK: - Pending Negotiations Section
@@ -1130,15 +1173,26 @@ struct PendingNegotiationCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("\(negotiation.currency) → \(negotiation.acceptCurrency)")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(.white)
+                HStack(spacing: 4) {
+                    Text(String(Int(negotiation.amount)))
+                        .font(.system(size: 18, weight: .bold))
+                    Text(negotiation.currency)
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("→")
+                        .font(.system(size: 16, weight: .bold))
+                    if let converted = negotiation.convertedAmount {
+                        Text(String(Int(converted)))
+                            .font(.system(size: 18, weight: .bold))
+                        Text(negotiation.acceptCurrency)
+                            .font(.system(size: 16, weight: .semibold))
+                    } else {
+                        Text(negotiation.acceptCurrency)
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+                .foregroundColor(.white)
                 
                 Spacer()
-                
-                Text("$\(negotiation.amount, specifier: "%.0f")")
-                    .font(.system(size: 21, weight: .bold))
-                    .foregroundColor(.white)
             }
             
             HStack {

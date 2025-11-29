@@ -285,7 +285,6 @@ struct ContentView: View {
             navigateToDashboard = true
         }
     }
-    }
     
     func checkPermissionsAndSession() {
         // Skip permission waiting - just proceed directly to session check

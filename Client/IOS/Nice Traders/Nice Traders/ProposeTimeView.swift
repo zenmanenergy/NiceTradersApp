@@ -85,7 +85,7 @@ struct ProposeTimeView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                             HStack(spacing: 4) {
-                                Text("\(String(format: "%.2f", amount)) \(currency)")
+                                Text("\(String(Int(amount))) \(currency)")
                                     .font(.headline)
                                 Image(systemName: "arrow.right")
                                     .font(.caption)
@@ -188,7 +188,7 @@ struct ProposeTimeView: View {
         ExchangeRatesAPI.shared.convertAmount(amount, from: currency, to: acceptCurrency) { result, error in
             DispatchQueue.main.async {
                 if let result = result {
-                    convertedAmount = String(format: "%.2f", result)
+                    convertedAmount = String(Int(result))
                 } else {
                     convertedAmount = "~"
                 }

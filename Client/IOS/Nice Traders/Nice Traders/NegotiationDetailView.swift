@@ -143,18 +143,14 @@ struct NegotiationDetailView: View {
             
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(String(format: "%.2f", negotiation.listing.amount)) \(negotiation.listing.currency)")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                    
                     if let usdValue = calculateUSDValue(amount: negotiation.listing.amount, currency: negotiation.listing.currency) {
-                        Text("→ \(negotiation.listing.acceptCurrency) (≈ $\(String(format: "%.2f", usdValue)) USD)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        Text("\(String(Int(negotiation.listing.amount))) \(negotiation.listing.currency) → \(String(Int(usdValue))) \(negotiation.listing.acceptCurrency)")
+                            .font(.title3)
+                            .fontWeight(.semibold)
                     } else {
-                        Text("→ \(negotiation.listing.acceptCurrency)")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        Text("\(String(Int(negotiation.listing.amount))) \(negotiation.listing.currency) → \(negotiation.listing.acceptCurrency)")
+                            .font(.title3)
+                            .fontWeight(.semibold)
                     }
                 }
                 Spacer()

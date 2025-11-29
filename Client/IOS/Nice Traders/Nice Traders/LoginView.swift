@@ -21,6 +21,8 @@ struct LoginView: View {
     @State private var alertMessage = ""
     @State private var navigateToDashboard = false
     
+    @FocusState private var emailFieldFocused: Bool
+    
     var body: some View {
         VStack(spacing: 0) {
             // Header
@@ -167,6 +169,11 @@ green: 0.29, blue: 0.64)]),
                 email = ""
                 password = ""
                 errors = [:]
+            }
+            
+            // Focus on email field after a short delay to allow view to fully appear
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                emailFieldFocused = true
             }
         }
         .alert(localizationManager.localize("LOGIN"), isPresented: $showingAlert) {

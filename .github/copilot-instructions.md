@@ -176,3 +176,5 @@ This means translations for all languages are downloaded once and stored locally
 
 ## Shell Commands
 Default shell is **zsh** - generate commands for zsh, not bash.
+
+When i say "compile and fix" that means run the IOS compiler immediately and repair any bugs. It does not mean try to search the code for errors. Just run the compiler and see if it works.

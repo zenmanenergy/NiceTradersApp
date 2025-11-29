@@ -288,4 +288,36 @@ class ExchangeRatesAPI {
             completion?(true)
         }
     }
+    
+    /**
+     * Convert amount synchronously using cached rates (for immediate display)
+     */
+    func convertAmountSync(_ amount: Double, from fromCurrency: String, to toCurrency: String) -> Double? {
+        // If we have cached rates, use them
+        if !cachedRates.isEmpty {
+            let fromRate = cachedRates[fromCurrency] ?? 1.0
+            let toRate = cachedRates[toCurrency] ?? 1.0
+            let usdAmount = amount / fromRate
+            let targetAmount = usdAmount * toRate
+            return targetAmount
+        }
+        
+        // Fallback to mock rates if no cached rates available
+        let mockRates: [String: Double] = [
+            "USD": 1.0, "EUR": 0.85, "GBP": 0.73, "JPY": 110.0,
+            "CAD": 1.25, "AUD": 1.35, "CHF": 0.92, "CNY": 6.45,
+            "SEK": 8.5, "NZD": 1.4, "MXN": 20.0, "BRL": 5.3,
+            "INR": 74.0, "ZAR": 14.5, "KRW": 1180.0, "SGD": 1.35,
+            "HKD": 7.8, "NOK": 8.6, "DKK": 6.3, "PLN": 3.9,
+            "CZK": 21.5, "HUF": 295.0, "RUB": 73.0, "TRY": 8.5,
+            "THB": 33.0
+        ]
+        
+        let fromRate = mockRates[fromCurrency] ?? 1.0
+        let toRate = mockRates[toCurrency] ?? 1.0
+        let usdAmount = amount / fromRate
+        let targetAmount = usdAmount * toRate
+        
+        return targetAmount
+    }
 }
