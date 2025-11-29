@@ -5,6 +5,7 @@ from flask import Blueprint, request
 from flask_cors import CORS, cross_origin
 from .GetLogin import get_login
 from .VerifySession import verify_session
+from .ForgotPassword import forgot_password, reset_password
 
 blueprint = Blueprint('Login', __name__)
 
@@ -48,4 +49,44 @@ def Verify():
 		return result
 	except Exception as e:
 		
+		return Debugger(e)
+
+@blueprint.route("/Login/ForgotPassword", methods=['POST', 'GET'])
+@cross_origin()
+def ForgotPassword():
+	try:
+		# Handle both GET and POST requests
+		if request.method == 'GET':
+			data = request.args.to_dict()
+		else:
+			data = request.get_json()
+		
+		email = data.get('email', None)
+		
+		if not email:
+			return {'success': False, 'error': 'Email is required'}
+		
+		result = forgot_password(email)
+		return result
+	except Exception as e:
+		return Debugger(e)
+
+@blueprint.route("/Login/ResetPassword", methods=['POST'])
+@cross_origin()
+def ResetPassword():
+	try:
+		data = request.get_json()
+		
+		reset_token = data.get('resetToken', None)
+		new_password = data.get('newPassword', None)
+		
+		if not reset_token or not new_password:
+			return {'success': False, 'error': 'Reset token and new password are required'}
+		
+		if len(new_password) < 6:
+			return {'success': False, 'error': 'Password must be at least 6 characters'}
+		
+		result = reset_password(reset_token, new_password)
+		return result
+	except Exception as e:
 		return Debugger(e)

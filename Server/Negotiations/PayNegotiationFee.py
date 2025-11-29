@@ -58,13 +58,6 @@ def pay_negotiation_fee(negotiation_id, session_id):
         # Determine user role
         is_buyer = (user_id == negotiation['buyer_id'])
         
-        # Check if negotiation is in agreed state
-        if negotiation['status'] not in ('agreed', 'paid_partial'):
-            return json.dumps({
-                'success': False,
-                'error': f'Cannot pay for negotiation in {negotiation["status"]} state'
-            })
-        
         # Check if user already paid
         if (is_buyer and negotiation['buyer_paid']) or (not is_buyer and negotiation['seller_paid']):
             return json.dumps({
@@ -74,17 +67,28 @@ def pay_negotiation_fee(negotiation_id, session_id):
         
         # Check if payment deadline has passed
         if negotiation['payment_deadline'] and datetime.now() > negotiation['payment_deadline']:
-            # Mark as expired
-            cursor.execute("""
-                UPDATE exchange_negotiations
-                SET status = 'expired'
-                WHERE negotiation_id = %s
-            """, (negotiation_id,))
-            connection.commit()
-            
+            # If one party has already paid, allow the other to still pay (extend grace period)
+            if not (negotiation['buyer_paid'] or negotiation['seller_paid']):
+                # Neither party has paid - mark as expired and reject
+                cursor.execute("""
+                    UPDATE exchange_negotiations
+                    SET status = 'expired'
+                    WHERE negotiation_id = %s
+                """, (negotiation_id,))
+                connection.commit()
+                
+                return json.dumps({
+                    'success': False,
+                    'error': 'Payment deadline has passed. Negotiation expired.'
+                })
+            # else: Allow payment if one party has already paid (grace period)
+        
+        # Check if negotiation is in a payable state
+        # Allow: agreed, paid_partial, or expired (if other party already paid)
+        if negotiation['status'] not in ('agreed', 'paid_partial', 'expired'):
             return json.dumps({
                 'success': False,
-                'error': 'Payment deadline has passed. Negotiation expired.'
+                'error': f'Cannot pay for negotiation in {negotiation["status"]} state'
             })
         
         # Check for available credits

@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { handleLogin } from './handleLogin.js';
+	import ForgotPasswordModal from '$lib/components/ForgotPasswordModal.svelte';
 	
 	let formData = {
 		email: '',
@@ -9,6 +10,7 @@
 	
 	let errors = {};
 	let isSubmitting = false;
+	let showForgotPassword = false;
 	
 	function validateForm() {
 		errors = {};
@@ -58,9 +60,17 @@
 	}
 	
 	function handleForgotPassword() {
-		alert('Forgot Password coming soon! This is just a prototype.');
+		showForgotPassword = true;
+	}
+	
+	function closeForgotPassword() {
+		showForgotPassword = false;
 	}
 </script>
+
+{#if showForgotPassword}
+	<ForgotPasswordModal onClose={closeForgotPassword} onBackToLogin={closeForgotPassword} />
+{/if}
 
 <main class="login-container">
 	<div class="header">
@@ -75,9 +85,7 @@
 
 	<div class="content">
 		<div class="welcome-text">
-			<div class="app-logo">💱</div>
 			<h2 class="welcome-title">Welcome Back</h2>
-			<p class="welcome-subtitle">Sign in to continue exchanging currency</p>
 		</div>
 
 		<form on:submit|preventDefault={handleSubmit} class="login-form">

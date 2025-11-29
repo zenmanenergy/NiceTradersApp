@@ -60,17 +60,11 @@ green: 0.29, blue: 0.64)]),
                 VStack(spacing: 0) {
                     // Welcome Section
                     VStack(spacing: 16) {
-                        Text("💱")
-                            .font(.system(size: 48))
                         
                         Text(localizationManager.localize("WELCOME_BACK"))
                             .font(.system(size: 29, weight: .semibold))
                             .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
-                        
-                        Text(localizationManager.localize("SIGN_IN_TO_CONTINUE"))
-                            .font(.system(size: 16))
-                            .foregroundColor(Color(red: 0.45, green: 0.5, blue: 0.59))
-                            .multilineTextAlignment(.center)
+                      
                     }
                     .padding(.top, 16)
                     .padding(.bottom, 24)
@@ -84,6 +78,7 @@ green: 0.29, blue: 0.64)]),
                             keyboardType: .emailAddress,
                             error: errors["email"]
                         )
+                        .focused($emailFieldFocused)
                         
                         FormField(
                             label: localizationManager.localize("PASSWORD"),

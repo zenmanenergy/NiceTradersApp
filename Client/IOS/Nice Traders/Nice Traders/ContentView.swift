@@ -214,13 +214,13 @@ struct ContentView: View {
             
             // Reset all navigation state
             showSignup = false
-            showLogin = false
+            showLogin = true // Show login view after logout
             showLearnMore = false
             navigateToDashboard = false
             isCheckingSession = false
             showingSplash = false // Don't show splash on logout
             
-            // Force NavigationStack to reset and return to landing page
+            // Force NavigationStack to reset and navigate to login
             navigationId = UUID()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeepLinkNotification"))) { notification in
