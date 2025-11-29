@@ -47,6 +47,7 @@ def get_purchased_contacts(session_id):
                     l.location,
                     l.meeting_preference,
                     l.available_until,
+                    l.will_round_to_nearest_dollar,
                     u.FirstName as seller_first_name,
                     u.LastName as seller_last_name,
                     u.Email as seller_email,
@@ -91,6 +92,7 @@ def get_purchased_contacts(session_id):
                     l.location,
                     l.meeting_preference,
                     l.available_until,
+                    l.will_round_to_nearest_dollar,
                     u.FirstName as seller_first_name,
                     u.LastName as seller_last_name,
                     u.Email as seller_email,
@@ -138,7 +140,8 @@ def get_purchased_contacts(session_id):
                     'accept_currency': row['accept_currency'],
                     'location': row['location'],
                     'meeting_preference': row['meeting_preference'],
-                    'available_until': row['available_until'].isoformat() if row['available_until'] else None
+                    'available_until': row['available_until'].isoformat() if row['available_until'] else None,
+                    'will_round_to_nearest_dollar': row['will_round_to_nearest_dollar']
                 },
                 'seller': {
                     'user_id': row['seller_user_id'],

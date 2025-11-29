@@ -21,6 +21,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
     let messageCount: Int
     let lastMessage: String?
     let lastMessageTime: String?
+    let willRoundToNearestDollar: Bool?
     
     enum CodingKeys: String, CodingKey {
         case id = "access_id"
@@ -36,6 +37,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
         case messageCount = "message_count"
         case lastMessage = "last_message"
         case lastMessageTime = "last_message_time"
+        case willRoundToNearestDollar = "will_round_to_nearest_dollar"
     }
 }
 
@@ -222,7 +224,8 @@ struct MessagesView: View {
                 preferred_currency: nil,
                 amount: contact.amount,
                 meeting_preference: nil,
-                location: contact.location ?? ""
+                location: contact.location ?? "",
+                will_round_to_nearest_dollar: contact.willRoundToNearestDollar
             ),
             other_user: DashboardContactData.ContactUser(
                 first_name: contact.sellerFirstName,

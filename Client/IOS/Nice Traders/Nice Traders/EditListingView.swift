@@ -22,6 +22,7 @@ struct EditListingView: View {
     @State private var locationRadius: String = "5"
     @State private var meetingPreference: String = "public"
     @State private var availableUntil: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    @State private var willRoundToNearestDollar: Bool = false
     
     // UI state
     @State private var currentStep = 1
@@ -243,6 +244,7 @@ struct EditListingView: View {
                         .padding(.top, 32)
                         .padding(.bottom, 100)
                     }
+                    .dismissKeyboardOnTap()
                     
                     Spacer()
                     
@@ -650,6 +652,36 @@ struct EditListingView: View {
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
             }
+            
+            // Rounding Preference
+            Button(action: {
+                willRoundToNearestDollar.toggle()
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
+                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
+                        .font(.system(size: 18))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("I'm willing to round to the nearest whole dollar")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        Text("Example: 130.79 USD rounds to 131 USD")
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
+                )
+            }
         }
         .padding(.horizontal, 24)
     }
@@ -674,8 +706,7 @@ struct EditListingView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         if let currency = selectedCurrency {
-                            Image(currency.code.lowercased())
-                                .resizable()
+                            currencyFlagImage(currency.code)
                                 .frame(width: 28, height: 21)
                                 .cornerRadius(3)
                                 .overlay(
@@ -900,8 +931,7 @@ struct EditListingView: View {
                     onSelect(currency)
                 }) {
                     HStack(spacing: 16) {
-                        Image(currency.code.lowercased())
-                            .resizable()
+                        currencyFlagImage(currency.code)
                             .frame(width: 24, height: 18)
                             .cornerRadius(2)
                             .overlay(
@@ -935,8 +965,7 @@ struct EditListingView: View {
     
     func selectedCurrencyView(currency: Currency, onClear: @escaping () -> Void) -> some View {
         HStack(spacing: 12) {
-            Image(currency.code.lowercased())
-                .resizable()
+            currencyFlagImage(currency.code)
                 .frame(width: 24, height: 18)
                 .cornerRadius(2)
                 .overlay(
@@ -1084,20 +1113,7 @@ struct EditListingView: View {
     }
     
     func calculateReceiveAmount(from: String, to: String, amount: String) -> String {
-        guard let amountValue = Double(amount) else { return "0" }
-        
-        let rates: [String: Double] = [
-            "USD": 1.0, "EUR": 0.85, "GBP": 0.73, "JPY": 110.0,
-            "CAD": 1.25, "AUD": 1.35, "CHF": 0.92, "CNY": 6.45,
-            "SEK": 8.5, "NZD": 1.4, "MXN": 20.0, "BRL": 5.3
-        ]
-        
-        let fromRate = rates[from] ?? 1.0
-        let toRate = rates[to] ?? 1.0
-        let usdAmount = amountValue / fromRate
-        let targetAmount = usdAmount * toRate
-        
-        return String(Int(targetAmount.rounded()))
+        return ExchangeRatesAPI.shared.calculateReceiveAmount(from: from, to: to, amount: amount, shouldRound: willRoundToNearestDollar)
     }
     
     func loadListingData() {
@@ -1288,7 +1304,8 @@ struct EditListingView: View {
             URLQueryItem(name: "longitude", value: longitude),
             URLQueryItem(name: "locationRadius", value: locationRadius),
             URLQueryItem(name: "meetingPreference", value: meetingPreference),
-            URLQueryItem(name: "availableUntil", value: availableUntilString)
+            URLQueryItem(name: "availableUntil", value: availableUntilString),
+            URLQueryItem(name: "willRoundToNearestDollar", value: willRoundToNearestDollar ? "true" : "false")
         ]
         
         guard let url = components.url else {
@@ -1397,6 +1414,30 @@ struct EditListingView: View {
 extension EditListingView {
     func refreshExchangeRates() {
         ExchangeRatesAPI.shared.refreshRatesIfNeeded()
+    }
+}
+
+// MARK: - Helper Extension for Flag Images
+extension EditListingView {
+    func currencyFlagImage(_ currencyCode: String) -> some View {
+        Group {
+            if let uiImage = UIImage(named: currencyCode.lowercased()) {
+                Image(uiImage: uiImage)
+                    .resizable()
+            } else {
+                // Fallback placeholder when flag image is missing
+                ZStack {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(hex: "e2e8f0"))
+                    
+                    VStack(spacing: 2) {
+                        Text(currencyCode)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(Color(hex: "4a5568"))
+                    }
+                }
+            }
+        }
     }
 }
 

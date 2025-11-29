@@ -119,7 +119,7 @@ struct NegotiationCard: View {
                 // Listing Info
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("\(String(format: "%.2f", negotiation.listing.amount)) \(negotiation.listing.currency)")
+                        Text("\(ExchangeRatesAPI.shared.formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.currency)")
                             .font(.headline)
                         Text("→ \(negotiation.listing.acceptCurrency)")
                             .font(.subheadline)

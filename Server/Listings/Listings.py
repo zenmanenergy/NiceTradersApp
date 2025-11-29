@@ -25,8 +25,9 @@ def CreateListing():
 		LocationRadius = ListingData.get('locationRadius', '5')
 		MeetingPreference = ListingData.get('meetingPreference', 'public')
 		AvailableUntil = ListingData.get('availableUntil', None)
+		WillRoundToNearestDollar = ListingData.get('willRoundToNearestDollar', 'false').lower() == 'true'
 		
-		result = create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil)
+		result = create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -77,8 +78,11 @@ def UpdateListing():
 		MeetingPreference = ListingData.get('meetingPreference', None)
 		AvailableUntil = ListingData.get('availableUntil', None)
 		Status = ListingData.get('status', None)
+		WillRoundToNearestDollar = ListingData.get('willRoundToNearestDollar', None)
+		if WillRoundToNearestDollar is not None:
+			WillRoundToNearestDollar = WillRoundToNearestDollar.lower() == 'true'
 		
-		result = update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status)
+		result = update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar)
 		return result
 	except Exception as e:
 		return Debugger(e)

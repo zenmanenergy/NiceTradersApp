@@ -133,7 +133,7 @@ struct ContactDetailView: View {
                                         .fontWeight(.bold)
                                         .foregroundColor(.white)
                                         
-                                        Text("$\(String(format: "%.2f", contactData.listing.amount))")
+                                        Text("$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar))")
                                             .font(.title2)
                                             .fontWeight(.semibold)
                                             .foregroundColor(Color(hex: "FFD700"))
@@ -228,7 +228,7 @@ struct ContactDetailView: View {
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                detailRow(label: "Amount to Exchange:", value: "$\(String(format: "%.2f", contactData.listing.amount)) \(contactData.listing.currency)")
+                detailRow(label: "Amount to Exchange:", value: "$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar)) \(contactData.listing.currency)")
                 
                 detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
                 
@@ -1140,6 +1140,7 @@ struct ContactListing {
     let preferredCurrency: String?
     let meetingPreference: String?
     let location: String
+    let willRoundToNearestDollar: Bool?
 }
 
 struct OtherUser {

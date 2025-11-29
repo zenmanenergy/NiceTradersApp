@@ -75,6 +75,7 @@ struct NegotiationDetail: Codable {
         let amount: Double
         let acceptCurrency: String
         let location: String
+        let willRoundToNearestDollar: Bool?
     }
     
     struct UserInfo: Codable {
@@ -237,6 +238,7 @@ struct NegotiationDetailResponse: Codable {
         let amount: Double
         let acceptCurrency: String
         let location: String
+        let willRoundToNearestDollar: Bool?
     }
     
     struct UserInfo: Codable {
@@ -276,7 +278,8 @@ struct NegotiationDetailResponse: Codable {
                 currency: listing.currency,
                 amount: listing.amount,
                 acceptCurrency: listing.acceptCurrency,
-                location: listing.location
+                location: listing.location,
+                willRoundToNearestDollar: listing.willRoundToNearestDollar
             ),
             buyer: NegotiationDetail.UserInfo(
                 userId: buyer.userId,
@@ -343,6 +346,7 @@ struct MyNegotiationItem: Codable, Identifiable {
         let amount: Double
         let acceptCurrency: String
         let location: String
+        let willRoundToNearestDollar: Bool?
     }
     
     struct OtherUserInfo: Codable {

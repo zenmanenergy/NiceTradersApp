@@ -31,6 +31,7 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
                 l.available_until,
                 l.status,
                 l.created_at,
+                l.will_round_to_nearest_dollar,
                 CONCAT(u.FirstName, ' ', u.LastName) as user_name,
                 u.Rating as user_rating,
                 u.TotalExchanges as user_total_exchanges
@@ -81,6 +82,7 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
                 'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
                 'status': listing['status'],
                 'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
+                'willRoundToNearestDollar': listing['will_round_to_nearest_dollar'],
                 'user': {
                     'name': listing['user_name'],
                     'rating': float(listing['user_rating']) if isinstance(listing['user_rating'], Decimal) else (listing['user_rating'] or 0),

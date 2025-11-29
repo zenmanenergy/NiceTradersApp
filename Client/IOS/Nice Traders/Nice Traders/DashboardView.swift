@@ -793,7 +793,8 @@ struct ActiveExchangesSection: View {
                     acceptCurrency: listing["accept_currency"] as? String,
                     preferredCurrency: nil,
                     meetingPreference: listing["meeting_preference"] as? String,
-                    location: location
+                    location: location,
+                    willRoundToNearestDollar: listing["will_round_to_nearest_dollar"] as? Bool
                 ),
                 otherUser: OtherUser(
                     firstName: firstName,
@@ -856,7 +857,7 @@ struct ActiveExchangeCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        Text(String(Int(exchange.amount)))
+                        Text(String(format: "%.2f", exchange.amount))
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
                         Text(exchange.currencyFrom)
@@ -868,7 +869,7 @@ struct ActiveExchangeCard: View {
                             .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                         
                         if let convertedAmount = exchange.convertedAmount {
-                            Text(String(Int(convertedAmount)))
+                            Text(String(format: "%.2f", convertedAmount))
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
                             Text(exchange.currencyTo)
@@ -993,7 +994,7 @@ struct ListingCard: View {
                         .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                     
                     if let converted = convertedAmount {
-                        Text("\(String(Int(converted))) \(listing.wantCurrency)")
+                        Text("\(String(format: "%.2f", converted)) \(listing.wantCurrency)")
                             .font(.system(size: 14, weight: .semibold))
                     } else {
                         Text(listing.wantCurrency)
@@ -1174,14 +1175,14 @@ struct PendingNegotiationCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 HStack(spacing: 4) {
-                    Text(String(Int(negotiation.amount)))
+                    Text(String(format: "%.2f", negotiation.amount))
                         .font(.system(size: 18, weight: .bold))
                     Text(negotiation.currency)
                         .font(.system(size: 16, weight: .semibold))
                     Text("→")
                         .font(.system(size: 16, weight: .bold))
                     if let converted = negotiation.convertedAmount {
-                        Text(String(Int(converted)))
+                        Text(String(format: "%.2f", converted))
                             .font(.system(size: 18, weight: .bold))
                         Text(negotiation.acceptCurrency)
                             .font(.system(size: 16, weight: .semibold))

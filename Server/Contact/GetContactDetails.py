@@ -69,6 +69,7 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 l.status,
                 l.created_at,
                 l.updated_at,
+                l.will_round_to_nearest_dollar,
                 u.FirstName,
                 u.LastName,
                 u.Email,
@@ -122,6 +123,7 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 'notes': '',  # Will be added later
                 'created_at': result['created_at'].isoformat() if result['created_at'] else None,
                 'posted_ago': calculate_time_ago(result['created_at']) if result['created_at'] else 'Unknown',
+                'will_round_to_nearest_dollar': result['will_round_to_nearest_dollar'],
                 'user': {
                     'name': f"{result['FirstName']} {result['LastName']}",
                     'first_name': result['FirstName'],

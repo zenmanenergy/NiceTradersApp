@@ -34,6 +34,7 @@ struct CreateListingView: View {
     @State private var locationRadius: String = "5"
     @State private var meetingPreference: String = "public"
     @State private var availableUntil: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    @State private var willRoundToNearestDollar: Bool = true
     
     // UI state
     @State private var currentStep = 1
@@ -251,6 +252,7 @@ struct CreateListingView: View {
                     .padding(.top, 32)
                     .padding(.bottom, 100)
                 }
+                .dismissKeyboardOnTap()
                 
                 Spacer()
                 
@@ -674,6 +676,36 @@ struct CreateListingView: View {
                         .foregroundColor(Color(hex: "e53e3e"))
                 }
             }
+            
+            // Rounding Preference
+            Button(action: {
+                willRoundToNearestDollar.toggle()
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
+                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
+                        .font(.system(size: 18))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("I'm willing to round to the nearest whole dollar")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        Text("Example: 130.79 USD rounds to 131 USD")
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
+                )
+            }
         }
         .padding(.horizontal, 24)
     }
@@ -698,8 +730,7 @@ struct CreateListingView: View {
                 VStack(spacing: 16) {
                     HStack(spacing: 8) {
                         if let currency = selectedCurrency {
-                            Image(currency.code.lowercased())
-                                .resizable()
+                            currencyFlagImage(currency.code)
                                 .frame(width: 28, height: 21)
                                 .cornerRadius(3)
                                 .overlay(
@@ -742,9 +773,33 @@ struct CreateListingView: View {
                         
                         Spacer()
                         
-                        Text(location.isEmpty ? "Not set" : "Detected")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(hex: "718096"))
+                        if location.isEmpty {
+                            Text("Not set")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "718096"))
+                        } else if let placemark = locationManager.placemark {
+                            if let city = placemark.locality, let state = placemark.administrativeArea {
+                                Text("\(city), \(state)")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "718096"))
+                            } else if let city = placemark.locality {
+                                Text(city)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "718096"))
+                            } else if let country = placemark.country {
+                                Text(country)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "718096"))
+                            } else {
+                                Text("Detected")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(hex: "718096"))
+                            }
+                        } else {
+                            Text("Detected")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "718096"))
+                        }
                     }
                     
                     HStack {
@@ -884,8 +939,7 @@ struct CreateListingView: View {
                     onSelect(currency)
                 }) {
                     HStack(spacing: 16) {
-                        Image(currency.code.lowercased())
-                            .resizable()
+                        currencyFlagImage(currency.code)
                             .frame(width: 24, height: 18)
                             .cornerRadius(2)
                             .overlay(
@@ -919,8 +973,7 @@ struct CreateListingView: View {
     
     func selectedCurrencyView(currency: Currency, onClear: @escaping () -> Void) -> some View {
         HStack(spacing: 12) {
-            Image(currency.code.lowercased())
-                .resizable()
+            currencyFlagImage(currency.code)
                 .frame(width: 24, height: 18)
                 .cornerRadius(2)
                 .overlay(
@@ -1042,14 +1095,33 @@ struct CreateListingView: View {
     
     var locationDetectedView: some View {
         HStack(spacing: 12) {
-            Text("✅")
-                .font(.system(size: 20))
+            VStack(alignment: .leading, spacing: 4) {
+                Text("✅")
+                    .font(.system(size: 20))
+                
+                if let placemark = locationManager.placemark {
+                    if let city = placemark.locality, let state = placemark.administrativeArea {
+                        Text("\(city), \(state)")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                    } else if let city = placemark.locality {
+                        Text(city)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                    } else if let country = placemark.country {
+                        Text(country)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                    }
+                }
+            }
             
             Spacer()
             
             Button(action: {
                 locationStatus = .unset
                 location = ""
+                locationManager.placemark = nil
             }) {
                 Text(localizationManager.localize("CHANGE"))
                     .font(.system(size: 15, weight: .medium))
@@ -1116,20 +1188,23 @@ struct CreateListingView: View {
         locationStatus = .detecting
         locationManager.requestLocation()
         
-        // Simulate location detection (in real app, use CLLocationManager)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        // Give iOS up to 10 seconds to acquire a location
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10.0) {
             if let coordinate = locationManager.location?.coordinate {
+                // Successfully got a real location
                 location = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+                locationStatus = .detected
             } else {
-                // Fallback for simulator
-                location = "37.7749, -122.4194"
+                // No location acquired - show error instead of falling back
+                locationStatus = .unset
+                errorMessage = localizationManager.localize("LOCATION_DETECTION_FAILED")
+                showError = true
             }
-            locationStatus = .detected
         }
     }
     
     func calculateReceiveAmount(from: String, to: String, amount: String) -> String {
-        return ExchangeRatesAPI.shared.calculateReceiveAmount(from: from, to: to, amount: amount)
+        return ExchangeRatesAPI.shared.calculateReceiveAmount(from: from, to: to, amount: amount, shouldRound: willRoundToNearestDollar)
     }
     
     func handleSubmit() {
@@ -1173,7 +1248,8 @@ struct CreateListingView: View {
             URLQueryItem(name: "longitude", value: longitude),
             URLQueryItem(name: "locationRadius", value: locationRadius),
             URLQueryItem(name: "meetingPreference", value: meetingPreference),
-            URLQueryItem(name: "availableUntil", value: availableUntilString)
+            URLQueryItem(name: "availableUntil", value: availableUntilString),
+            URLQueryItem(name: "willRoundToNearestDollar", value: willRoundToNearestDollar ? "true" : "false")
         ]
         
         guard let url = components.url else {
@@ -1219,6 +1295,30 @@ struct CreateListingView: View {
 }
 // LocationManager is defined in ContactPurchaseView.swift
 // Color extension is in SharedModels.swift
+
+// MARK: - Helper Extension for Flag Images
+extension CreateListingView {
+    func currencyFlagImage(_ currencyCode: String) -> some View {
+        Group {
+            if let uiImage = UIImage(named: currencyCode.lowercased()) {
+                Image(uiImage: uiImage)
+                    .resizable()
+            } else {
+                // Fallback placeholder when flag image is missing
+                ZStack {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(hex: "e2e8f0"))
+                    
+                    VStack(spacing: 2) {
+                        Text(currencyCode)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(Color(hex: "4a5568"))
+                    }
+                }
+            }
+        }
+    }
+}
 
 #Preview {
     CreateListingView(navigateToCreateListing: .constant(true))

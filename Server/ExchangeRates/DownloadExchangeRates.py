@@ -48,6 +48,12 @@ def download_and_save_exchange_rates():
         connection.commit()
         print(f"[DownloadExchangeRates] Exchange rates table created/verified")
         
+        # Clear all old rates - keep only latest
+        cursor.execute("DELETE FROM exchange_rates WHERE date_retrieved < CURDATE()")
+        deleted_old = cursor.rowcount
+        if deleted_old > 0:
+            print(f"[DownloadExchangeRates] Cleaned up {deleted_old} old exchange rate records")
+        
         # Clear today's rates first (in case we're updating)
         today = datetime.now().strftime('%Y-%m-%d')
         cursor.execute("DELETE FROM exchange_rates WHERE date_retrieved = %s", (today,))

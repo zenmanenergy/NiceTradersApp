@@ -58,9 +58,13 @@ struct RoundedCorner: Shape {
 
 // MARK: - Location Manager
 
+import MapKit
+
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     @Published var location: CLLocation?
+    @Published var placemark: CLPlacemark?
+    private let geocoder = CLGeocoder()
     
     override init() {
         super.init()
@@ -70,9 +74,13 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         // Start location updates immediately
         manager.requestWhenInUseAuthorization()
         #if targetEnvironment(simulator)
-        // In simulator, start continuous updates to pick up custom locations
+        // In simulator, start continuous updates to pick up simulated locations from Xcode
         manager.startUpdatingLocation()
         print("[LocationManager] Started continuous location updates (simulator)")
+        #else
+        // On real devices, also start continuous updates
+        manager.startUpdatingLocation()
+        print("[LocationManager] Started continuous location updates (device)")
         #endif
     }
     
@@ -87,18 +95,22 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.first
         print("[LocationManager] Location updated: \(location?.coordinate.latitude ?? 0), \(location?.coordinate.longitude ?? 0)")
+        
+        // Reverse geocode to get city name
+        if let location = location {
+            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+                if let placemark = placemarks?.first {
+                    DispatchQueue.main.async {
+                        self?.placemark = placemark
+                    }
+                }
+            }
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("[LocationManager] Location error: \(error.localizedDescription)")
-        
-        // Fallback to default location only on error and if no location is set
-        #if targetEnvironment(simulator)
-        if location == nil {
-            self.location = CLLocation(latitude: 37.7749, longitude: -122.4194)
-            print("[LocationManager] Using fallback simulated location: 37.7749, -122.4194")
-        }
-        #endif
+        // Don't use hardcoded fallback locations - let the app handle no location gracefully
     }
 }
 

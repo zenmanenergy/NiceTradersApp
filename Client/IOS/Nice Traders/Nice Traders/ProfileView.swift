@@ -100,6 +100,7 @@ struct ProfileView: View {
                     .padding(.horizontal, 24)
                     .padding(.bottom, 32)
                 }
+                .dismissKeyboardOnTap()
             }
             
             // Bottom Navigation

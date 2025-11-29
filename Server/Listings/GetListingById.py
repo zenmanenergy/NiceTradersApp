@@ -33,6 +33,7 @@ def get_listing_by_id(ListingId):
                 l.status,
                 l.created_at,
                 l.updated_at,
+                l.will_round_to_nearest_dollar,
                 u.UserId as user_id,
                 CONCAT(u.FirstName, ' ', u.LastName) as user_name,
                 u.Email as user_email,
@@ -69,6 +70,7 @@ def get_listing_by_id(ListingId):
             'status': listing['status'],
             'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
             'updatedAt': listing['updated_at'].isoformat() if listing['updated_at'] else None,
+            'willRoundToNearestDollar': listing['will_round_to_nearest_dollar'],
             'user': {
                 'id': listing['user_id'],
                 'name': listing['user_name'],

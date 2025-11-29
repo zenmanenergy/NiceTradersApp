@@ -138,13 +138,12 @@ struct ContactPurchaseView: View {
             HStack {
                 // Currency display
                 HStack(spacing: 12) {
-                    Image(listing.currency.lowercased())
-                        .resizable()
+                    currencyFlagImage(listing.currency)
                         .frame(width: 32, height: 24)
                         .cornerRadius(4)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(String(format: "%.2f", listing.amount) + " \(listing.currency)")
+                        Text(ExchangeRatesAPI.shared.formatAmount(listing.amount, shouldRound: listing.willRoundToNearestDollar) + " \(listing.currency)")
                             .font(.title3)
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: "2d3748"))
@@ -722,6 +721,7 @@ struct ContactPurchaseView: View {
             location: data["location"] as? String ?? "",
             locationRadius: data["location_radius"] as? Int ?? 5,
             meetingPreference: data["meeting_preference"] as? String ?? "public",
+            willRoundToNearestDollar: data["will_round_to_nearest_dollar"] as? Bool,
             user: TraderUserInfo(
                 firstName: userData["first_name"] as? String ?? "",
                 lastName: userData["last_name"] as? String,
@@ -774,6 +774,7 @@ struct ListingDetails {
     let location: String
     let locationRadius: Int
     let meetingPreference: String
+    let willRoundToNearestDollar: Bool?
     let user: TraderUserInfo
 }
 
@@ -798,6 +799,30 @@ struct ContactFee {
 struct ReportReason {
     let value: String
     let label: String
+}
+
+// MARK: - Helper Extension for Flag Images
+extension ContactPurchaseView {
+    func currencyFlagImage(_ currencyCode: String) -> some View {
+        Group {
+            if let uiImage = UIImage(named: currencyCode.lowercased()) {
+                Image(uiImage: uiImage)
+                    .resizable()
+            } else {
+                // Fallback placeholder when flag image is missing
+                ZStack {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color(hex: "e2e8f0"))
+                    
+                    VStack(spacing: 2) {
+                        Text(currencyCode)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundColor(Color(hex: "4a5568"))
+                    }
+                }
+            }
+        }
+    }
 }
 
 // LocationManager is defined in SharedModels.swift

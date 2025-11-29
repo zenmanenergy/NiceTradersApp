@@ -144,11 +144,11 @@ struct NegotiationDetailView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     if let usdValue = calculateUSDValue(amount: negotiation.listing.amount, currency: negotiation.listing.currency) {
-                        Text("\(String(Int(negotiation.listing.amount))) \(negotiation.listing.currency) → \(String(Int(usdValue))) \(negotiation.listing.acceptCurrency)")
+                        Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.currency) → \(formatAmount(usdValue, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.acceptCurrency)")
                             .font(.title3)
                             .fontWeight(.semibold)
                     } else {
-                        Text("\(String(Int(negotiation.listing.amount))) \(negotiation.listing.currency) → \(negotiation.listing.acceptCurrency)")
+                        Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.currency) → \(negotiation.listing.acceptCurrency)")
                             .font(.title3)
                             .fontWeight(.semibold)
                     }
@@ -176,6 +176,14 @@ struct NegotiationDetailView: View {
         let amountString = String(amount)
         let result = ExchangeRatesAPI.shared.calculateReceiveAmount(from: currency, to: "USD", amount: amountString)
         return Double(result)
+    }
+    
+    private func formatAmount(_ amount: Double, shouldRound: Bool? = false) -> String {
+        if shouldRound ?? false {
+            return String(format: "%.0f", amount)
+        } else {
+            return String(format: "%.2f", amount)
+        }
     }
     
     private func otherUserInfo(_ negotiation: NegotiationDetail) -> some View {

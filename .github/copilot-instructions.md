@@ -12,17 +12,16 @@
 - **Library:** PyMySQL (NOT mysql-connector)
 
 ### Virtual Environment Location
-The virtual environment is at the **PROJECT ROOT**, not in the Server directory:
+The virtual environment is in the **Server directory**:
 ```bash
-cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
-.venv/bin/python3
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server
+venv/bin/python3
 ```
 
 ### Running SQL Queries from Terminal
 To execute SQL queries on the local database, use this pattern:
 ```bash
-cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
-.venv/bin/python3 -c "
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && venv/bin/python3 << 'EOF'
 import pymysql
 db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders')
 cursor = db.cursor()
@@ -33,13 +32,12 @@ for row in results:
 db.commit()
 cursor.close()
 db.close()
-"
+EOF
 ```
 
 For queries with DictCursor (returns dictionaries):
 ```bash
-cd /Users/stevenelson/Documents/GitHub/NiceTradersApp
-.venv/bin/python3 -c "
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && venv/bin/python3 << 'EOF'
 import pymysql
 import pymysql.cursors
 db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders', cursorclass=pymysql.cursors.DictCursor)
@@ -51,7 +49,7 @@ for row in results:
 db.commit()
 cursor.close()
 db.close()
-"
+EOF
 ```
 
 ### Standard Connection Template (for Python scripts)
@@ -79,9 +77,9 @@ db.close()
 - ❌ DO NOT use `mysql.connector` - it's not installed
 - ❌ DO NOT use `root` user with `root` password - wrong credentials
 - ❌ DO NOT use `python3` directly - it doesn't have pymysql installed
-- ❌ DO NOT look for venv in Server directory - it's at project root
+- ❌ DO NOT look for venv at project root - it's in Server directory
 - ❌ DO NOT create diagnostic Flask routes for database testing
-- ✅ ALWAYS use `.venv/bin/python3` from project root
+- ✅ ALWAYS use `Server/venv/bin/python3` (cd to Server first)
 - ✅ ALWAYS use PyMySQL
 - ✅ ALWAYS use credentials from above (stevenelson/mwitcitw711)
 
@@ -178,3 +176,32 @@ This means translations for all languages are downloaded once and stored locally
 Default shell is **zsh** - generate commands for zsh, not bash.
 
 When i say "compile and fix" that means run the IOS compiler immediately and repair any bugs. It does not mean try to search the code for errors. Just run the compiler and see if it works.
+
+## Compilation Commands
+
+### iOS Compilation
+**Quick compile and check:**
+```bash
+cd "/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders" && xcodebuild build -scheme "Nice Traders" -configuration Debug 2>&1 | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED)"
+```
+
+**Full build output:**
+```bash
+cd "/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders" && xcodebuild build -scheme "Nice Traders" -configuration Debug
+```
+
+**Paths to remember:**
+- **Xcode Project:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders.xcodeproj`
+- **Swift Files:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders/*.swift`
+- **Build Output Location:** `~/Library/Developer/Xcode/DerivedData/Nice_Traders-*/Build/Products/Debug-iphoneos/`
+
+### Backend Compilation
+**Run Flask server:**
+```bash
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && ./run.sh
+```
+
+**Or with flask directly:**
+```bash
+cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && flask --app flask_app run --host=0.0.0.0 --port=9000 --reload
+```

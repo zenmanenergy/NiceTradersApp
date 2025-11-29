@@ -23,6 +23,7 @@ struct DashboardContactData: Codable {
         let amount: Double
         let meeting_preference: String?
         let location: String
+        let will_round_to_nearest_dollar: Bool?
     }
     
     struct ContactUser: Codable {
@@ -149,7 +150,7 @@ struct ContactView: View {
                         .font(.system(size: 28, weight: .bold))
                 }
                 
-                Text("$\(Int(contactData.listing.amount))")
+                Text("$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.will_round_to_nearest_dollar))")
                     .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(Color(hex: "FFD700"))
             }
@@ -213,7 +214,7 @@ struct ContactView: View {
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 VStack(spacing: 12) {
-                    detailRow(label: "Amount to Exchange:", value: "$\(Int(contactData.listing.amount)) \(contactData.listing.currency)")
+                    detailRow(label: "Amount to Exchange:", value: "$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.will_round_to_nearest_dollar)) \(contactData.listing.currency)")
                     
                     if let lockedAmount = contactData.locked_amount,
                        let currency = contactData.listing.accept_currency ?? contactData.listing.preferred_currency {
@@ -917,7 +918,8 @@ struct ContactView: View {
             preferred_currency: nil,
             amount: 500,
             meeting_preference: "public",
-            location: "New York, NY"
+            location: "New York, NY",
+            will_round_to_nearest_dollar: true
         ),
         other_user: DashboardContactData.ContactUser(
             first_name: "John",

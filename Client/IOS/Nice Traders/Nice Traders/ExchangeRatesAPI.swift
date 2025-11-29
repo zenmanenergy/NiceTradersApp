@@ -26,6 +26,19 @@ class ExchangeRatesAPI {
     private var cachedRates: [String: Double] = [:]
     private var lastFetchDate: Date?
     
+    // MARK: - Formatting
+    
+    /**
+     * Format amount based on rounding preference
+     */
+    func formatAmount(_ amount: Double, shouldRound: Bool? = false) -> String {
+        if shouldRound ?? false {
+            return String(format: "%.0f", amount)
+        } else {
+            return String(format: "%.2f", amount)
+        }
+    }
+    
     // MARK: - API Functions
     
     /**
@@ -236,7 +249,7 @@ class ExchangeRatesAPI {
     /**
      * Calculate converted amount using cached rates or fallback
      */
-    func calculateReceiveAmount(from: String, to: String, amount: String) -> String {
+    func calculateReceiveAmount(from: String, to: String, amount: String, shouldRound: Bool = false) -> String {
         guard let amountValue = Double(amount), amountValue > 0 else { return "0" }
         
         // If we have cached rates, use them
@@ -245,18 +258,30 @@ class ExchangeRatesAPI {
             let toRate = cachedRates[to] ?? 1.0
             let usdAmount = amountValue / fromRate
             let targetAmount = usdAmount * toRate
-            return String(Int(targetAmount.rounded()))
+            
+            // Format based on rounding preference
+            if shouldRound {
+                return String(format: "%.0f", targetAmount)
+            } else {
+                if targetAmount >= 100 {
+                    return String(format: "%.2f", targetAmount)
+                } else if targetAmount >= 10 {
+                    return String(format: "%.2f", targetAmount)
+                } else {
+                    return String(format: "%.4f", targetAmount)
+                }
+            }
         }
         
         // Fallback to mock rates if no cached rates available
         let mockRates: [String: Double] = [
-            "USD": 1.0, "EUR": 0.85, "GBP": 0.73, "JPY": 110.0,
-            "CAD": 1.25, "AUD": 1.35, "CHF": 0.92, "CNY": 6.45,
-            "SEK": 8.5, "NZD": 1.4, "MXN": 20.0, "BRL": 5.3,
-            "INR": 74.0, "ZAR": 14.5, "KRW": 1180.0, "SGD": 1.35,
-            "HKD": 7.8, "NOK": 8.6, "DKK": 6.3, "PLN": 3.9,
-            "CZK": 21.5, "HUF": 295.0, "RUB": 73.0, "TRY": 8.5,
-            "THB": 33.0
+            "USD": 1.0, "EUR": 0.863, "GBP": 0.756, "JPY": 156.18,
+            "CAD": 1.4, "AUD": 1.53, "CHF": 0.804, "CNY": 7.08,
+            "SEK": 9.46, "NZD": 1.74, "MXN": 18.31, "BRL": 5.35,
+            "INR": 89.44, "ZAR": 17.12, "KRW": 1467.67, "SGD": 1.3,
+            "HKD": 7.78, "NOK": 10.14, "DKK": 6.44, "PLN": 3.66,
+            "CZK": 20.85, "HUF": 329.16, "RUB": 77.91, "TRY": 42.5,
+            "THB": 32.16
         ]
         
         let fromRate = mockRates[from] ?? 1.0
@@ -264,7 +289,16 @@ class ExchangeRatesAPI {
         let usdAmount = amountValue / fromRate
         let targetAmount = usdAmount * toRate
         
-        return String(Int(targetAmount.rounded()))
+        // Format based on rounding preference
+        if shouldRound {
+            return String(format: "%.0f", targetAmount)
+        } else if targetAmount >= 100 {
+            return String(format: "%.2f", targetAmount)
+        } else if targetAmount >= 10 {
+            return String(format: "%.2f", targetAmount)
+        } else {
+            return String(format: "%.4f", targetAmount)
+        }
     }
     
     /**
@@ -304,13 +338,13 @@ class ExchangeRatesAPI {
         
         // Fallback to mock rates if no cached rates available
         let mockRates: [String: Double] = [
-            "USD": 1.0, "EUR": 0.85, "GBP": 0.73, "JPY": 110.0,
-            "CAD": 1.25, "AUD": 1.35, "CHF": 0.92, "CNY": 6.45,
-            "SEK": 8.5, "NZD": 1.4, "MXN": 20.0, "BRL": 5.3,
-            "INR": 74.0, "ZAR": 14.5, "KRW": 1180.0, "SGD": 1.35,
-            "HKD": 7.8, "NOK": 8.6, "DKK": 6.3, "PLN": 3.9,
-            "CZK": 21.5, "HUF": 295.0, "RUB": 73.0, "TRY": 8.5,
-            "THB": 33.0
+            "USD": 1.0, "EUR": 0.863, "GBP": 0.756, "JPY": 156.18,
+            "CAD": 1.4, "AUD": 1.53, "CHF": 0.804, "CNY": 7.08,
+            "SEK": 9.46, "NZD": 1.74, "MXN": 18.31, "BRL": 5.35,
+            "INR": 89.44, "ZAR": 17.12, "KRW": 1467.67, "SGD": 1.3,
+            "HKD": 7.78, "NOK": 10.14, "DKK": 6.44, "PLN": 3.66,
+            "CZK": 20.85, "HUF": 329.16, "RUB": 77.91, "TRY": 42.5,
+            "THB": 32.16
         ]
         
         let fromRate = mockRates[fromCurrency] ?? 1.0
@@ -318,6 +352,7 @@ class ExchangeRatesAPI {
         let usdAmount = amount / fromRate
         let targetAmount = usdAmount * toRate
         
+        // Return full precision - formatting will be done at display level
         return targetAmount
     }
 }

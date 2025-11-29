@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 import json
 
-def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil):
+def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar=False):
     """Create a new currency exchange listing"""
     try:
         # Parameters are passed directly from the blueprint
@@ -17,6 +17,7 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitu
         location_radius = LocationRadius or '5'
         meeting_preference = MeetingPreference or 'public'
         available_until = AvailableUntil
+        will_round_to_nearest_dollar = WillRoundToNearestDollar
         
         print(f"[CreateListing] Creating listing for session: {session_id}")
         
@@ -82,16 +83,16 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitu
         insert_query = """
             INSERT INTO listings (
                 listing_id, user_id, currency, amount, accept_currency, 
-                location, latitude, longitude, location_radius, meeting_preference, available_until, 
+                location, latitude, longitude, location_radius, meeting_preference, will_round_to_nearest_dollar, available_until, 
                 status, created_at, updated_at
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'active', NOW(), NOW()
             )
         """
         
         cursor.execute(insert_query, (
             listing_id, user_id, currency, amount_float, accept_currency,
-            location, lat_value, lng_value, int(location_radius), meeting_preference, available_until
+            location, lat_value, lng_value, int(location_radius), meeting_preference, will_round_to_nearest_dollar, available_until
         ))
         connection.commit()
         connection.close()

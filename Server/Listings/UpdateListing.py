@@ -1,7 +1,7 @@
 from _Lib import Database
 import json
 
-def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status):
+def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar=None):
     """Update an existing listing"""
     try:
         # Parameters are passed directly from the blueprint
@@ -17,6 +17,7 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
         meeting_preference = MeetingPreference
         available_until = AvailableUntil
         status = Status
+        will_round_to_nearest_dollar = WillRoundToNearestDollar
         
         print(f"[UpdateListing] Updating listing: {listing_id}")
         
@@ -116,6 +117,10 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
         if status:
             update_fields.append("status = %s")
             params.append(status)
+        
+        if will_round_to_nearest_dollar is not None:
+            update_fields.append("will_round_to_nearest_dollar = %s")
+            params.append(will_round_to_nearest_dollar)
         
         if not update_fields:
             connection.close()
