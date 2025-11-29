@@ -13,23 +13,37 @@ NC='\033[0m' # No Color
 
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}Auto-Translate All Languages${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 
-# Navigate to project root and activate virtual environment
-cd "$PROJECT_ROOT"
+# Try to find and activate virtual environment in Server directory
+VENV_PATH=""
 
-if [ ! -d ".venv" ]; then
-    echo -e "${RED}❌ Virtual environment not found at $PROJECT_ROOT/.venv${NC}"
+# Check common locations in Server directory
+if [ -d "$SCRIPT_DIR/.venv" ]; then
+    VENV_PATH="$SCRIPT_DIR/.venv"
+elif [ -d "$SCRIPT_DIR/venv" ]; then
+    VENV_PATH="$SCRIPT_DIR/venv"
+fi
+
+if [ -z "$VENV_PATH" ]; then
+    echo -e "${RED}❌ Virtual environment not found${NC}"
+    echo -e "${YELLOW}Checked locations:${NC}"
+    echo "  - $SCRIPT_DIR/.venv"
+    echo "  - $SCRIPT_DIR/venv"
+    echo ""
+    echo -e "${YELLOW}Please create a virtual environment:${NC}"
+    echo "  cd $SCRIPT_DIR"
+    echo "  python -m venv venv"
     exit 1
 fi
 
+echo -e "${YELLOW}Using virtual environment: $VENV_PATH${NC}"
 echo -e "${YELLOW}Activating virtual environment...${NC}"
-source .venv/bin/activate
+source "$VENV_PATH/bin/activate"
 
 # Check if googletrans is installed
 python -c "import googletrans" 2>/dev/null
@@ -38,9 +52,6 @@ if [ $? -ne 0 ]; then
     pip install googletrans-py
     echo ""
 fi
-
-# Navigate to Server directory
-cd Server
 
 # Languages to translate (must match those in auto_translate_missing.py)
 LANGUAGES=("ja" "es" "fr" "de" "ar" "hi" "pt" "ru" "sk" "zh")
