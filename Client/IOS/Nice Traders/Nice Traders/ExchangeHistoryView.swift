@@ -26,6 +26,7 @@ struct ExchangeFilters {
 }
 
 struct ExchangeHistoryView: View {
+    @Binding var showExchangeHistory: Bool
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
     @State private var exchangeHistory: [Exchange] = []
@@ -70,12 +71,11 @@ struct ExchangeHistoryView: View {
                     .padding(24)
                 }
                 .background(Color(hex: "f8fafc"))
-            
-            // Bottom Navigation
-            BottomNavigation(activeTab: "home")
         }
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
         .onAppear {
+            print("[ExchangeHistoryView] onAppear - showExchangeHistory=\(showExchangeHistory)")
             loadExchangeHistory()
         }
         .onChange(of: filters.type) { filterHistory() }
@@ -88,7 +88,11 @@ struct ExchangeHistoryView: View {
     var headerView: some View {
         HStack {
             Button(action: {
+                print("[ExchangeHistoryView] Back button tapped")
+                print("[ExchangeHistoryView] Calling dismiss()")
                 dismiss()
+                print("[ExchangeHistoryView] Dismiss called, setting showExchangeHistory to false")
+                showExchangeHistory = false
             }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 18, weight: .semibold))
@@ -111,7 +115,7 @@ struct ExchangeHistoryView: View {
                 .frame(width: 40, height: 40)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -469,5 +473,6 @@ struct ExchangeHistoryView: View {
 }
 
 #Preview {
-    ExchangeHistoryView()
+    @Previewable @State var showExchangeHistory = true
+    ExchangeHistoryView(showExchangeHistory: $showExchangeHistory)
 }

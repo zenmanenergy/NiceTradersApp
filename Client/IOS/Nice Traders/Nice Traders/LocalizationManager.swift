@@ -117,6 +117,8 @@ class LocalizationManager: NSObject, ObservableObject {
             "NO_DATA_RECEIVED": "No data received",
             "INVALID_LOGIN_CREDENTIALS": "Invalid email or password",
             "FAILED_PARSE_RESPONSE": "Failed to parse response",
+            "WILLING_TO_ROUND_TO_NEAREST_DOLLAR": "Willing to round to the nearest dollar?",
+            "EXAMPLE_ROUNDING": "e.g., 10.47 USD → 10 USD",
         ]
     ]
     

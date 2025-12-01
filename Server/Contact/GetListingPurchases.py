@@ -28,6 +28,7 @@ def get_listing_purchases(session_id):
         has_exchange_columns = 'exchange_rate' in columns
         
         # Get all purchases for user's listings with buyer details
+        # Use ROW_NUMBER to get only the most recent access per listing
         if has_exchange_columns:
             query = """
                 SELECT 
@@ -47,10 +48,35 @@ def get_listing_purchases(session_id):
                     l.location,
                     l.meeting_preference,
                     l.available_until,
+                    l.will_round_to_nearest_dollar,
                     u.FirstName as buyer_first_name,
                     u.LastName as buyer_last_name,
                     u.Email as buyer_email,
                     ca.user_id as buyer_user_id,
+                -- Get latest message info
+                (SELECT COUNT(*) FROM messages m WHERE m.listing_id = l.listing_id 
+                 AND ((m.sender_id = %s AND m.recipient_id = ca.user_id) 
+                      OR (m.sender_id = ca.user_id AND m.recipient_id = %s))) as message_count,
+                (SELECT m.message_text FROM messages m WHERE m.listing_id = l.listing_id
+                 AND ((m.sender_id = %s AND m.recipient_id = ca.user_id) 
+                      OR (m.sender_id = ca.user_id AND m.recipient_id = %s))
+                 ORDER BY m.sent_at DESC LIMIT 1) as last_message,
+                (SELECT m.sent_at FROM messages m WHERE m.listing_id = l.listing_id
+                 AND ((m.sender_id = %s AND m.recipient_id = ca.user_id) 
+                      OR (m.sender_id = ca.user_id AND m.recipient_id = %s))
+                 ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
+            FROM (
+                SELECT *,
+                    ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
+                FROM contact_access
+                WHERE status = 'active'
+                AND (expires_at IS NULL OR expires_at > NOW())
+            ) ca
+            JOIN listings l ON ca.listing_id = l.listing_id
+            JOIN users u ON ca.user_id = u.UserId
+            WHERE l.user_id = %s 
+            AND ca.rn = 1
+            ORDER BY ca.purchased_at DESC
         """
         else:
             query = """
@@ -71,6 +97,7 @@ def get_listing_purchases(session_id):
                     l.location,
                     l.meeting_preference,
                     l.available_until,
+                    l.will_round_to_nearest_dollar,
                     u.FirstName as buyer_first_name,
                     u.LastName as buyer_last_name,
                     u.Email as buyer_email,
@@ -87,12 +114,18 @@ def get_listing_purchases(session_id):
                  AND ((m.sender_id = %s AND m.recipient_id = ca.user_id) 
                       OR (m.sender_id = ca.user_id AND m.recipient_id = %s))
                  ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
-            FROM contact_access ca
+            FROM (
+                SELECT *,
+                    ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
+                FROM contact_access
+                WHERE status = 'active'
+                AND (expires_at IS NULL OR expires_at > NOW())
+            ) ca
             JOIN listings l ON ca.listing_id = l.listing_id
             JOIN users u ON ca.user_id = u.UserId
             WHERE l.user_id = %s 
-            AND ca.status = 'active'
-            AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+            AND ca.rn = 1
+            AND ca.user_id != l.user_id
             ORDER BY ca.purchased_at DESC
         """
         
@@ -118,7 +151,8 @@ def get_listing_purchases(session_id):
                     'accept_currency': row['accept_currency'],
                     'location': row['location'],
                     'meeting_preference': row['meeting_preference'],
-                    'available_until': row['available_until'].isoformat() if row['available_until'] else None
+                    'available_until': row['available_until'].isoformat() if row['available_until'] else None,
+                    'will_round_to_nearest_dollar': bool(row['will_round_to_nearest_dollar']) if row['will_round_to_nearest_dollar'] is not None else False
                 },
                 'buyer': {
                     'user_id': row['buyer_user_id'],

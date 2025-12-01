@@ -29,9 +29,10 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(seller_id)
         
-        title = get_translation(seller_lang, 'payment_received')
+        title = get_translation(seller_lang, 'PAYMENT_RECEIVED')
         currency_str = format_currency(amount, currency)
-        body = f"{buyer_name} {get_translation(seller_lang, 'listing_contact_access')} ({currency_str})"
+        contact_access_text = get_translation(seller_lang, 'listing_contact_access')
+        body = f"{buyer_name} {contact_access_text} ({currency_str})"
         
         result = self.apn_service.send_notification(
             user_id=seller_id,
@@ -65,8 +66,9 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(recipient_id)
         
-        title = get_translation(recipient_lang, 'meeting_proposed')
-        body = f"{proposer_name} {get_translation(recipient_lang, 'meeting_proposed_text')} {proposed_time}"
+        title = get_translation(recipient_lang, 'MEETING_PROPOSED')
+        proposed_text = get_translation(recipient_lang, 'meeting_proposed_text')
+        body = f"{proposer_name} {proposed_text} {proposed_time}"
         
         result = self.apn_service.send_notification(
             user_id=recipient_id,
@@ -100,8 +102,9 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(recipient_id)
         
-        title = get_translation(recipient_lang, 'new_message')
-        body = f"{sender_name} {get_translation(recipient_lang, 'message_from')}: {message_preview[:50]}"
+        title = get_translation(recipient_lang, 'NEW_MESSAGE')
+        message_from_text = get_translation(recipient_lang, 'message_from')
+        body = f"{sender_name} {message_from_text} {message_preview[:50]}"
         
         result = self.apn_service.send_notification(
             user_id=recipient_id,
@@ -122,23 +125,28 @@ class NotificationService:
         Args:
             seller_id: ID of the seller
             listing_id: ID of the listing
-            status: New status (flagged, removed, expired, etc.)
+            status: New status (flagged, removed, expired, reactivated)
             reason: Optional reason for the change
             session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
+        # Get seller's preferred language
+        seller_lang = self.get_user_language(seller_id)
+        
         # Get session ID if not provided
         if not session_id:
             session_id = self.get_user_session(seller_id)
         
-        status_messages = {
-            'flagged': '🚩 Your listing has been flagged for review',
-            'removed': '❌ Your listing has been removed',
-            'expired': '⏰ Your listing has expired',
-            'reactivated': '✅ Your listing is active again'
+        # Map status to translation keys
+        status_key_map = {
+            'flagged': 'listing_flagged',
+            'removed': 'listing_removed',
+            'expired': 'listing_expired',
+            'reactivated': 'listing_reactivated'
         }
         
-        title = status_messages.get(status, f"Listing Status: {status}")
-        body = reason if reason else f"Your listing #{listing_id[:8]} {status}"
+        translation_key = status_key_map.get(status, 'listing_flagged')
+        title = get_translation(seller_lang, translation_key)
+        body = reason if reason else f"Your listing #{listing_id[:8]}"
         
         result = self.apn_service.send_notification(
             user_id=seller_id,
@@ -163,13 +171,16 @@ class NotificationService:
             listing_id: Related listing ID
             session_id: Optional session ID for auto-login (will be fetched if not provided)
         """
+        # Get user's preferred language
+        user_lang = self.get_user_language(user_id)
+        
         # Get session ID if not provided
         if not session_id:
             session_id = self.get_user_session(user_id)
         
+        title = get_translation(user_lang, 'RATING_RECEIVED')
         stars = "⭐" * rating
-        title = f"You got a rating! {stars}"
-        body = f"{rater_name} gave you a {rating}-star rating"
+        body = f"{rater_name} gave you a {rating}-star rating {stars}"
         
         result = self.apn_service.send_notification(
             user_id=user_id,
@@ -281,6 +292,68 @@ class NotificationService:
         
         return result
 
+    def send_listing_cancelled_notification(self, buyer_id, seller_name, listing_title):
+        """
+        Send notification when a listing is cancelled by the seller
+        Args:
+            buyer_id: ID of the buyer
+            seller_name: Name of the seller
+            listing_title: Title of the listing
+        """
+        # Get buyer's preferred language
+        buyer_lang = self.get_user_language(buyer_id)
+        
+        # Get session ID for buyer
+        session_id = self.get_user_session(buyer_id)
+        
+        # Get translation for title
+        title = get_translation(buyer_lang, 'listing_cancelled')
+        body = f"{seller_name}'s listing '{listing_title}' was cancelled"
+        
+        result = self.apn_service.send_notification(
+            user_id=buyer_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='dashboard',
+            deep_link_id=None
+        )
+        
+        return result
+
+    def send_exchange_completed_notification(self, user_id, partner_name):
+        """
+        Send notification when an exchange is completed by the other party
+        Args:
+            user_id: ID of the user being notified
+            partner_name: Name of the partner who completed the exchange
+        """
+        # Get user's preferred language
+        user_lang = self.get_user_language(user_id)
+        
+        # Get session ID for user
+        session_id = self.get_user_session(user_id)
+        
+        # Get translation for title
+        title = get_translation(user_lang, 'exchange_completed')
+        body = f"{partner_name} has confirmed the exchange completion"
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='dashboard',
+            deep_link_id=None
+        )
+        
+        return result
+
 
 # Global instance
 notification_service = NotificationService()
+

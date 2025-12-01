@@ -12,6 +12,7 @@ struct PaymentView: View {
     let userRole: String
     let otherUserName: String
     let onComplete: () -> Void
+    let onBothPaid: (() -> Void)?
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
@@ -159,9 +160,16 @@ struct PaymentView: View {
                 }
             }
             .alert(localizationManager.localize("PAYMENT_SUCCESS"), isPresented: $showSuccess) {
-                Button(localizationManager.localize("OK")) {
-                    dismiss()
-                    onComplete()
+                if let result = paymentResult, result.bothPaid == true {
+                    Button(localizationManager.localize("VIEW_ACTIVE_EXCHANGE")) {
+                        dismiss()
+                        onBothPaid?()
+                    }
+                } else {
+                    Button(localizationManager.localize("OK")) {
+                        dismiss()
+                        onComplete()
+                    }
                 }
             } message: {
                 if let result = paymentResult {
@@ -203,8 +211,10 @@ struct PaymentView: View {
     PaymentView(
         negotiationId: "NEG-123",
         userRole: "buyer",
-        otherUserName: "John"
-    ) {
-        print("Payment complete")
-    }
+        otherUserName: "John",
+        onComplete: {
+            print("Payment complete")
+        },
+        onBothPaid: nil
+    )
 }

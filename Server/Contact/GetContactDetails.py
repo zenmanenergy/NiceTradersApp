@@ -152,6 +152,36 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
             }
         }
         
+        # Get current agreed meeting if exists
+        if session_id:
+            print(f"[GetContactDetails] Fetching meeting for listing_id: {listing_id}")
+            meeting_query = """
+                SELECT current_proposed_time, agreement_reached_at
+                FROM exchange_negotiations
+                WHERE listing_id = %s 
+                AND status IN ('agreed', 'paid_partial', 'paid_complete')
+                ORDER BY agreement_reached_at DESC
+                LIMIT 1
+            """
+            try:
+                cursor.execute(meeting_query, (listing_id,))
+                meeting_result = cursor.fetchone()
+                print(f"[GetContactDetails] Meeting query result: {meeting_result}")
+                if meeting_result:
+                    listing_data['current_meeting'] = {
+                        'location': '',  # Location comes from meeting_proposals if needed
+                        'time': meeting_result['current_proposed_time'].isoformat() if meeting_result['current_proposed_time'] else None,
+                        'message': None,
+                        'agreed_at': meeting_result['agreement_reached_at'].isoformat() if meeting_result['agreement_reached_at'] else None
+                    }
+                    print(f"[GetContactDetails] Meeting added to response: {listing_data['current_meeting']}")
+                else:
+                    print(f"[GetContactDetails] No agreed meeting found for listing {listing_id}")
+            except Exception as meeting_err:
+                print(f"[GetContactDetails] Error fetching meeting data: {str(meeting_err)}")
+        else:
+            print(f"[GetContactDetails] No session_id provided, skipping meeting fetch")
+        
         # Close database connection
         cursor.close()
         connection.close()

@@ -2,7 +2,7 @@ import json
 import uuid
 from datetime import datetime
 from _Lib import Database
-from Admin.NotificationService import NotificationService
+from Admin.NotificationService import notification_service
 
 def propose_negotiation(listing_id, session_id, proposed_time):
     """
@@ -132,14 +132,13 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         
         # Send APN notification to seller
         try:
-            notification_service = NotificationService()
             notification_service.send_negotiation_proposal_notification(
                 seller_id=seller_id,
                 buyer_name=buyer_name,
                 proposed_time=proposed_time,
                 listing_id=listing_id,
-                negotiation_id=negotiation_id,
-                session_id=session_id
+                negotiation_id=negotiation_id
+                # session_id is automatically fetched inside notification_service
             )
             print(f"[Negotiations] Sent APN notification to seller {seller_id}")
         except Exception as notif_error:

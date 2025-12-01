@@ -15,6 +15,13 @@
 		};
 	}
 	
+	function goToPaymentReports() {
+		$viewState = {
+			currentView: 'payment-reports',
+			breadcrumbs: []
+		};
+	}
+	
 	function goBack() {
 		if ($viewState.breadcrumbs.length > 0) {
 			$viewState.breadcrumbs.pop();
@@ -39,7 +46,10 @@
 				<h1>🔧 Admin Dashboard</h1>
 				<p>Nice Traders Admin</p>
 			</div>
-			<button class="logs-btn" on:click={goToLogs}>📋 View Logs</button>
+			<div class="header-buttons">
+				<button class="logs-btn" on:click={goToPaymentReports}>💳 Payment Reports</button>
+				<button class="logs-btn" on:click={goToLogs}>📋 View Logs</button>
+			</div>
 		</div>
 	</div>
 	
@@ -85,6 +95,12 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 20px;
+	}
+
+	.header-buttons {
+		display: flex;
+		gap: 10px;
+		flex-wrap: wrap;
 	}
 
 	.admin-header h1 {

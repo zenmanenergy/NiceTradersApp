@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 // Note: ContactData, ContactListing, and OtherUser types are defined in ContactDetailView.swift
 // They should be moved to a shared models file, but for now we reference them here
@@ -22,6 +23,7 @@ struct DashboardView: View {
     @State private var navigateToCreateListing = false
     @State private var navigateToSearch = false
     @State private var navigateToProfile = false
+    @State private var currentRequestToken = UUID() // Track which load request is current
     @State private var navigateToMessages = false
     @State private var navigateToContact = false
     @State private var selectedContactData: ContactData?
@@ -166,6 +168,10 @@ struct DashboardView: View {
         isLoading = true
         error = nil
         
+        // Generate new token for this load request
+        currentRequestToken = UUID()
+        let thisRequestToken = currentRequestToken
+        
         // Clear existing data to prevent duplicates
         allActiveExchanges = []
         purchasedContactsData = []
@@ -173,7 +179,8 @@ struct DashboardView: View {
         
         // Get dashboard summary
         getDashboardSummary(sessionId: sessionId) { response in
-            print("[Dashboard] Full response: \(response)")
+            // Ignore if this response is from an old request
+            guard thisRequestToken == self.currentRequestToken else { return }
             
             if let dashboardData = response["data"] as? [String: Any],
                let userData = dashboardData["user"] as? [String: Any] {
@@ -232,7 +239,8 @@ struct DashboardView: View {
                             createdDate: listingDict["createdAt"] as? String ?? "",
                             expiresDate: listingDict["availableUntil"] as? String ?? "",
                             viewCount: 0,
-                            contactCount: 0
+                            contactCount: 0,
+                            willRoundToNearestDollar: listingDict["willRoundToNearestDollar"] as? Bool ?? false
                         )
                     }
                     
@@ -249,7 +257,14 @@ struct DashboardView: View {
         
         // Get purchased contacts
         getPurchasedContacts(sessionId: sessionId) { contacts in
+            // Ignore if this response is from an old request
+            guard thisRequestToken == self.currentRequestToken else { return }
             print("[Dashboard] Purchased contacts response: \(contacts.count) contacts")
+            for (index, contact) in contacts.enumerated() {
+                if let listingId = contact["listing_id"] as? String {
+                    print("[DEBUG]   PurchasedContact[\(index)]: listing_id=\(listingId)")
+                }
+            }
             
             // Store raw data for navigation
             self.purchasedContactsData = contacts
@@ -262,8 +277,11 @@ struct DashboardView: View {
                       let location = listing["location"] as? String,
                       let sellerName = seller["name"] as? String,
                       let listingId = contact["listing_id"] as? String else {
+                    print("[DEBUG] Failed to extract purchased exchange from contact")
                     return nil
                 }
+                
+                print("[DEBUG] Creating purchased exchange for listing: \(listingId)")
                 
                 let amount: Double
                 if let amountInt = listing["amount"] as? Int {
@@ -274,8 +292,10 @@ struct DashboardView: View {
                     return nil
                 }
                 
-                // Calculate converted amount using exchange rates
                 let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                let willRound = (listing["will_round_to_nearest_dollar"] as? Bool) ?? false
+                let meetingTime = contact["current_meeting"] as? [String: Any] ?? nil
+                let meetingTimeStr = (meetingTime?["time"] as? String) ?? nil
                 
                 return ActiveExchange(
                     id: listingId,
@@ -285,16 +305,35 @@ struct DashboardView: View {
                     convertedAmount: convertedAmount,
                     traderName: sellerName,
                     location: location,
-                    type: .buyer
+                    type: .buyer,
+                    willRoundToNearestDollar: willRound,
+                    meetingTime: meetingTimeStr
                 )
             }
             
-            self.allActiveExchanges.append(contentsOf: purchasedExchanges)
-            print("[Dashboard] Total active exchanges: \(self.allActiveExchanges.count)")
+            print("[DEBUG] Purchased exchanges created: \(purchasedExchanges.count)")
+            for (index, exchange) in purchasedExchanges.enumerated() {
+                print("[DEBUG]   PurchasedExchange[\(index)]: id=\(exchange.id)")
+            }
+            
+            // Deduplicate purchased exchanges by listing ID before adding
+            var seenIds = Set<String>()
+            let uniquePurchasedExchanges = purchasedExchanges.filter { exchange in
+                if seenIds.contains(exchange.id) {
+                    return false
+                }
+                seenIds.insert(exchange.id)
+                return true
+            }
+            
+            self.allActiveExchanges.append(contentsOf: uniquePurchasedExchanges)
+            print("[Dashboard] Total active exchanges (purchased): \(self.allActiveExchanges.count)")
         }
         
         // Get listing purchases
         getListingPurchases(sessionId: sessionId) { purchases in
+            // Ignore if this response is from an old request
+            guard thisRequestToken == self.currentRequestToken else { return }
             print("[Dashboard] Listing purchases response: \(purchases.count) purchases")
             let sellerExchanges = purchases.compactMap { purchase -> ActiveExchange? in
                 guard let listing = purchase["listing"] as? [String: Any],
@@ -304,8 +343,11 @@ struct DashboardView: View {
                       let location = listing["location"] as? String,
                       let buyerName = buyer["name"] as? String,
                       let listingId = purchase["listing_id"] as? String else {
+                    print("[DEBUG] Failed to extract seller exchange from purchase")
                     return nil
                 }
+                
+                print("[DEBUG] Creating seller exchange for listing: \(listingId)")
                 
                 let amount: Double
                 if let amountInt = listing["amount"] as? Int {
@@ -318,6 +360,7 @@ struct DashboardView: View {
                 
                 // Calculate converted amount using exchange rates
                 let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                let willRound = (listing["will_round_to_nearest_dollar"] as? Bool) ?? false
                 
                 return ActiveExchange(
                     id: listingId,
@@ -327,16 +370,39 @@ struct DashboardView: View {
                     convertedAmount: convertedAmount,
                     traderName: buyerName,
                     location: location,
-                    type: .seller
+                    type: .seller,
+                    willRoundToNearestDollar: willRound,
+                    meetingTime: nil
                 )
             }
             
-            self.allActiveExchanges.append(contentsOf: sellerExchanges)
-            print("[Dashboard] Total active exchanges: \(self.allActiveExchanges.count)")
+            print("[DEBUG] Seller exchanges created: \(sellerExchanges.count)")
+            for (index, exchange) in sellerExchanges.enumerated() {
+                print("[DEBUG]   SellerExchange[\(index)]: id=\(exchange.id)")
+            }
+            
+            // Deduplicate - filter out seller exchanges for listings already in buyer list
+            let existingBuyerListingIds = Set(self.allActiveExchanges.map { $0.id })
+            print("[DEBUG] Existing buyer listing IDs: \(existingBuyerListingIds)")
+            
+            let uniqueSellerExchanges = sellerExchanges.filter { !existingBuyerListingIds.contains($0.id) }
+            print("[DEBUG] Unique seller exchanges after dedup: \(uniqueSellerExchanges.count)")
+            for (index, exchange) in uniqueSellerExchanges.enumerated() {
+                print("[DEBUG]   UniqueSellerExchange[\(index)]: id=\(exchange.id)")
+            }
+            
+            self.allActiveExchanges.append(contentsOf: uniqueSellerExchanges)
+            
+            print("[Dashboard] Total active exchanges (after dedup): \(self.allActiveExchanges.count)")
+            for (index, exchange) in self.allActiveExchanges.enumerated() {
+                print("[DEBUG]   AllActiveExchange[\(index)]: id=\(exchange.id), type=\(exchange.type)")
+            }
         }
         
         // Get pending negotiations (for both buyers and sellers)
         getNegotiations(sessionId: sessionId) { negotiations in
+            // Ignore if this response is from an old request
+            guard thisRequestToken == self.currentRequestToken else { return }
             print("[Dashboard] Negotiations response: \(negotiations.count) negotiations")
             let pending = negotiations.filter { neg in
                 guard let userRole = neg["userRole"] as? String else { return false }
@@ -350,7 +416,8 @@ struct DashboardView: View {
                       let proposedTime = neg["currentProposedTime"] as? String,
                       let currency = listing["currency"] as? String,
                       let acceptCurrency = listing["acceptCurrency"] as? String,
-                      let buyerName = otherUser["name"] as? String else {
+                      let buyerName = otherUser["name"] as? String,
+                      let status = neg["status"] as? String else {
                     return nil
                 }
                 
@@ -365,6 +432,8 @@ struct DashboardView: View {
                 
                 let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
                 
+                let willRound = (listing["willRoundToNearestDollar"] as? Bool) ?? false
+                
                 return PendingNegotiation(
                     id: negId,
                     buyerName: buyerName,
@@ -372,7 +441,9 @@ struct DashboardView: View {
                     amount: amount,
                     acceptCurrency: acceptCurrency,
                     proposedTime: proposedTime,
-                    convertedAmount: convertedAmount
+                    convertedAmount: convertedAmount,
+                    status: status,
+                    willRoundToNearestDollar: willRound
                 )
             }
             
@@ -435,8 +506,15 @@ struct DashboardView: View {
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let purchases = json["listing_purchases"] as? [[String: Any]] else {
+                    print("[DEBUG] GetListingPurchases: Failed to parse response")
                     completion([])
                     return
+                }
+                print("[DEBUG] GetListingPurchases API Response: \(purchases.count) purchases")
+                for (index, purchase) in purchases.enumerated() {
+                    if let listingId = purchase["listing_id"] as? String {
+                        print("[DEBUG]   Purchase[\(index)]: listing_id=\(listingId)")
+                    }
                 }
                 completion(purchases)
             }
@@ -794,6 +872,9 @@ struct ActiveExchangesSection: View {
                     preferredCurrency: nil,
                     meetingPreference: listing["meeting_preference"] as? String,
                     location: location,
+                    latitude: (listing["latitude"] as? Double) ?? 0.0,
+                    longitude: (listing["longitude"] as? Double) ?? 0.0,
+                    radius: (listing["location_radius"] as? Int) ?? 5,
                     willRoundToNearestDollar: listing["will_round_to_nearest_dollar"] as? Bool
                 ),
                 otherUser: OtherUser(
@@ -850,6 +931,7 @@ struct EmptyStateView: View {
 struct ActiveExchangeCard: View {
     let exchange: ActiveExchange
     @ObservedObject var localizationManager = LocalizationManager.shared
+    @State private var displayLocation: String = ""
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -857,7 +939,7 @@ struct ActiveExchangeCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        Text(String(format: "%.2f", exchange.amount))
+                        Text(String(format: exchange.willRoundToNearestDollar ? "%.0f" : "%.2f", exchange.amount))
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
                         Text(exchange.currencyFrom)
@@ -869,7 +951,7 @@ struct ActiveExchangeCard: View {
                             .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                         
                         if let convertedAmount = exchange.convertedAmount {
-                            Text(String(format: "%.2f", convertedAmount))
+                            Text(String(format: exchange.willRoundToNearestDollar ? "%.0f" : "%.2f", convertedAmount))
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.white)
                             Text(exchange.currencyTo)
@@ -890,9 +972,18 @@ struct ActiveExchangeCard: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.white)
             
-            Text(exchange.location)
+            Text(displayLocation.isEmpty ? exchange.location : displayLocation)
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.8))
+                .onAppear {
+                    geocodeLocation(exchange.location)
+                }
+            
+            if let meetingTime = exchange.meetingTime {
+                Text(formatDateTime(meetingTime))
+                    .font(.system(size: 13))
+                    .foregroundColor(.white.opacity(0.8))
+            }
             
             HStack {
                 Text(exchange.type == .buyer ? "Buying from" : "Selling to")
@@ -902,17 +993,70 @@ struct ActiveExchangeCard: View {
                 Spacer()
                 
                 Text("💬 " + localizationManager.localize("START_CONVERSATION"))
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
                     .background(Color.white.opacity(0.2))
-                    .cornerRadius(15)
+                    .cornerRadius(12)
             }
         }
         .padding(16)
         .background(Color.white.opacity(0.1))
         .cornerRadius(12)
+    }
+    
+    private func geocodeLocation(_ locationString: String) {
+        // Parse lat/lng from location string (format: "37.7858, -122.4064")
+        let components = locationString.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        guard components.count == 2,
+              let latitude = Double(components[0]),
+              let longitude = Double(components[1]) else {
+            displayLocation = locationString
+            return
+        }
+        
+        let location = CLLocation(latitude: latitude, longitude: longitude)
+        let geocoder = CLGeocoder()
+        
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            DispatchQueue.main.async {
+                if let placemark = placemarks?.first {
+                    // Build a readable location string
+                    var addressParts: [String] = []
+                    
+                    if let city = placemark.locality {
+                        addressParts.append(city)
+                    }
+                    if let state = placemark.administrativeArea {
+                        addressParts.append(state)
+                    }
+                    if let country = placemark.country {
+                        addressParts.append(country)
+                    }
+                    
+                    if !addressParts.isEmpty {
+                        self.displayLocation = addressParts.joined(separator: ", ")
+                    } else {
+                        self.displayLocation = locationString
+                    }
+                } else {
+                    self.displayLocation = locationString
+                }
+            }
+        }
+    }
+    
+    private func formatDateTime(_ dateString: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        guard let date = formatter.date(from: dateString) else {
+            return dateString
+        }
+        
+        let displayFormatter = DateFormatter()
+        displayFormatter.dateStyle = .medium
+        displayFormatter.timeStyle = .short
+        return displayFormatter.string(from: date)
     }
 }
 
@@ -994,8 +1138,13 @@ struct ListingCard: View {
                         .foregroundColor(Color(red: 0.4, green: 0.49, blue: 0.92))
                     
                     if let converted = convertedAmount {
-                        Text("\(String(format: "%.2f", converted)) \(listing.wantCurrency)")
-                            .font(.system(size: 14, weight: .semibold))
+                        if listing.willRoundToNearestDollar {
+                            Text("\(String(format: "%.0f", converted)) \(listing.wantCurrency)")
+                                .font(.system(size: 14, weight: .semibold))
+                        } else {
+                            Text("\(String(format: "%.2f", converted)) \(listing.wantCurrency)")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
                     } else {
                         Text(listing.wantCurrency)
                             .font(.system(size: 14, weight: .semibold))
@@ -1098,6 +1247,7 @@ struct Listing: Identifiable, Hashable {
     let expiresDate: String
     let viewCount: Int
     let contactCount: Int
+    let willRoundToNearestDollar: Bool
 }
 
 struct ActiveExchange: Identifiable {
@@ -1109,6 +1259,8 @@ struct ActiveExchange: Identifiable {
     let traderName: String
     let location: String
     let type: ExchangeType
+    let willRoundToNearestDollar: Bool
+    let meetingTime: String? // ISO datetime string
     
     enum ExchangeType {
         case buyer, seller
@@ -1123,6 +1275,8 @@ struct PendingNegotiation: Identifiable {
     let acceptCurrency: String
     let proposedTime: String
     let convertedAmount: Double?
+    let status: String
+    let willRoundToNearestDollar: Bool
 }
 
 // MARK: - Pending Negotiations Section
@@ -1140,13 +1294,33 @@ struct PendingNegotiationsSection: View {
                 
                 Spacer()
                 
-                Text("ACTION REQUIRED")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.orange)
-                    .cornerRadius(12)
+                // Show different badge based on negotiation statuses
+                let statuses = Set(negotiations.map { $0.status })
+                if statuses.contains("proposed") || statuses.contains("countered") {
+                    Text("ACTION REQUIRED")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.orange)
+                        .cornerRadius(12)
+                } else if statuses.contains("paid_partial") {
+                    Text("AWAITING PAYMENT")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                } else if statuses.contains("agreed") {
+                    Text("AGREED - PAY TO UNLOCK")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(Color.green)
+                        .cornerRadius(12)
+                }
             }
             
             ForEach(negotiations) { negotiation in
@@ -1175,14 +1349,14 @@ struct PendingNegotiationCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 HStack(spacing: 4) {
-                    Text(String(format: "%.2f", negotiation.amount))
+                    Text(String(format: negotiation.willRoundToNearestDollar ? "%.0f" : "%.2f", negotiation.amount))
                         .font(.system(size: 18, weight: .bold))
                     Text(negotiation.currency)
                         .font(.system(size: 16, weight: .semibold))
                     Text("→")
                         .font(.system(size: 16, weight: .bold))
                     if let converted = negotiation.convertedAmount {
-                        Text(String(format: "%.2f", converted))
+                        Text(String(format: negotiation.willRoundToNearestDollar ? "%.0f" : "%.2f", converted))
                             .font(.system(size: 18, weight: .bold))
                         Text(negotiation.acceptCurrency)
                             .font(.system(size: 16, weight: .semibold))

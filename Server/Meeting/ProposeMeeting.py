@@ -136,15 +136,14 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, me
         
         # Send APN notification to recipient
         try:
-            from NotificationService import notification_service
-            recipient_session = notification_service.get_user_last_session(recipient_id)
+            from Admin.NotificationService import notification_service
             notification_service.send_meeting_proposal_notification(
                 recipient_id=recipient_id,
                 proposer_name=proposer_name,
                 proposed_time=time_str,
                 listing_id=listing_id,
-                proposal_id=proposal_id,
-                session_id=recipient_session
+                proposal_id=proposal_id
+                # session_id is automatically fetched inside notification_service
             )
         except Exception as apn_error:
             # Log error but don't fail the transaction

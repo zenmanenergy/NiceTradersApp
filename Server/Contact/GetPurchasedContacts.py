@@ -28,6 +28,7 @@ def get_purchased_contacts(session_id):
         has_exchange_columns = 'exchange_rate' in columns
         
         # Get all purchased contacts with listing and seller details
+        # Use ROW_NUMBER to get only the most recent access per listing
         if has_exchange_columns:
             query = """
                 SELECT 
@@ -64,12 +65,17 @@ def get_purchased_contacts(session_id):
                      AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
                           OR (m.sender_id = l.user_id AND m.recipient_id = %s))
                      ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
-                FROM contact_access ca
+                FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
+                    FROM contact_access
+                    WHERE user_id = %s 
+                    AND status = 'active'
+                    AND (expires_at IS NULL OR expires_at > NOW())
+                ) ca
                 JOIN listings l ON ca.listing_id = l.listing_id
                 JOIN users u ON l.user_id = u.UserId
-                WHERE ca.user_id = %s 
-                AND ca.status = 'active'
-                AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+                WHERE ca.rn = 1
                 ORDER BY ca.purchased_at DESC
             """
         else:
@@ -109,12 +115,17 @@ def get_purchased_contacts(session_id):
                      AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
                           OR (m.sender_id = l.user_id AND m.recipient_id = %s))
                      ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
-                FROM contact_access ca
-                JOIN listings l ON ca.listing_id = l.listing_id
+                FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
+                    FROM contact_access
+                    WHERE user_id = %s 
+                    AND status = 'active'
+                    AND (expires_at IS NULL OR expires_at > NOW())
+                ) ca
+                JOIN listings l ON ca.listing_id = l.listing_id AND ca.user_id != l.user_id
                 JOIN users u ON l.user_id = u.UserId
-                WHERE ca.user_id = %s 
-                AND ca.status = 'active'
-                AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+                WHERE ca.rn = 1
                 ORDER BY ca.purchased_at DESC
             """
         

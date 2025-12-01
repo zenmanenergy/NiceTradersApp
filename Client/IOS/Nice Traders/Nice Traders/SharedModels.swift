@@ -130,6 +130,8 @@ struct SearchListing: Identifiable, Codable, Equatable {
     let status: String
     let createdAt: String?
     let user: ListingUser
+    let convertedAmount: Double?
+    let willRoundToNearestDollar: Bool?
     
     // Calculate approximate distance (coordinates are already randomized for privacy)
     func approximateDistance(from userLocation: CLLocation?) -> Double? {

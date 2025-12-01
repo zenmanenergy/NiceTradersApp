@@ -109,8 +109,7 @@ struct ProfileView: View {
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToExchangeHistory) {
-            // ExchangeHistoryView would go here
-            Text(localizationManager.localize("Exchange_History"))
+            ExchangeHistoryView(showExchangeHistory: $navigateToExchangeHistory)
         }
         .navigationDestination(isPresented: $navigateToLanguagePicker) {
             LanguagePickerView()
@@ -120,6 +119,9 @@ struct ProfileView: View {
             let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
             print("🟢 [ProfileView] onAppear - UserDefaults.AppLanguage: \(savedInDefaults ?? "nil")")
             loadProfileData()
+        }
+        .onChange(of: navigateToExchangeHistory) { newValue in
+            print("🟢 [ProfileView] navigateToExchangeHistory changed: \(newValue)")
         }
         .onChange(of: localizationManager.languageVersion) { newVersion in
             print("🟢 [ProfileView] onChange triggered - version changed to: \(newVersion)")
@@ -161,7 +163,7 @@ struct ProfileView: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),

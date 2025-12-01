@@ -650,6 +650,116 @@ def get_logs():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@blueprint.route('/Admin/GetPaymentReports', methods=['GET', 'POST'])
+@cross_origin()
+def get_payment_reports():
+    """Get payment reports with filtering and statistics"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        
+        # Get optional filters
+        start_date = params.get('start_date')
+        end_date = params.get('end_date')
+        payment_method = params.get('payment_method')  # 'paypal', 'stripe', etc.
+        status = params.get('status')  # 'completed', 'pending', 'failed'
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Build base query
+        query = "SELECT * FROM purchased_listings WHERE 1=1"
+        query_params = []
+        
+        # Add filters
+        if start_date:
+            query += " AND purchased_at >= %s"
+            query_params.append(start_date)
+        
+        if end_date:
+            query += " AND purchased_at <= %s"
+            query_params.append(end_date)
+        
+        if payment_method:
+            query += " AND payment_method = %s"
+            query_params.append(payment_method)
+        
+        if status:
+            query += " AND status = %s"
+            query_params.append(status)
+        
+        # Get all matching transactions
+        query += " ORDER BY purchased_at DESC"
+        cursor.execute(query, query_params)
+        transactions = cursor.fetchall()
+        
+        # Calculate statistics
+        stats_query = """
+            SELECT 
+                COUNT(*) as total_transactions,
+                SUM(amount_paid) as total_amount,
+                AVG(amount_paid) as average_amount,
+                COUNT(DISTINCT user_id) as unique_users,
+                COUNT(DISTINCT listing_id) as unique_listings
+            FROM purchased_listings
+            WHERE 1=1
+        """
+        stats_params = []
+        
+        if start_date:
+            stats_query += " AND purchased_at >= %s"
+            stats_params.append(start_date)
+        
+        if end_date:
+            stats_query += " AND purchased_at <= %s"
+            stats_params.append(end_date)
+        
+        if payment_method:
+            stats_query += " AND payment_method = %s"
+            stats_params.append(payment_method)
+        
+        if status:
+            stats_query += " AND status = %s"
+            stats_params.append(status)
+        
+        cursor.execute(stats_query, stats_params)
+        stats = cursor.fetchone()
+        
+        # Get payment method breakdown
+        method_query = """
+            SELECT 
+                payment_method,
+                COUNT(*) as count,
+                SUM(amount_paid) as total
+            FROM purchased_listings
+            WHERE 1=1
+        """
+        method_params = []
+        
+        if start_date:
+            method_query += " AND purchased_at >= %s"
+            method_params.append(start_date)
+        
+        if end_date:
+            method_query += " AND purchased_at <= %s"
+            method_params.append(end_date)
+        
+        method_query += " GROUP BY payment_method ORDER BY total DESC"
+        cursor.execute(method_query, method_params)
+        payment_methods = cursor.fetchall()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'transactions': transactions,
+            'stats': stats,
+            'payment_methods': payment_methods,
+            'count': len(transactions) if transactions else 0
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @blueprint.route('/Admin/ClearLogs', methods=['POST'])
 @cross_origin()
 def clear_logs():

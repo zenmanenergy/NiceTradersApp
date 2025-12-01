@@ -300,7 +300,7 @@ struct CreateListingView: View {
             Spacer()
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -516,6 +516,36 @@ struct CreateListingView: View {
                     }
                 }
             }
+            
+            // Rounding Preference
+            Button(action: {
+                willRoundToNearestDollar.toggle()
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
+                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
+                        .font(.system(size: 18))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("I'm willing to round to the nearest whole dollar")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        Text("Example: 130.79 USD rounds to 131 USD")
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
+                )
+            }
         }
         .padding(.horizontal, 24)
     }
@@ -676,36 +706,6 @@ struct CreateListingView: View {
                         .foregroundColor(Color(hex: "e53e3e"))
                 }
             }
-            
-            // Rounding Preference
-            Button(action: {
-                willRoundToNearestDollar.toggle()
-            }) {
-                HStack(spacing: 12) {
-                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
-                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
-                        .font(.system(size: 18))
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("I'm willing to round to the nearest whole dollar")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Color(hex: "2d3748"))
-                        
-                        Text("Example: 130.79 USD rounds to 131 USD")
-                            .font(.system(size: 13))
-                            .foregroundColor(Color(hex: "718096"))
-                    }
-                    
-                    Spacer()
-                }
-                .padding(16)
-                .background(Color.white)
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
-                )
-            }
         }
         .padding(.horizontal, 24)
     }
@@ -824,6 +824,24 @@ struct CreateListingView: View {
                         Text(availableUntil, style: .date)
                             .font(.system(size: 14))
                             .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    HStack {
+                        Text("Rounding preference:")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(Color(hex: "4a5568"))
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 6) {
+                            Image(systemName: willRoundToNearestDollar ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(willRoundToNearestDollar ? Color(hex: "48bb78") : Color(hex: "f56565"))
+                            
+                            Text(willRoundToNearestDollar ? "Yes, I'll accept rounding" : "No rounding allowed")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color(hex: "718096"))
+                        }
                     }
                 }
             }

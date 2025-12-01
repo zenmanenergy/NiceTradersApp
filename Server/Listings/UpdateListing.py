@@ -1,4 +1,5 @@
 from _Lib import Database
+from _Lib.Geocoding import GeocodingService
 import json
 
 def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar=None):
@@ -90,7 +91,8 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
             update_fields.append("location = %s")
             params.append(location)
         
-        # Handle coordinates
+        # Handle coordinates and geocoding
+        geocoded_location = None
         if latitude and longitude:
             try:
                 lat_value = float(latitude)
@@ -99,8 +101,24 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
                 params.append(lat_value)
                 update_fields.append("longitude = %s")
                 params.append(lng_value)
+                
+                # Reverse geocode the new coordinates
+                print(f"[UpdateListing] Reverse geocoding coordinates: {lat_value}, {lng_value}")
+                geocoded = GeocodingService.reverse_geocode(lat_value, lng_value)
+                if geocoded and geocoded != location:
+                    geocoded_location = geocoded
+                    print(f"[UpdateListing] Reverse geocoding successful: {geocoded_location}")
+                
+                # Always update geocoding_updated_at when coordinates change
+                update_fields.append("geocoding_updated_at = NOW()")
+                
             except (ValueError, TypeError):
                 print(f"[UpdateListing] Warning: Invalid coordinates lat={latitude}, lng={longitude}")
+        
+        # Store geocoded_location if we have it
+        if geocoded_location is not None:
+            update_fields.append("geocoded_location = %s")
+            params.append(geocoded_location)
         
         if location_radius:
             update_fields.append("location_radius = %s")

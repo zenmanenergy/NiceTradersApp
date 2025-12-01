@@ -90,8 +90,7 @@ The canonical connection code is in: `Server/_Lib/Database.py`
 
 ### Backend (Flask)
 - **Location:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server`
-- **Port:** 9000
-- **Run:** `./run.sh` or `flask --app flask_app run --host=0.0.0.0 --port=9000 --reload`
+- **Run:** `./Server/run.sh`
 
 ### iOS App
 - **Location:** `/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders`
@@ -205,3 +204,5 @@ cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && ./run.sh
 ```bash
 cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && flask --app flask_app run --host=0.0.0.0 --port=9000 --reload
 ```
+
+If you need to write a python script don't just run the code in the command line, put it into a file. name the file: /scriptMadeByAi.py put it in the root folder. Then run it

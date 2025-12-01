@@ -212,6 +212,13 @@ def pay_negotiation_fee(negotiation_id, session_id):
                 ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
             """, (seller_access_id, negotiation['seller_id'], negotiation['listing_id'], amount_to_charge))
             
+            # Increment total exchanges for both buyer and seller
+            cursor.execute("""
+                UPDATE users
+                SET TotalExchanges = TotalExchanges + 1
+                WHERE UserID IN (%s, %s)
+            """, (negotiation['buyer_id'], negotiation['seller_id']))
+            
             new_status = 'paid_complete'
             message = 'Payment successful! Both parties have paid. Messaging and location coordination now unlocked.'
         else:

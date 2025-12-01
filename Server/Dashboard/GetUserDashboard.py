@@ -73,7 +73,7 @@ def get_user_dashboard(SessionId):
         # Get recent active listings (last 10 listings, excluding sold/completed)
         recent_listings_query = """
             SELECT listing_id, currency, amount, accept_currency, location, 
-                   status, created_at, available_until
+                   status, created_at, available_until, will_round_to_nearest_dollar
             FROM listings l
             WHERE l.user_id = %s 
             AND l.status = 'active'
@@ -132,7 +132,8 @@ def get_user_dashboard(SessionId):
                     'location': listing['location'],
                     'status': listing['status'],
                     'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
-                    'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None
+                    'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
+                    'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
                 }
                 for listing in recent_listings
             ],

@@ -65,9 +65,9 @@ def accept_proposal(negotiation_id, session_id):
                 'error': f'Cannot accept proposal in {negotiation["status"]} state'
             })
         
-        # Set agreement time and payment deadline (2 hours from now)
+        # Set agreement time and payment deadline (6 hours from now)
         agreement_time = datetime.now()
-        payment_deadline = agreement_time + timedelta(hours=2)
+        payment_deadline = agreement_time + timedelta(hours=6)
         
         # Update negotiation status to 'agreed'
         cursor.execute("""
@@ -94,7 +94,7 @@ def accept_proposal(negotiation_id, session_id):
             'status': 'agreed',
             'agreementReachedAt': agreement_time.isoformat(),
             'paymentDeadline': payment_deadline.isoformat(),
-            'message': 'Proposal accepted. Both parties must pay $2 within 2 hours.'
+            'message': 'Proposal accepted. Both parties must pay $2 within 6 hours.'
         })
         
     except Exception as e:

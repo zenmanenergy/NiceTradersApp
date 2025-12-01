@@ -57,6 +57,7 @@ struct SearchView: View {
     @State private var selectedListing: SearchListing?
     @State private var navigateToCreateListing = false
     @State private var navigateToMessages = false
+    @State private var navigateToDashboard = false
     
     var filteredCurrencies: [String] {
         if currencySearchQuery.isEmpty {
@@ -103,6 +104,11 @@ struct SearchView: View {
         }
         .navigationDestination(isPresented: $navigateToMessages) {
             MessagesView(navigateToMessages: $navigateToMessages)
+        }
+        .onChange(of: navigateToDashboard) { newValue in
+            if newValue {
+                navigateToSearch = false
+            }
         }
         .onAppear {
             loadInitialData()
@@ -155,7 +161,7 @@ struct SearchView: View {
             }
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -397,9 +403,36 @@ struct SearchView: View {
             currency: listing.currency,
             amount: listing.amount,
             acceptCurrency: listing.acceptCurrency,
-            sellerName: listing.user.firstName
+            sellerName: listing.user.firstName,
+            willRoundToNearestDollar: listing.willRoundToNearestDollar ?? false,
+            navigateToDashboard: $navigateToDashboard
         )) {
         VStack(alignment: .leading, spacing: 16) {
+            // Exchange Display - "10 USD -> 189 MXN"
+            HStack(spacing: 8) {
+                Text(String(format: "%.0f", listing.amount))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(hex: "667eea"))
+                Text(listing.currency)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(hex: "667eea"))
+                
+                Text("→")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Color(hex: "f6ad55"))
+                
+                let displayAmount = listing.convertedAmount ?? ExchangeRatesAPI.shared.convertAmountSync(listing.amount, from: listing.currency, to: listing.acceptCurrency) ?? 0
+                let shouldRound = listing.willRoundToNearestDollar ?? false
+                Text(String(format: shouldRound ? "%.0f" : "%.2f", displayAmount))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(Color(hex: "667eea"))
+                Text(listing.acceptCurrency)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(Color(hex: "667eea"))
+                
+                Spacer()
+            }
+            
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -744,15 +777,15 @@ struct SearchView: View {
         guard !dateString.isEmpty else { return "Not specified" }
         
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         formatter.timeZone = TimeZone(identifier: "UTC")
         
         guard let date = formatter.date(from: dateString) else {
             // Try simple date format
             formatter.dateFormat = "yyyy-MM-dd"
             if let date = formatter.date(from: dateString) {
-                formatter.dateStyle = .medium
-                formatter.timeStyle = .none
+                formatter.dateFormat = "MMM d yyyy"
+                formatter.timeZone = TimeZone.current
                 return formatter.string(from: date)
             }
             return dateString
@@ -771,8 +804,7 @@ struct SearchView: View {
         } else if days < 7 {
             return "\(days) days"
         } else {
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
+            formatter.dateFormat = "MMM d yyyy"
             formatter.timeZone = TimeZone.current
             return formatter.string(from: date)
         }

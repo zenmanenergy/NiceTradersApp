@@ -530,10 +530,39 @@ CREATE TABLE IF NOT EXISTS user_credits (
     FOREIGN KEY (applied_to_negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Create password_reset_tokens table for forgot password functionality
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    TokenId CHAR(39) PRIMARY KEY,
+    UserId CHAR(39) NOT NULL,
+    ResetToken VARCHAR(255) NOT NULL UNIQUE,
+    TokenExpires DATETIME NOT NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE,
+    INDEX idx_reset_token (ResetToken),
+    INDEX idx_user_id (UserId),
+    INDEX idx_expires (TokenExpires)
+);
+
+-- Create geocoding_cache table for reverse geocoding results
+CREATE TABLE IF NOT EXISTS geocoding_cache (
+    cache_id CHAR(39) PRIMARY KEY,
+    latitude DECIMAL(10,8) NOT NULL,
+    longitude DECIMAL(11,8) NOT NULL,
+    geocoded_location VARCHAR(255) NOT NULL COMMENT 'City, State or similar human-readable location',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    access_count INT DEFAULT 1 COMMENT 'Track how often this cache is used for optimization',
+    INDEX idx_coordinates (latitude, longitude),
+    INDEX idx_accessed_at (accessed_at),
+    UNIQUE KEY unique_coordinates (latitude, longitude)
+) COMMENT 'Centralized cache for reverse geocoding results to avoid repeated API calls';
+
 -- Show table creation status
 SELECT 'Complete NiceTradersApp database schema created successfully!' as status;
 SELECT 'All ID columns are CHAR(39) for consistent sizing' as note;
 SELECT 'Includes Contact module tables: contact_access, messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
 SELECT 'Includes Exchange Rates tables: exchange_rates, exchange_rate_logs' as exchange_rate_tables;
 SELECT 'Includes exchange_history table for user transaction records' as exchange_history_table;
+SELECT 'Includes password_reset_tokens for forgot password functionality' as password_reset_table;
+SELECT 'Includes geocoding_cache for reverse geocoding optimization' as geocoding_table;
 SELECT 'Ready for use with Flask application and all functionality' as ready;

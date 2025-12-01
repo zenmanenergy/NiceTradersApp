@@ -126,38 +126,31 @@ struct ContactView: View {
     
     // MARK: - Header View
     var headerView: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .center, spacing: 12) {
             Button(action: {
                 dismiss()
             }) {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
-                    .padding(10)
+                    .padding(8)
                     .background(Color.white.opacity(0.2))
-                    .cornerRadius(8)
+                    .cornerRadius(6)
             }
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 4) {
-                HStack(spacing: 8) {
-                    Text(contactData.listing.currency)
-                        .font(.system(size: 28, weight: .bold))
-                    Text("→")
-                        .font(.system(size: 24))
-                    Text(contactData.listing.accept_currency ?? contactData.listing.preferred_currency ?? "")
-                        .font(.system(size: 28, weight: .bold))
-                }
-                
-                Text("$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.will_round_to_nearest_dollar))")
-                    .font(.system(size: 22, weight: .semibold))
+            HStack(spacing: 4) {
+                Text("$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.will_round_to_nearest_dollar)) \(contactData.listing.currency) → \(ExchangeRatesAPI.shared.formatAmount(contactData.locked_amount ?? contactData.listing.amount, shouldRound: contactData.listing.will_round_to_nearest_dollar)) \(contactData.listing.accept_currency ?? contactData.listing.preferred_currency ?? "")")
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "FFD700"))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
         }
         .foregroundColor(.white)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -230,8 +223,8 @@ struct ContactView: View {
                     detailRow(label: "Meeting Preference:", value: contactData.listing.meeting_preference ?? "Not specified")
                     detailRow(label: "General Location:", value: contactData.listing.location)
                     
-                    if let purchasedAt = contactData.purchased_at {
-                        detailRow(label: "Contact Purchased:", value: formatDate(purchasedAt))
+                    if let meeting = currentMeeting {
+                        detailRow(label: "Meeting Date/Time:", value: formatDate(meeting.time))
                     }
                 }
             }

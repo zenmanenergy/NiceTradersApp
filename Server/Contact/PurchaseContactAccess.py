@@ -90,15 +90,14 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
         
         # Send APN notification to seller
         try:
-            from NotificationService import notification_service
-            seller_session = notification_service.get_user_last_session(seller_id)
+            from Admin.NotificationService import notification_service
             notification_service.send_payment_received_notification(
                 seller_id=seller_id,
                 buyer_name=buyer_name,
                 amount=2.00,
                 currency='USD',
-                listing_id=listing_id,
-                session_id=seller_session
+                listing_id=listing_id
+                # session_id is automatically fetched inside notification_service
             )
         except Exception as apn_error:
             # Log error but don't fail the transaction

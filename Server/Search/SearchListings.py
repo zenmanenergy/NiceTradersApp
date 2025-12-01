@@ -37,6 +37,7 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 l.status,
                 l.created_at,
                 l.updated_at,
+                l.will_round_to_nearest_dollar,
                 u.FirstName,
                 u.LastName,
                 u.Email,
@@ -166,6 +167,7 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
                 'status': listing['status'],
                 'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
+                'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False,
                 'user': {
                     'firstName': listing['FirstName'],
                     'rating': float(listing['Rating']) if listing['Rating'] and isinstance(listing['Rating'], Decimal) else (float(listing['Rating']) if listing['Rating'] else None),

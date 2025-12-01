@@ -13,6 +13,8 @@ struct ProposeTimeView: View {
     let amount: Double
     let acceptCurrency: String
     let sellerName: String
+    let willRoundToNearestDollar: Bool
+    @Binding var navigateToDashboard: Bool
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
@@ -85,7 +87,7 @@ struct ProposeTimeView: View {
                                 .foregroundColor(.secondary)
                             Spacer()
                             HStack(spacing: 4) {
-                                Text("\(String(format: "%.2f", Double(amount) ?? 0)) \(currency)")
+                                Text("\(String(format: willRoundToNearestDollar ? "%.0f" : "%.2f", amount)) \(currency)")
                                     .font(.headline)
                                 Image(systemName: "arrow.right")
                                     .font(.caption)
@@ -109,37 +111,56 @@ struct ProposeTimeView: View {
                             .font(.headline)
                             .padding(.horizontal)
                         
-                        DatePicker(
-                            "Choose when to meet",
-                            selection: $proposedDate,
-                            in: Date()...,
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .datePickerStyle(.graphical)
+                        VStack {
+                            DatePicker(
+                                "Choose when to meet",
+                                selection: $proposedDate,
+                                in: Date()...,
+                                displayedComponents: [.date, .hourAndMinute]
+                            )
+                            .datePickerStyle(.graphical)
+                        }
                         .padding()
                         .background(Color(UIColor.secondarySystemGroupedBackground))
                         .cornerRadius(12)
                         .padding(.horizontal)
-                        .onTapGesture { }
-                        .simultaneousGesture(TapGesture().onEnded { })
                     }
                     
                     // Info Box
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("What happens next?")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            Text("The seller can accept, reject, or propose a different time. Once you both agree, you'll each pay $2 within 2 hours to unlock messaging and share exact locations.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "info.circle.fill")
+                                    .foregroundColor(.blue)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("What happens next?")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("The seller can accept, reject, or propose a different time. Once you both agree, you'll each pay $2 within 2 hours to unlock messaging and share exact locations.")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Divider()
+                            
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundColor(.green)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Meeting Location")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Text("The exact meeting location will be determined after both parties have paid. You'll then be able to select a specific location within the agreed distance.")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(12)
                     .padding(.horizontal)
                     
                     // Error Message
@@ -175,6 +196,8 @@ struct ProposeTimeView: View {
             .background(Color(UIColor.systemGroupedBackground))
             .alert("Proposal Sent!", isPresented: $showSuccess) {
                 Button("OK") {
+                    // Navigate back to dashboard
+                    navigateToDashboard = true
                     dismiss()
                 }
             } message: {
@@ -188,8 +211,10 @@ struct ProposeTimeView: View {
         ExchangeRatesAPI.shared.convertAmount(amount, from: currency, to: acceptCurrency) { result, error in
             DispatchQueue.main.async {
                 if let result = result {
-                    // Format with appropriate decimal places
-                    if result >= 100 {
+                    // Format with appropriate decimal places based on rounding preference
+                    if willRoundToNearestDollar {
+                        convertedAmount = String(format: "%.0f", result)
+                    } else if result >= 100 {
                         convertedAmount = String(format: "%.2f", result)
                     } else if result >= 10 {
                         convertedAmount = String(format: "%.2f", result)
@@ -239,11 +264,14 @@ struct ProposeTimeView: View {
 }
 
 #Preview {
-    ProposeTimeView(
+    @State var navigateToDashboard = false
+    return ProposeTimeView(
         listingId: "LST-123",
         currency: "USD",
         amount: 1000.0,
         acceptCurrency: "EUR",
-        sellerName: "John Doe"
+        sellerName: "John Doe",
+        willRoundToNearestDollar: false,
+        navigateToDashboard: $navigateToDashboard
     )
 }

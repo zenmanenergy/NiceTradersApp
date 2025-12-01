@@ -40,7 +40,7 @@ struct EditListingView: View {
     @State private var isLoading = true
     @State private var showDeleteConfirmation = false
     
-    let totalSteps = 3
+    let totalSteps = 4
     
     enum LocationStatus {
         case unset, detecting, detected
@@ -239,6 +239,8 @@ struct EditListingView: View {
                                 step2View
                             } else if currentStep == 3 {
                                 step3View
+                            } else if currentStep == 4 {
+                                step4View
                             }
                         }
                         .padding(.top, 32)
@@ -296,7 +298,7 @@ struct EditListingView: View {
             Color.clear.frame(width: 40, height: 40)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.vertical, 10)
         .background(
             LinearGradient(
                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
@@ -328,7 +330,7 @@ struct EditListingView: View {
             }
             .frame(height: 6)
             
-            Text(getStepLabel())
+            Text("\(localizationManager.localize("STEP")) \(currentStep) \(localizationManager.localize("OF")) \(totalSteps)")
                 .font(.system(size: 14))
                 .foregroundColor(Color(hex: "718096"))
         }
@@ -461,6 +463,25 @@ struct EditListingView: View {
                 }
             }
             
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    // MARK: - Step 2: Accept Currency and Rounding
+    var step2View: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(spacing: 8) {
+                Text(localizationManager.localize("CONFIRM_YOUR_PREFERENCES"))
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(Color(hex: "2d3748"))
+                
+                Text(localizationManager.localize("WHICH_CURRENCY_WILL_YOU_ACCEPT"))
+                    .font(.system(size: 16))
+                    .foregroundColor(Color(hex: "718096"))
+            }
+            .frame(maxWidth: .infinity)
+            .multilineTextAlignment(.center)
+            
             // Accept Currency
             VStack(alignment: .leading, spacing: 8) {
                 Text(localizationManager.localize("WHAT_CURRENCY_WILL_YOU_ACCEPT"))
@@ -502,12 +523,42 @@ struct EditListingView: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "a0aec0"))
             }
+            
+            // Rounding Preference
+            Button(action: {
+                willRoundToNearestDollar.toggle()
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
+                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
+                        .font(.system(size: 18))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(localizationManager.localize("WILLING_TO_ROUND_TO_NEAREST_DOLLAR"))
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        Text(localizationManager.localize("EXAMPLE_ROUNDING"))
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(hex: "718096"))
+                    }
+                    
+                    Spacer()
+                }
+                .padding(16)
+                .background(Color.white)
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
+                )
+            }
         }
         .padding(.horizontal, 24)
     }
     
-    // MARK: - Step 2: Location and Preferences
-    var step2View: some View {
+    // MARK: - Step 3: Location and Preferences
+    var step3View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
                 Text(localizationManager.localize("WHERE_CAN_YOU_MEET"))
@@ -652,42 +703,12 @@ struct EditListingView: View {
                         .foregroundColor(Color(hex: "a0aec0"))
                 }
             }
-            
-            // Rounding Preference
-            Button(action: {
-                willRoundToNearestDollar.toggle()
-            }) {
-                HStack(spacing: 12) {
-                    Image(systemName: willRoundToNearestDollar ? "checkmark.square.fill" : "square")
-                        .foregroundColor(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
-                        .font(.system(size: 18))
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("I'm willing to round to the nearest whole dollar")
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Color(hex: "2d3748"))
-                        
-                        Text("Example: 130.79 USD rounds to 131 USD")
-                            .font(.system(size: 13))
-                            .foregroundColor(Color(hex: "718096"))
-                    }
-                    
-                    Spacer()
-                }
-                .padding(16)
-                .background(Color.white)
-                .cornerRadius(12)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(willRoundToNearestDollar ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
-                )
-            }
         }
         .padding(.horizontal, 24)
     }
     
-    // MARK: - Step 3: Review
-    var step3View: some View {
+    // MARK: - Step 4: Review
+    var step4View: some View {
         VStack(alignment: .leading, spacing: 24) {
             VStack(spacing: 8) {
                 Text(localizationManager.localize("REVIEW_YOUR_CHANGES"))
@@ -1084,11 +1105,12 @@ struct EditListingView: View {
                 fieldErrors["amount"] = "Please enter a valid amount"
                 return false
             }
+        } else if currentStep == 2 {
             if selectedAcceptCurrency == nil {
                 fieldErrors["acceptCurrency"] = "Please select what currency you will accept"
                 return false
             }
-        } else if currentStep == 2 {
+        } else if currentStep == 3 {
             if locationStatus != .detected {
                 fieldErrors["location"] = "Please detect your location first"
                 return false
@@ -1247,6 +1269,14 @@ struct EditListingView: View {
                     print("[EditListingView] Setting meeting preference: \(meetingPreference)")
                 }
                 
+                if let willRound = listingData["willRoundToNearestDollar"] as? Bool {
+                    willRoundToNearestDollar = willRound
+                    print("[EditListingView] Setting willRoundToNearestDollar: \(willRoundToNearestDollar)")
+                } else if let willRound = listingData["willRoundToNearestDollar"] as? Int {
+                    willRoundToNearestDollar = willRound != 0
+                    print("[EditListingView] Setting willRoundToNearestDollar (from Int): \(willRoundToNearestDollar)")
+                }
+                
                 if let availableUntilStr = listingData["availableUntil"] as? String {
                     let formatter = DateFormatter()
                     formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
@@ -1346,11 +1376,6 @@ struct EditListingView: View {
                 }
             }
         }.resume()
-    }
-    
-    func getStepLabel() -> String {
-        let key = "PASO_\(currentStep)_DE_\(totalSteps)"
-        return localizationManager.localize(key)
     }
     
     func confirmDelete() {

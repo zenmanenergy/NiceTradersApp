@@ -31,7 +31,7 @@ def get_negotiation(negotiation_id, session_id):
         cursor.execute("""
             SELECT 
                 n.*,
-                l.currency, l.amount, l.accept_currency, l.location,
+                l.currency, l.amount, l.accept_currency, l.location, l.will_round_to_nearest_dollar,
                 buyer.FirstName as buyer_first_name,
                 buyer.LastName as buyer_last_name,
                 buyer.Rating as buyer_rating,
@@ -112,7 +112,8 @@ def get_negotiation(negotiation_id, session_id):
                 'currency': negotiation['currency'],
                 'amount': float(negotiation['amount']),
                 'acceptCurrency': negotiation['accept_currency'],
-                'location': negotiation['location']
+                'location': negotiation['location'],
+                'willRoundToNearestDollar': bool(negotiation['will_round_to_nearest_dollar']) if negotiation['will_round_to_nearest_dollar'] is not None else False
             },
             'buyer': {
                 'userId': negotiation['buyer_id'],

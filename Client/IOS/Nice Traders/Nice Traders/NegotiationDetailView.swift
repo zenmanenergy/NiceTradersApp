@@ -21,6 +21,7 @@ struct NegotiationDetailView: View {
     @State private var showBuyerInfo = false
     @State private var isProcessing = false
     @State private var actionMessage: String?
+    @State private var navigateToDashboard = false
     
     var body: some View {
         ZStack {
@@ -46,14 +47,8 @@ struct NegotiationDetailView: View {
             } else if let negotiation = negotiation {
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Proposed Time (moved to top)
-                        proposedTimeCard(negotiation)
-                        
-                        // Status Header
-                        statusHeader(negotiation)
-                        
-                        // Listing Info
-                        listingInfo(negotiation)
+                        // Combined Negotiation Summary Card
+                        negotiationSummaryCard(negotiation)
                         
                         // Other User Info
                         otherUserInfo(negotiation)
@@ -101,10 +96,14 @@ struct NegotiationDetailView: View {
                 PaymentView(
                     negotiationId: negotiationId,
                     userRole: negotiation.userRole,
-                    otherUserName: negotiation.userRole == "buyer" ? negotiation.seller.firstName : negotiation.buyer.firstName
-                ) {
-                    loadNegotiation()
-                }
+                    otherUserName: negotiation.userRole == "buyer" ? negotiation.seller.firstName : negotiation.buyer.firstName,
+                    onComplete: {
+                        loadNegotiation()
+                    },
+                    onBothPaid: {
+                        navigateToDashboard = true
+                    }
+                )
             }
         }
         .sheet(isPresented: $showBuyerInfo) {
@@ -112,9 +111,80 @@ struct NegotiationDetailView: View {
                 BuyerInfoView(buyerId: negotiation.buyer.userId)
             }
         }
+        .onChange(of: navigateToDashboard) { newValue in
+            if newValue {
+                dismiss()
+                NotificationCenter.default.post(name: NSNotification.Name("NavigateToDashboard"), object: nil)
+            }
+        }
     }
     
     // MARK: - View Components
+    
+    private func negotiationSummaryCard(_ negotiation: NegotiationDetail) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Meeting Time Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizationManager.localize("PROPOSED_MEETING_TIME"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundColor(.blue)
+                    Text(NegotiationService.formatDate(negotiation.negotiation.currentProposedTime))
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                    Spacer()
+                }
+                
+                let proposer = negotiation.negotiation.proposedBy == negotiation.buyer.userId ? negotiation.buyer : negotiation.seller
+                Text("\(localizationManager.localize("PROPOSED_BY")) \(proposer.firstName)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Divider()
+            
+            // Status Section
+            VStack(spacing: 8) {
+                StatusBadge(status: negotiation.negotiation.status)
+                
+                if negotiation.negotiation.status == .proposed || negotiation.negotiation.status == .countered {
+                    let isWaitingForMe = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.userId : negotiation.seller.userId)
+                    
+                    Text(isWaitingForMe ? 
+                        localizationManager.localize("WAITING_FOR_YOUR_RESPONSE") :
+                        localizationManager.localize("WAITING_FOR_OTHER_RESPONSE"))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            
+            Divider()
+            
+            // Listing Section
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizationManager.localize("LISTING"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        let convertedValue = ExchangeRatesAPI.shared.calculateReceiveAmount(from: negotiation.listing.currency, to: negotiation.listing.acceptCurrency, amount: String(negotiation.listing.amount))
+                        Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar ?? false)) \(negotiation.listing.currency) → \(formatAmount(Double(convertedValue) ?? 0, shouldRound: negotiation.listing.willRoundToNearestDollar ?? false)) \(negotiation.listing.acceptCurrency)")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .padding()
+        .background(Color(UIColor.secondarySystemGroupedBackground))
+        .cornerRadius(12)
+    }
     
     private func statusHeader(_ negotiation: NegotiationDetail) -> some View {
         VStack(spacing: 8) {
@@ -143,15 +213,10 @@ struct NegotiationDetailView: View {
             
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    if let usdValue = calculateUSDValue(amount: negotiation.listing.amount, currency: negotiation.listing.currency) {
-                        Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.currency) → \(formatAmount(usdValue, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.acceptCurrency)")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                    } else {
-                        Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar)) \(negotiation.listing.currency) → \(negotiation.listing.acceptCurrency)")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                    }
+                    let convertedValue = ExchangeRatesAPI.shared.calculateReceiveAmount(from: negotiation.listing.currency, to: negotiation.listing.acceptCurrency, amount: String(negotiation.listing.amount))
+                    Text("\(formatAmount(negotiation.listing.amount, shouldRound: negotiation.listing.willRoundToNearestDollar ?? false)) \(negotiation.listing.currency) → \(formatAmount(Double(convertedValue) ?? 0, shouldRound: negotiation.listing.willRoundToNearestDollar ?? false)) \(negotiation.listing.acceptCurrency)")
+                        .font(.title3)
+                        .fontWeight(.semibold)
                 }
                 Spacer()
             }
@@ -159,27 +224,10 @@ struct NegotiationDetailView: View {
         .padding()
         .background(Color(UIColor.secondarySystemGroupedBackground))
         .cornerRadius(12)
-        .onAppear {
-            // Convert to USD for display
-            if negotiation.listing.currency != "USD" {
-                ExchangeRatesAPI.shared.convertAmount(negotiation.listing.amount, from: negotiation.listing.currency, to: "USD") { _, _ in
-                    // Trigger view update
-                }
-            }
-        }
     }
     
-    private func calculateUSDValue(amount: Double, currency: String) -> Double? {
-        if currency == "USD" {
-            return amount
-        }
-        let amountString = String(amount)
-        let result = ExchangeRatesAPI.shared.calculateReceiveAmount(from: currency, to: "USD", amount: amountString)
-        return Double(result)
-    }
-    
-    private func formatAmount(_ amount: Double, shouldRound: Bool? = false) -> String {
-        if shouldRound ?? false {
+    private func formatAmount(_ amount: Double, shouldRound: Bool = false) -> String {
+        if shouldRound {
             return String(format: "%.0f", amount)
         } else {
             return String(format: "%.2f", amount)

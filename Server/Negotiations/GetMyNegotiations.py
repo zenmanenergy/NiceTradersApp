@@ -44,6 +44,7 @@ def get_my_negotiations(session_id):
                 l.amount,
                 l.accept_currency,
                 l.location,
+                l.will_round_to_nearest_dollar,
                 CASE 
                     WHEN n.buyer_id = %s THEN 'buyer'
                     ELSE 'seller'
@@ -90,7 +91,8 @@ def get_my_negotiations(session_id):
                     'currency': n['currency'],
                     'amount': float(n['amount']),
                     'acceptCurrency': n['accept_currency'],
-                    'location': n['location']
+                    'location': n['location'],
+                    'willRoundToNearestDollar': bool(n['will_round_to_nearest_dollar']) if n['will_round_to_nearest_dollar'] is not None else False
                 },
                 'userRole': n['user_role'],
                 'otherUser': {

@@ -166,8 +166,8 @@ green: 0.29, blue: 0.64)]),
                 errors = [:]
             }
             
-            // Focus on email field after a short delay to allow view to fully appear
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // Focus on email field and automatically show keyboard
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 emailFieldFocused = true
             }
         }

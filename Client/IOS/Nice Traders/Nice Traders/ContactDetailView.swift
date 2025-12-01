@@ -21,9 +21,12 @@ struct ContactDetailView: View {
     
     // Propose meeting form fields
     @State private var proposedLocation: String = ""
+    @State private var proposedLocationLat: Double? = nil
+    @State private var proposedLocationLng: Double? = nil
     @State private var proposedDate: Date = Date()
     @State private var proposedTime: Date = Date()
     @State private var proposalMessage: String = ""
+    @State private var showLocationPicker: Bool = false
     
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -34,6 +37,12 @@ struct ContactDetailView: View {
     @State private var isPolling: Bool = false
     @State private var lastPollTime: Date?
     @State private var messageDeliveryStatus: [String: MessageDeliveryStatus] = [:] // Track delivery status by message ID
+    
+    // Rating state
+    @State private var userRating: Int = 0
+    @State private var ratingMessage: String = ""
+    @State private var showRatingView: Bool = false
+    @State private var hasSubmittedRating: Bool = false
     
     enum MessageDeliveryStatus {
         case sending
@@ -96,54 +105,38 @@ struct ContactDetailView: View {
                 } else {
                     // OTHER TABS - Full layout with header and navigation
                     VStack(spacing: 0) {
-                        // Header
-                        ZStack {
+                        // Header - Match Dashboard Height
+                        HStack(spacing: 12) {
+                            Button(action: { dismiss() }) {
+                                Image(systemName: "chevron.left")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 40, height: 40)
+                                    .background(Color.white.opacity(0.2))
+                                    .cornerRadius(8)
+                            }
+                            
+                            let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(contactData.listing.amount, from: contactData.listing.currency, to: contactData.listing.acceptCurrency ?? "") ?? contactData.listing.amount
+                            let formattedConverted = ExchangeRatesAPI.shared.formatAmount(convertedAmount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
+                            let formattedOriginal = ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
+                            
+                            Text("$\(formattedOriginal) \(contactData.listing.currency) → \(formattedConverted) \(contactData.listing.acceptCurrency ?? "")")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Color(hex: "FFD700"))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                            
+                            Spacer()
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
+                        .background(
                             LinearGradient(
                                 gradient: Gradient(colors: [Color(hex: "667eea"), Color(hex: "764ba2")]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
-                            
-                            VStack(alignment: .trailing, spacing: 8) {
-                                HStack {
-                                    Button(action: { dismiss() }) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "chevron.left")
-                                        }
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                        .background(Color.white.opacity(0.2))
-                                        .cornerRadius(8)
-                                    }
-                                    Spacer()
-                                }
-                                
-                                Spacer()
-                                
-                                HStack {
-                                    Spacer()
-                                    VStack(alignment: .trailing, spacing: 4) {
-                                        HStack(spacing: 8) {
-                                            Text(contactData.listing.currency)
-                                            Text("→")
-                                            Text(contactData.listing.acceptCurrency ?? contactData.listing.preferredCurrency ?? "")
-                                        }
-                                        .font(.title)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(.white)
-                                        
-                                        Text("$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar))")
-                                            .font(.title2)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(Color(hex: "FFD700"))
-                                    }
-                                }
-                            }
-                            .padding()
-                            .padding(.top, 40)
-                        }
-                        .frame(height: 160)
+                        )
                     
                         // Tab Navigation (only for non-chat tabs)
                         HStack(spacing: 12) {
@@ -200,7 +193,6 @@ struct ContactDetailView: View {
             }
         }
         .navigationBarHidden(true)
-        .edgesIgnoringSafeArea(.top)
         .onAppear {
             loadMessages()
             loadMeetingProposals()
@@ -228,14 +220,70 @@ struct ContactDetailView: View {
                     .font(.headline)
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                detailRow(label: "Amount to Exchange:", value: "$\(ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar)) \(contactData.listing.currency)")
+                // Who is exchanging what
+                let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(contactData.listing.amount, from: contactData.listing.currency, to: contactData.listing.acceptCurrency ?? "") ?? contactData.listing.amount
+                let formattedConverted = ExchangeRatesAPI.shared.formatAmount(convertedAmount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
+                let formattedOriginal = ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    // You bringing...
+                    HStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("You bring:")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "718096"))
+                            Text("$\(formattedOriginal) \(contactData.listing.currency)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: "2d3748"))
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                            .foregroundColor(Color(hex: "667eea"))
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("They bring:")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "718096"))
+                            Text("\(formattedConverted) \(contactData.listing.acceptCurrency ?? "")")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: "2d3748"))
+                        }
+                    }
+                    .padding()
+                    .background(Color(hex: "f7fafc"))
+                    .cornerRadius(8)
+                }
+                
+                if let meeting = currentMeeting {
+                    detailRow(label: "Meeting Date/Time:", value: formatDateTime(meeting.time))
+                }
                 
                 detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
                 
-                if let purchasedAt = contactData.purchasedAt {
-                    detailRow(label: "Contact Purchased:", value: formatDate(purchasedAt))
-                } else {
-                    detailRow(label: "Contact Purchased:", value: "Not specified")
+                // Propose Location Button
+                Button(action: { showProposeForm = true }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 14))
+                        Text("PROPOSE EXCHANGE LOCATION")
+                            .font(.system(size: 12, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "3b82f6"), Color(hex: "1d4ed8")]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(8)
                 }
             }
             .padding()
@@ -269,6 +317,100 @@ struct ContactDetailView: View {
             .background(Color.white)
             .cornerRadius(16)
             .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            
+            // Complete Exchange Button
+            Button(action: completeExchange) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 16))
+                    Text("MARK EXCHANGE COMPLETE")
+                        .font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12))
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .foregroundColor(.white)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(hex: "10b981"), Color(hex: "059669")]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+            }
+            .padding()
+            
+            // Rating Section
+            if showRatingView && !hasSubmittedRating {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(localizationManager.localize("RATE_EXCHANGE"))
+                        .font(.headline)
+                        .foregroundColor(Color(hex: "2d3748"))
+                    
+                    VStack(spacing: 16) {
+                        // Star Rating
+                        VStack(spacing: 8) {
+                            Text("How was your experience?")
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: "718096"))
+                            
+                            HStack(spacing: 12) {
+                                ForEach(1...5, id: \.self) { star in
+                                    Button(action: { userRating = star }) {
+                                        Image(systemName: star <= userRating ? "star.fill" : "star")
+                                            .font(.system(size: 28))
+                                            .foregroundColor(star <= userRating ? Color(hex: "fbbf24") : Color(hex: "cbd5e0"))
+                                    }
+                                }
+                                Spacer()
+                            }
+                        }
+                        
+                        // Rating Message
+                        TextField("Optional: Share feedback about this exchange", text: $ratingMessage)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .lineLimit(3)
+                        
+                        // Submit Button
+                        Button(action: submitRating) {
+                            HStack {
+                                Image(systemName: "paperplane.fill")
+                                Text("SUBMIT RATING")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "667eea"))
+                            .cornerRadius(8)
+                        }
+                    }
+                    .padding()
+                    .background(Color(hex: "f7fafc"))
+                    .cornerRadius(12)
+                }
+                .padding()
+            } else if hasSubmittedRating {
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(Color(hex: "10b981"))
+                            .font(.system(size: 20))
+                        Text("Rating submitted!")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "10b981"))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color(hex: "ecfdf5"))
+                    .cornerRadius(8)
+                }
+                .padding()
+            }
         }
         .padding()
     }
@@ -377,10 +519,31 @@ struct ContactDetailView: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "4a5568"))
-                            TextField("e.g., Starbucks on 5th Street", text: $proposedLocation)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .onTapGesture { }
-                                .simultaneousGesture(TapGesture().onEnded { })
+                            
+                            HStack(spacing: 8) {
+                                TextField("e.g., Starbucks on 5th Street", text: $proposedLocation)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .onTapGesture { }
+                                    .simultaneousGesture(TapGesture().onEnded { })
+                                
+                                NavigationLink(destination: MeetingLocationPickerView(
+                                    listingLocation: contactData.listing.location,
+                                    listingLatitude: contactData.listing.latitude,
+                                    listingLongitude: contactData.listing.longitude,
+                                    radiusKm: Double(contactData.listing.radius),
+                                    selectedLocation: $proposedLocation,
+                                    selectedLat: $proposedLocationLat,
+                                    selectedLng: $proposedLocationLng
+                                )) {
+                                    Image(systemName: "map.fill")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(Color(hex: "667eea"))
+                                        .cornerRadius(8)
+                                }
+                            }
                         }
                         
                         HStack(spacing: 12) {
@@ -944,17 +1107,30 @@ struct ContactDetailView: View {
                     }
                     
                     // Parse current meeting
-                    if let meetingData = json["current_meeting"] as? [String: Any],
-                       let location = meetingData["location"] as? String,
-                       let time = meetingData["time"] as? String,
-                       let agreedAt = meetingData["agreed_at"] as? String {
-                        
-                        self.currentMeeting = CurrentMeeting(
-                            location: location,
-                            time: time,
-                            message: meetingData["message"] as? String,
-                            agreedAt: agreedAt
-                        )
+                    print("[ContactDetailView] Checking for current_meeting in response...")
+                    print("[ContactDetailView] current_meeting value: \(json["current_meeting"] ?? "nil")")
+                    print("[ContactDetailView] current_meeting type: \(type(of: json["current_meeting"]))")
+                    
+                    if let meetingData = json["current_meeting"] as? [String: Any] {
+                        print("[ContactDetailView] Found current_meeting: \(meetingData)")
+                        if let time = meetingData["time"] as? String {
+                            let location = (meetingData["location"] as? String) ?? ""
+                            let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
+                            
+                            print("[ContactDetailView] Parsing meeting - time: \(time)")
+                            self.currentMeeting = CurrentMeeting(
+                                location: location,
+                                time: time,
+                                message: meetingData["message"] as? String,
+                                agreedAt: agreedAt
+                            )
+                            print("[ContactDetailView] Meeting set: \(self.currentMeeting)")
+                        } else {
+                            print("[ContactDetailView] Meeting data incomplete - missing 'time' field")
+                        }
+                    } else {
+                        print("[ContactDetailView] No current_meeting in response")
+                        print("[ContactDetailView] Full JSON keys: \(json.keys)")
                     }
                 }
             }
@@ -1118,6 +1294,131 @@ struct ContactDetailView: View {
         loadMessages()
         lastPollTime = Date()
     }
+    
+    // MARK: - Complete Exchange
+    
+    private func completeExchange() {
+        // Show confirmation alert
+        let alert = UIAlertController(
+            title: localizationManager.localize("CONFIRM_EXCHANGE_COMPLETE"),
+            message: localizationManager.localize("EXCHANGE_COMPLETE_MESSAGE"),
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Complete", style: .default) { _ in
+            self.submitCompleteExchange()
+        })
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            return
+        }
+        
+        rootVC.present(alert, animated: true)
+    }
+    
+    private func submitCompleteExchange() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            return
+        }
+        
+        // Get negotiation ID from contact data
+        // Note: We need to find the negotiation ID - it should be passed in ContactData
+        // For now, we'll need to fetch it from the API or store it
+        let baseURL = Settings.shared.baseURL
+        let url = URL(string: "\(baseURL)/Negotiations/CompleteExchange?SessionId=\(sessionId)&ListingId=\(contactData.listing.listingId)")!
+        
+        isLoading = true
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                DispatchQueue.main.async {
+                    self.errorMessage = "Network error: \(error?.localizedDescription ?? "Unknown")"
+                    self.isLoading = false
+                }
+                return
+            }
+            
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let success = json["success"] as? Bool, success {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    // Show rating view instead of dismissing
+                    self.showRatingView = true
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        self.errorMessage = json["error"] as? String ?? "Failed to complete exchange"
+                    } else {
+                        self.errorMessage = "Failed to complete exchange"
+                    }
+                }
+            }
+        }.resume()
+    }
+    
+    // MARK: - Rating
+    
+    private func submitRating() {
+        guard userRating > 0 else {
+            errorMessage = "Please select a rating"
+            return
+        }
+        
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            return
+        }
+        
+        isLoading = true
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Ratings/SubmitRating")!
+        components.queryItems = [
+            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "ListingId", value: contactData.listing.listingId),
+            URLQueryItem(name: "Rating", value: String(userRating)),
+            URLQueryItem(name: "Comments", value: ratingMessage)
+        ]
+        
+        guard let url = components.url else {
+            errorMessage = "Invalid URL"
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                
+                guard let data = data, error == nil else {
+                    self.errorMessage = "Network error: \(error?.localizedDescription ?? "Unknown")"
+                    return
+                }
+                
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    // Rating submitted successfully
+                    self.hasSubmittedRating = true
+                    
+                    // Dismiss after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.dismiss()
+                    }
+                } else {
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        self.errorMessage = json["error"] as? String ?? "Failed to submit rating"
+                    } else {
+                        self.errorMessage = "Failed to submit rating"
+                    }
+                }
+            }
+        }.resume()
+    }
 }
 
 // MARK: - Data Models
@@ -1140,6 +1441,9 @@ struct ContactListing {
     let preferredCurrency: String?
     let meetingPreference: String?
     let location: String
+    let latitude: Double
+    let longitude: Double
+    let radius: Int
     let willRoundToNearestDollar: Bool?
 }
 

@@ -121,16 +121,15 @@ def send_interest_message(listing_id, session_id, message='', availability=[]):
         
         # Send APN notification to listing owner
         try:
-            from NotificationService import notification_service
-            owner_session = notification_service.get_user_last_session(listing_owner_id)
+            from Admin.NotificationService import notification_service
             message_preview = message[:50] if message else "New interest in your listing"
             notification_service.send_message_received_notification(
                 recipient_id=listing_owner_id,
                 sender_name=sender_name,
                 message_preview=message_preview,
                 listing_id=listing_id,
-                message_id=message_id,
-                session_id=owner_session
+                message_id=message_id
+                # session_id is automatically fetched inside notification_service
             )
         except Exception as apn_error:
             # Log error but don't fail the transaction
