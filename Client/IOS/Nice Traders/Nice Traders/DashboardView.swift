@@ -94,15 +94,13 @@ struct DashboardView: View {
         
         // Handle deep links from push notifications
         NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToListing"), object: nil, queue: .main) { notification in
-            if let listingId = notification.userInfo?["listingId"] as? String {
-                print("✓ DashboardView: Navigating to listing \(listingId)")
+            if notification.userInfo?["listingId"] as? String != nil {
                 navigateToSearch = true
             }
         }
         
         NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToNegotiations"), object: nil, queue: .main) { notification in
-            if let negotiationId = notification.userInfo?["negotiationId"] as? String {
-                print("✓ DashboardView: Navigating to negotiation \(negotiationId)")
+            if notification.userInfo?["negotiationId"] as? String != nil {
                 // Set selected tab to My Negotiations (usually tab 3 or 4, depending on your structure)
                 selectedTab = 3  // Adjust based on your actual tab structure
             }
@@ -185,8 +183,6 @@ struct DashboardView: View {
             if let dashboardData = response["data"] as? [String: Any],
                let userData = dashboardData["user"] as? [String: Any] {
                 
-                print("[Dashboard] Found dashboard data")
-                print("[Dashboard] User data: \(userData)")
                 
                 let firstName = userData["firstName"] as? String ?? ""
                 let lastName = userData["lastName"] as? String ?? ""
@@ -201,18 +197,14 @@ struct DashboardView: View {
                 
                 // Process listings
                 if let recentListings = dashboardData["recentListings"] as? [[String: Any]] {
-                    print("[Dashboard] Found \(recentListings.count) listings in response")
-                    print("[Dashboard] Listings data: \(recentListings)")
                     
                     myListings = recentListings.compactMap { listingDict -> Listing? in
-                        print("[Dashboard] Processing listing: \(listingDict)")
                         
                         guard let listingId = listingDict["listingId"] as? String,
                               let currency = listingDict["currency"] as? String,
                               let acceptCurrency = listingDict["acceptCurrency"] as? String,
                               let location = listingDict["location"] as? String,
                               let status = listingDict["status"] as? String else {
-                            print("[Dashboard] Failed to parse listing - missing required fields")
                             return nil
                         }
                         
@@ -223,7 +215,6 @@ struct DashboardView: View {
                         } else if let amountDouble = listingDict["amount"] as? Double {
                             amount = amountDouble
                         } else {
-                            print("[Dashboard] Failed to parse amount: \(String(describing: listingDict["amount"]))")
                             return nil
                         }
                         
@@ -244,12 +235,9 @@ struct DashboardView: View {
                         )
                     }
                     
-                    print("[Dashboard] Successfully parsed \(myListings.count) listings")
                 } else {
-                    print("[Dashboard] No recentListings found in dashboard data")
                 }
             } else {
-                print("[Dashboard] Failed to find data or user in response")
             }
             
             isLoading = false
@@ -259,12 +247,6 @@ struct DashboardView: View {
         getPurchasedContacts(sessionId: sessionId) { contacts in
             // Ignore if this response is from an old request
             guard thisRequestToken == self.currentRequestToken else { return }
-            print("[Dashboard] Purchased contacts response: \(contacts.count) contacts")
-            for (index, contact) in contacts.enumerated() {
-                if let listingId = contact["listing_id"] as? String {
-                    print("[DEBUG]   PurchasedContact[\(index)]: listing_id=\(listingId)")
-                }
-            }
             
             // Store raw data for navigation
             self.purchasedContactsData = contacts
@@ -277,11 +259,9 @@ struct DashboardView: View {
                       let location = listing["location"] as? String,
                       let sellerName = seller["name"] as? String,
                       let listingId = contact["listing_id"] as? String else {
-                    print("[DEBUG] Failed to extract purchased exchange from contact")
                     return nil
                 }
                 
-                print("[DEBUG] Creating purchased exchange for listing: \(listingId)")
                 
                 let amount: Double
                 if let amountInt = listing["amount"] as? Int {
@@ -311,10 +291,7 @@ struct DashboardView: View {
                 )
             }
             
-            print("[DEBUG] Purchased exchanges created: \(purchasedExchanges.count)")
-            for (index, exchange) in purchasedExchanges.enumerated() {
-                print("[DEBUG]   PurchasedExchange[\(index)]: id=\(exchange.id)")
-            }
+            
             
             // Deduplicate purchased exchanges by listing ID before adding
             var seenIds = Set<String>()
@@ -327,14 +304,12 @@ struct DashboardView: View {
             }
             
             self.allActiveExchanges.append(contentsOf: uniquePurchasedExchanges)
-            print("[Dashboard] Total active exchanges (purchased): \(self.allActiveExchanges.count)")
         }
         
         // Get listing purchases
         getListingPurchases(sessionId: sessionId) { purchases in
             // Ignore if this response is from an old request
             guard thisRequestToken == self.currentRequestToken else { return }
-            print("[Dashboard] Listing purchases response: \(purchases.count) purchases")
             let sellerExchanges = purchases.compactMap { purchase -> ActiveExchange? in
                 guard let listing = purchase["listing"] as? [String: Any],
                       let buyer = purchase["buyer"] as? [String: Any],
@@ -343,11 +318,9 @@ struct DashboardView: View {
                       let location = listing["location"] as? String,
                       let buyerName = buyer["name"] as? String,
                       let listingId = purchase["listing_id"] as? String else {
-                    print("[DEBUG] Failed to extract seller exchange from purchase")
                     return nil
                 }
                 
-                print("[DEBUG] Creating seller exchange for listing: \(listingId)")
                 
                 let amount: Double
                 if let amountInt = listing["amount"] as? Int {
@@ -376,36 +349,25 @@ struct DashboardView: View {
                 )
             }
             
-            print("[DEBUG] Seller exchanges created: \(sellerExchanges.count)")
-            for (index, exchange) in sellerExchanges.enumerated() {
-                print("[DEBUG]   SellerExchange[\(index)]: id=\(exchange.id)")
-            }
+            
             
             // Deduplicate - filter out seller exchanges for listings already in buyer list
             let existingBuyerListingIds = Set(self.allActiveExchanges.map { $0.id })
-            print("[DEBUG] Existing buyer listing IDs: \(existingBuyerListingIds)")
             
             let uniqueSellerExchanges = sellerExchanges.filter { !existingBuyerListingIds.contains($0.id) }
-            print("[DEBUG] Unique seller exchanges after dedup: \(uniqueSellerExchanges.count)")
-            for (index, exchange) in uniqueSellerExchanges.enumerated() {
-                print("[DEBUG]   UniqueSellerExchange[\(index)]: id=\(exchange.id)")
-            }
+            
             
             self.allActiveExchanges.append(contentsOf: uniqueSellerExchanges)
             
-            print("[Dashboard] Total active exchanges (after dedup): \(self.allActiveExchanges.count)")
-            for (index, exchange) in self.allActiveExchanges.enumerated() {
-                print("[DEBUG]   AllActiveExchange[\(index)]: id=\(exchange.id), type=\(exchange.type)")
-            }
+            
         }
         
         // Get pending negotiations (for both buyers and sellers)
         getNegotiations(sessionId: sessionId) { negotiations in
             // Ignore if this response is from an old request
             guard thisRequestToken == self.currentRequestToken else { return }
-            print("[Dashboard] Negotiations response: \(negotiations.count) negotiations")
             let pending = negotiations.filter { neg in
-                guard let userRole = neg["userRole"] as? String else { return false }
+                guard neg["userRole"] as? String != nil else { return false }
                 // Show negotiations where status is proposed/countered/agreed/paid_partial (not complete or rejected)
                 let status = neg["status"] as? String ?? ""
                 return status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
@@ -448,7 +410,6 @@ struct DashboardView: View {
             }
             
             self.pendingNegotiations = pending
-            print("[Dashboard] Pending negotiations: \(self.pendingNegotiations.count)")
         }
     }
     
@@ -506,15 +467,8 @@ struct DashboardView: View {
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                       let purchases = json["listing_purchases"] as? [[String: Any]] else {
-                    print("[DEBUG] GetListingPurchases: Failed to parse response")
                     completion([])
                     return
-                }
-                print("[DEBUG] GetListingPurchases API Response: \(purchases.count) purchases")
-                for (index, purchase) in purchases.enumerated() {
-                    if let listingId = purchase["listing_id"] as? String {
-                        print("[DEBUG]   Purchase[\(index)]: listing_id=\(listingId)")
-                    }
                 }
                 completion(purchases)
             }

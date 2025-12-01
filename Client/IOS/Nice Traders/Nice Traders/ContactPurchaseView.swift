@@ -605,12 +605,10 @@ struct ContactPurchaseView: View {
     
     private func purchaseContact() {
         guard let sessionId = SessionManager.shared.sessionId else {
-            print("[ContactPurchase] No session ID available")
             return
         }
         
         isProcessingPayment = true
-        print("[ContactPurchase] Starting payment process for listing: \(listingId)")
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/PurchaseContactAccess")!
         components.queryItems = [
@@ -620,18 +618,15 @@ struct ContactPurchaseView: View {
         ]
         
         guard let url = components.url else {
-            print("[ContactPurchase] Invalid URL")
             DispatchQueue.main.async {
                 self.isProcessingPayment = false
             }
             return
         }
         
-        print("[ContactPurchase] Request URL: \(url.absoluteString)")
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("[ContactPurchase] Network error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
                     // TODO: Show error alert
@@ -640,7 +635,6 @@ struct ContactPurchaseView: View {
             }
             
             guard let data = data else {
-                print("[ContactPurchase] No data received")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
                     // TODO: Show error alert
@@ -648,13 +642,10 @@ struct ContactPurchaseView: View {
                 return
             }
             
-            print("[ContactPurchase] Response data: \(String(data: data, encoding: .utf8) ?? "invalid")")
             
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                print("[ContactPurchase] Parsed JSON: \(json)")
                 
                 if let success = json["success"] as? Bool, success {
-                    print("[ContactPurchase] Payment successful!")
                     DispatchQueue.main.async {
                         self.isProcessingPayment = false
                         self.hasActiveContact = true
@@ -662,14 +653,12 @@ struct ContactPurchaseView: View {
                     }
                 } else {
                     let errorMsg = json["error"] as? String ?? "Payment failed"
-                    print("[ContactPurchase] Payment failed: \(errorMsg)")
                     DispatchQueue.main.async {
                         self.isProcessingPayment = false
                         // TODO: Show error: errorMsg
                     }
                 }
             } else {
-                print("[ContactPurchase] Failed to parse JSON response")
                 DispatchQueue.main.async {
                     self.isProcessingPayment = false
                     // TODO: Show error

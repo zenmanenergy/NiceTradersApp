@@ -116,11 +116,7 @@ struct SearchView: View {
             
             // Give location manager a moment to update
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if let loc = locationManager.location {
-                    print("[SearchView] Location ready: \(loc.coordinate.latitude), \(loc.coordinate.longitude)")
-                } else {
-                    print("[SearchView] Location not available yet")
-                }
+                // Location will be available via locationManager.location
             }
         }
     }
@@ -614,17 +610,14 @@ struct SearchView: View {
             if let location = locationManager.location {
                 let lat = location.coordinate.latitude
                 let lng = location.coordinate.longitude
-                print("[SearchView] Using location: \(lat), \(lng)")
                 queryItems.append(URLQueryItem(name: "UserLatitude", value: String(lat)))
                 queryItems.append(URLQueryItem(name: "UserLongitude", value: String(lng)))
             } else {
-                print("[SearchView] WARNING: No location available for distance search")
             }
         }
         
         components.queryItems = queryItems
         
-        print("[SearchView] Search URL: \(components.url?.absoluteString ?? "invalid")")
         
         guard let url = components.url else {
             DispatchQueue.main.async {
@@ -663,22 +656,18 @@ struct SearchView: View {
                 isSearching = false
                 
                 if let listingsData = json["listings"] as? [[String: Any]] {
-                    print("[Search] Found \(listingsData.count) listings in response")
                     let decoder = JSONDecoder()
                     let listings = listingsData.compactMap { dict -> SearchListing? in
                         guard let jsonData = try? JSONSerialization.data(withJSONObject: dict),
                               let listing = try? decoder.decode(SearchListing.self, from: jsonData) else {
-                            print("[Search] Failed to decode listing: \(dict)")
                             return nil
                         }
                         return listing
                     }
                     
-                    print("[Search] Successfully decoded \(listings.count) listings")
                     searchResults = listings
                     hasSearched = true
                 } else {
-                    print("[Search] No listings array found in response")
                 }
                 
                 if let paginationData = json["pagination"] as? [String: Any] {

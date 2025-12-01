@@ -266,16 +266,12 @@ struct SignupView: View {
             showingAlert = true
             return
         }
-        
-        print("Signup URL:", urlString)
-        
         // Make API request
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 isSubmitting = false
                 
                 if let error = error {
-                    print("Network error:", error.localizedDescription)
                     alertMessage = localizationManager.localize("NETWORK_ERROR") + ": \(error.localizedDescription)"
                     showingAlert = true
                     return
@@ -289,8 +285,6 @@ struct SignupView: View {
                 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        print("Response:", json)
-                        
                         if let errorMessage = json["ErrorMessage"] as? String {
                             alertMessage = localizationManager.error + ": \(errorMessage)"
                             showingAlert = true
@@ -312,13 +306,9 @@ struct SignupView: View {
                                 
                                 // If device token is already available, update it now
                                 if let deviceToken = DeviceTokenManager.shared.deviceToken {
-                                    print("✓ [SignupView] Device token available at signup - updating backend")
                                     DeviceTokenManager.shared.updateDeviceTokenForUser(userId: userId, deviceToken: deviceToken)
                                 }
                             }
-                            
-                            print("Signup successful! SessionId:", sessionId, "UserType:", userType)
-                            
                             // Send the locally-selected language preference to the backend
                             LocalizationManager.shared.saveLanguagePreferenceToBackend(languageCode: LocalizationManager.shared.currentLanguage)
                             
@@ -331,7 +321,6 @@ struct SignupView: View {
                         }
                     }
                 } catch {
-                    print("JSON parsing error:", error)
                     alertMessage = localizationManager.localize("FAILED_PARSE_RESPONSE")
                     showingAlert = true
                 }

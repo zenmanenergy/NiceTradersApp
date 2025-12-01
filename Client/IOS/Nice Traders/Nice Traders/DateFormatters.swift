@@ -18,7 +18,6 @@ struct DateFormatters {
         isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         if let isoDate = isoFormatter.date(from: dateString) {
             date = isoDate
-            print("[DateFormatters] Parsed ISO8601 (with fractional): \(dateString) -> \(isoDate)")
         }
         
         // Try ISO8601 with timezone, no fractional seconds
@@ -26,7 +25,6 @@ struct DateFormatters {
             isoFormatter.formatOptions = [.withInternetDateTime]
             if let isoDate = isoFormatter.date(from: dateString) {
                 date = isoDate
-                print("[DateFormatters] Parsed ISO8601 (without fractional): \(dateString) -> \(isoDate)")
             }
         }
         
@@ -46,14 +44,12 @@ struct DateFormatters {
                 fallbackFormatter.dateFormat = format
                 if let fallbackDate = fallbackFormatter.date(from: dateString) {
                     date = fallbackDate
-                    print("[DateFormatters] Parsed fallback format \(format): \(dateString) -> \(fallbackDate)")
                     break
                 }
             }
         }
         
         guard let date = date else {
-            print("[DateFormatters] Failed to parse: \(dateString)")
             return dateString
         }
         
@@ -66,11 +62,7 @@ struct DateFormatters {
         formatter.dateFormat = "MMM d '@' h:mma"
         formatter.timeZone = TimeZone.current  // Use user's local timezone
         
-        let result = formatter.string(from: date)
-        let tz = TimeZone.current.abbreviation() ?? "Unknown"
-        print("[DateFormatters] Formatting date: \(date) in timezone \(tz) -> \(result)")
-        
-        return result
+        return formatter.string(from: date)
     }
     
     /// Format a date/time with smart relative formatting

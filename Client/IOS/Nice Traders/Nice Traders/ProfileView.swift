@@ -115,16 +115,12 @@ struct ProfileView: View {
             LanguagePickerView()
         }
         .onAppear {
-            print("🟢 [ProfileView] onAppear - currentLanguage: \(localizationManager.currentLanguage), version: \(localizationManager.languageVersion)")
             let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
-            print("🟢 [ProfileView] onAppear - UserDefaults.AppLanguage: \(savedInDefaults ?? "nil")")
             loadProfileData()
         }
         .onChange(of: navigateToExchangeHistory) { newValue in
-            print("🟢 [ProfileView] navigateToExchangeHistory changed: \(newValue)")
         }
         .onChange(of: localizationManager.languageVersion) { newVersion in
-            print("🟢 [ProfileView] onChange triggered - version changed to: \(newVersion)")
             profileRefreshId = UUID()
         }
         .id(profileRefreshId)

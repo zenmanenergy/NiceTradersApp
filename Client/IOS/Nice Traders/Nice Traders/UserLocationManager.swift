@@ -58,12 +58,10 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         DispatchQueue.main.async {
             self.authorizationStatus = status
-            print("Location authorization status changed to: \(status)")
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Location error: \(error.localizedDescription)")
     }
     
     // MARK: - Backend Communication
@@ -87,7 +85,6 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
             request.httpBody = try JSONSerialization.data(withJSONObject: payload)
             URLSession.shared.dataTask(with: request).resume()
         } catch {
-            print("Error sending location: \(error)")
         }
     }
     

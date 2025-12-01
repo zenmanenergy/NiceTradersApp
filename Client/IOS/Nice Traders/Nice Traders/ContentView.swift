@@ -228,7 +228,6 @@ struct ContentView: View {
             if let userInfo = notification.userInfo,
                let deepLinkType = userInfo["deepLinkType"] as? String,
                let deepLinkId = userInfo["deepLinkId"] as? String {
-                print("✓ ContentView: Deep link notification received - Type: \(deepLinkType), ID: \(deepLinkId)")
                 
                 // If session ID was provided, it's already set by AppDelegate
                 // Navigate based on deep link type
@@ -244,11 +243,9 @@ struct ContentView: View {
         // Ensure user is logged in
         if !SessionManager.shared.isLoggedIn {
             // Session wasn't in the notification, can't auto-login
-            print("✗ ContentView: No session available for deep link")
             return
         }
         
-        print("✓ ContentView: Navigating to \(type) with ID: \(id)")
         
         // Navigate based on type using DashboardView's existing notification pattern
         // These notifications are listened to by DashboardView
@@ -281,7 +278,6 @@ struct ContentView: View {
             navigateToDashboard = true
             
         default:
-            print("✗ ContentView: Unknown deep link type: \(type)")
             navigateToDashboard = true
         }
     }

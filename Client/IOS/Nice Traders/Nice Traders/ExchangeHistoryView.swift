@@ -75,7 +75,6 @@ struct ExchangeHistoryView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .onAppear {
-            print("[ExchangeHistoryView] onAppear - showExchangeHistory=\(showExchangeHistory)")
             loadExchangeHistory()
         }
         .onChange(of: filters.type) { filterHistory() }
@@ -88,10 +87,7 @@ struct ExchangeHistoryView: View {
     var headerView: some View {
         HStack {
             Button(action: {
-                print("[ExchangeHistoryView] Back button tapped")
-                print("[ExchangeHistoryView] Calling dismiss()")
                 dismiss()
-                print("[ExchangeHistoryView] Dismiss called, setting showExchangeHistory to false")
                 showExchangeHistory = false
             }) {
                 Image(systemName: "chevron.left")

@@ -20,7 +20,6 @@ class NegotiationService {
     
     func proposeNegotiation(listingId: String, proposedTime: Date, completion: @escaping (Result<ProposeResponse, Error>) -> Void) {
         guard let sessionId = SessionManager.shared.sessionId else {
-            print("[NegotiationService] ❌ No session ID found")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
@@ -29,13 +28,8 @@ class NegotiationService {
         
         let urlString = "\(baseURL)/Negotiations/Propose?listingId=\(listingId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
-        print("[NegotiationService] 🌐 Attempting to call: \(urlString)")
-        print("[NegotiationService] 📅 Proposed time: \(isoTime)")
-        print("[NegotiationService] 🔑 Session ID: \(sessionId)")
-        print("[NegotiationService] 📋 Listing ID: \(listingId)")
         
         guard let url = URL(string: urlString) else {
-            print("[NegotiationService] ❌ Invalid URL: \(urlString)")
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -44,15 +38,11 @@ class NegotiationService {
             #if DEBUG
             // In debug/simulator mode, handle connection errors gracefully
             if let error = error as NSError? {
-                print("[NegotiationService] ❌ Network Error: \(error)")
-                print("[NegotiationService] Error Domain: \(error.domain)")
-                print("[NegotiationService] Error Code: \(error.code)")
                 
                 if error.domain == NSURLErrorDomain && 
                    (error.code == NSURLErrorCannotConnectToHost || 
                     error.code == NSURLErrorCannotFindHost ||
                     error.code == NSURLErrorNetworkConnectionLost) {
-                    print("[NegotiationService] 🔧 Server not reachable - simulating success for debug")
                     let mockResponse = ProposeResponse(
                         success: true,
                         negotiationId: "NEG-DEBUG-\(UUID().uuidString.prefix(8))",
@@ -68,29 +58,23 @@ class NegotiationService {
             #endif
             
             if let error = error {
-                print("[NegotiationService] ❌ Request failed with error: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
-                print("[NegotiationService] 📡 HTTP Status: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
-                print("[NegotiationService] ❌ No data received")
                 completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
             }
             
-            print("[NegotiationService] 📦 Received data: \(String(data: data, encoding: .utf8) ?? "Unable to decode")")
             
             do {
                 let result = try JSONDecoder().decode(ProposeResponse.self, from: data)
-                print("[NegotiationService] ✅ Successfully decoded response: success=\(result.success), negId=\(result.negotiationId ?? "nil")")
                 completion(.success(result))
             } catch {
-                print("[NegotiationService] ❌ JSON decode error: \(error)")
                 completion(.failure(error))
             }
         }.resume()
@@ -266,40 +250,28 @@ class NegotiationService {
             
             // Debug: print raw response
             if let jsonString = String(data: data, encoding: .utf8) {
-                print("[PaymentService] Raw response: \(jsonString)")
             }
             
             do {
                 let decoder = JSONDecoder()
                 decoder.keyDecodingStrategy = .useDefaultKeys
                 let result = try decoder.decode(PaymentResponse.self, from: data)
-                print("[PaymentService] Successfully decoded: success=\(result.success), status=\(result.status ?? "nil"), bothPaid=\(result.bothPaid ?? false)")
                 completion(.success(result))
             } catch let decodingError as DecodingError {
-                print("[PaymentService] Decoding error: \(decodingError)")
                 switch decodingError {
                 case .keyNotFound(let key, let context):
-                    print("  Missing key: \(key.stringValue)")
-                    print("  Context: \(context.debugDescription)")
+                    ()
                 case .typeMismatch(let type, let context):
-                    print("  Type mismatch for type: \(type)")
-                    print("  Context: \(context.debugDescription)")
-                    print("  Coding path: \(context.codingPath.map { $0.stringValue })")
+                    ()
                 case .valueNotFound(let type, let context):
-                    print("  Value not found for type: \(type)")
-                    print("  Context: \(context.debugDescription)")
+                    ()
                 case .dataCorrupted(let context):
-                    print("  Data corrupted")
-                    print("  Context: \(context.debugDescription)")
+                    ()
                 @unknown default:
-                    print("  Unknown decoding error")
-                }
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("[PaymentService] Failed JSON: \(jsonString)")
+                    ()
                 }
                 completion(.failure(decodingError))
             } catch {
-                print("[PaymentService] General error: \(error)")
                 completion(.failure(error))
             }
         }.resume()

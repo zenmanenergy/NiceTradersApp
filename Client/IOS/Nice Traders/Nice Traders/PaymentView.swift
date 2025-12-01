@@ -213,7 +213,6 @@ struct PaymentView: View {
         userRole: "buyer",
         otherUserName: "John",
         onComplete: {
-            print("Payment complete")
         },
         onBothPaid: nil
     )

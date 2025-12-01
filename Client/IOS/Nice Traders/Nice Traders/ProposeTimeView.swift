@@ -229,9 +229,6 @@ struct ProposeTimeView: View {
     }
     
     private func proposeTime() {
-        print("[ProposeTimeView] 🚀 Starting negotiation proposal")
-        print("[ProposeTimeView] Listing ID: \(listingId)")
-        print("[ProposeTimeView] Proposed Date: \(proposedDate)")
         
         isLoading = true
         errorMessage = nil
@@ -239,23 +236,16 @@ struct ProposeTimeView: View {
         NegotiationService.shared.proposeNegotiation(listingId: listingId, proposedTime: proposedDate) { result in
             DispatchQueue.main.async {
                 isLoading = false
-                
-                print("[ProposeTimeView] 📬 Received response")
-                
                 switch result {
                 case .success(let response):
-                    print("[ProposeTimeView] ✅ Success response: \(response)")
                     if response.success, let negId = response.negotiationId {
-                        print("[ProposeTimeView] 🎉 Negotiation created: \(negId)")
                         negotiationId = negId
                         showSuccess = true
                     } else {
                         let error = response.error ?? localizationManager.localize("UNKNOWN_ERROR")
-                        print("[ProposeTimeView] ⚠️ Success=false, error: \(error)")
                         errorMessage = error
                     }
                 case .failure(let error):
-                    print("[ProposeTimeView] ❌ Failure: \(error.localizedDescription)")
                     errorMessage = error.localizedDescription
                 }
             }

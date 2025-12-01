@@ -110,7 +110,6 @@ struct ExchangeMapView: View {
                 defer { isLoadingOtherUser = false }
                 
                 guard let data = data, error == nil else {
-                    print("Error fetching other user location: \(error?.localizedDescription ?? "Unknown")")
                     return
                 }
                 
@@ -121,7 +120,6 @@ struct ExchangeMapView: View {
                         otherUserLocation = CLLocation(latitude: latitude, longitude: longitude)
                     }
                 } catch {
-                    print("Error parsing location: \(error)")
                 }
             }
         }.resume()

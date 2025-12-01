@@ -76,11 +76,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         #if targetEnvironment(simulator)
         // In simulator, start continuous updates to pick up simulated locations from Xcode
         manager.startUpdatingLocation()
-        print("[LocationManager] Started continuous location updates (simulator)")
         #else
         // On real devices, also start continuous updates
         manager.startUpdatingLocation()
-        print("[LocationManager] Started continuous location updates (device)")
         #endif
     }
     
@@ -94,7 +92,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.first
-        print("[LocationManager] Location updated: \(location?.coordinate.latitude ?? 0), \(location?.coordinate.longitude ?? 0)")
         
         // Reverse geocode to get city name
         if let location = location {
@@ -109,7 +106,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("[LocationManager] Location error: \(error.localizedDescription)")
         // Don't use hardcoded fallback locations - let the app handle no location gracefully
     }
 }

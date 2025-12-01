@@ -140,25 +140,21 @@ class ExchangeRatesAPI {
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
-                    print("[ExchangeRatesAPI] Network error: \(error.localizedDescription)")
                     completion(nil, "Network error")
                     return
                 }
                 
                 if let data = data,
                    let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    print("[ExchangeRatesAPI] Convert response: \(json)")
                     
                     if let success = json["success"] as? Bool, success,
                        let convertedAmount = json["converted_amount"] as? Double {
                         completion(convertedAmount, nil)
                     } else {
                         let errorMsg = json["error"] as? String ?? "Failed to convert amount"
-                        print("[ExchangeRatesAPI] Conversion failed: \(errorMsg)")
                         completion(nil, errorMsg)
                     }
                 } else {
-                    print("[ExchangeRatesAPI] Failed to parse response")
                     completion(nil, "Failed to parse response")
                 }
             }

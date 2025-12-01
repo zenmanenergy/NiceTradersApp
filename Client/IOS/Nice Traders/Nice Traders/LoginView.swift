@@ -227,16 +227,12 @@ green: 0.29, blue: 0.64)]),
             showingAlert = true
             return
         }
-        
-        print("Login URL:", urlString)
-        
         // Make API request
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 isSubmitting = false
                 
                 if let error = error {
-                    print("Network error:", error.localizedDescription)
                     alertMessage = localizationManager.localize("NETWORK_ERROR") + ": \(error.localizedDescription)"
                     showingAlert = true
                     return
@@ -250,8 +246,6 @@ green: 0.29, blue: 0.64)]),
                 
                 do {
                     if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        print("Response:", json)
-                        
                         if let errorMessage = json["ErrorMessage"] as? String {
                             alertMessage = localizationManager.localize("ERROR") + ": \(errorMessage)"
                             showingAlert = true
@@ -271,13 +265,9 @@ green: 0.29, blue: 0.64)]),
                                 
                                 // If device token is already available, update it now
                                 if let deviceToken = DeviceTokenManager.shared.deviceToken {
-                                    print("✓ [LoginView] Device token available at login - updating backend")
                                     DeviceTokenManager.shared.updateDeviceTokenForUser(userId: userId, deviceToken: deviceToken)
                                 }
                             }
-                            
-                            print("Login successful! SessionId:", sessionId, "UserType:", userType)
-                            
                             // Send the locally-selected language preference to the backend
                             LocalizationManager.shared.saveLanguagePreferenceToBackend(languageCode: LocalizationManager.shared.currentLanguage)
                             
@@ -294,7 +284,6 @@ green: 0.29, blue: 0.64)]),
                         }
                     }
                 } catch {
-                    print("JSON parsing error:", error)
                     alertMessage = localizationManager.localize("FAILED_PARSE_RESPONSE")
                     showingAlert = true
                 }

@@ -13,21 +13,16 @@ import Combine
 class LocalizationManager: NSObject, ObservableObject {
     @Published var currentLanguage: String {
         didSet {
-            print("🔴 [LocalizationManager] currentLanguage changed: '\(oldValue)' → '\(currentLanguage)'")
             UserDefaults.standard.set(currentLanguage, forKey: "AppLanguage")
             UserDefaults.standard.synchronize()
-            print("🔴 [LocalizationManager] Saved to UserDefaults: \(currentLanguage)")
             languageVersion += 1
-            print("🔴 [LocalizationManager] languageVersion incremented to: \(languageVersion)")
             objectWillChange.send()
             
             // Switch to the new language immediately from cached data
             if let allCached = loadAllTranslationsFromCache(),
                let languageTranslations = allCached[currentLanguage] {
                 self.cachedTranslations = languageTranslations
-                print("📦 [LocalizationManager] Switched to cached translations for \(currentLanguage) (\(languageTranslations.count) keys)")
             } else {
-                print("⚠️ [LocalizationManager] No cached translations for \(currentLanguage)")
                 self.cachedTranslations = [:]
             }
             
@@ -130,23 +125,16 @@ class LocalizationManager: NSObject, ObservableObject {
         // Initialize before super.init()
         self.currentLanguage = "en"
         super.init()
-        
-        print("🟠 [LocalizationManager] Initializing...")
-        
         // Try to load saved language preference
         if let savedLanguage = UserDefaults.standard.string(forKey: "AppLanguage") {
-            print("🟠 [LocalizationManager] Found saved language in UserDefaults: \(savedLanguage)")
             self.currentLanguage = savedLanguage
         } else {
-            print("🟠 [LocalizationManager] No saved language, auto-detecting...")
             // Auto-detect from system locale first
             let systemLocale = Locale.preferredLanguages.first ?? "en"
             let languageCode = String(systemLocale.prefix(2))
             self.currentLanguage = supportedLanguages[languageCode] != nil ? languageCode : "en"
-            print("🟠 [LocalizationManager] Auto-detected language: \(self.currentLanguage)")
         }
         
-        print("🟠 [LocalizationManager] Initialized with language: \(self.currentLanguage), version: \(self.languageVersion)")
         
         // Load all cached translations and check for updates
         Task {
@@ -157,7 +145,6 @@ class LocalizationManager: NSObject, ObservableObject {
             if let allCached = self.loadAllTranslationsFromCache(),
                let languageTranslations = allCached[self.currentLanguage] {
                 self.cachedTranslations = languageTranslations
-                print("📦 [LocalizationManager] Loaded \(languageTranslations.count) cached translations for \(self.currentLanguage)")
             }
             
             // Check if we need to download updates
@@ -200,7 +187,6 @@ class LocalizationManager: NSObject, ObservableObject {
     private func downloadAllTranslations() async {
         let endpoint = "\(baseURL)/Translations/GetAllTranslations"
         guard let url = URL(string: endpoint) else {
-            print("⚠️ [LocalizationManager] Invalid URL: \(endpoint)")
             return
         }
         
@@ -221,27 +207,21 @@ class LocalizationManager: NSObject, ObservableObject {
                 // Update current language's in-memory cache
                 if let currentLangTranslations = response.translations[self.currentLanguage] {
                     self.cachedTranslations = currentLangTranslations
-                    print("✅ [LocalizationManager] Downloaded all translations (\(response.total_count) total)")
                     
                     // Trigger UI update
                     Task { @MainActor in
                         self.languageVersion += 1
                     }
                 } else {
-                    print("⚠️ [LocalizationManager] Current language '\(self.currentLanguage)' not found in downloaded translations")
                 }
             } else {
-                print("⚠️ [LocalizationManager] Server returned error for all translations")
             }
         } catch let error as NSError {
             // Network errors are expected when offline
             if error.domain == NSURLErrorDomain {
-                print("ℹ️ [LocalizationManager] Network unavailable, using cached translations")
             } else {
-                print("⚠️ [LocalizationManager] Error downloading all translations: \(error.localizedDescription)")
             }
         } catch {
-            print("⚠️ [LocalizationManager] Error downloading all translations: \(error.localizedDescription)")
         }
     }
     
@@ -249,7 +229,6 @@ class LocalizationManager: NSObject, ObservableObject {
     private func checkForUpdates() async {
         let endpoint = "\(baseURL)/Translations/GetLastUpdated"
         guard let url = URL(string: endpoint) else {
-            print("⚠️ [LocalizationManager] Invalid URL: \(endpoint)")
             return
         }
         
@@ -261,14 +240,12 @@ class LocalizationManager: NSObject, ObservableObject {
             let response = try JSONDecoder().decode(LastUpdatedResponse.self, from: data)
             
             guard response.success else {
-                print("⚠️ [LocalizationManager] GetLastUpdated returned success: false")
                 return
             }
             
             // Get the max timestamp from server (across all languages)
             let serverTimestamps = response.last_updated.values
             guard let maxServerTimestamp = serverTimestamps.max() else {
-                print("⚠️ [LocalizationManager] No timestamps found on server")
                 return
             }
             
@@ -276,25 +253,19 @@ class LocalizationManager: NSObject, ObservableObject {
             
             // Always download if no cache exists
             if cachedTimestamp == nil {
-                print("⚠️ [LocalizationManager] No cached timestamp, downloading from server")
                 await downloadAllTranslations()
             } 
             // If server timestamp is newer, download updates
             else if maxServerTimestamp > cachedTimestamp! {
-                print("🔄 [LocalizationManager] Server timestamp newer than cache (\(maxServerTimestamp) > \(cachedTimestamp!)), downloading updates")
                 await downloadAllTranslations()
             } else {
-                print("✓ [LocalizationManager] Cache is up to date")
             }
         } catch let error as NSError {
             // Network errors are expected when offline - silently continue with cached data
             if error.domain == NSURLErrorDomain {
-                print("ℹ️ [LocalizationManager] Offline mode: using cached translations")
             } else {
-                print("⚠️ [LocalizationManager] Error checking translation updates: \(error.localizedDescription)")
             }
         } catch {
-            print("⚠️ [LocalizationManager] Error checking translation updates: \(error.localizedDescription)")
         }
     }
     
@@ -312,20 +283,17 @@ class LocalizationManager: NSObject, ObservableObject {
     private func loadUserPreferredLanguageFromBackend() async {
         // Check if user is logged in (get sessionId from UserDefaults)
         guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
-            print("ℹ️ [LocalizationManager] User not logged in, skipping backend language load")
             return
         }
         
         let endpoint = "\(baseURL)/Profile/GetProfile"
         guard let url = URL(string: "\(endpoint)?SessionId=\(sessionId)") else {
-            print("⚠️ [LocalizationManager] Invalid URL for GetProfile")
             return
         }
         
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
             guard let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                print("⚠️ [LocalizationManager] Invalid response format")
                 return
             }
             
@@ -334,7 +302,6 @@ class LocalizationManager: NSObject, ObservableObject {
                !preferredLanguage.isEmpty {
                 
                 if supportedLanguages[preferredLanguage] != nil && preferredLanguage != self.currentLanguage {
-                    print("📥 [LocalizationManager] Loading user's preferred language from backend: \(preferredLanguage)")
                     Task { @MainActor in
                         self.currentLanguage = preferredLanguage
                         UserDefaults.standard.set(preferredLanguage, forKey: "AppLanguage")
@@ -342,7 +309,6 @@ class LocalizationManager: NSObject, ObservableObject {
                 }
             }
         } catch {
-            print("⚠️ [LocalizationManager] Error loading user profile: \(error.localizedDescription)")
         }
     }
     
@@ -363,7 +329,6 @@ class LocalizationManager: NSObject, ObservableObject {
         
         // Convert to JSON-serializable format
         guard let jsonData = try? JSONSerialization.data(withJSONObject: translations, options: .prettyPrinted) else {
-            print("⚠️ [LocalizationManager] Failed to serialize translations to JSON")
             return
         }
         
@@ -376,17 +341,13 @@ class LocalizationManager: NSObject, ObservableObject {
         if let filePath = getTranslationsFilePath() {
             do {
                 try jsonData.write(to: filePath, options: .atomic)
-                print("📦 [LocalizationManager] Saved translations to file: \(filePath.lastPathComponent)")
             } catch {
-                print("⚠️ [LocalizationManager] Failed to write translations to file: \(error.localizedDescription)")
             }
         }
         
         if let timestamp = timestamp {
             UserDefaults.standard.setValue(timestamp, forKey: timestampKey)
-            print("📦 [LocalizationManager] Cached all translations with timestamp: \(timestamp)")
         } else {
-            print("⚠️ [LocalizationManager] Cached all translations but NO TIMESTAMP!")
         }
         UserDefaults.standard.synchronize()
     }
@@ -401,11 +362,9 @@ class LocalizationManager: NSObject, ObservableObject {
                 if let translations = try JSONSerialization.jsonObject(with: jsonData) as? [String: [String: String]] {
                     let timestamp = getGlobalCachedTimestamp()
                     let totalKeys = translations.values.reduce(0) { $0 + $1.count }
-                    print("📥 [LocalizationManager] Loaded \(totalKeys) translations from file across \(translations.count) languages (timestamp: \(timestamp ?? "NONE"))")
                     return translations
                 }
             } catch {
-                print("⚠️ [LocalizationManager] Failed to load from file: \(error.localizedDescription)")
             }
         }
         
@@ -416,11 +375,8 @@ class LocalizationManager: NSObject, ObservableObject {
            let translations = try? JSONSerialization.jsonObject(with: jsonData) as? [String: [String: String]] {
             let timestamp = getGlobalCachedTimestamp()
             let totalKeys = translations.values.reduce(0) { $0 + $1.count }
-            print("📥 [LocalizationManager] Loaded \(totalKeys) cached translations from UserDefaults across \(translations.count) languages (timestamp: \(timestamp ?? "NONE"))")
             return translations
         }
-        
-        print("⚠️ [LocalizationManager] No cached translations found in file or UserDefaults")
         return nil
     }
     
@@ -429,7 +385,6 @@ class LocalizationManager: NSObject, ObservableObject {
         let key = "translations_global_timestamp"
         let timestamp = UserDefaults.standard.string(forKey: key)
         if timestamp == nil {
-            print("⚠️ [LocalizationManager] No global cached timestamp")
         }
         return timestamp
     }
@@ -444,9 +399,7 @@ class LocalizationManager: NSObject, ObservableObject {
         UserDefaults.standard.setValue(translations, forKey: key)
         if let timestamp = timestamp {
             UserDefaults.standard.setValue(timestamp, forKey: timestampKey)
-            print("📦 [LocalizationManager] Cached \(translations.count) translations for \(language) with timestamp: \(timestamp)")
         } else {
-            print("⚠️ [LocalizationManager] Cached \(translations.count) translations for \(language) but NO TIMESTAMP!")
         }
         UserDefaults.standard.synchronize()
     }
@@ -456,9 +409,7 @@ class LocalizationManager: NSObject, ObservableObject {
         let cached = UserDefaults.standard.dictionary(forKey: key) as? [String: String]
         if let cached = cached {
             let timestamp = getCachedTimestamp(language: language)
-            print("📥 [LocalizationManager] Loaded \(cached.count) cached translations for \(language) (timestamp: \(timestamp ?? "NONE"))")
         } else {
-            print("⚠️ [LocalizationManager] No cached translations found for \(language)")
         }
         return cached
     }
@@ -467,7 +418,6 @@ class LocalizationManager: NSObject, ObservableObject {
         let key = "translations_\(language)_timestamp"
         let timestamp = UserDefaults.standard.string(forKey: key)
         if timestamp == nil {
-            print("⚠️ [LocalizationManager] No cached timestamp for \(language)")
         }
         return timestamp
     }
@@ -482,7 +432,6 @@ class LocalizationManager: NSObject, ObservableObject {
         
         // Location-based language detection can be extended here
         // For now, we rely on system locale detection
-        print("ℹ️ [LocalizationManager] Location-based language detection not yet implemented")
     }
     
     // MARK: - Backend Synchronization
@@ -491,7 +440,6 @@ class LocalizationManager: NSObject, ObservableObject {
     private func loadSupportedLanguages() async {
         let endpoint = "\(baseURL)/Translations/GetLastUpdated"
         guard let url = URL(string: endpoint) else {
-            print("⚠️ [LocalizationManager] Invalid URL for GetLastUpdated")
             return
         }
         
@@ -511,11 +459,9 @@ class LocalizationManager: NSObject, ObservableObject {
                 
                 Task { @MainActor in
                     self.supportedLanguages = languageMap
-                    print("✅ [LocalizationManager] Loaded \(languageMap.count) supported languages from backend")
                 }
             }
         } catch {
-            print("⚠️ [LocalizationManager] Error loading supported languages: \(error.localizedDescription)")
             // Fall back to empty dict - languages will still be usable
         }
     }
@@ -523,12 +469,10 @@ class LocalizationManager: NSObject, ObservableObject {
     func saveLanguagePreferenceToBackend(languageCode: String) {
         // Get sessionId from UserDefaults (safe access without SessionManager dependency)
         guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
-            print("ℹ️ [LocalizationManager] User not logged in, language preference not saved to backend")
             return
         }
         
         guard let backendURL = URLComponents(string: "\(baseURL)/Profile/UpdateProfile")?.url else {
-            print("⚠️ [LocalizationManager] Invalid backend URL for language preference")
             return
         }
         
@@ -546,7 +490,6 @@ class LocalizationManager: NSObject, ObservableObject {
             
             URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
-                    print("❌ [LocalizationManager] Error saving language preference: \(error.localizedDescription)")
                     return
                 }
                 
@@ -556,19 +499,15 @@ class LocalizationManager: NSObject, ObservableObject {
                         if let jsonResponse = try JSONSerialization.jsonObject(with: data) as? [String: Any],
                            let success = jsonResponse["success"] as? Bool {
                             if success {
-                                print("✅ [LocalizationManager] Language preference saved to backend: \(languageCode)")
                             } else {
                                 let errorMsg = jsonResponse["error"] as? String ?? "Unknown error"
-                                print("⚠️ [LocalizationManager] Failed to save language preference: \(errorMsg)")
                             }
                         }
                     } catch {
-                        print("⚠️ [LocalizationManager] Failed to parse response: \(error.localizedDescription)")
                     }
                 }
             }.resume()
         } catch {
-            print("❌ [LocalizationManager] Error encoding language preference: \(error.localizedDescription)")
         }
     }
     

@@ -962,13 +962,11 @@ struct ContactDetailView: View {
         ]
         
         guard let url = components.url else {
-            print("Error: Invalid URL")
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error loading messages: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
@@ -1025,7 +1023,6 @@ struct ContactDetailView: View {
         ]
         
         guard let url = components.url else {
-            print("Error: Invalid URL")
             DispatchQueue.main.async {
                 self.messageDeliveryStatus[tempMessageId] = .failed
             }
@@ -1069,13 +1066,11 @@ struct ContactDetailView: View {
         ]
         
         guard let url = components.url else {
-            print("Error: Invalid URL")
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error loading proposals: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
@@ -1107,30 +1102,21 @@ struct ContactDetailView: View {
                     }
                     
                     // Parse current meeting
-                    print("[ContactDetailView] Checking for current_meeting in response...")
-                    print("[ContactDetailView] current_meeting value: \(json["current_meeting"] ?? "nil")")
-                    print("[ContactDetailView] current_meeting type: \(type(of: json["current_meeting"]))")
                     
                     if let meetingData = json["current_meeting"] as? [String: Any] {
-                        print("[ContactDetailView] Found current_meeting: \(meetingData)")
                         if let time = meetingData["time"] as? String {
                             let location = (meetingData["location"] as? String) ?? ""
                             let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
                             
-                            print("[ContactDetailView] Parsing meeting - time: \(time)")
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
                                 time: time,
                                 message: meetingData["message"] as? String,
                                 agreedAt: agreedAt
                             )
-                            print("[ContactDetailView] Meeting set: \(self.currentMeeting)")
                         } else {
-                            print("[ContactDetailView] Meeting data incomplete - missing 'time' field")
                         }
                     } else {
-                        print("[ContactDetailView] No current_meeting in response")
-                        print("[ContactDetailView] Full JSON keys: \(json.keys)")
                     }
                 }
             }
@@ -1175,13 +1161,11 @@ struct ContactDetailView: View {
         ]
         
         guard let url = components.url else {
-            print("Error: Invalid URL")
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error proposing meeting: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
@@ -1214,13 +1198,11 @@ struct ContactDetailView: View {
         ]
         
         guard let url = components.url else {
-            print("Error: Invalid URL")
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {
-                print("Error responding to proposal: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
             
