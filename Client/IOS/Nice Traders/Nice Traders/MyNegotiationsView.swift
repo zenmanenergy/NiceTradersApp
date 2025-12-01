@@ -60,6 +60,7 @@ struct MyNegotiationsView: View {
             .navigationTitle(localizationManager.localize("MY_NEGOTIATIONS"))
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
+                print("VIEW: MyNegotiationsView")
                 loadNegotiations()
             }
             .refreshable {
@@ -241,7 +242,7 @@ struct PaymentStatusIndicator: View {
     @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        HStack(spacing: 6) {
+        return VStack(spacing: 0) {
             Image(systemName: paid ? "checkmark.circle.fill" : "circle")
                 .foregroundColor(paid ? .green : .secondary)
             Text(label)

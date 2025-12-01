@@ -24,7 +24,7 @@ struct LoginView: View {
     @FocusState private var emailFieldFocused: Bool
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             ZStack {
                 HStack {
@@ -159,6 +159,7 @@ green: 0.29, blue: 0.64)]),
         .navigationBarHidden(true)
         .background(Color.white)
         .onAppear {
+            print("VIEW: LoginView")
             // Clear form when view appears (e.g., after logout)
             if SessionManager.shared.sessionId == nil {
                 email = ""

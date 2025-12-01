@@ -23,7 +23,7 @@ struct ExchangeRatesView: View {
     let majorCurrencies = ExchangeRatesAPI.shared.getMajorCurrencies()
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 // Header
                 headerView
                 
@@ -44,6 +44,7 @@ struct ExchangeRatesView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
+            print("VIEW: ExchangeRatesView")
             loadExchangeRates()
         }
     }

@@ -12,7 +12,7 @@ struct PrivacyView: View {
     @State private var navigateToTerms = false
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             headerView
             
@@ -35,6 +35,9 @@ struct PrivacyView: View {
         .navigationDestination(isPresented: $navigateToTerms) {
             TermsView()
                 .navigationBarBackButtonHidden(true)
+        }
+        .onAppear {
+            print("VIEW: PrivacyView")
         }
     }
     

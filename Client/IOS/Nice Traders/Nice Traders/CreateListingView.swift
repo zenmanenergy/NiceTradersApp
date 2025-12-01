@@ -225,7 +225,7 @@ struct CreateListingView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 // Header
                 headerView
                 
@@ -271,6 +271,7 @@ struct CreateListingView: View {
             MessagesView(navigateToMessages: $navigateToMessages)
         }
         .onAppear {
+            print("VIEW: CreateListingView")
             ExchangeRatesAPI.shared.refreshRatesIfNeeded()
             
             // Automatically detect location when view appears

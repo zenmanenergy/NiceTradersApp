@@ -27,7 +27,7 @@ struct SignupView: View {
     @State private var navigateToDashboard = false
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             ZStack {
                 HStack {
@@ -193,6 +193,9 @@ struct SignupView: View {
         }
         .navigationDestination(isPresented: $showLogin) {
             LoginView()
+        }
+        .onAppear {
+            print("VIEW: SignupView")
         }
         .navigationDestination(isPresented: $navigateToDashboard) {
             DashboardView()

@@ -11,7 +11,7 @@ struct TermsView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             headerView
             
@@ -30,6 +30,9 @@ struct TermsView: View {
         }
         .background(Color.white)
         .navigationBarHidden(true)
+        .onAppear {
+            print("VIEW: TermsView")
+        }
     }
     
     // MARK: - Header View

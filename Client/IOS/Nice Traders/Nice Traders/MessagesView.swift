@@ -52,7 +52,7 @@ struct MessagesView: View {
     @State private var navigateToCreateListing = false
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             HStack {
                 Text(localizationManager.localize("MESSAGES"))
@@ -149,6 +149,7 @@ struct MessagesView: View {
             CreateListingView(navigateToCreateListing: $navigateToCreateListing)
         }
         .onAppear {
+            print("VIEW: MessagesView - Displaying inbox with \(purchasedContacts.count) conversations")
             loadPurchasedContacts()
         }
     }

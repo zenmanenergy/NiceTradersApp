@@ -69,7 +69,7 @@ struct SearchView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             headerView
             
@@ -111,6 +111,7 @@ struct SearchView: View {
             }
         }
         .onAppear {
+            print("VIEW: SearchView")
             loadInitialData()
             locationManager.requestLocation()
             

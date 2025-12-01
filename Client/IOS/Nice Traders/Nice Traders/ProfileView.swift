@@ -65,7 +65,7 @@ struct ProfileView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        return NavigationStack {
         VStack(spacing: 0) {
             // Header
             headerView
@@ -115,6 +115,7 @@ struct ProfileView: View {
             LanguagePickerView()
         }
         .onAppear {
+            print("VIEW: ProfileView")
             let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
             loadProfileData()
         }

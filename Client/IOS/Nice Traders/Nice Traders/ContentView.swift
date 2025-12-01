@@ -42,12 +42,13 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        return NavigationStack {
             Group {
                 if showingSplash {
                     // Show splash screen while loading
                     SplashScreenView()
                         .onAppear {
+                            print("VIEW: ContentView")
                             checkPermissionsAndSession()
                         }
                 } else if SessionManager.shared.isLoggedIn {

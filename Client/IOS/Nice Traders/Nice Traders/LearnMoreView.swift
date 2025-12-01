@@ -183,6 +183,9 @@ struct LearnMoreView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            print("VIEW: LearnMoreView")
+        }
         .navigationDestination(isPresented: $showSignup) {
             SignupView()
         }

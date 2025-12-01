@@ -24,7 +24,7 @@ struct NegotiationDetailView: View {
     @State private var navigateToDashboard = false
     
     var body: some View {
-        ZStack {
+        return ZStack {
             Color(UIColor.systemGroupedBackground)
                 .ignoresSafeArea()
             
@@ -79,6 +79,7 @@ struct NegotiationDetailView: View {
         .navigationTitle(localizationManager.localize("NEGOTIATION_DETAILS"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
+            print("VIEW: NegotiationDetailView")
             loadNegotiation()
         }
         .sheet(isPresented: $showCounterProposal) {

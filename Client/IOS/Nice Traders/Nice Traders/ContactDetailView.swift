@@ -66,7 +66,7 @@ struct ContactDetailView: View {
     }
     
     var body: some View {
-        ZStack {
+        return ZStack {
             VStack(spacing: 0) {
                 if activeTab == .messages {
                     // CHAT TAB - Minimal header with back button
@@ -194,6 +194,7 @@ struct ContactDetailView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
+            print("VIEW: ContactDetailView")
             loadMessages()
             loadMeetingProposals()
             startPollingIfNeeded()

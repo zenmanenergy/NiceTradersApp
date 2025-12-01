@@ -80,7 +80,7 @@ struct ContactView: View {
     @State private var proposalMessage = ""
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 // Header
                 headerView
                 
@@ -118,7 +118,9 @@ struct ContactView: View {
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
         .onAppear {
+            print("VIEW: ContactView - Displaying chat for user: \(contactData.other_user.first_name) \(contactData.other_user.last_name) with initial: \(contactData.other_user.first_name.prefix(1))")
             loadMessages()
             loadMeetingProposals()
         }
@@ -126,7 +128,8 @@ struct ContactView: View {
     
     // MARK: - Header View
     var headerView: some View {
-        HStack(alignment: .center, spacing: 12) {
+        print("DEBUG: ContactView header - User name: \(contactData.other_user.first_name) \(contactData.other_user.last_name)")
+        return HStack(alignment: .center, spacing: 12) {
             Button(action: {
                 dismiss()
             }) {
@@ -137,6 +140,8 @@ struct ContactView: View {
                     .background(Color.white.opacity(0.2))
                     .cornerRadius(6)
             }
+            .accessibilityLabel("")
+            .accessibilityHint(localizationManager.localize("BACK_TO_MESSAGES"))
             
             Spacer()
             

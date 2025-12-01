@@ -30,7 +30,7 @@ struct DashboardView: View {
     @State private var selectedTab = 0
     
     var body: some View {
-        ZStack {
+        return ZStack {
             if isLoading {
                 LoadingView()
             } else if let error = error {
@@ -73,6 +73,7 @@ struct DashboardView: View {
             }
         }
         .onAppear {
+            print("VIEW: DashboardView - Displaying dashboard")
             verifySessionAndLoadData()
             setupNavigationListeners()
         }

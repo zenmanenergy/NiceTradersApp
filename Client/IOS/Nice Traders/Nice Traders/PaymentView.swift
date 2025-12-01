@@ -30,7 +30,7 @@ struct PaymentView: View {
     }
     
     var body: some View {
-        NavigationView {
+        return NavigationView {
             ZStack {
                 Color(UIColor.systemGroupedBackground)
                     .ignoresSafeArea()
@@ -179,6 +179,9 @@ struct PaymentView: View {
                         Text(localizationManager.localize("WAITING_OTHER_PAYMENT"))
                     }
                 }
+            }
+            .onAppear {
+                print("VIEW: PaymentView")
             }
         }
     }

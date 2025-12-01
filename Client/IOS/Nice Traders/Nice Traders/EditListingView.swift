@@ -215,7 +215,7 @@ struct EditListingView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 if isLoading {
                     ProgressView("Loading listing...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -266,6 +266,7 @@ struct EditListingView: View {
                 Text(localizationManager.localize("DELETE_LISTING_CONFIRM_MESSAGE"))
             }
             .onAppear {
+                print("VIEW: EditListingView")
                 ExchangeRatesAPI.shared.refreshRatesIfNeeded()
                 loadListingData()
             }

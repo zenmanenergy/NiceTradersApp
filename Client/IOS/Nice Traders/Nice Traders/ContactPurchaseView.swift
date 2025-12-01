@@ -28,7 +28,7 @@ struct ContactPurchaseView: View {
     @StateObject private var locationManager = LocationManager()
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             // Header
             ZStack {
                 LinearGradient(
@@ -90,6 +90,7 @@ struct ContactPurchaseView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
+            print("VIEW: ContactPurchaseView")
             loadContactDetails()
         }
         .sheet(isPresented: $showReportModal) {

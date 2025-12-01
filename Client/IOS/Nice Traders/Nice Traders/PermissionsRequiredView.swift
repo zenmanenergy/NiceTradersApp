@@ -135,6 +135,9 @@ struct PermissionsRequiredView: View {
         } message: {
             Text(alertMessage)
         }
+        .onAppear {
+            print("VIEW: PermissionsRequiredView")
+        }
     }
 }
 
@@ -147,7 +150,7 @@ struct PermissionCard: View {
     let action: () -> Void
     
     var body: some View {
-        VStack(spacing: 12) {
+        return VStack(spacing: 0) {
             HStack(spacing: 16) {
                 VStack(spacing: 8) {
                     HStack(spacing: 12) {

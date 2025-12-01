@@ -53,7 +53,7 @@ struct ExchangeHistoryView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
                 // Header
                 headerView
                 
@@ -75,6 +75,7 @@ struct ExchangeHistoryView: View {
         .navigationBarHidden(true)
         .navigationBarBackButtonHidden(true)
         .onAppear {
+            print("VIEW: ExchangeHistoryView")
             loadExchangeHistory()
         }
         .onChange(of: filters.type) { filterHistory() }
