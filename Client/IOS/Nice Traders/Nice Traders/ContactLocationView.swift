@@ -26,10 +26,67 @@ struct ContactLocationView: View {
     @State private var showLocationProposalConfirm: Bool = false
     @State private var selectedLocationForProposal: MapSearchResult?
     @State private var currentMeetingTime: String?
+    @State private var showSuccessMessage: Bool = false
+    @State private var successMessageText: String = ""
     
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
+                // Location Status Section
+                if !meetingProposals.isEmpty {
+                    let latestProposal = meetingProposals.first!
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            if latestProposal.status == "accepted" {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizationManager.localize("LOCATION_ACCEPTED"))
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.green)
+                                    Text(latestProposal.proposedLocation)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            } else if latestProposal.status == "pending" {
+                                Image(systemName: "clock.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.orange)
+                                    Text(latestProposal.proposedLocation)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            } else if latestProposal.status == "rejected" {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                                    .font(.system(size: 16))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizationManager.localize("REJECT_LOCATION"))
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.red)
+                                    Text(latestProposal.proposedLocation)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(hex: "f0f9ff"))
+                    .cornerRadius(8)
+                    .padding(16)
+                }
+                
                 // Map at the top
                 ZStack {
                     if mapIsReady {
@@ -201,8 +258,9 @@ struct ContactLocationView: View {
                                         )
                                     }
                                 }
+                                .padding(.bottom, 8)
                             }
-                            .frame(maxHeight: 250)
+                            .frame(maxHeight: 300)
                         }
                     }
                 }
@@ -238,6 +296,29 @@ struct ContactLocationView: View {
                         }
                     }
                     .padding(16)
+                }
+            }
+            
+            // Success Message Toast
+            if showSuccessMessage {
+                VStack {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 18))
+                        
+                        Text(successMessageText)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.black)
+                        
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(Color(hex: "dcfce7"))
+                    .cornerRadius(8)
+                    .padding(16)
+                    
+                    Spacer()
                 }
             }
             
@@ -461,12 +542,20 @@ struct ContactLocationView: View {
                     print("✓ Location proposal sent successfully")
                     
                     DispatchQueue.main.async {
+                        successMessageText = "📍 \(location.name) proposed!"
+                        showSuccessMessage = true
+                        
                         // Clear the form and reload proposals
                         selectedLocationForProposal = nil
                         searchText = ""
                         searchResults = []
                         selectedResultId = nil
                         showLocationProposalConfirm = false
+                        
+                        // Hide success message after 3 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            showSuccessMessage = false
+                        }
                     }
                 } else {
                     print("ERROR: Server error: \(result.error ?? "Unknown error")")

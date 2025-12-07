@@ -234,6 +234,36 @@ struct DashboardView: View {
                         )
                     }
                     
+                    // Fetch meeting proposals for each listing
+                    var proposalCounts: [String: Int] = [:]
+                    let dispatchGroup = DispatchGroup()
+                    
+                    for listing in myListings {
+                        dispatchGroup.enter()
+                        getMeetingProposals(sessionId: sessionId, listingId: listing.id) { result in
+                            if let result = result,
+                               let proposals = result["proposals"] as? [[String: Any]] {
+                                let pendingCount = proposals.filter { prop in
+                                    (prop["status"] as? String) == "pending"
+                                }.count
+                                proposalCounts[listing.id] = pendingCount
+                            } else {
+                                proposalCounts[listing.id] = 0
+                            }
+                            dispatchGroup.leave()
+                        }
+                    }
+                    
+                    dispatchGroup.notify(queue: .main) {
+                        // Update listings with proposal counts
+                        self.myListings = self.myListings.map { listing in
+                            var updatedListing = listing
+                            if let pendingCount = proposalCounts[listing.id] {
+                                updatedListing.pendingLocationProposals = pendingCount
+                            }
+                            return updatedListing
+                        }
+                    }
                 } else {
                 }
             } else {
@@ -493,6 +523,28 @@ struct DashboardView: View {
                     return
                 }
                 completion(negotiations)
+            }
+        }.resume()
+    }
+    
+    func getMeetingProposals(sessionId: String, listingId: String, completion: @escaping ([String: Any]?) -> Void) {
+        let urlString = "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&listingId=\(listingId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        guard let url = URL(string: urlString) else {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                guard let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let success = json["success"] as? Bool,
+                      success else {
+                    completion(nil)
+                    return
+                }
+                completion(json)
             }
         }.resume()
     }
@@ -1027,11 +1079,33 @@ struct MyListingsSection: View {
     @Binding var navigateToCreateListing: Bool
     var onRefresh: (() -> Void)?
     
+    var totalPendingProposals: Int {
+        listings.reduce(0) { $0 + $1.pendingLocationProposals }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(localizationManager.localize("MY_ACTIVE_LISTINGS")) (\(listings.count))")
-                .font(.system(size: 19, weight: .semibold))
-                .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
+            HStack {
+                Text("\(localizationManager.localize("MY_ACTIVE_LISTINGS")) (\(listings.count))")
+                    .font(.system(size: 19, weight: .semibold))
+                    .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
+                
+                Spacer()
+                
+                if totalPendingProposals > 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.system(size: 14))
+                        Text("\(totalPendingProposals)")
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.orange)
+                    .cornerRadius(10)
+                }
+            }
             
             if listings.isEmpty {
                 EmptyListingsView(navigateToCreateListing: $navigateToCreateListing)
@@ -1114,13 +1188,25 @@ struct ListingCard: View {
                 
                 Spacer()
                 
-                Text(localizationManager.localize("ACTIVE"))
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.green)
-                    .cornerRadius(12)
+                VStack(spacing: 6) {
+                    Text(localizationManager.localize("ACTIVE"))
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.green)
+                        .cornerRadius(12)
+                    
+                    if listing.pendingLocationProposals > 0 {
+                        Text("📍 \(listing.pendingLocationProposals) Proposal\(listing.pendingLocationProposals != 1 ? "s" : "")")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange)
+                            .cornerRadius(12)
+                    }
+                }
             }
             
             HStack(spacing: 16) {
@@ -1209,6 +1295,8 @@ struct Listing: Identifiable, Hashable {
     let viewCount: Int
     let contactCount: Int
     let willRoundToNearestDollar: Bool
+    var pendingLocationProposals: Int = 0
+    var acceptedLocationProposals: Int = 0
 }
 
 struct ActiveExchange: Identifiable {
