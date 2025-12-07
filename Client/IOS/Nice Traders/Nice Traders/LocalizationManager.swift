@@ -114,6 +114,17 @@ class LocalizationManager: NSObject, ObservableObject {
             "FAILED_PARSE_RESPONSE": "Failed to parse response",
             "WILLING_TO_ROUND_TO_NEAREST_DOLLAR": "Willing to round to the nearest dollar?",
             "EXAMPLE_ROUNDING": "e.g., 10.47 USD → 10 USD",
+            "PROPOSE_LOCATION": "Propose Location",
+            "CONFIRM_LOCATION_PROPOSAL": "Confirm Location Proposal",
+            "PROPOSED_LOCATION": "Proposed Location",
+            "ACCEPT_LOCATION": "Accept Location",
+            "REJECT_LOCATION": "Reject Location",
+            "COUNTER_PROPOSE_LOCATION": "Counter Propose Location",
+            "LOCATION_PROPOSED": "Location Proposed",
+            "AWAITING_LOCATION_RESPONSE": "Awaiting Location Response",
+            "LOCATION_ACCEPTED": "Location Accepted",
+            "PROPOSED_BY": "Proposed by",
+            "MESSAGE": "Message",
         ]
     ]
     

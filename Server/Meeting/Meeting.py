@@ -22,9 +22,19 @@ def ProposeMeeting():
         listing_id = request_data.get('listingId')
         proposed_location = request_data.get('proposedLocation')
         proposed_time = request_data.get('proposedTime')
+        proposed_latitude = request_data.get('proposedLatitude')
+        proposed_longitude = request_data.get('proposedLongitude')
         message = request_data.get('message', '')
         
-        result = propose_meeting(session_id, listing_id, proposed_location, proposed_time, message)
+        # Convert latitude and longitude to float if provided
+        try:
+            proposed_latitude = float(proposed_latitude) if proposed_latitude else None
+            proposed_longitude = float(proposed_longitude) if proposed_longitude else None
+        except (ValueError, TypeError):
+            proposed_latitude = None
+            proposed_longitude = None
+        
+        result = propose_meeting(session_id, listing_id, proposed_location, proposed_time, proposed_latitude, proposed_longitude, message)
         return result
     except Exception as e:
         return Debugger(e)

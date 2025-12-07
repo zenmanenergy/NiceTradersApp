@@ -3,7 +3,7 @@ import json
 import uuid
 from datetime import datetime, timedelta
 
-def propose_meeting(session_id, listing_id, proposed_location, proposed_time, message=None):
+def propose_meeting(session_id, listing_id, proposed_location, proposed_time, proposed_latitude=None, proposed_longitude=None, message=None):
     """Propose a meeting time and location for an exchange"""
     try:
         print(f"[ProposeMeeting] Creating meeting proposal for listing: {listing_id}")
@@ -116,12 +116,12 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, me
         insert_query = """
             INSERT INTO meeting_proposals 
             (proposal_id, listing_id, proposer_id, recipient_id, proposed_location, 
-             proposed_time, message, expires_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+             proposed_latitude, proposed_longitude, proposed_time, message, expires_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query, (
             proposal_id, listing_id, proposer_id, recipient_id, 
-            proposed_location, proposed_datetime, message, expires_at
+            proposed_location, proposed_latitude, proposed_longitude, proposed_datetime, message, expires_at
         ))
         
         connection.commit()

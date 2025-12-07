@@ -53,7 +53,8 @@ def get_meeting_proposals(session_id, listing_id):
         # Get all meeting proposals for this listing involving this user
         proposals_query = """
             SELECT mp.proposal_id, mp.listing_id, mp.proposer_id, mp.recipient_id,
-                   mp.proposed_location, mp.proposed_time, mp.message, mp.status,
+                   mp.proposed_location, mp.proposed_latitude, mp.proposed_longitude,
+                   mp.proposed_time, mp.message, mp.status,
                    mp.proposed_at, mp.responded_at, mp.expires_at,
                    u1.FirstName as proposer_first_name, u1.LastName as proposer_last_name,
                    u2.FirstName as recipient_first_name, u2.LastName as recipient_last_name
@@ -118,6 +119,8 @@ def get_meeting_proposals(session_id, listing_id):
                 'proposal_id': proposal['proposal_id'],
                 'listing_id': proposal['listing_id'],
                 'proposed_location': proposal['proposed_location'],
+                'proposed_latitude': proposal['proposed_latitude'],
+                'proposed_longitude': proposal['proposed_longitude'],
                 'proposed_time': proposed_time.isoformat() if proposed_time else None,
                 'message': proposal['message'],
                 'status': proposal['status'],

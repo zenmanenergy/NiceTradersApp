@@ -23,210 +23,235 @@ struct ContactLocationView: View {
     @State private var selectedResultId: String?
     @State private var currentMapSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     @State private var mapIsReady: Bool = false
+    @State private var showLocationProposalConfirm: Bool = false
+    @State private var selectedLocationForProposal: MapSearchResult?
+    @State private var currentMeetingTime: String?
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Map at the top
-            ZStack {
-                if mapIsReady {
-                    Map(position: $cameraPosition) {
-                        
+        ZStack {
+            VStack(spacing: 0) {
+                // Map at the top
+                ZStack {
+                    if mapIsReady {
+                        Map(position: $cameraPosition) {
+                            
 
-                        // Listing location circle
-                        MapCircle(
-                            center: CLLocationCoordinate2D(
+                            // Listing location circle
+                            MapCircle(
+                                center: CLLocationCoordinate2D(
+                                    latitude: contactData.listing.latitude,
+                                    longitude: contactData.listing.longitude
+                                ),
+                                radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
+                            )
+                            .foregroundStyle(Color.blue.opacity(0.2))
+                            .stroke(Color.blue.opacity(0.5), lineWidth: 2)
+                            
+                            // Listing pin
+                            Annotation("", coordinate: CLLocationCoordinate2D(
                                 latitude: contactData.listing.latitude,
                                 longitude: contactData.listing.longitude
-                            ),
-                            radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
-                        )
-                        .foregroundStyle(Color.blue.opacity(0.2))
-                        .stroke(Color.blue.opacity(0.5), lineWidth: 2)
-                        
-                        // Listing pin
-                        Annotation("", coordinate: CLLocationCoordinate2D(
-                            latitude: contactData.listing.latitude,
-                            longitude: contactData.listing.longitude
-                        )) {
-                            VStack {
-                                Image(systemName: "location.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.red)
-                                Text("Listing")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                            }
-                        }
-                        
-                        // User location pin
-                        if let userCoord = locationManager.location?.coordinate {
-                            Annotation("", coordinate: userCoord) {
+                            )) {
                                 VStack {
-                                    Image(systemName: "location.circle.fill")
+                                    Image(systemName: "location.fill")
                                         .font(.title2)
-                                        .foregroundColor(.blue)
-                                    Text("You")
+                                        .foregroundColor(.red)
+                                    Text("Listing")
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                 }
                             }
-                        }
-                        
-                        // Search result pins
-                        ForEach(searchResults, id: \.id) { result in
-                            Annotation("", coordinate: result.coordinate) {
-                                VStack {
-                                    Image(systemName: "mappin.circle.fill")
-                                        .font(.title2)
-                                        .foregroundColor(selectedResultId == result.id ? .orange : .purple)
-                                    Text(result.name)
-                                        .font(.caption2)
-                                        .fontWeight(.semibold)
+                            
+                            // User location pin
+                            if let userCoord = locationManager.location?.coordinate {
+                                Annotation("", coordinate: userCoord) {
+                                    VStack {
+                                        Image(systemName: "location.circle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.blue)
+                                        Text("You")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                            }
+                            
+                            // Search result pins
+                            ForEach(searchResults, id: \.id) { result in
+                                Annotation("", coordinate: result.coordinate) {
+                                    VStack {
+                                        Image(systemName: "mappin.circle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(selectedResultId == result.id ? .orange : .purple)
+                                        Text(result.name)
+                                            .font(.caption2)
+                                            .fontWeight(.semibold)
+                                    }
                                 }
                             }
                         }
-                    }
-                    .mapStyle(.standard)
-                    .frame(height: 300)
-                    .onAppear {
-                        centerMapOnListing()
-                    }
-                } else {
-                    Color(hex: "e2e8f0")
+                        .mapStyle(.standard)
                         .frame(height: 300)
                         .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                mapIsReady = true
-                            }
+                            centerMapOnListing()
                         }
-                }
-                
-                // Zoom controls - bottom right corner
-                VStack(spacing: 0) {
-                    Spacer()
-                    HStack(spacing: 0) {
+                    } else {
+                        Color(hex: "e2e8f0")
+                            .frame(height: 300)
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    mapIsReady = true
+                                }
+                            }
+                    }
+                    
+                    // Zoom controls - bottom right corner
+                    VStack(spacing: 0) {
                         Spacer()
-                        VStack(spacing: 8) {
-                            Button(action: { zoomIn() }) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .frame(width: 36, height: 36)
-                                    .background(Color.blue)
-                                    .cornerRadius(6)
+                        HStack(spacing: 0) {
+                            Spacer()
+                            VStack(spacing: 8) {
+                                Button(action: { zoomIn() }) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 36, height: 36)
+                                        .background(Color.blue)
+                                        .cornerRadius(6)
+                                }
+                                
+                                Button(action: { zoomOut() }) {
+                                    Image(systemName: "minus")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 36, height: 36)
+                                        .background(Color.blue)
+                                        .cornerRadius(6)
+                                }
                             }
-                            
-                            Button(action: { zoomOut() }) {
-                                Image(systemName: "minus")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .frame(width: 36, height: 36)
-                                    .background(Color.blue)
-                                    .cornerRadius(6)
-                            }
-                        }
-                        .padding(12)
-                    }
-                }
-            }
-            
-            // Search section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                    
-                    TextField("Search locations in area...", text: $searchText)
-                        .onChange(of: searchText) { _ in
-                            if !searchText.isEmpty {
-                                searchLocations()
-                            } else {
-                                searchResults = []
-                            }
-                        }
-                    
-                    if !searchText.isEmpty {
-                        Button(action: {
-                            searchText = ""
-                            searchResults = []
-                            selectedResultId = nil
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                            .padding(12)
                         }
                     }
                 }
-                .padding(8)
-                .background(Color(hex: "f7fafc"))
-                .cornerRadius(8)
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "cbd5e0"), lineWidth: 1))
                 
-                // Search results
-                if isSearching {
+                // Search section
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        ProgressView()
-                        Text("Searching...")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        Spacer()
-                    }
-                } else if !searchResults.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Results (\(searchResults.count))")
-                            .font(.caption)
+                        Image(systemName: "magnifyingglass")
                             .foregroundColor(.gray)
                         
-                        ScrollView {
+                        TextField("Search locations in area...", text: $searchText)
+                            .onChange(of: searchText) {
+                                if !searchText.isEmpty {
+                                    searchLocations()
+                                } else {
+                                    searchResults = []
+                                }
+                            }
+                        
+                        if !searchText.isEmpty {
+                            Button(action: {
+                                searchText = ""
+                                searchResults = []
+                                selectedResultId = nil
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .background(Color(hex: "f7fafc"))
+                    .cornerRadius(8)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "cbd5e0"), lineWidth: 1))
+                    
+                    // Search results
+                    if isSearching {
+                        HStack {
+                            ProgressView()
+                            Text("Searching...")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            Spacer()
+                        }
+                    } else if !searchResults.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Results (\(searchResults.count))")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                            
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(searchResults, id: \.id) { result in
+                                        SearchResultRow(
+                                            result: result,
+                                            isSelected: selectedResultId == result.id,
+                                            onTap: {
+                                                selectedResultId = result.id
+                                                centerMapOnResult(result)
+                                            },
+                                            onProposeLocation: {
+                                                selectedLocationForProposal = result
+                                                // Load current meeting time from proposals if available
+                                                if let latestProposal = meetingProposals.first {
+                                                    currentMeetingTime = latestProposal.proposedTime
+                                                }
+                                                showLocationProposalConfirm = true
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            .frame(maxHeight: 250)
+                        }
+                    }
+                }
+                .padding(16)
+                .background(Color(hex: "f0f9ff"))
+                
+                // Bottom content area
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        if !meetingProposals.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
-                                ForEach(searchResults, id: \.id) { result in
-                                    SearchResultRow(
-                                        result: result,
-                                        isSelected: selectedResultId == result.id,
-                                        onTap: {
-                                            selectedResultId = result.id
-                                            centerMapOnResult(result)
+                                Text(localizationManager.localize("MEETING_PROPOSALS"))
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                
+                                ForEach(meetingProposals, id: \.id) { proposal in
+                                    LocationProposalCard(
+                                        proposal: proposal,
+                                        onAccept: {
+                                            respondToProposal(proposalId: proposal.proposalId, response: "accepted")
+                                        },
+                                        onReject: {
+                                            respondToProposal(proposalId: proposal.proposalId, response: "rejected")
+                                        },
+                                        onCounterPropose: {
+                                            selectedLocationForProposal = nil
+                                            searchText = ""
+                                            searchResults = []
                                         }
                                     )
                                 }
                             }
                         }
-                        .frame(maxHeight: 250)
                     }
+                    .padding(16)
                 }
             }
-            .padding(16)
-            .background(Color(hex: "f0f9ff"))
             
-            // Bottom content area
-            ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
-                    if !meetingProposals.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Meeting Proposals")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            ForEach(meetingProposals, id: \.id) { proposal in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(proposal.proposedLocation)
-                                        .fontWeight(.semibold)
-                                    Text(proposal.proposedTime)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                    if let message = proposal.message {
-                                        Text(message)
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                                .padding()
-                                .background(Color(hex: "f7fafc"))
-                                .cornerRadius(8)
-                            }
-                        }
+            // Location Proposal Confirmation Modal
+            if showLocationProposalConfirm, let location = selectedLocationForProposal {
+                LocationProposalConfirmView(
+                    location: location,
+                    meetingTime: currentMeetingTime,
+                    contactData: contactData,
+                    isPresented: $showLocationProposalConfirm,
+                    onConfirm: { message in
+                        proposeLocation(location: location, message: message)
                     }
-                }
-                .padding(16)
+                )
             }
         }
     }
@@ -338,6 +363,120 @@ struct ContactLocationView: View {
         }
     }
     
+    private func respondToProposal(proposalId: String, response: String) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("ERROR: No session ID available")
+            return
+        }
+        
+        var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/RespondToMeeting")!
+        let queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "proposalId", value: proposalId),
+            URLQueryItem(name: "response", value: response)
+        ]
+        components.queryItems = queryItems
+        
+        guard let url = components.url else {
+            print("ERROR: Failed to construct URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("ERROR: Network error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("ERROR: No data received")
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(RespondToProposalResponse.self, from: data)
+                if result.success {
+                    print("✓ Responded to proposal: \(response)")
+                    
+                    DispatchQueue.main.async {
+                        // Reload proposals to reflect the change
+                        // This would need to be called from parent view to reload
+                    }
+                } else {
+                    if let error = result.error {
+                        print("ERROR: Server error: \(error)")
+                    }
+                }
+            } catch {
+                print("ERROR: Failed to parse response: \(error)")
+            }
+        }.resume()
+    }
+    
+    private func proposeLocation(location: MapSearchResult, message: String?) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("ERROR: No session ID available")
+            return
+        }
+        
+        var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/ProposeMeeting")!
+        var queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId),
+            URLQueryItem(name: "proposedLocation", value: location.name),
+            URLQueryItem(name: "proposedLatitude", value: String(location.coordinate.latitude)),
+            URLQueryItem(name: "proposedLongitude", value: String(location.coordinate.longitude))
+        ]
+        
+        if let msg = message, !msg.isEmpty {
+            queryItems.append(URLQueryItem(name: "message", value: msg))
+        }
+        
+        // Use current meeting time if available from proposals
+        if let latestProposal = meetingProposals.first {
+            queryItems.append(URLQueryItem(name: "proposedTime", value: latestProposal.proposedTime))
+        }
+        
+        components.queryItems = queryItems
+        
+        guard let url = components.url else {
+            print("ERROR: Failed to construct URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("ERROR: Network error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("ERROR: No data received")
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(LocationProposalResponse.self, from: data)
+                if result.success {
+                    print("✓ Location proposal sent successfully")
+                    
+                    DispatchQueue.main.async {
+                        // Clear the form and reload proposals
+                        selectedLocationForProposal = nil
+                        searchText = ""
+                        searchResults = []
+                        selectedResultId = nil
+                        showLocationProposalConfirm = false
+                    }
+                } else {
+                    print("ERROR: Server error: \(result.error ?? "Unknown error")")
+                }
+            } catch {
+                print("ERROR: Failed to parse response: \(error)")
+            }
+        }.resume()
+    }
+    
     private func haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
         let R = 3959.0 // Earth's radius in miles
         let dLat = (lat2 - lat1) * .pi / 180.0
@@ -362,9 +501,11 @@ struct SearchResultRow: View {
     let result: MapSearchResult
     let isSelected: Bool
     let onTap: () -> Void
+    let onProposeLocation: () -> Void
+    @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(result.name)
@@ -395,6 +536,24 @@ struct SearchResultRow: View {
                     }
                 }
             }
+            
+            if isSelected {
+                Button(action: onProposeLocation) {
+                    HStack {
+                        Image(systemName: "checkmark.square")
+                            .font(.system(size: 12))
+                        Text(localizationManager.localize("PROPOSE_LOCATION"))
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(8)
+                    .foregroundColor(.white)
+                    .background(Color(hex: "667eea"))
+                    .cornerRadius(6)
+                }
+            }
         }
         .padding(10)
         .background(isSelected ? Color.blue.opacity(0.1) : Color.white)
@@ -405,4 +564,19 @@ struct SearchResultRow: View {
         .cornerRadius(8)
         .onTapGesture(perform: onTap)
     }
+}
+
+// MARK: - API Response Models
+
+struct LocationProposalResponse: Codable {
+    let success: Bool
+    let proposal_id: String?
+    let message: String?
+    let error: String?
+}
+
+struct RespondToProposalResponse: Codable {
+    let success: Bool
+    let message: String?
+    let error: String?
 }
