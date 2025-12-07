@@ -454,55 +454,35 @@ CREATE TABLE IF NOT EXISTS apn_logs (
     FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Create exchange_negotiations table for negotiating meeting times
-CREATE TABLE IF NOT EXISTS exchange_negotiations (
-    negotiation_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    buyer_id CHAR(39) NOT NULL,
-    seller_id CHAR(39) NOT NULL,
-    status ENUM('proposed', 'countered', 'agreed', 'rejected', 'expired', 'cancelled', 'paid_partial', 'paid_complete') DEFAULT 'proposed',
-    current_proposed_time DATETIME NOT NULL,
-    proposed_by CHAR(39) NOT NULL,
-    buyer_paid TINYINT DEFAULT 0,
-    seller_paid TINYINT DEFAULT 0,
-    buyer_paid_at TIMESTAMP NULL,
-    seller_paid_at TIMESTAMP NULL,
-    buyer_payment_transaction_id CHAR(39) NULL,
-    seller_payment_transaction_id CHAR(39) NULL,
-    agreement_reached_at TIMESTAMP NULL,
-    payment_deadline TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_buyer_id (buyer_id),
-    INDEX idx_seller_id (seller_id),
-    INDEX idx_status (status),
-    INDEX idx_proposed_time (current_proposed_time),
-    INDEX idx_payment_deadline (payment_deadline),
-    INDEX idx_created_at (created_at),
-    INDEX idx_agreement_reached (agreement_reached_at),
-    INDEX idx_proposed_by (proposed_by),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (seller_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(UserId) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Create negotiation_history table for tracking negotiation changes
+
+-- Create negotiation_history table for tracking all negotiation actions
 CREATE TABLE IF NOT EXISTS negotiation_history (
     history_id CHAR(39) PRIMARY KEY,
     negotiation_id CHAR(39) NOT NULL,
-    action ENUM('initial_proposal', 'counter_proposal', 'accepted', 'rejected', 'cancelled', 'buyer_paid', 'seller_paid', 'expired') NOT NULL,
+    listing_id CHAR(39) NOT NULL,
+    action ENUM('time_proposal', 'location_proposal', 'counter_proposal', 'accepted_time', 'accepted_location', 'rejected', 'buyer_paid', 'seller_paid', 'completed') NOT NULL,
     proposed_time DATETIME NULL,
+    proposed_location VARCHAR(255) NULL,
+    proposed_latitude DECIMAL(10,8) NULL,
+    proposed_longitude DECIMAL(11,8) NULL,
+    accepted_time DATETIME NULL,
+    accepted_location VARCHAR(255) NULL,
+    accepted_latitude DECIMAL(10,8) NULL,
+    accepted_longitude DECIMAL(11,8) NULL,
     proposed_by CHAR(39) NULL,
+    paid_by CHAR(39) NULL,
     notes TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_negotiation_id (negotiation_id),
+    INDEX idx_listing_id (listing_id),
     INDEX idx_action (action),
     INDEX idx_proposed_by (proposed_by),
+    INDEX idx_paid_by (paid_by),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(UserId) ON DELETE SET NULL
+    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
+    FOREIGN KEY (proposed_by) REFERENCES users(UserId) ON DELETE SET NULL,
+    FOREIGN KEY (paid_by) REFERENCES users(UserId) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create user_credits table for managing user credits/refunds

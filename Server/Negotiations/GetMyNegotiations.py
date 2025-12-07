@@ -25,20 +25,22 @@ def get_my_negotiations(session_id):
             })
         
         user_id = session_result['UserId']
+        print(f"[GetMyNegotiations] Processing request for user: {user_id}")
         
         # Get all active negotiations where user is participant
         cursor.execute("""
-            SELECT DISTINCT nh.negotiation_id, nh.listing_id
+            SELECT DISTINCT nh.negotiation_id, nh.listing_id, nh.created_at
             FROM negotiation_history nh
             WHERE nh.proposed_by = %s
             OR nh.listing_id IN (
-                SELECT ListingId FROM listings WHERE created_by = %s
+                SELECT listing_id FROM listings WHERE user_id = %s
             )
             AND nh.action NOT IN ('rejected')
             ORDER BY nh.created_at DESC
         """, (user_id, user_id))
         
         negotiation_ids = cursor.fetchall()
+        print(f"[GetMyNegotiations] Found {len(negotiation_ids)} negotiations for user {user_id}")
         
         # Format negotiations
         negotiations_list = []
@@ -46,20 +48,23 @@ def get_my_negotiations(session_id):
         for neg in negotiation_ids:
             negotiation_id = neg['negotiation_id']
             listing_id = neg['listing_id']
+            print(f"[GetMyNegotiations] Processing negotiation {negotiation_id} for listing {listing_id}")
             
             # Get listing info
             cursor.execute("""
                 SELECT l.currency, l.amount, l.accept_currency, l.location, 
-                       l.will_round_to_nearest_dollar, l.created_by
+                       l.will_round_to_nearest_dollar, l.user_id
                 FROM listings l
-                WHERE l.ListingId = %s
+                WHERE l.listing_id = %s
             """, (listing_id,))
             
             listing = cursor.fetchone()
             if not listing:
+                print(f"[GetMyNegotiations] Listing {listing_id} not found, skipping")
                 continue
+            print(f"[GetMyNegotiations] Found listing: {listing['currency']} {listing['amount']}")
             
-            seller_id = listing['created_by']
+            seller_id = listing['user_id']
             is_buyer = (user_id != seller_id)
             
             # Get all participants
@@ -79,38 +84,61 @@ def get_my_negotiations(session_id):
             
             # Get last action to determine status
             cursor.execute("""
-                SELECT action, created_at FROM negotiation_history
+                SELECT action, proposed_time, created_at FROM negotiation_history
                 WHERE negotiation_id = %s
                 ORDER BY created_at DESC
                 LIMIT 1
             """, (negotiation_id,))
             
             last_action = cursor.fetchone()
-            status = last_action['action'] if last_action else 'proposed'
+            action = last_action['action'] if last_action else 'proposed'
+            
+            # Map action names to standardized status names for iOS compatibility
+            status_mapping = {
+                'time_proposal': 'proposed',
+                'counter_proposal': 'countered',
+                'accepted_time': 'agreed',
+                'accepted_location': 'agreed',
+                'location_proposal': 'proposed',
+                'rejected': 'rejected',
+                'buyer_paid': 'paid_partial',
+                'seller_paid': 'paid_partial',
+                'proposed': 'proposed',
+                'countered': 'countered',
+                'agreed': 'agreed'
+            }
+            
+            status = status_mapping.get(action, action)
+            if last_action:
+                print(f"[GetMyNegotiations] Last action: {action} -> status: {status}, proposed_time: {last_action['proposed_time']}")
+            else:
+                print(f"[GetMyNegotiations] No last action found")
             
             # Get other user info
             other_user_id = seller_id if is_buyer else buyer_id
             cursor.execute("""
-                SELECT FirstName, LastName, Rating FROM users WHERE UserID = %s
+                SELECT FirstName, LastName, Rating FROM users WHERE UserId = %s
             """, (other_user_id,))
             
             other_user = cursor.fetchone()
             
             # Get payment status
             cursor.execute("""
-                SELECT COUNT(DISTINCT paid_by) as payment_count FROM negotiation_history
-                WHERE negotiation_id = %s AND paid_by IS NOT NULL
+                SELECT COUNT(CASE WHEN action = 'buyer_paid' THEN 1 END) as buyer_paid_count,
+                       COUNT(CASE WHEN action = 'seller_paid' THEN 1 END) as seller_paid_count
+                FROM negotiation_history
+                WHERE negotiation_id = %s
             """, (negotiation_id,))
             
             payment_check = cursor.fetchone()
-            buyer_paid = (is_buyer and payment_check['payment_count'] > 0) or (not is_buyer and payment_check['payment_count'] >= 2)
-            seller_paid = (is_buyer and payment_check['payment_count'] >= 2) or (not is_buyer and payment_check['payment_count'] > 0)
+            buyer_paid = payment_check['buyer_paid_count'] > 0
+            seller_paid = payment_check['seller_paid_count'] > 0
             
-            negotiations_list.append({
+            neg_dict = {
                 'negotiationId': negotiation_id,
                 'listingId': listing_id,
                 'status': status,
-                'currentProposedTime': last_action['created_at'].isoformat() if last_action else None,
+                'currentProposedTime': last_action['proposed_time'].isoformat() if last_action and last_action['proposed_time'] else None,
                 'buyerPaid': buyer_paid,
                 'sellerPaid': seller_paid,
                 'createdAt': last_action['created_at'].isoformat() if last_action else None,
@@ -126,10 +154,13 @@ def get_my_negotiations(session_id):
                 'otherUser': {
                     'userId': other_user_id,
                     'name': f"{other_user['FirstName']} {other_user['LastName']}" if other_user else 'Unknown',
-                    'rating': float(n['other_user_rating']) if n['other_user_rating'] else 0
+                    'rating': float(other_user['Rating']) if other_user and other_user['Rating'] else 0
                 }
-            })
+            }
+            negotiations_list.append(neg_dict)
+            print(f"[GetMyNegotiations] Added negotiation {negotiation_id} to list, proposedTime: {neg_dict['currentProposedTime']}")
         
+        print(f"[GetMyNegotiations] Returning {len(negotiations_list)} negotiations")
         return json.dumps({
             'success': True,
             'negotiations': negotiations_list,

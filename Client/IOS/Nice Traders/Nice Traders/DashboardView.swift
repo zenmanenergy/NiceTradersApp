@@ -395,20 +395,50 @@ struct DashboardView: View {
         getNegotiations(sessionId: sessionId) { negotiations in
             // Ignore if this response is from an old request
             guard thisRequestToken == self.currentRequestToken else { return }
+            print("[DashboardView] Processing \(negotiations.count) negotiations")
+            
             let pending = negotiations.filter { neg in
-                guard neg["userRole"] as? String != nil else { return false }
+                guard neg["userRole"] as? String != nil else {
+                    print("[DashboardView] Skipping negotiation - no userRole: \(neg)")
+                    return false
+                }
                 // Show negotiations where status is proposed/countered/agreed/paid_partial (not complete or rejected)
                 let status = neg["status"] as? String ?? ""
-                return status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
+                let include = status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
+                print("[DashboardView] Status filter: \(status) -> \(include)")
+                return include
             }.compactMap { neg -> PendingNegotiation? in
-                guard let negId = neg["negotiationId"] as? String,
-                      let listing = neg["listing"] as? [String: Any],
-                      let otherUser = neg["otherUser"] as? [String: Any],
-                      let proposedTime = neg["currentProposedTime"] as? String,
-                      let currency = listing["currency"] as? String,
-                      let acceptCurrency = listing["acceptCurrency"] as? String,
-                      let buyerName = otherUser["name"] as? String,
-                      let status = neg["status"] as? String else {
+                print("[DashboardView] Mapping negotiation: \(neg)")
+                guard let negId = neg["negotiationId"] as? String else {
+                    print("[DashboardView] Missing negotiationId")
+                    return nil
+                }
+                guard let listing = neg["listing"] as? [String: Any] else {
+                    print("[DashboardView] Missing listing")
+                    return nil
+                }
+                guard let otherUser = neg["otherUser"] as? [String: Any] else {
+                    print("[DashboardView] Missing otherUser")
+                    return nil
+                }
+                guard let proposedTime = neg["currentProposedTime"] as? String else {
+                    print("[DashboardView] Missing currentProposedTime")
+                    return nil
+                }
+                guard let currency = listing["currency"] as? String else {
+                    print("[DashboardView] Missing currency")
+                    return nil
+                }
+                guard let acceptCurrency = listing["acceptCurrency"] as? String else {
+                    print("[DashboardView] Missing acceptCurrency")
+                    return nil
+                }
+                guard let buyerName = otherUser["name"] as? String else {
+                    print("[DashboardView] Missing buyerName")
+                    return nil
+                }
+                guard let status = neg["status"] as? String else {
+                    print("[DashboardView] Missing status")
                     return nil
                 }
                 
@@ -418,6 +448,7 @@ struct DashboardView: View {
                 } else if let amountDouble = listing["amount"] as? Double {
                     amount = amountDouble
                 } else {
+                    print("[DashboardView] Missing or invalid amount")
                     return nil
                 }
                 
@@ -425,7 +456,7 @@ struct DashboardView: View {
                 
                 let willRound = (listing["willRoundToNearestDollar"] as? Bool) ?? false
                 
-                return PendingNegotiation(
+                let pending = PendingNegotiation(
                     id: negId,
                     buyerName: buyerName,
                     currency: currency,
@@ -436,8 +467,11 @@ struct DashboardView: View {
                     status: status,
                     willRoundToNearestDollar: willRound
                 )
+                print("[DashboardView] Created PendingNegotiation: \(pending.id) - \(proposedTime)")
+                return pending
             }
             
+            print("[DashboardView] Final pendingNegotiations count: \(pending.count)")
             self.pendingNegotiations = pending
         }
     }
@@ -506,21 +540,49 @@ struct DashboardView: View {
     
     func getNegotiations(sessionId: String, completion: @escaping ([[String: Any]]) -> Void) {
         let urlString = "\(Settings.shared.baseURL)/Negotiations/GetMyNegotiations?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        print("[DashboardView] getNegotiations URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
+            print("[DashboardView] Invalid URL")
             completion([])
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let success = json["success"] as? Bool,
-                      success,
-                      let negotiations = json["negotiations"] as? [[String: Any]] else {
+                if let error = error {
+                    print("[DashboardView] getNegotiations error: \(error)")
+                }
+                guard let data = data else {
+                    print("[DashboardView] No data received")
                     completion([])
                     return
+                }
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("[DashboardView] Failed to parse JSON")
+                    completion([])
+                    return
+                }
+                print("[DashboardView] Raw JSON response: \(json)")
+                
+                guard let success = json["success"] as? Bool else {
+                    print("[DashboardView] No success field")
+                    completion([])
+                    return
+                }
+                guard success else {
+                    print("[DashboardView] success=false")
+                    completion([])
+                    return
+                }
+                guard let negotiations = json["negotiations"] as? [[String: Any]] else {
+                    print("[DashboardView] No negotiations array")
+                    completion([])
+                    return
+                }
+                print("[DashboardView] Got \(negotiations.count) negotiations from server")
+                negotiations.forEach { neg in
+                    print("[DashboardView] Negotiation: \(neg)")
                 }
                 completion(negotiations)
             }

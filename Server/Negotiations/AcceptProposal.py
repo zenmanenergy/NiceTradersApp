@@ -49,11 +49,8 @@ def accept_proposal(negotiation_id, session_id):
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, listing_id, action, proposed_by, created_at
-            ) VALUES (%s, %s, %s, 'accepted_time', %s, NOW())
+            ) VALUES (%s, %s, %s, 'accepted', %s, NOW())
         """, (history_id, negotiation_id, negotiation['listing_id'], user_id))
-                history_id, negotiation_id, action, proposed_by
-            ) VALUES (%s, %s, 'accepted', %s)
-        """, (history_id, negotiation_id, user_id))
         
         connection.commit()
         

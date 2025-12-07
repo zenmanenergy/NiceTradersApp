@@ -26,17 +26,18 @@ def reset_negotiation(negotiation_id=None):
         if negotiation_id:
             # Get the specified negotiation
             cursor.execute('''
-                SELECT negotiation_id, listing_id, buyer_id, seller_id, status
-                FROM exchange_negotiations 
+                SELECT DISTINCT negotiation_id, listing_id
+                FROM negotiation_history 
                 WHERE negotiation_id = %s
+                LIMIT 1
             ''', (negotiation_id,))
         else:
-            # Get the most recent paid/paid_partial negotiation
+            # Get the most recent paid negotiation
             cursor.execute('''
-                SELECT negotiation_id, listing_id, buyer_id, seller_id, status
-                FROM exchange_negotiations 
-                WHERE status IN ('paid_complete', 'paid_partial')
-                ORDER BY updated_at DESC 
+                SELECT DISTINCT nh.negotiation_id, nh.listing_id
+                FROM negotiation_history nh
+                WHERE nh.action IN ('buyer_paid', 'seller_paid')
+                ORDER BY nh.created_at DESC 
                 LIMIT 1
             ''')
         
@@ -46,18 +47,32 @@ def reset_negotiation(negotiation_id=None):
             if negotiation_id:
                 print(f'❌ Negotiation {negotiation_id} not found')
             else:
-                print('❌ No paid/paid_partial negotiations found')
+                print('❌ No paid negotiations found')
             return
         
         neg_id = neg['negotiation_id']
         listing_id = neg['listing_id']
-        buyer_id = neg['buyer_id']
-        seller_id = neg['seller_id']
-        old_status = neg['status']
+        old_status = 'paid'
         
         print(f'Resetting negotiation: {neg_id}')
         print(f'Current status: {old_status}')
         print()
+        
+        # Get buyer and seller from listing
+        cursor.execute('''
+            SELECT created_by FROM listings WHERE ListingId = %s
+        ''', (listing_id,))
+        listing = cursor.fetchone()
+        seller_id = listing['created_by'] if listing else None
+        
+        # Get buyer from first proposal
+        cursor.execute('''
+            SELECT proposed_by FROM negotiation_history 
+            WHERE negotiation_id = %s AND action = 'time_proposal'
+            LIMIT 1
+        ''', (neg_id,))
+        first_proposal = cursor.fetchone()
+        buyer_id = first_proposal['proposed_by'] if first_proposal else None
         
         # Delete any transactions related to this negotiation
         cursor.execute('''
@@ -67,20 +82,19 @@ def reset_negotiation(negotiation_id=None):
         txn_deleted = cursor.rowcount
         
         # Delete the contact_access entries
-        cursor.execute('''
-            DELETE FROM contact_access
-            WHERE user_id IN (%s, %s) AND listing_id = %s
-        ''', (buyer_id, seller_id, listing_id))
-        access_deleted = cursor.rowcount
+        if buyer_id and seller_id:
+            cursor.execute('''
+                DELETE FROM contact_access
+                WHERE user_id IN (%s, %s) AND listing_id = %s
+            ''', (buyer_id, seller_id, listing_id))
+            access_deleted = cursor.rowcount
+        else:
+            access_deleted = 0
         
-        # Reset the negotiation to proposed status
+        # Delete payment records from negotiation_history
         cursor.execute('''
-            UPDATE exchange_negotiations
-            SET status = 'proposed',
-                buyer_paid = FALSE,
-                seller_paid = FALSE,
-                updated_at = NOW()
-            WHERE negotiation_id = %s
+            DELETE FROM negotiation_history
+            WHERE negotiation_id = %s AND action IN ('buyer_paid', 'seller_paid', 'completed')
         ''', (neg_id,))
         
         db.commit()
