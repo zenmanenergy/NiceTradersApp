@@ -22,72 +22,83 @@ struct ContactLocationView: View {
     @State private var isSearching: Bool = false
     @State private var selectedResultId: String?
     @State private var currentMapSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+    @State private var mapIsReady: Bool = false
     
     var body: some View {
         VStack(spacing: 0) {
             // Map at the top
             ZStack {
-                Map(position: $cameraPosition) {
-                    
+                if mapIsReady {
+                    Map(position: $cameraPosition) {
+                        
 
-                    // Listing location circle
-                    MapCircle(
-                        center: CLLocationCoordinate2D(
+                        // Listing location circle
+                        MapCircle(
+                            center: CLLocationCoordinate2D(
+                                latitude: contactData.listing.latitude,
+                                longitude: contactData.listing.longitude
+                            ),
+                            radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
+                        )
+                        .foregroundStyle(Color.blue.opacity(0.2))
+                        .stroke(Color.blue.opacity(0.5), lineWidth: 2)
+                        
+                        // Listing pin
+                        Annotation("", coordinate: CLLocationCoordinate2D(
                             latitude: contactData.listing.latitude,
                             longitude: contactData.listing.longitude
-                        ),
-                        radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
-                    )
-                    .foregroundStyle(Color.blue.opacity(0.2))
-                    .stroke(Color.blue.opacity(0.5), lineWidth: 2)
-                    
-                    // Listing pin
-                    Annotation("", coordinate: CLLocationCoordinate2D(
-                        latitude: contactData.listing.latitude,
-                        longitude: contactData.listing.longitude
-                    )) {
-                        VStack {
-                            Image(systemName: "location.fill")
-                                .font(.title2)
-                                .foregroundColor(.red)
-                            Text("Listing")
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    
-                    // User location pin
-                    if let userCoord = locationManager.location?.coordinate {
-                        Annotation("", coordinate: userCoord) {
+                        )) {
                             VStack {
-                                Image(systemName: "location.circle.fill")
+                                Image(systemName: "location.fill")
                                     .font(.title2)
-                                    .foregroundColor(.blue)
-                                Text("You")
+                                    .foregroundColor(.red)
+                                Text("Listing")
                                     .font(.caption)
                                     .fontWeight(.semibold)
                             }
                         }
-                    }
-                    
-                    // Search result pins
-                    ForEach(searchResults, id: \.id) { result in
-                        Annotation("", coordinate: result.coordinate) {
-                            VStack {
-                                Image(systemName: "mappin.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(selectedResultId == result.id ? .orange : .purple)
-                                Text(result.name)
-                                    .font(.caption2)
-                                    .fontWeight(.semibold)
+                        
+                        // User location pin
+                        if let userCoord = locationManager.location?.coordinate {
+                            Annotation("", coordinate: userCoord) {
+                                VStack {
+                                    Image(systemName: "location.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.blue)
+                                    Text("You")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                }
+                            }
+                        }
+                        
+                        // Search result pins
+                        ForEach(searchResults, id: \.id) { result in
+                            Annotation("", coordinate: result.coordinate) {
+                                VStack {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(selectedResultId == result.id ? .orange : .purple)
+                                    Text(result.name)
+                                        .font(.caption2)
+                                        .fontWeight(.semibold)
+                                }
                             }
                         }
                     }
-                }
-                .mapStyle(.standard)
-                .frame(height: 300)
-                .onAppear {
-                    centerMapOnListing()
+                    .mapStyle(.standard)
+                    .frame(height: 300)
+                    .onAppear {
+                        centerMapOnListing()
+                    }
+                } else {
+                    Color(hex: "e2e8f0")
+                        .frame(height: 300)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                mapIsReady = true
+                            }
+                        }
                 }
                 
                 // Zoom controls - bottom right corner

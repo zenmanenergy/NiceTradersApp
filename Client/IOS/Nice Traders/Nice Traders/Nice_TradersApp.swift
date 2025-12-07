@@ -6,12 +6,16 @@
 //
 
 import SwiftUI
+import MapKit
 
 @main
 struct Nice_TradersApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     init() {
+        // Pre-warm MapKit to avoid resource loading errors
+        _ = MKMapView()
+        
         // Disable text field haptic feedback
         UserDefaults.standard.set(false, forKey: "_UITextInputHapticFeedbackEnabled")
         UserDefaults.standard.set(false, forKey: "UIFeedbackGenerator")
