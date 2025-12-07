@@ -34,14 +34,13 @@ def respond_to_meeting(session_id, proposal_id, response):
         
         user_id = session_result['UserId']
         
-        # Get proposal details from negotiation_history
+        # Get proposal details from negotiation_history only
         proposal_query = """
             SELECT nh.history_id, nh.negotiation_id, nh.proposed_location, nh.proposed_time, 
                    nh.proposed_latitude, nh.proposed_longitude, nh.notes, nh.proposed_by,
-                   en.listing_id,
+                   nh.listing_id,
                    u.FirstName, u.LastName
             FROM negotiation_history nh
-            JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
             JOIN users u ON nh.proposed_by = u.UserId
             WHERE nh.history_id = %s
         """
@@ -105,17 +104,6 @@ def respond_to_meeting(session_id, proposal_id, response):
             f"Responded: {response}"
         ))
         
-        # If accepted, update negotiation status to 'agreed'
-        if response == 'accepted':
-            update_neg_query = """
-                UPDATE exchange_negotiations
-                SET status = 'agreed',
-                    current_proposed_time = %s,
-                    agreement_reached_at = NOW()
-                WHERE negotiation_id = %s
-            """
-            cursor.execute(update_neg_query, (proposal_result['proposed_time'], proposal_result['negotiation_id']))
-        
         connection.commit()
         connection.close()
         
@@ -131,7 +119,7 @@ def respond_to_meeting(session_id, proposal_id, response):
             'message': f'Meeting proposal {response} successfully',
             'proposal': {
                 'proposal_id': proposal_result['history_id'],
-                'listing_id': proposal_result['listing_id'],
+                'listing_id': proposal_result['final_listing_id'],
                 'proposed_location': proposal_result['proposed_location'],
                 'proposed_time': proposed_time.isoformat() if proposed_time else None,
                 'message': proposal_result['notes'],

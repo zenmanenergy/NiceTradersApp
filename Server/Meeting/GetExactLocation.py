@@ -35,13 +35,10 @@ def get_exact_location(session_id, listing_id):
         # Check if user has an accepted meeting for this listing
         meeting_query = """
             SELECT nh.history_id, nh.accepted_time, nh.accepted_location,
-                   nh.accepted_latitude, nh.accepted_longitude, l.location
+                   nh.accepted_latitude, nh.accepted_longitude, nh.proposed_location
             FROM negotiation_history nh
-            JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
-            JOIN listings l ON en.listing_id = l.listing_id
-            WHERE en.listing_id = %s
+            WHERE nh.listing_id = %s
             AND nh.action IN ('accepted_time', 'accepted_location')
-            AND nh.accepted_time IS NOT NULL
             ORDER BY nh.created_at DESC
             LIMIT 1
         """
@@ -75,7 +72,7 @@ def get_exact_location(session_id, listing_id):
                 'has_meeting': True,
                 'is_exact': True,
                 'location': {
-                    'address': meeting['accepted_location'] or meeting['location'],
+                    'address': meeting['accepted_location'] or meeting['proposed_location'],
                     'latitude': float(meeting['accepted_latitude']) if meeting['accepted_latitude'] else None,
                     'longitude': float(meeting['accepted_longitude']) if meeting['accepted_longitude'] else None
                 },

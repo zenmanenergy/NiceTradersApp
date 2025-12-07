@@ -27,44 +27,67 @@ def get_negotiation(negotiation_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details with buyer and seller info
+        # Get negotiation details from history
         cursor.execute("""
-            SELECT 
-                n.*,
-                l.currency, l.amount, l.accept_currency, l.location, l.will_round_to_nearest_dollar,
-                buyer.FirstName as buyer_first_name,
-                buyer.LastName as buyer_last_name,
-                buyer.Rating as buyer_rating,
-                buyer.TotalExchanges as buyer_total_exchanges,
-                seller.FirstName as seller_first_name,
-                seller.LastName as seller_last_name,
-                seller.Rating as seller_rating,
-                seller.TotalExchanges as seller_total_exchanges
-            FROM exchange_negotiations n
-            JOIN listings l ON n.listing_id = l.listing_id
-            JOIN users buyer ON n.buyer_id = buyer.UserId
-            JOIN users seller ON n.seller_id = seller.UserId
-            WHERE n.negotiation_id = %s
+            SELECT DISTINCT nh.negotiation_id, nh.listing_id
+            FROM negotiation_history nh
+            WHERE nh.negotiation_id = %s
+            LIMIT 1
         """, (negotiation_id,))
         
-        negotiation = cursor.fetchone()
+        negotiation_base = cursor.fetchone()
         
-        if not negotiation:
+        if not negotiation_base:
             return json.dumps({
                 'success': False,
                 'error': 'Negotiation not found'
             })
         
+        # Get listing details
+        cursor.execute("""
+            SELECT l.currency, l.amount, l.accept_currency, l.location, l.will_round_to_nearest_dollar, l.created_by
+            FROM listings l
+            WHERE l.ListingId = %s
+        """, (negotiation_base['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
+            return json.dumps({
+                'success': False,
+                'error': 'Listing not found'
+            })
+        
+        seller_id = listing['created_by']
+        
+        # Get all participants in negotiation
+        cursor.execute("""
+            SELECT DISTINCT proposed_by FROM negotiation_history
+            WHERE negotiation_id = %s
+        """, (negotiation_id,))
+        
+        participants = cursor.fetchall()
+        buyer_id = participants[0]['proposed_by'] if participants else None
+        
         # Verify user is either buyer or seller
-        if user_id not in (negotiation['buyer_id'], negotiation['seller_id']):
+        if user_id not in (buyer_id, seller_id):
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
+        # Get buyer and seller user info
+        cursor.execute("""
+            SELECT u.UserId, u.FirstName, u.LastName, u.Rating, u.TotalExchanges
+            FROM users u
+            WHERE u.UserId IN (%s, %s)
+        """, (buyer_id, seller_id))
+        
+        users = cursor.fetchall()
+        buyer_info = next((u for u in users if u['UserId'] == buyer_id), None)
+        seller_info = next((u for u in users if u['UserId'] == seller_id), None)
+        
         # Determine user's role
-        user_role = 'buyer' if user_id == negotiation['buyer_id'] else 'seller'
-        other_user_id = negotiation['seller_id'] if user_role == 'buyer' else negotiation['buyer_id']
+        user_role = 'buyer' if user_id == buyer_id else 'seller'
         
         # Get negotiation history
         cursor.execute("""
@@ -96,38 +119,29 @@ def get_negotiation(negotiation_id, session_id):
         response = {
             'success': True,
             'negotiation': {
-                'negotiationId': negotiation['negotiation_id'],
-                'listingId': negotiation['listing_id'],
-                'status': negotiation['status'],
-                'currentProposedTime': negotiation['current_proposed_time'].isoformat() if negotiation['current_proposed_time'] else None,
-                'proposedBy': negotiation['proposed_by'],
-                'buyerPaid': bool(negotiation['buyer_paid']),
-                'sellerPaid': bool(negotiation['seller_paid']),
-                'agreementReachedAt': negotiation['agreement_reached_at'].isoformat() if negotiation['agreement_reached_at'] else None,
-                'paymentDeadline': negotiation['payment_deadline'].isoformat() if negotiation['payment_deadline'] else None,
-                'createdAt': negotiation['created_at'].isoformat() if negotiation['created_at'] else None,
-                'updatedAt': negotiation['updated_at'].isoformat() if negotiation['updated_at'] else None
+                'negotiationId': negotiation_base['negotiation_id'],
+                'listingId': negotiation_base['listing_id']
             },
             'listing': {
-                'currency': negotiation['currency'],
-                'amount': float(negotiation['amount']),
-                'acceptCurrency': negotiation['accept_currency'],
-                'location': negotiation['location'],
-                'willRoundToNearestDollar': bool(negotiation['will_round_to_nearest_dollar']) if negotiation['will_round_to_nearest_dollar'] is not None else False
+                'currency': listing['currency'],
+                'amount': float(listing['amount']),
+                'acceptCurrency': listing['accept_currency'],
+                'location': listing['location'],
+                'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
             },
             'buyer': {
-                'userId': negotiation['buyer_id'],
-                'firstName': negotiation['buyer_first_name'],
-                'lastName': negotiation['buyer_last_name'],
-                'rating': float(negotiation['buyer_rating']) if negotiation['buyer_rating'] else 0,
-                'totalExchanges': negotiation['buyer_total_exchanges']
+                'userId': buyer_id,
+                'firstName': buyer_info['FirstName'] if buyer_info else 'Unknown',
+                'lastName': buyer_info['LastName'] if buyer_info else 'Unknown',
+                'rating': float(buyer_info['Rating']) if buyer_info and buyer_info['Rating'] else 0,
+                'totalExchanges': buyer_info['TotalExchanges'] if buyer_info else 0
             },
             'seller': {
-                'userId': negotiation['seller_id'],
-                'firstName': negotiation['seller_first_name'],
-                'lastName': negotiation['seller_last_name'],
-                'rating': float(negotiation['seller_rating']) if negotiation['seller_rating'] else 0,
-                'totalExchanges': negotiation['seller_total_exchanges']
+                'userId': seller_id,
+                'firstName': seller_info['FirstName'] if seller_info else 'Unknown',
+                'lastName': seller_info['LastName'] if seller_info else 'Unknown',
+                'rating': float(seller_info['Rating']) if seller_info and seller_info['Rating'] else 0,
+                'totalExchanges': seller_info['TotalExchanges'] if seller_info else 0
             },
             'userRole': user_role,
             'history': history_formatted

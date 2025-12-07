@@ -39,9 +39,8 @@ class LocationTrackingService:
             # Get proposal and meeting details
             proposal_query = """
                 SELECT nh.history_id as proposal_id, nh.accepted_time, nh.accepted_latitude, nh.accepted_longitude,
-                       en.negotiation_id
+                       nh.negotiation_id
                 FROM negotiation_history nh
-                JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
                 WHERE nh.history_id = %s 
                 AND nh.action IN ('accepted_time', 'accepted_location')
                 AND nh.accepted_time IS NOT NULL

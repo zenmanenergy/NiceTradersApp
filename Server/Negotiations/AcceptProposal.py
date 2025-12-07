@@ -29,11 +29,11 @@ def accept_proposal(negotiation_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details
+        # Get negotiation details from negotiation_history
         cursor.execute("""
-            SELECT buyer_id, seller_id, status, proposed_by
-            FROM exchange_negotiations
+            SELECT DISTINCT negotiation_id, listing_id FROM negotiation_history
             WHERE negotiation_id = %s
+            LIMIT 1
         """, (negotiation_id,))
         
         negotiation = cursor.fetchone()
@@ -44,45 +44,13 @@ def accept_proposal(negotiation_id, session_id):
                 'error': 'Negotiation not found'
             })
         
-        # Verify user is part of this negotiation
-        if user_id not in (negotiation['buyer_id'], negotiation['seller_id']):
-            return json.dumps({
-                'success': False,
-                'error': 'You do not have access to this negotiation'
-            })
-        
-        # Verify user is not the one who made the current proposal
-        if user_id == negotiation['proposed_by']:
-            return json.dumps({
-                'success': False,
-                'error': 'You cannot accept your own proposal'
-            })
-        
-        # Check if negotiation is in correct state
-        if negotiation['status'] not in ('proposed', 'countered'):
-            return json.dumps({
-                'success': False,
-                'error': f'Cannot accept proposal in {negotiation["status"]} state'
-            })
-        
-        # Set agreement time and payment deadline (6 hours from now)
-        agreement_time = datetime.now()
-        payment_deadline = agreement_time + timedelta(hours=6)
-        
-        # Update negotiation status to 'agreed'
-        cursor.execute("""
-            UPDATE exchange_negotiations
-            SET status = 'agreed',
-                agreement_reached_at = %s,
-                payment_deadline = %s,
-                updated_at = NOW()
-            WHERE negotiation_id = %s
-        """, (agreement_time, payment_deadline, negotiation_id))
-        
-        # Log to history (39 chars: HIS- + 35 char UUID)
-        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
+        # Create acceptance record in negotiation_history
+        history_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO negotiation_history (
+                history_id, negotiation_id, listing_id, action, proposed_by, created_at
+            ) VALUES (%s, %s, %s, 'accepted_time', %s, NOW())
+        """, (history_id, negotiation_id, negotiation['listing_id'], user_id))
                 history_id, negotiation_id, action, proposed_by
             ) VALUES (%s, %s, 'accepted', %s)
         """, (history_id, negotiation_id, user_id))

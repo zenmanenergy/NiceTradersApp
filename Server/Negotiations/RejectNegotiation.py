@@ -28,11 +28,11 @@ def reject_negotiation(negotiation_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details
+        # Get negotiation details from history
         cursor.execute("""
-            SELECT buyer_id, seller_id, status
-            FROM exchange_negotiations
+            SELECT DISTINCT negotiation_id, listing_id FROM negotiation_history
             WHERE negotiation_id = %s
+            LIMIT 1
         """, (negotiation_id,))
         
         negotiation = cursor.fetchone()
@@ -43,30 +43,51 @@ def reject_negotiation(negotiation_id, session_id):
                 'error': 'Negotiation not found'
             })
         
+        # Get listing info to determine buyer/seller
+        cursor.execute("""
+            SELECT created_by FROM listings WHERE ListingId = %s
+        """, (negotiation['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
+            return json.dumps({
+                'success': False,
+                'error': 'Listing not found'
+            })
+        
+        # Get all participants
+        cursor.execute("""
+            SELECT DISTINCT proposed_by FROM negotiation_history
+            WHERE negotiation_id = %s
+        """, (negotiation_id,))
+        
+        participants = cursor.fetchall()
+        participant_ids = [p['proposed_by'] for p in participants]
+        
         # Verify user is part of this negotiation
-        if user_id not in (negotiation['buyer_id'], negotiation['seller_id']):
+        if user_id not in participant_ids:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
-        # Check if negotiation can be rejected
-        if negotiation['status'] in ('rejected', 'cancelled', 'expired', 'paid_complete'):
-            return json.dumps({
-                'success': False,
-                'error': f'Cannot reject negotiation in {negotiation["status"]} state'
-            })
-        
-        # Update negotiation status to 'rejected'
+        # Check if already rejected or completed
         cursor.execute("""
-            UPDATE exchange_negotiations
-            SET status = 'rejected',
-                updated_at = NOW()
+            SELECT action FROM negotiation_history
             WHERE negotiation_id = %s
+            ORDER BY created_at DESC
+            LIMIT 1
         """, (negotiation_id,))
         
-        # Log to history (39 chars: HIS- + 35 char UUID)
-        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
+        last_action = cursor.fetchone()
+        if last_action and last_action['action'] in ('rejected', 'paid_complete'):
+            return json.dumps({
+                'success': False,
+                'error': f'Cannot reject negotiation in {last_action["action"]} state'
+            })
+        
+        # Log rejection to history
+        history_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, action, proposed_by

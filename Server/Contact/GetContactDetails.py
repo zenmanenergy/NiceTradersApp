@@ -156,11 +156,11 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
         if session_id:
             print(f"[GetContactDetails] Fetching meeting for listing_id: {listing_id}")
             meeting_query = """
-                SELECT current_proposed_time, agreement_reached_at
-                FROM exchange_negotiations
-                WHERE listing_id = %s 
-                AND status IN ('agreed', 'paid_partial', 'paid_complete')
-                ORDER BY agreement_reached_at DESC
+                SELECT DISTINCT nh.proposed_time, nh.created_at
+                FROM negotiation_history nh
+                WHERE nh.listing_id = %s 
+                AND nh.action IN ('accepted_time', 'accepted_location')
+                ORDER BY nh.created_at DESC
                 LIMIT 1
             """
             try:
@@ -170,9 +170,9 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 if meeting_result:
                     listing_data['current_meeting'] = {
                         'location': '',  # Location comes from meeting_proposals if needed
-                        'time': meeting_result['current_proposed_time'].isoformat() if meeting_result['current_proposed_time'] else None,
+                        'time': meeting_result['proposed_time'].isoformat() if meeting_result['proposed_time'] else None,
                         'message': None,
-                        'agreed_at': meeting_result['agreement_reached_at'].isoformat() if meeting_result['agreement_reached_at'] else None
+                        'agreed_at': meeting_result['created_at'].isoformat() if meeting_result['created_at'] else None
                     }
                     print(f"[GetContactDetails] Meeting added to response: {listing_data['current_meeting']}")
                 else:

@@ -30,11 +30,11 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details
+        # Get negotiation details from history
         cursor.execute("""
-            SELECT buyer_id, seller_id, status, proposed_by
-            FROM exchange_negotiations
+            SELECT DISTINCT negotiation_id, listing_id FROM negotiation_history
             WHERE negotiation_id = %s
+            LIMIT 1
         """, (negotiation_id,))
         
         negotiation = cursor.fetchone()
@@ -45,18 +45,54 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
                 'error': 'Negotiation not found'
             })
         
-        # Verify user is part of this negotiation
-        if user_id not in (negotiation['buyer_id'], negotiation['seller_id']):
+        # Get listing info to determine buyer/seller
+        cursor.execute("""
+            SELECT created_by FROM listings WHERE ListingId = %s
+        """, (negotiation['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
+            return json.dumps({
+                'success': False,
+                'error': 'Listing not found'
+            })
+        
+        seller_id = listing['created_by']
+        
+        # Get latest proposal to check state
+        cursor.execute("""
+            SELECT proposed_by FROM negotiation_history
+            WHERE negotiation_id = %s
+            ORDER BY created_at DESC
+            LIMIT 1
+        """, (negotiation_id,))
+        
+        last_proposal = cursor.fetchone()
+        if not last_proposal:
+            return json.dumps({
+                'success': False,
+                'error': 'No proposals found for this negotiation'
+            })
+        
+        # Verify user is part of this negotiation and didn't make last proposal
+        cursor.execute("""
+            SELECT DISTINCT proposed_by FROM negotiation_history
+            WHERE negotiation_id = %s
+        """, (negotiation_id,))
+        
+        participants = cursor.fetchall()
+        participant_ids = [p['proposed_by'] for p in participants]
+        
+        if user_id not in participant_ids:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
-        # Check if negotiation is in correct state
-        if negotiation['status'] not in ('proposed', 'countered'):
+        if user_id == last_proposal['proposed_by']:
             return json.dumps({
                 'success': False,
-                'error': f'Cannot counter-propose in {negotiation["status"]} state'
+                'error': 'You cannot counter your own proposal'
             })
         
         # Parse and validate proposed time
@@ -75,18 +111,8 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
                 'error': 'Proposed time must be in the future'
             })
         
-        # Update negotiation with new proposal
-        cursor.execute("""
-            UPDATE exchange_negotiations
-            SET status = 'countered',
-                current_proposed_time = %s,
-                proposed_by = %s,
-                updated_at = NOW()
-            WHERE negotiation_id = %s
-        """, (proposed_datetime, user_id, negotiation_id))
-        
-        # Log to history (39 chars: HIS- + 35 char UUID)
-        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
+        # Log counter-proposal to history
+        history_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO negotiation_history (
                 history_id, negotiation_id, action, proposed_time, proposed_by

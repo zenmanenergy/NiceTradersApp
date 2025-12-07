@@ -41,41 +41,66 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details
-        negotiation_query = """
-            SELECT n.*, l.amount, l.currency, l.accept_currency, u.first_name, u.last_name
-            FROM exchange_negotiations n
-            JOIN listings l ON n.listing_id = l.listing_id
-            JOIN users u ON CASE 
-                WHEN n.buyer_id = %s THEN n.seller_id = u.UserID
-                ELSE n.buyer_id = u.UserID
-            END
-            WHERE n.negotiation_id = %s
-            AND (n.buyer_id = %s OR n.seller_id = %s)
-        """
-        cursor.execute(negotiation_query, (user_id, NegotiationId, user_id, user_id))
+        # Get negotiation details from history
+        cursor.execute("""
+            SELECT DISTINCT nh.negotiation_id, nh.listing_id
+            FROM negotiation_history nh
+            WHERE nh.negotiation_id = %s
+            LIMIT 1
+        """, (NegotiationId,))
+        
         negotiation = cursor.fetchone()
         
         if not negotiation:
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': 'Negotiation not found or access denied'
+                'error': 'Negotiation not found'
             })
         
-        # Only allow completion if negotiation is in paid_complete status
-        if negotiation['status'] != 'paid_complete':
+        # Get listing and other user info
+        cursor.execute("""
+            SELECT l.amount, l.currency, l.created_by
+            FROM listings l
+            WHERE l.ListingId = %s
+        """, (negotiation['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': f'Exchange must be in paid_complete status to complete. Current status: {negotiation["status"]}'
+                'error': 'Listing not found'
             })
         
-        # Determine transaction type (buyer or seller perspective)
-        is_buyer = negotiation['buyer_id'] == user_id
+        # Check if both parties have paid by looking for payment records
+        cursor.execute("""
+            SELECT COUNT(DISTINCT paid_by) as payment_count
+            FROM negotiation_history
+            WHERE negotiation_id = %s AND paid_by IS NOT NULL
+        """, (NegotiationId,))
+        
+        payment_check = cursor.fetchone()
+        if payment_check['payment_count'] < 2:
+            connection.close()
+            return json.dumps({
+                'success': False,
+                'error': 'Exchange must have both parties paid before completion'
+            })
+        
+        # Determine who the other user is
+        seller_id = listing['created_by']
+        is_buyer = (user_id != seller_id)
+        partner_id = seller_id if is_buyer else user_id  # Get the other person
+        
+        # Get partner name
+        partner_query = "SELECT first_name, last_name FROM users WHERE UserID = %s"
+        cursor.execute(partner_query, (partner_id,))
+        partner_user = cursor.fetchone()
+        partner_name = f"{partner_user['first_name']} {partner_user['last_name']}" if partner_user else "User"
+        
+        # Determine transaction type
         transaction_type = 'buy' if is_buyer else 'sell'
-        partner_id = negotiation['seller_id'] if is_buyer else negotiation['buyer_id']
-        partner_name = f"{negotiation['first_name']} {negotiation['last_name']}"
         
         # Create exchange history record
         import uuid
@@ -89,21 +114,22 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         cursor.execute(history_insert_query, (
             exchange_id,
             user_id,
-            negotiation['currency'],
-            float(negotiation['amount']),
+            listing['currency'],
+            float(listing['amount']),
             partner_name,
-            0,  # Rating will be 0 initially, updated when user rates
-            CompletionNotes or f"Exchange completed for {negotiation['currency']} {negotiation['amount']}",
+            0,
+            CompletionNotes or f"Exchange completed for {listing['currency']} {listing['amount']}",
             transaction_type
         ))
         
-        # Update negotiation status to 'completed'
-        update_negotiation_query = """
-            UPDATE exchange_negotiations
-            SET status = 'completed', updated_at = NOW()
-            WHERE negotiation_id = %s
-        """
-        cursor.execute(update_negotiation_query, (NegotiationId,))
+        # Log completion to negotiation history
+        history_id = str(uuid.uuid4())
+        cursor.execute("""
+            INSERT INTO negotiation_history (
+                history_id, negotiation_id, action, proposed_by
+            ) VALUES (%s, %s, 'completed', %s)
+        """, (history_id, NegotiationId, user_id))
+        
         
         # Get partner name for notification
         partner_name_query = "SELECT first_name, last_name FROM users WHERE UserID = %s"

@@ -34,13 +34,14 @@ def propose_location(negotiation_id, session_id, proposed_location, proposed_lat
         
         proposer_id = session_result['UserId']
         
-        # Get negotiation details
-        negotiation_query = """
-            SELECT buyer_id, seller_id, status
-            FROM exchange_negotiations
+        # Get negotiation details from history
+        cursor.execute("""
+            SELECT DISTINCT negotiation_id, listing_id
+            FROM negotiation_history
             WHERE negotiation_id = %s
-        """
-        cursor.execute(negotiation_query, (negotiation_id,))
+            LIMIT 1
+        """, (negotiation_id,))
+        
         negotiation_result = cursor.fetchone()
         
         if not negotiation_result:
@@ -50,8 +51,32 @@ def propose_location(negotiation_id, session_id, proposed_location, proposed_lat
                 'error': 'Negotiation not found'
             })
         
+        # Get listing to determine buyer/seller
+        cursor.execute("""
+            SELECT created_by FROM listings WHERE ListingId = %s
+        """, (negotiation_result['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
+            connection.close()
+            return json.dumps({
+                'success': False,
+                'error': 'Listing not found'
+            })
+        
+        seller_id = listing['created_by']
+        
+        # Get all participants
+        cursor.execute("""
+            SELECT DISTINCT proposed_by FROM negotiation_history
+            WHERE negotiation_id = %s
+        """, (negotiation_id,))
+        
+        participants = cursor.fetchall()
+        participant_ids = [p['proposed_by'] for p in participants]
+        
         # Verify user is part of this negotiation
-        if proposer_id not in (negotiation_result['buyer_id'], negotiation_result['seller_id']):
+        if proposer_id not in participant_ids:
             connection.close()
             return json.dumps({
                 'success': False,

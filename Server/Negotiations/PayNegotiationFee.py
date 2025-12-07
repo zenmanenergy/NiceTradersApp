@@ -29,16 +29,15 @@ def pay_negotiation_fee(negotiation_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details
+        # Get negotiation details from history - get latest state
         cursor.execute("""
-            SELECT 
-                buyer_id, seller_id, listing_id, status,
-                buyer_paid, seller_paid,
-                buyer_payment_transaction_id, seller_payment_transaction_id,
-                payment_deadline
-            FROM exchange_negotiations
-            WHERE negotiation_id = %s
-        """, (negotiation_id,))
+            SELECT DISTINCT
+                nh.negotiation_id,
+                nh.listing_id,
+                (SELECT proposed_by FROM negotiation_history WHERE negotiation_id = %s AND action IN ('time_proposal') LIMIT 1) as initiator_id
+            FROM negotiation_history nh
+            WHERE nh.negotiation_id = %s
+        """, (negotiation_id, negotiation_id))
         
         negotiation = cursor.fetchone()
         
@@ -48,47 +47,55 @@ def pay_negotiation_fee(negotiation_id, session_id):
                 'error': 'Negotiation not found'
             })
         
+        # Get buyer/seller from listing
+        cursor.execute("""
+            SELECT created_by, ListingId FROM listings WHERE ListingId = %s
+        """, (negotiation['listing_id'],))
+        
+        listing = cursor.fetchone()
+        if not listing:
+            return json.dumps({
+                'success': False,
+                'error': 'Listing not found'
+            })
+        
+        seller_id = listing['created_by']
+        buyer_id = negotiation['initiator_id']
+        
         # Verify user is part of this negotiation
-        if user_id not in (negotiation['buyer_id'], negotiation['seller_id']):
+        if user_id not in (buyer_id, seller_id):
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
         # Determine user role
-        is_buyer = (user_id == negotiation['buyer_id'])
+        is_buyer = (user_id == buyer_id)
         
-        # Check if user already paid
-        if (is_buyer and negotiation['buyer_paid']) or (not is_buyer and negotiation['seller_paid']):
+        # Check if user already paid by looking for payment records
+        cursor.execute("""
+            SELECT COUNT(*) as payment_count FROM transactions
+            WHERE negotiation_id = %s AND user_id = %s AND status = 'completed'
+        """, (negotiation_id, user_id))
+        
+        payment_check = cursor.fetchone()
+        if payment_check['payment_count'] > 0:
             return json.dumps({
                 'success': False,
                 'error': 'You have already paid for this negotiation'
             })
         
-        # Check if payment deadline has passed
-        if negotiation['payment_deadline'] and datetime.now() > negotiation['payment_deadline']:
-            # If one party has already paid, allow the other to still pay (extend grace period)
-            if not (negotiation['buyer_paid'] or negotiation['seller_paid']):
-                # Neither party has paid - mark as expired and reject
-                cursor.execute("""
-                    UPDATE exchange_negotiations
-                    SET status = 'expired'
-                    WHERE negotiation_id = %s
-                """, (negotiation_id,))
-                connection.commit()
-                
-                return json.dumps({
-                    'success': False,
-                    'error': 'Payment deadline has passed. Negotiation expired.'
-                })
-            # else: Allow payment if one party has already paid (grace period)
+        # Check if there's an accepted meeting (both parties agreed)
+        cursor.execute("""
+            SELECT COUNT(*) as accepted_count FROM negotiation_history
+            WHERE negotiation_id = %s AND action IN ('accepted_time', 'accepted_location')
+        """, (negotiation_id,))
         
-        # Check if negotiation is in a payable state
-        # Allow: agreed, paid_partial, or expired (if other party already paid)
-        if negotiation['status'] not in ('agreed', 'paid_partial', 'expired'):
+        accepted_check = cursor.fetchone()
+        if accepted_check['accepted_count'] == 0:
             return json.dumps({
                 'success': False,
-                'error': f'Cannot pay for negotiation in {negotiation["status"]} state'
+                'error': 'Cannot pay for negotiation that hasn\'t been accepted by both parties'
             })
         
         # Check for available credits
@@ -144,52 +151,34 @@ def pay_negotiation_fee(negotiation_id, session_id):
             f"Negotiation fee - ${credit_used:.2f} credit applied" if credit_used > 0 else "Negotiation fee payment"
         ))
         
-        # Update negotiation payment status
-        if is_buyer:
-            cursor.execute("""
-                UPDATE exchange_negotiations
-                SET buyer_paid = 1,
-                    buyer_paid_at = NOW(),
-                    buyer_payment_transaction_id = %s,
-                    updated_at = NOW()
-                WHERE negotiation_id = %s
-            """, (transaction_id, negotiation_id))
-        else:
-            cursor.execute("""
-                UPDATE exchange_negotiations
-                SET seller_paid = 1,
-                    seller_paid_at = NOW(),
-                    seller_payment_transaction_id = %s,
-                    updated_at = NOW()
-                WHERE negotiation_id = %s
-            """, (transaction_id, negotiation_id))
+        # Update negotiation payment status in history
+        payment_action = 'buyer_paid' if is_buyer else 'seller_paid'
+        cursor.execute("""
+            INSERT INTO negotiation_history (
+                history_id, negotiation_id, action, proposed_by, paid_by
+            ) VALUES (%s, %s, %s, %s, %s)
+        """, (str(uuid.uuid4()), negotiation_id, payment_action, user_id, user_id))
         
         # Check if both parties have now paid
         cursor.execute("""
-            SELECT buyer_paid, seller_paid
-            FROM exchange_negotiations
-            WHERE negotiation_id = %s
-        """, (negotiation_id,))
+            SELECT COUNT(DISTINCT paid_by) as paying_users FROM negotiation_history
+            WHERE negotiation_id = %s AND paid_by IN (%s, %s)
+        """, (negotiation_id, buyer_id, seller_id))
         
-        updated_negotiation = cursor.fetchone()
-        both_paid = bool(updated_negotiation['buyer_paid'] and updated_negotiation['seller_paid'])
+        payment_count = cursor.fetchone()
+        both_paid = (payment_count['paying_users'] == 2)
         
         if both_paid:
-            # Both paid - mark as paid_complete and auto-reject other negotiations
+            # Both paid - auto-reject other negotiations for this listing
             cursor.execute("""
-                UPDATE exchange_negotiations
-                SET status = 'paid_complete'
-                WHERE negotiation_id = %s
-            """, (negotiation_id,))
-            
-            # Auto-reject all other negotiations for this listing
-            cursor.execute("""
-                UPDATE exchange_negotiations
-                SET status = 'rejected',
-                    updated_at = NOW()
+                UPDATE negotiation_history
+                SET action = 'rejected'
                 WHERE listing_id = %s
                 AND negotiation_id != %s
-                AND status IN ('proposed', 'countered', 'agreed', 'paid_partial')
+                AND action IN ('time_proposal', 'location_proposal', 'counter_proposal')
+                AND (SELECT COUNT(*) FROM negotiation_history nh2 
+                     WHERE nh2.negotiation_id = negotiation_history.negotiation_id 
+                     AND nh2.action IN ('accepted_time', 'accepted_location')) = 0
             """, (negotiation['listing_id'], negotiation_id))
             
             # Create contact_access entries for both buyer and seller
@@ -202,7 +191,7 @@ def pay_negotiation_fee(negotiation_id, session_id):
                     access_id, user_id, listing_id, purchased_at, 
                     status, amount_paid, currency
                 ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
-            """, (buyer_access_id, negotiation['buyer_id'], negotiation['listing_id'], amount_to_charge))
+            """, (buyer_access_id, buyer_id, negotiation['listing_id'], amount_to_charge))
             
             # Seller gets access to listing  
             cursor.execute("""
@@ -210,36 +199,20 @@ def pay_negotiation_fee(negotiation_id, session_id):
                     access_id, user_id, listing_id, purchased_at,
                     status, amount_paid, currency
                 ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
-            """, (seller_access_id, negotiation['seller_id'], negotiation['listing_id'], amount_to_charge))
+            """, (seller_access_id, seller_id, negotiation['listing_id'], amount_to_charge))
             
             # Increment total exchanges for both buyer and seller
             cursor.execute("""
                 UPDATE users
                 SET TotalExchanges = TotalExchanges + 1
                 WHERE UserID IN (%s, %s)
-            """, (negotiation['buyer_id'], negotiation['seller_id']))
+            """, (buyer_id, seller_id))
             
             new_status = 'paid_complete'
             message = 'Payment successful! Both parties have paid. Messaging and location coordination now unlocked.'
         else:
-            # Only this user paid so far
-            cursor.execute("""
-                UPDATE exchange_negotiations
-                SET status = 'paid_partial'
-                WHERE negotiation_id = %s
-            """, (negotiation_id,))
-            
             new_status = 'paid_partial'
             message = 'Payment successful! Waiting for other party to pay.'
-        
-        # Log to history (39 chars: HIS- + 35 char UUID)
-        history_id = f"HIS-{str(uuid.uuid4())[:-1]}"
-        action = 'buyer_paid' if is_buyer else 'seller_paid'
-        cursor.execute("""
-            INSERT INTO negotiation_history (
-                history_id, negotiation_id, action, proposed_by
-            ) VALUES (%s, %s, %s, %s)
-        """, (history_id, negotiation_id, action, user_id))
         
         connection.commit()
         
