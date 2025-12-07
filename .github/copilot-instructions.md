@@ -210,3 +210,5 @@ If you need to write a python script don't just run the code in the command line
 Do NOT make summary documents unless I specifically ask for them.
 
 Do not compile unless I ask you to.
+
+I don't need excessive explanations of the code you write. Just write the code.
