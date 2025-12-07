@@ -96,7 +96,7 @@ struct SearchView: View {
             }
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "search")
+            BottomNavigation(activeTab: "search", isContactView: false, contactActiveTab: .constant(nil))
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToCreateListing) {
@@ -577,15 +577,24 @@ struct SearchView: View {
     
     // MARK: - Functions
     func performSearch() {
+        print("\n=== SEARCH REQUEST START ===")
+        print("SearchView: performSearch() called")
+        print("  haveCurrency: \(searchFilters.haveCurrency)")
+        print("  wantCurrency: \(searchFilters.wantCurrency)")
+        print("  maxDistance: \(searchFilters.maxDistance)")
+        
         isSearching = true
         hasSearched = true
         searchError = nil
         pagination.offset = 0
         
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("ERROR: No sessionId found")
             isSearching = false
             return
         }
+        
+        print("  sessionId: \(sessionId)")
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Search/SearchListings")!
         var queryItems = [
@@ -598,14 +607,17 @@ struct SearchView: View {
         // This finds listings that have what we want and accept what we have
         if !searchFilters.haveCurrency.isEmpty {
             queryItems.append(URLQueryItem(name: "Currency", value: searchFilters.wantCurrency))
+            print("  Adding Currency (what we want): \(searchFilters.wantCurrency)")
         }
         if !searchFilters.wantCurrency.isEmpty {
             queryItems.append(URLQueryItem(name: "AcceptCurrency", value: searchFilters.haveCurrency))
+            print("  Adding AcceptCurrency (what we have): \(searchFilters.haveCurrency)")
         }
         
         // Add distance filter with user's location
         if !searchFilters.maxDistance.isEmpty {
             queryItems.append(URLQueryItem(name: "MaxDistance", value: searchFilters.maxDistance))
+            print("  maxDistance: \(searchFilters.maxDistance)")
             
             // Add user's current location for distance calculation
             if let location = locationManager.location {
@@ -613,14 +625,16 @@ struct SearchView: View {
                 let lng = location.coordinate.longitude
                 queryItems.append(URLQueryItem(name: "UserLatitude", value: String(lat)))
                 queryItems.append(URLQueryItem(name: "UserLongitude", value: String(lng)))
+                print("  User location: (\(lat), \(lng))")
             } else {
+                print("  WARNING: No user location available")
             }
         }
         
         components.queryItems = queryItems
         
-        
         guard let url = components.url else {
+            print("ERROR: Failed to construct URL")
             DispatchQueue.main.async {
                 isSearching = false
                 searchError = "Invalid URL"
@@ -629,14 +643,56 @@ struct SearchView: View {
             return
         }
         
+        print("Final URL: \(url.absoluteString)")
+        print("=== SENDING REQUEST ===\n")
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("\n=== RESPONSE RECEIVED ===")
+            
+            if let error = error {
+                print("ERROR: Network error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    isSearching = false
+                    searchError = error.localizedDescription
+                    searchResults = []
+                }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("HTTP Status Code: \(httpResponse.statusCode)")
+            }
+            
             guard let data = data else {
+                print("ERROR: No data received")
                 DispatchQueue.main.async {
                     isSearching = false
                     searchError = "No data received"
                     searchResults = []
                 }
                 return
+            }
+            
+            print("Data received: \(data.count) bytes")
+            
+            do {
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    print("JSON parsed successfully")
+                    if let success = json["success"] as? Bool {
+                        print("success: \(success)")
+                    }
+                    if let error = json["error"] as? String {
+                        print("error: \(error)")
+                    }
+                    if let listings = json["listings"] as? [[String: Any]] {
+                        print("Found \(listings.count) listings in response")
+                    }
+                    if let pagination = json["pagination"] as? [String: Any] {
+                        print("Pagination: \(pagination)")
+                    }
+                } else {
+                    print("ERROR: Could not parse JSON")
+                }
             }
             
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -657,6 +713,7 @@ struct SearchView: View {
                 isSearching = false
                 
                 if let listingsData = json["listings"] as? [[String: Any]] {
+                    print("Decoding \(listingsData.count) listings...")
                     let decoder = JSONDecoder()
                     let listings = listingsData.compactMap { dict -> SearchListing? in
                         guard let jsonData = try? JSONSerialization.data(withJSONObject: dict),
@@ -668,13 +725,18 @@ struct SearchView: View {
                     
                     searchResults = listings
                     hasSearched = true
+                    print("Successfully decoded \(listings.count) listings")
                 } else {
+                    print("WARNING: No listings array in response")
                 }
                 
                 if let paginationData = json["pagination"] as? [String: Any] {
                     pagination.total = paginationData["total"] as? Int ?? 0
                     pagination.hasMore = paginationData["hasMore"] as? Bool ?? false
+                    print("Pagination: total=\(pagination.total), hasMore=\(pagination.hasMore)")
                 }
+                
+                print("=== SEARCH REQUEST COMPLETE ===\n")
             }
         }.resume()
     }

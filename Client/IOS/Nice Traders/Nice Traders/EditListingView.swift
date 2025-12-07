@@ -272,7 +272,7 @@ struct EditListingView: View {
             }
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "home")
+            BottomNavigation(activeTab: "home", isContactView: false, contactActiveTab: .constant(nil))
     }
     
     // MARK: - Header View

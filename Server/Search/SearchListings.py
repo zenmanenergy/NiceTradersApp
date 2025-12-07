@@ -6,8 +6,6 @@ from decimal import Decimal
 def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, UserLatitude=None, UserLongitude=None, MinAmount=None, MaxAmount=None, SessionId=None, Limit=None, Offset=None):
     """Search for currency exchange listings with filters"""
     try:
-        print(f"[SearchListings] Searching with filters - Currency: {Currency}, AcceptCurrency: {AcceptCurrency}, Location: {Location}, MaxDistance: {MaxDistance}, UserLat: {UserLatitude}, UserLng: {UserLongitude}")
-        
         # Connect to database
         cursor, connection = Database.ConnectToDatabase()
         
@@ -18,7 +16,6 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             session_result = cursor.fetchone()
             if session_result:
                 current_user_id = session_result['UserId']
-                print(f"[SearchListings] Excluding listings from current user: {current_user_id}")
         
         # Build the base query (excluding sold/completed listings)
         base_query = """
@@ -65,15 +62,18 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         if Currency:
             conditions.append("l.currency = %s")
             params.append(Currency)
+            print(f"[SearchListings] Added currency filter: {Currency}")
             
         if AcceptCurrency:
             conditions.append("l.accept_currency = %s")
             params.append(AcceptCurrency)
+            print(f"[SearchListings] Added acceptCurrency filter: {AcceptCurrency}")
             
         if Location:
             # Simple location search - in production would use geographic distance calculation
             conditions.append("l.location LIKE %s")
             params.append(f"%{Location}%")
+            print(f"[SearchListings] Added location filter: {Location}")
         
         # Distance-based filtering using Haversine formula
         if MaxDistance and UserLatitude and UserLongitude:
@@ -123,9 +123,15 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             base_query += " OFFSET %s"
             params.append(offset_val)
         
-        print(f"[SearchListings] Executing query with {len(params)} parameters")
+        print(f"\n[SearchListings] Final SQL Query:")
+        print(f"[SearchListings] {base_query}")
+        print(f"[SearchListings] Parameters: {params}")
+        print(f"[SearchListings] Total params: {len(params)}")
+        
         cursor.execute(base_query, tuple(params))
         listings = cursor.fetchall()
+        
+        print(f"[SearchListings] Query executed successfully, returned {len(listings)} rows")
         
         # Get total count for pagination (excluding sold/completed listings)
         count_query = """
@@ -178,6 +184,13 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         
         print(f"[SearchListings] Found {len(formatted_listings)} listings out of {total_count} total")
         
+        print(f"\n[SearchListings] Response data:")
+        print(f"  - Total listings in DB: {total_count}")
+        print(f"  - Returned in this page: {len(formatted_listings)}")
+        print(f"  - Pagination offset: {offset_val}")
+        print(f"  - Has more: {offset_val + len(formatted_listings) < total_count}")
+        print(f"[SearchListings] ===== SEARCH REQUEST END =====\n")
+        
         return json.dumps({
             'success': True,
             'listings': formatted_listings,
@@ -190,7 +203,9 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         })
         
     except Exception as e:
-        print(f"[SearchListings] Error: {str(e)}")
+        print(f"\n[SearchListings] ERROR: {str(e)}")
+        import traceback
+        print(f"[SearchListings] Traceback: {traceback.format_exc()}")
         return json.dumps({
             'success': False,
             'error': f'Failed to search listings: {str(e)}'

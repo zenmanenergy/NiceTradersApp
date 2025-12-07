@@ -104,7 +104,7 @@ struct ProfileView: View {
             }
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "profile")
+            BottomNavigation(activeTab: "profile", isContactView: false, contactActiveTab: .constant(nil))
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)

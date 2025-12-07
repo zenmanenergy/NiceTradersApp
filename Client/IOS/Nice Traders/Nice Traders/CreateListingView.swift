@@ -260,7 +260,7 @@ struct CreateListingView: View {
                 footerView
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "create")
+            BottomNavigation(activeTab: "create", isContactView: false, contactActiveTab: .constant(nil))
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)

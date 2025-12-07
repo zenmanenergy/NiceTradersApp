@@ -206,3 +206,7 @@ cd /Users/stevenelson/Documents/GitHub/NiceTradersApp/Server && flask --app flas
 ```
 
 If you need to write a python script don't just run the code in the command line, put it into a file. name the file: /scriptMadeByAi.py put it in the root folder. Then run it
+
+Do NOT make summary documents unless I specifically ask for them.
+
+Do not compile unless I ask you to.

@@ -18,6 +18,7 @@
 	<key>MKDirectionsApplicationSupportedModes</key>
 	<array>
 		<string>MKDirectionsModeCar</string>
+		<string>MKDirectionsModePedestrian</string>
 	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>

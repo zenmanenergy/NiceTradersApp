@@ -40,7 +40,7 @@ struct ExchangeRatesView: View {
                 .background(Color(hex: "f8fafc"))
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "home")
+            BottomNavigation(activeTab: "home", isContactView: false, contactActiveTab: .constant(nil))
         }
         .navigationBarHidden(true)
         .onAppear {

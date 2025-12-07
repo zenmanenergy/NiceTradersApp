@@ -135,7 +135,7 @@ struct MessagesView: View {
             }
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "messages")
+            BottomNavigation(activeTab: "messages", isContactView: false, contactActiveTab: .constant(nil))
         }
         .background(Color(hex: "f7fafc"))
         .navigationBarHidden(true)

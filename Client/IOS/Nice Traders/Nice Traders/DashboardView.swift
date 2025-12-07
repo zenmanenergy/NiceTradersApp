@@ -37,6 +37,9 @@ struct DashboardView: View {
                 ErrorView(error: error) {
                     loadDashboardData()
                 }
+            } else if navigateToContact && selectedContactData != nil {
+                // Show ContactDetailView instead of DashboardView - no navigationDestination needed
+                ContactDetailView(contactData: selectedContactData!, navigateToContact: $navigateToContact)
             } else {
                 MainDashboardView(
                     user: user,
@@ -66,11 +69,6 @@ struct DashboardView: View {
         }
         .navigationDestination(isPresented: $navigateToMessages) {
             MessagesView(navigateToMessages: $navigateToMessages)
-        }
-        .navigationDestination(isPresented: $navigateToContact) {
-            if let contactData = selectedContactData {
-                ContactDetailView(contactData: contactData)
-            }
         }
         .onAppear {
             print("VIEW: DashboardView - Displaying dashboard")
@@ -566,14 +564,8 @@ struct MainDashboardView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    // Quick Actions
-                    QuickActionsSection(
-                        navigateToCreateListing: $navigateToCreateListing,
-                        navigateToSearch: $navigateToSearch,
-                        navigateToMessages: $navigateToMessages
-                    )
-                    .padding(.horizontal)
-                    .padding(.top, 24)
+                    Spacer()
+                        .frame(height: 16)
                     
                     // Pending Negotiations (for sellers)
                     if !pendingNegotiations.isEmpty {
@@ -602,7 +594,7 @@ struct MainDashboardView: View {
             }
             
             // Bottom Navigation
-            BottomNavigation(activeTab: "home")
+            BottomNavigation(activeTab: "home", isContactView: false, contactActiveTab: .constant(nil))
         }
         .background(Color(red: 0.97, green: 0.98, blue: 0.99))
     }
@@ -827,8 +819,22 @@ struct ActiveExchangesSection: View {
                     preferredCurrency: nil,
                     meetingPreference: listing["meeting_preference"] as? String,
                     location: location,
-                    latitude: (listing["latitude"] as? Double) ?? 0.0,
-                    longitude: (listing["longitude"] as? Double) ?? 0.0,
+                    latitude: {
+                        if let latDouble = listing["latitude"] as? Double {
+                            return latDouble
+                        } else if let latString = listing["latitude"] as? String, let latDouble = Double(latString) {
+                            return latDouble
+                        }
+                        return 0.0
+                    }(),
+                    longitude: {
+                        if let lngDouble = listing["longitude"] as? Double {
+                            return lngDouble
+                        } else if let lngString = listing["longitude"] as? String, let lngDouble = Double(lngString) {
+                            return lngDouble
+                        }
+                        return 0.0
+                    }(),
                     radius: (listing["location_radius"] as? Int) ?? 5,
                     willRoundToNearestDollar: listing["will_round_to_nearest_dollar"] as? Bool
                 ),
