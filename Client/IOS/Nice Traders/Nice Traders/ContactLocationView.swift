@@ -21,12 +21,15 @@ struct ContactLocationView: View {
     @State private var searchResults: [MapSearchResult] = []
     @State private var isSearching: Bool = false
     @State private var selectedResultId: String?
+    @State private var currentMapSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
     
     var body: some View {
         VStack(spacing: 0) {
             // Map at the top
             ZStack {
                 Map(position: $cameraPosition) {
+                    
+
                     // Listing location circle
                     MapCircle(
                         center: CLLocationCoordinate2D(
@@ -85,6 +88,34 @@ struct ContactLocationView: View {
                 .frame(height: 300)
                 .onAppear {
                     centerMapOnListing()
+                }
+                
+                // Zoom controls - bottom right corner
+                VStack(spacing: 0) {
+                    Spacer()
+                    HStack(spacing: 0) {
+                        Spacer()
+                        VStack(spacing: 8) {
+                            Button(action: { zoomIn() }) {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.blue)
+                                    .cornerRadius(6)
+                            }
+                            
+                            Button(action: { zoomOut() }) {
+                                Image(systemName: "minus")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(Color.blue)
+                                    .cornerRadius(6)
+                            }
+                        }
+                        .padding(12)
+                    }
                 }
             }
             
@@ -196,13 +227,38 @@ struct ContactLocationView: View {
         )
         
         let radiusKm = Double(contactData.listing.radius) * 1.60934
-        let latitudeDelta = max(0.01, (radiusKm * 3) / 111.0)
+        let latitudeDelta = max(0.01, (radiusKm * 2.2) / 111.0)
         let longitudeDelta = latitudeDelta
+        currentMapSpan = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
         
         cameraPosition = .region(MKCoordinateRegion(
             center: listingCoord,
-            span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+            span: currentMapSpan
         ))
+    }
+    
+    private func zoomIn() {
+        let listingCoord = CLLocationCoordinate2D(
+            latitude: contactData.listing.latitude,
+            longitude: contactData.listing.longitude
+        )
+        var newSpan = currentMapSpan
+        newSpan.latitudeDelta *= 0.6
+        newSpan.longitudeDelta *= 0.6
+        currentMapSpan = newSpan
+        cameraPosition = .region(MKCoordinateRegion(center: listingCoord, span: newSpan))
+    }
+    
+    private func zoomOut() {
+        let listingCoord = CLLocationCoordinate2D(
+            latitude: contactData.listing.latitude,
+            longitude: contactData.listing.longitude
+        )
+        var newSpan = currentMapSpan
+        newSpan.latitudeDelta *= 1.5
+        newSpan.longitudeDelta *= 1.5
+        currentMapSpan = newSpan
+        cameraPosition = .region(MKCoordinateRegion(center: listingCoord, span: newSpan))
     }
     
     private func centerMapOnResult(_ result: MapSearchResult) {
@@ -244,16 +300,42 @@ struct ContactLocationView: View {
                 
                 guard let response = response else { return }
                 
-                searchResults = response.mapItems.enumerated().map { index, mapItem in
-                    MapSearchResult(
-                        id: "\(index)",
-                        name: mapItem.name ?? "Unknown",
-                        coordinate: mapItem.placemark.coordinate,
-                        address: mapItem.placemark.title ?? ""
+                // Filter results to only those within the radius
+                let filteredResults = response.mapItems.enumerated().compactMap { index, mapItem -> MapSearchResult? in
+                    let distance = haversineDistance(
+                        lat1: listingCoord.latitude,
+                        lon1: listingCoord.longitude,
+                        lat2: mapItem.placemark.coordinate.latitude,
+                        lon2: mapItem.placemark.coordinate.longitude
                     )
+                    
+                    // Only include if within radius (convert km to miles)
+                    if distance <= Double(contactData.listing.radius) {
+                        return MapSearchResult(
+                            id: "\(index)",
+                            name: mapItem.name ?? "Unknown",
+                            coordinate: mapItem.placemark.coordinate,
+                            address: mapItem.placemark.title ?? "",
+                            distance: distance
+                        )
+                    }
+                    return nil
                 }
+                
+                searchResults = filteredResults
             }
         }
+    }
+    
+    private func haversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> Double {
+        let R = 3959.0 // Earth's radius in miles
+        let dLat = (lat2 - lat1) * .pi / 180.0
+        let dLon = (lon2 - lon1) * .pi / 180.0
+        let a = sin(dLat / 2) * sin(dLat / 2) +
+                cos(lat1 * .pi / 180.0) * cos(lat2 * .pi / 180.0) *
+                sin(dLon / 2) * sin(dLon / 2)
+        let c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c
     }
 }
 
@@ -262,6 +344,7 @@ struct MapSearchResult: Identifiable {
     let name: String
     let coordinate: CLLocationCoordinate2D
     let address: String
+    let distance: Double?
 }
 
 struct SearchResultRow: View {
@@ -288,9 +371,17 @@ struct SearchResultRow: View {
                 
                 Spacer()
                 
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
+                HStack(spacing: 8) {
+                    if let distance = result.distance {
+                        Text(String(format: "%.1f mi", distance))
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                    
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.blue)
+                    }
                 }
             }
         }
