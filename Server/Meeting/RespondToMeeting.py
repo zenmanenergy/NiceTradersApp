@@ -1,9 +1,10 @@
 from _Lib import Database
 import json
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 
 def respond_to_meeting(session_id, proposal_id, response):
-    """Accept or reject a meeting proposal"""
+    """Accept or reject a meeting proposal stored in negotiation_history"""
     try:
         print(f"[RespondToMeeting] Responding to proposal: {proposal_id} with: {response}")
         
@@ -33,16 +34,16 @@ def respond_to_meeting(session_id, proposal_id, response):
         
         user_id = session_result['UserId']
         
-        # Get proposal details and verify user is the recipient
+        # Get proposal details from negotiation_history
         proposal_query = """
-            SELECT mp.proposal_id, mp.listing_id, mp.proposer_id, mp.recipient_id,
-                   mp.proposed_location, mp.proposed_time, mp.message, mp.status,
-                   u1.FirstName as proposer_first_name, u1.LastName as proposer_last_name,
-                   u2.FirstName as recipient_first_name, u2.LastName as recipient_last_name
-            FROM meeting_proposals mp
-            JOIN users u1 ON mp.proposer_id = u1.UserId
-            JOIN users u2 ON mp.recipient_id = u2.UserId
-            WHERE mp.proposal_id = %s
+            SELECT nh.history_id, nh.negotiation_id, nh.proposed_location, nh.proposed_time, 
+                   nh.proposed_latitude, nh.proposed_longitude, nh.notes, nh.proposed_by,
+                   en.listing_id,
+                   u.FirstName, u.LastName
+            FROM negotiation_history nh
+            JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
+            JOIN users u ON nh.proposed_by = u.UserId
+            WHERE nh.history_id = %s
         """
         cursor.execute(proposal_query, (proposal_id,))
         proposal_result = cursor.fetchone()
@@ -54,69 +55,90 @@ def respond_to_meeting(session_id, proposal_id, response):
                 'error': 'Meeting proposal not found'
             })
         
-        if proposal_result['recipient_id'] != user_id:
+        # Verify user is not the proposer (can't accept own proposal)
+        if proposal_result['proposed_by'] == user_id:
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': 'You can only respond to proposals sent to you'
+                'error': 'You cannot respond to your own proposal'
             })
         
-        if proposal_result['status'] != 'pending':
-            connection.close()
-            return json.dumps({
-                'success': False,
-                'error': f'This proposal has already been {proposal_result["status"]}'
-            })
-        
-        # Update proposal status
-        update_query = """
-            UPDATE meeting_proposals 
-            SET status = %s, responded_at = NOW()
-            WHERE proposal_id = %s
+        # Create acceptance/rejection record in negotiation_history
+        # For 'accepted' action, copy the proposed values to accepted_* columns
+        response_history_id = str(uuid.uuid4())
+        response_query = """
+            INSERT INTO negotiation_history 
+            (history_id, negotiation_id, action, proposed_time, proposed_location,
+             proposed_latitude, proposed_longitude, accepted_time, accepted_location,
+             accepted_latitude, accepted_longitude, proposed_by, notes, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
         """
-        cursor.execute(update_query, (response, proposal_id))
         
-        # If accepted, expire any other pending proposals for this listing between these users
+        # If accepting, copy proposed values to accepted columns; if rejecting, leave NULL
+        accepted_time = proposal_result['proposed_time'] if response == 'accepted' else None
+        accepted_location = proposal_result['proposed_location'] if response == 'accepted' else None
+        accepted_latitude = proposal_result['proposed_latitude'] if response == 'accepted' else None
+        accepted_longitude = proposal_result['proposed_longitude'] if response == 'accepted' else None
+        
+        # Use 'accepted_time' for time proposals, 'accepted_location' for location-only proposals
+        action = response
         if response == 'accepted':
-            expire_others_query = """
-                UPDATE meeting_proposals 
-                SET status = 'expired' 
-                WHERE listing_id = %s 
-                AND ((proposer_id = %s AND recipient_id = %s) OR (proposer_id = %s AND recipient_id = %s))
-                AND proposal_id != %s
-                AND status = 'pending'
+            # Determine if this is a time acceptance or location acceptance
+            if accepted_time is not None:
+                action = 'accepted_time'
+            elif accepted_location is not None:
+                action = 'accepted_location'
+        
+        cursor.execute(response_query, (
+            response_history_id,
+            proposal_result['negotiation_id'],
+            action,
+            proposal_result['proposed_time'],
+            proposal_result['proposed_location'],
+            proposal_result['proposed_latitude'],
+            proposal_result['proposed_longitude'],
+            accepted_time,
+            accepted_location,
+            accepted_latitude,
+            accepted_longitude,
+            user_id,  # responder
+            f"Responded: {response}"
+        ))
+        
+        # If accepted, update negotiation status to 'agreed'
+        if response == 'accepted':
+            update_neg_query = """
+                UPDATE exchange_negotiations
+                SET status = 'agreed',
+                    current_proposed_time = %s,
+                    agreement_reached_at = NOW()
+                WHERE negotiation_id = %s
             """
-            cursor.execute(expire_others_query, (
-                proposal_result['listing_id'], 
-                proposal_result['proposer_id'], 
-                proposal_result['recipient_id'],
-                proposal_result['recipient_id'], 
-                proposal_result['proposer_id'], 
-                proposal_id
-            ))
+            cursor.execute(update_neg_query, (proposal_result['proposed_time'], proposal_result['negotiation_id']))
         
         connection.commit()
         connection.close()
         
         print(f"[RespondToMeeting] Proposal {proposal_id} {response} successfully")
         
+        # Format proposed_time with timezone
+        proposed_time = proposal_result['proposed_time']
+        if proposed_time and proposed_time.tzinfo is None:
+            proposed_time = proposed_time.replace(tzinfo=timezone.utc)
+        
         return json.dumps({
             'success': True,
             'message': f'Meeting proposal {response} successfully',
             'proposal': {
-                'proposal_id': proposal_result['proposal_id'],
+                'proposal_id': proposal_result['history_id'],
                 'listing_id': proposal_result['listing_id'],
                 'proposed_location': proposal_result['proposed_location'],
-                'proposed_time': proposal_result['proposed_time'].isoformat() if proposal_result['proposed_time'] else None,
-                'message': proposal_result['message'],
+                'proposed_time': proposed_time.isoformat() if proposed_time else None,
+                'message': proposal_result['notes'],
                 'status': response,
                 'proposer': {
-                    'first_name': proposal_result['proposer_first_name'],
-                    'last_name': proposal_result['proposer_last_name']
-                },
-                'recipient': {
-                    'first_name': proposal_result['recipient_first_name'],
-                    'last_name': proposal_result['recipient_last_name']
+                    'first_name': proposal_result['FirstName'],
+                    'last_name': proposal_result['LastName']
                 }
             }
         })

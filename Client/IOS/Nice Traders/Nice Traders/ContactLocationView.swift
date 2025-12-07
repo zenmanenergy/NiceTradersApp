@@ -500,22 +500,34 @@ struct ContactLocationView: View {
             return
         }
         
+        // Get the meeting time from either current meeting or latest proposal
+        var meetingTimeToSend: String?
+        if let latestProposal = meetingProposals.first {
+            meetingTimeToSend = latestProposal.proposedTime
+        } else if let currentMeeting = currentMeeting {
+            // If no proposals yet, use the current meeting time
+            meetingTimeToSend = currentMeeting.time
+        } else if let currentTime = currentMeetingTime {
+            meetingTimeToSend = currentTime
+        }
+        
+        guard let timeToSend = meetingTimeToSend else {
+            print("ERROR: No meeting time available. Please agree on a time first.")
+            return
+        }
+        
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/ProposeMeeting")!
         var queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId),
             URLQueryItem(name: "proposedLocation", value: location.name),
+            URLQueryItem(name: "proposedTime", value: timeToSend),
             URLQueryItem(name: "proposedLatitude", value: String(location.coordinate.latitude)),
             URLQueryItem(name: "proposedLongitude", value: String(location.coordinate.longitude))
         ]
         
         if let msg = message, !msg.isEmpty {
             queryItems.append(URLQueryItem(name: "message", value: msg))
-        }
-        
-        // Use current meeting time if available from proposals
-        if let latestProposal = meetingProposals.first {
-            queryItems.append(URLQueryItem(name: "proposedTime", value: latestProposal.proposedTime))
         }
         
         components.queryItems = queryItems

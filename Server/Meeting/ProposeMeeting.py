@@ -4,14 +4,15 @@ import uuid
 from datetime import datetime, timedelta
 
 def propose_meeting(session_id, listing_id, proposed_location, proposed_time, proposed_latitude=None, proposed_longitude=None, message=None):
-    """Propose a meeting time and location for an exchange"""
+    """Propose a meeting time and/or location for an exchange"""
     try:
         print(f"[ProposeMeeting] Creating meeting proposal for listing: {listing_id}")
         
-        if not session_id or not listing_id or not proposed_location or not proposed_time:
+        # Either location or time must be provided
+        if not session_id or not listing_id or (not proposed_location and not proposed_time):
             return json.dumps({
                 'success': False,
-                'error': 'Session ID, listing ID, location, and time are required'
+                'error': 'Session ID, listing ID, and either location or time are required'
             })
         
         # Connect to database
@@ -86,42 +87,74 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                 })
             recipient_id = listing_owner_id
         
-        # Parse proposed time
-        try:
-            proposed_datetime = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
-        except ValueError:
-            try:
-                proposed_datetime = datetime.strptime(proposed_time, '%Y-%m-%d %H:%M:%S')
-            except ValueError:
+        # Get or create negotiation for this listing
+        negotiation_query = """
+            SELECT negotiation_id, status, current_proposed_time FROM exchange_negotiations
+            WHERE listing_id = %s AND user_id IN (%s, %s)
+            LIMIT 1
+        """
+        cursor.execute(negotiation_query, (listing_id, proposer_id, recipient_id))
+        negotiation = cursor.fetchone()
+        
+        if not negotiation:
+            # Create new negotiation - requires time for initial proposal
+            if not proposed_time:
                 connection.close()
                 return json.dumps({
                     'success': False,
-                    'error': 'Invalid datetime format. Use ISO format or YYYY-MM-DD HH:MM:SS'
+                    'error': 'Initial proposal requires both time and location'
                 })
+            negotiation_id = str(uuid.uuid4())
+            create_negotiation_query = """
+                INSERT INTO exchange_negotiations 
+                (negotiation_id, listing_id, user_id, status, created_at)
+                VALUES (%s, %s, %s, %s, NOW())
+            """
+            cursor.execute(create_negotiation_query, (negotiation_id, listing_id, proposer_id, 'pending'))
+            connection.commit()
+            negotiation_id_str = negotiation_id
+            agreed_time = None
+        else:
+            negotiation_id_str = negotiation['negotiation_id']
+            agreed_time = negotiation['current_proposed_time']
         
-        # Expire any existing pending proposals between these users for this listing
-        expire_query = """
-            UPDATE meeting_proposals 
-            SET status = 'expired' 
-            WHERE listing_id = %s 
-            AND ((proposer_id = %s AND recipient_id = %s) OR (proposer_id = %s AND recipient_id = %s))
-            AND status = 'pending'
-        """
-        cursor.execute(expire_query, (listing_id, proposer_id, recipient_id, recipient_id, proposer_id))
+        # Parse proposed time if provided, otherwise use existing agreed time
+        proposed_datetime = None
+        if proposed_time:
+            try:
+                proposed_datetime = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
+            except ValueError:
+                try:
+                    proposed_datetime = datetime.strptime(proposed_time, '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    connection.close()
+                    return json.dumps({
+                        'success': False,
+                        'error': 'Invalid datetime format. Use ISO format or YYYY-MM-DD HH:MM:SS'
+                    })
+        elif agreed_time:
+            # Use existing agreed time for location-only proposals
+            proposed_datetime = agreed_time
+        else:
+            # No time provided and no existing agreed time
+            connection.close()
+            return json.dumps({
+                'success': False,
+                'error': 'No meeting time available. Please agree on a time first.'
+            })
         
-        # Create new proposal (MPR prefix + UUID trimmed to fit CHAR(39))
-        proposal_id = f"MPR-{str(uuid.uuid4())[:-1]}"  # 39 chars: MPR- + 35 char UUID
-        expires_at = datetime.now() + timedelta(days=7)  # Proposals expire after 7 days
-        
+        # Create history record in negotiation_history table
+        history_id = str(uuid.uuid4())
         insert_query = """
-            INSERT INTO meeting_proposals 
-            (proposal_id, listing_id, proposer_id, recipient_id, proposed_location, 
-             proposed_latitude, proposed_longitude, proposed_time, message, expires_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO negotiation_history 
+            (history_id, negotiation_id, action, proposed_time, proposed_location, 
+             proposed_latitude, proposed_longitude, proposed_by, notes, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
         """
         cursor.execute(insert_query, (
-            proposal_id, listing_id, proposer_id, recipient_id, 
-            proposed_location, proposed_latitude, proposed_longitude, proposed_datetime, message, expires_at
+            history_id, negotiation_id_str, 'initial_proposal',
+            proposed_datetime, proposed_location, proposed_latitude, proposed_longitude,
+            proposer_id, message
         ))
         
         connection.commit()
@@ -142,7 +175,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                 proposer_name=proposer_name,
                 proposed_time=time_str,
                 listing_id=listing_id,
-                proposal_id=proposal_id
+                proposal_id=history_id
                 # session_id is automatically fetched inside notification_service
             )
         except Exception as apn_error:
@@ -151,11 +184,11 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         
         connection.close()
         
-        print(f"[ProposeMeeting] Meeting proposal created successfully: {proposal_id}")
+        print(f"[ProposeMeeting] Meeting proposal created successfully: {history_id}")
         
         return json.dumps({
             'success': True,
-            'proposal_id': proposal_id,
+            'proposal_id': history_id,
             'message': 'Meeting proposal sent successfully'
         })
         

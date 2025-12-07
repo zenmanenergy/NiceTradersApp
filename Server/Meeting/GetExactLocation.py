@@ -34,17 +34,18 @@ def get_exact_location(session_id, listing_id):
         
         # Check if user has an accepted meeting for this listing
         meeting_query = """
-            SELECT mp.proposal_id, mp.proposed_time, mp.proposed_location,
-                   l.latitude, l.longitude, l.location
-            FROM meeting_proposals mp
-            JOIN listings l ON mp.listing_id = l.listing_id
-            WHERE mp.listing_id = %s
-            AND (mp.proposer_id = %s OR mp.recipient_id = %s)
-            AND mp.status = 'accepted'
-            ORDER BY mp.responded_at DESC
+            SELECT nh.history_id, nh.accepted_time, nh.accepted_location,
+                   nh.accepted_latitude, nh.accepted_longitude, l.location
+            FROM negotiation_history nh
+            JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
+            JOIN listings l ON en.listing_id = l.listing_id
+            WHERE en.listing_id = %s
+            AND nh.action IN ('accepted_time', 'accepted_location')
+            AND nh.accepted_time IS NOT NULL
+            ORDER BY nh.created_at DESC
             LIMIT 1
         """
-        cursor.execute(meeting_query, (listing_id, user_id, user_id))
+        cursor.execute(meeting_query, (listing_id,))
         meeting = cursor.fetchone()
         
         if not meeting:
@@ -56,10 +57,10 @@ def get_exact_location(session_id, listing_id):
             })
         
         # Check if we're within 1 hour of the meeting time
-        proposed_time = meeting['proposed_time']
+        accepted_time = meeting['accepted_time']
         current_time = datetime.now()
-        time_until_meeting = (proposed_time - current_time).total_seconds() / 3600  # hours
-        time_since_meeting = (current_time - proposed_time).total_seconds() / 3600  # hours
+        time_until_meeting = (accepted_time - current_time).total_seconds() / 3600  # hours
+        time_since_meeting = (current_time - accepted_time).total_seconds() / 3600  # hours
         
         # Allow access 1 hour before and up to 2 hours after meeting time
         is_meeting_time = (-1 <= time_until_meeting <= 2)
@@ -74,9 +75,9 @@ def get_exact_location(session_id, listing_id):
                 'has_meeting': True,
                 'is_exact': True,
                 'location': {
-                    'address': meeting['proposed_location'],
-                    'latitude': float(meeting['latitude']) if meeting['latitude'] else None,
-                    'longitude': float(meeting['longitude']) if meeting['longitude'] else None
+                    'address': meeting['accepted_location'] or meeting['location'],
+                    'latitude': float(meeting['accepted_latitude']) if meeting['accepted_latitude'] else None,
+                    'longitude': float(meeting['accepted_longitude']) if meeting['accepted_longitude'] else None
                 },
                 'meeting_time': proposed_time.isoformat(),
                 'time_until_meeting_hours': time_until_meeting

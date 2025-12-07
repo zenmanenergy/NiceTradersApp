@@ -259,7 +259,7 @@ struct ContactDetailView: View {
             
             // Meeting Information
             if let meeting = currentMeeting {
-                if meeting.location.isEmpty {
+                if meeting.location == nil || meeting.location?.isEmpty ?? true {
                     // Location not set - show button to set it
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -311,7 +311,7 @@ struct ContactDetailView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: localizationManager.localize("LOCATION") + ":", value: meeting.location)
+                            detailRow(label: localizationManager.localize("LOCATION") + ":", value: meeting.location ?? "Not set")
                             detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
                             if let message = meeting.message, !message.isEmpty {
                                 detailRow(label: localizationManager.localize("NOTE") + ":", value: message)
@@ -699,17 +699,16 @@ struct ContactDetailView: View {
                     // Parse current meeting
                     if let meetingData = json["current_meeting"] as? [String: Any] {
                         if let time = meetingData["time"] as? String {
-                            // Handle location - if it's nil or null, set to empty string
-                            let location: String
-                            if let loc = meetingData["location"] as? String, !loc.isEmpty {
-                                location = loc
-                            } else {
-                                location = ""
-                            }
+                            // Handle location - if it's nil or null, set to nil
+                            let location: String? = meetingData["location"] as? String
+                            let latitude: Double? = meetingData["latitude"] as? Double
+                            let longitude: Double? = meetingData["longitude"] as? Double
                             let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
                             
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
+                                latitude: latitude,
+                                longitude: longitude,
                                 time: time,
                                 message: meetingData["message"] as? String,
                                 agreedAt: agreedAt
@@ -778,7 +777,9 @@ struct ProposerInfo {
 }
 
 struct CurrentMeeting {
-    let location: String
+    let location: String?
+    let latitude: Double?
+    let longitude: Double?
     let time: String
     let message: String?
     let agreedAt: String

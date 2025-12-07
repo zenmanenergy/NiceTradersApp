@@ -38,9 +38,13 @@ class LocationTrackingService:
         try:
             # Get proposal and meeting details
             proposal_query = """
-                SELECT proposal_id, initiator_id, responder_id, proposed_time, location_latitude, location_longitude
-                FROM meeting_proposals
-                WHERE proposal_id = %s AND status = 'accepted'
+                SELECT nh.history_id as proposal_id, nh.accepted_time, nh.accepted_latitude, nh.accepted_longitude,
+                       en.negotiation_id
+                FROM negotiation_history nh
+                JOIN exchange_negotiations en ON nh.negotiation_id = en.negotiation_id
+                WHERE nh.history_id = %s 
+                AND nh.action IN ('accepted_time', 'accepted_location')
+                AND nh.accepted_time IS NOT NULL
             """
             cursor.execute(proposal_query, (proposal_id,))
             proposal = cursor.fetchone()
@@ -49,23 +53,23 @@ class LocationTrackingService:
                 connection.close()
                 return {"success": False, "error": "Proposal not found or not accepted"}
             
-            # Verify user is part of this exchange
-            if user_id not in (proposal['initiator_id'], proposal['responder_id']):
-                connection.close()
-                return {"success": False, "error": "User not part of this exchange"}
-            
             # Check if within tracking window (1 hour before exchange)
-            proposed_time = datetime.fromisoformat(proposal['proposed_time'])
+            accepted_time = datetime.fromisoformat(proposal['accepted_time'].isoformat()) if hasattr(proposal['accepted_time'], 'isoformat') else datetime.fromisoformat(proposal['accepted_time'])
             current_time = datetime.utcnow()
-            time_until_exchange = (proposed_time - current_time).total_seconds() / 3600
+            time_until_exchange = (accepted_time - current_time).total_seconds() / 3600
             
             if time_until_exchange > LocationTrackingService.TRACKING_WINDOW_HOURS or time_until_exchange < 0:
                 connection.close()
                 return {"success": False, "error": f"Not in tracking window. Exchange in {time_until_exchange:.1f} hours"}
             
             # Check if within 1 mile radius of meeting location
-            meeting_lat = proposal['location_latitude']
-            meeting_lon = proposal['location_longitude']
+            meeting_lat = proposal['accepted_latitude']
+            meeting_lon = proposal['accepted_longitude']
+            
+            if not meeting_lat or not meeting_lon:
+                connection.close()
+                return {"success": False, "error": "Meeting location not set"}
+            
             distance = LocationTrackingService.calculate_distance(
                 latitude, longitude, meeting_lat, meeting_lon
             )
@@ -121,9 +125,11 @@ class LocationTrackingService:
         try:
             # Get proposal details
             proposal_query = """
-                SELECT initiator_id, responder_id, location_latitude, location_longitude
-                FROM meeting_proposals
-                WHERE proposal_id = %s AND status = 'accepted'
+                SELECT nh.accepted_latitude, nh.accepted_longitude
+                FROM negotiation_history nh
+                WHERE nh.history_id = %s 
+                AND nh.action IN ('accepted_time', 'accepted_location')
+                AND nh.accepted_time IS NOT NULL
             """
             cursor.execute(proposal_query, (proposal_id,))
             proposal = cursor.fetchone()
@@ -131,9 +137,6 @@ class LocationTrackingService:
             if not proposal:
                 connection.close()
                 return {"success": False, "error": "Proposal not found"}
-            
-            # Determine other user
-            other_user_id = proposal['responder_id'] if proposal['initiator_id'] == current_user_id else proposal['initiator_id']
             
             # Get other user's latest location
             location_query = """
@@ -220,20 +223,21 @@ class LocationTrackingService:
         
         try:
             proposal_query = """
-                SELECT proposed_time FROM meeting_proposals
-                WHERE proposal_id = %s AND status = 'accepted'
-                AND (initiator_id = %s OR responder_id = %s)
+                SELECT nh.accepted_time FROM negotiation_history nh
+                WHERE nh.history_id = %s 
+                AND nh.action IN ('accepted_time', 'accepted_location')
+                AND nh.accepted_time IS NOT NULL
             """
-            cursor.execute(proposal_query, (proposal_id, user_id, user_id))
+            cursor.execute(proposal_query, (proposal_id,))
             proposal = cursor.fetchone()
             
             if not proposal:
                 connection.close()
                 return {"success": False, "error": "Proposal not found"}
             
-            proposed_time = datetime.fromisoformat(proposal['proposed_time'])
+            accepted_time = datetime.fromisoformat(proposal['accepted_time'].isoformat()) if hasattr(proposal['accepted_time'], 'isoformat') else datetime.fromisoformat(proposal['accepted_time'])
             current_time = datetime.utcnow()
-            time_until_exchange = (proposed_time - current_time).total_seconds() / 3600
+            time_until_exchange = (accepted_time - current_time).total_seconds() / 3600
             
             tracking_enabled = 0 < time_until_exchange <= LocationTrackingService.TRACKING_WINDOW_HOURS
             

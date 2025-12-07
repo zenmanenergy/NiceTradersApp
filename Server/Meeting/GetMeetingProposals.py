@@ -1,9 +1,9 @@
 from _Lib import Database
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 def get_meeting_proposals(session_id, listing_id):
-    """Get all meeting proposals for a specific listing"""
+    """Get all meeting proposals for a specific listing from negotiation_history"""
     try:
         print(f"[GetMeetingProposals] Getting meeting proposals for listing: {listing_id}")
         
@@ -50,126 +50,107 @@ def get_meeting_proposals(session_id, listing_id):
                 'error': 'You do not have access to view meeting proposals for this listing'
             })
         
-        # Get all meeting proposals for this listing involving this user
-        proposals_query = """
-            SELECT mp.proposal_id, mp.listing_id, mp.proposer_id, mp.recipient_id,
-                   mp.proposed_location, mp.proposed_latitude, mp.proposed_longitude,
-                   mp.proposed_time, mp.message, mp.status,
-                   mp.proposed_at, mp.responded_at, mp.expires_at,
-                   u1.FirstName as proposer_first_name, u1.LastName as proposer_last_name,
-                   u2.FirstName as recipient_first_name, u2.LastName as recipient_last_name
-            FROM meeting_proposals mp
-            JOIN users u1 ON mp.proposer_id = u1.UserId
-            JOIN users u2 ON mp.recipient_id = u2.UserId
-            WHERE mp.listing_id = %s 
-            AND (mp.proposer_id = %s OR mp.recipient_id = %s)
-            ORDER BY mp.proposed_at DESC
-        """
-        cursor.execute(proposals_query, (listing_id, user_id, user_id))
-        proposals = cursor.fetchall()
-        
-        # Get current agreed meeting from exchange_negotiations (primary source)
-        # This is the actual agreed meeting that has been finalized
-        agreed_query = """
-            SELECT 'exchange' as meeting_type, NULL as proposal_id, NULL as proposed_location, 
-                   current_proposed_time as proposed_time, NULL as message,
-                   NULL as proposed_at, agreement_reached_at as responded_at,
-                   NULL as proposer_first_name, NULL as proposer_last_name,
-                   NULL as recipient_first_name, NULL as recipient_last_name
-            FROM exchange_negotiations
-            WHERE listing_id = %s 
-            AND status IN ('agreed', 'paid_partial', 'paid_complete')
-            ORDER BY agreement_reached_at DESC
+        # Get negotiation for this listing
+        negotiation_query = """
+            SELECT negotiation_id FROM exchange_negotiations
+            WHERE listing_id = %s
             LIMIT 1
         """
-        cursor.execute(agreed_query, (listing_id,))
-        accepted_meeting = cursor.fetchone()
+        cursor.execute(negotiation_query, (listing_id,))
+        negotiation = cursor.fetchone()
         
-        # If no agreed meeting in exchange_negotiations, check meeting_proposals for accepted status (fallback)
-        if not accepted_meeting:
+        formatted_proposals = []
+        current_meeting = None
+        
+        if negotiation:
+            negotiation_id = negotiation['negotiation_id']
+            
+            # Get all history records (both time and location proposals)
+            history_query = """
+                SELECT nh.history_id, nh.action, nh.proposed_time, nh.proposed_location,
+                       nh.proposed_latitude, nh.proposed_longitude, nh.proposed_by, nh.notes, nh.created_at,
+                       u.FirstName, u.LastName
+                FROM negotiation_history nh
+                JOIN users u ON nh.proposed_by = u.UserId
+                WHERE nh.negotiation_id = %s
+                ORDER BY nh.created_at DESC
+            """
+            cursor.execute(history_query, (negotiation_id,))
+            history_records = cursor.fetchall()
+            
+            for record in history_records:
+                proposed_time = record['proposed_time']
+                if proposed_time and proposed_time.tzinfo is None:
+                    proposed_time = proposed_time.replace(tzinfo=timezone.utc)
+                
+                # Determine status based on action
+                status = 'pending'
+                if record['action'] == 'accepted':
+                    status = 'accepted'
+                elif record['action'] == 'rejected':
+                    status = 'rejected'
+                
+                formatted_proposals.append({
+                    'proposal_id': record['history_id'],
+                    'proposed_location': record['proposed_location'],
+                    'proposed_latitude': record['proposed_latitude'],
+                    'proposed_longitude': record['proposed_longitude'],
+                    'proposed_time': proposed_time.isoformat() if proposed_time else None,
+                    'message': record['notes'],
+                    'status': status,
+                    'action': record['action'],
+                    'proposed_at': record['created_at'].isoformat() if record['created_at'] else None,
+                    'is_from_me': record['proposed_by'] == user_id,
+                    'proposer': {
+                        'first_name': record['FirstName'],
+                        'last_name': record['LastName']
+                    }
+                })
+            
+            # Get current agreed meeting from most recent accepted record
             accepted_query = """
-                SELECT 'proposal' as meeting_type, mp.proposal_id, mp.proposed_location, mp.proposed_time, mp.message,
-                       mp.proposed_at, mp.responded_at,
-                       u1.FirstName as proposer_first_name, u1.LastName as proposer_last_name,
-                       u2.FirstName as recipient_first_name, u2.LastName as recipient_last_name
-                FROM meeting_proposals mp
-                JOIN users u1 ON mp.proposer_id = u1.UserId
-                JOIN users u2 ON mp.recipient_id = u2.UserId
-                WHERE mp.listing_id = %s 
-                AND (mp.proposer_id = %s OR mp.recipient_id = %s)
-                AND mp.status = 'accepted'
-                ORDER BY mp.responded_at DESC
+                SELECT nh.history_id, nh.accepted_time, nh.accepted_location,
+                       nh.accepted_latitude, nh.accepted_longitude, nh.proposed_location,
+                       nh.proposed_latitude, nh.proposed_longitude, nh.proposed_by, nh.notes, nh.created_at,
+                       u.FirstName, u.LastName
+                FROM negotiation_history nh
+                JOIN users u ON nh.proposed_by = u.UserId
+                WHERE nh.negotiation_id = %s
+                AND nh.action IN ('accepted_time', 'accepted_location')
+                AND nh.accepted_time IS NOT NULL
+                ORDER BY nh.created_at DESC
                 LIMIT 1
             """
-            cursor.execute(accepted_query, (listing_id, user_id, user_id))
-            accepted_meeting = cursor.fetchone()
+            cursor.execute(accepted_query, (negotiation_id,))
+            accepted_record = cursor.fetchone()
+            
+            if accepted_record:
+                accepted_time = accepted_record['accepted_time']
+                if accepted_time and accepted_time.tzinfo is None:
+                    accepted_time = accepted_time.replace(tzinfo=timezone.utc)
+                
+                # Use accepted_location if available, fall back to proposed_location
+                location = accepted_record['accepted_location'] or accepted_record['proposed_location']
+                latitude = accepted_record['accepted_latitude'] or accepted_record['proposed_latitude']
+                longitude = accepted_record['accepted_longitude'] or accepted_record['proposed_longitude']
+                
+                current_meeting = {
+                    'proposal_id': accepted_record['history_id'],
+                    'location': location,
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'time': accepted_time.isoformat() if accepted_time else None,
+                    'message': accepted_record['notes'],
+                    'proposed_at': accepted_record['created_at'].isoformat() if accepted_record['created_at'] else None,
+                    'agreed_at': accepted_record['created_at'].isoformat() if accepted_record['created_at'] else None,
+                    'proposer': {
+                        'first_name': accepted_record['FirstName'],
+                        'last_name': accepted_record['LastName']
+                    }
+                }
+                print(f"[GetMeetingProposals] Meeting time with TZ: {current_meeting['time']}")
         
         connection.close()
-        
-        # Format proposals
-        formatted_proposals = []
-        for proposal in proposals:
-            # Ensure datetimes are treated as UTC
-            proposed_time = proposal['proposed_time']
-            if proposed_time and proposed_time.tzinfo is None:
-                from datetime import timezone
-                proposed_time = proposed_time.replace(tzinfo=timezone.utc)
-            
-            formatted_proposals.append({
-                'proposal_id': proposal['proposal_id'],
-                'listing_id': proposal['listing_id'],
-                'proposed_location': proposal['proposed_location'],
-                'proposed_latitude': proposal['proposed_latitude'],
-                'proposed_longitude': proposal['proposed_longitude'],
-                'proposed_time': proposed_time.isoformat() if proposed_time else None,
-                'message': proposal['message'],
-                'status': proposal['status'],
-                'proposed_at': proposal['proposed_at'].isoformat() if proposal['proposed_at'] else None,
-                'responded_at': proposal['responded_at'].isoformat() if proposal['responded_at'] else None,
-                'expires_at': proposal['expires_at'].isoformat() if proposal['expires_at'] else None,
-                'is_from_me': proposal['proposer_id'] == user_id,
-                'proposer': {
-                    'first_name': proposal['proposer_first_name'],
-                    'last_name': proposal['proposer_last_name']
-                },
-                'recipient': {
-                    'first_name': proposal['recipient_first_name'],
-                    'last_name': proposal['recipient_last_name']
-                }
-            })
-        
-        # Format accepted meeting
-        current_meeting = None
-        if accepted_meeting:
-            # Ensure the datetime is treated as UTC
-            proposed_time = accepted_meeting['proposed_time']
-            if proposed_time and proposed_time.tzinfo is None:
-                # Assume naive datetimes from DB are in UTC
-                from datetime import timezone
-                proposed_time = proposed_time.replace(tzinfo=timezone.utc)
-            
-            responded_at = accepted_meeting['responded_at']
-            if responded_at and responded_at.tzinfo is None:
-                from datetime import timezone
-                responded_at = responded_at.replace(tzinfo=timezone.utc)
-            
-            current_meeting = {
-                'proposal_id': accepted_meeting['proposal_id'],
-                'location': accepted_meeting['proposed_location'],
-                'time': proposed_time.isoformat() if proposed_time else None,
-                'message': accepted_meeting['message'],
-                'proposed_at': accepted_meeting['proposed_at'].isoformat() if accepted_meeting['proposed_at'] else None,
-                'agreed_at': responded_at.isoformat() if responded_at else None,
-                'proposer': {
-                    'first_name': accepted_meeting['proposer_first_name'],
-                    'last_name': accepted_meeting['proposer_last_name']
-                },
-                'recipient': {
-                    'first_name': accepted_meeting['recipient_first_name'],
-                    'last_name': accepted_meeting['recipient_last_name']
-                }
-            }
-            print(f"[GetMeetingProposals] Meeting time with TZ: {current_meeting['time']}")
         
         print(f"[GetMeetingProposals] Found {len(formatted_proposals)} proposals, accepted meeting: {current_meeting is not None}")
         

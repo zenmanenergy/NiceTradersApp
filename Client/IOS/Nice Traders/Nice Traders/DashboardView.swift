@@ -996,6 +996,11 @@ struct ActiveExchangeCard: View {
                 Text(formatDateTime(meetingTime))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.8))
+            } else {
+                Text("⏳ Waiting for location response")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
             }
             
             HStack {
