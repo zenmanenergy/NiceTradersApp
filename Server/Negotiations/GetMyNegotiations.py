@@ -87,7 +87,7 @@ def get_my_negotiations(session_id):
             
             # Get last action to determine status
             cursor.execute("""
-                SELECT action, proposed_time, accepted_time, created_at FROM negotiation_history
+                SELECT action, proposed_time, accepted_time, proposed_by, created_at FROM negotiation_history
                 WHERE negotiation_id = %s
                 ORDER BY created_at DESC
                 LIMIT 1
@@ -144,11 +144,19 @@ def get_my_negotiations(session_id):
             buyer_paid = payment_check['buyer_paid_count'] > 0
             seller_paid = payment_check['seller_paid_count'] > 0
             
+            # Determine if action is required for current user
+            # Action required if: status is proposed/countered AND last proposal was NOT made by current user
+            action_required = False
+            if last_action and status in ('proposed', 'countered'):
+                action_required = (last_action['proposed_by'] != user_id)
+            
             neg_dict = {
                 'negotiationId': negotiation_id,
                 'listingId': listing_id,
                 'status': status,
                 'currentProposedTime': current_time.isoformat() if current_time else None,
+                'proposedBy': last_action['proposed_by'] if last_action else None,
+                'actionRequired': action_required,
                 'buyerPaid': buyer_paid,
                 'sellerPaid': seller_paid,
                 'createdAt': last_action['created_at'].isoformat() if last_action else None,

@@ -402,7 +402,7 @@ struct DashboardView: View {
                     print("[DashboardView] Skipping negotiation - no userRole: \(neg)")
                     return false
                 }
-                // Show negotiations where status is proposed/countered/agreed/paid_partial (not complete or rejected)
+                // Show negotiations where status is proposed/countered/agreed/paid_partial (active negotiations)
                 let status = neg["status"] as? String ?? ""
                 let include = status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
                 print("[DashboardView] Status filter: \(status) -> \(include)")
@@ -410,35 +410,35 @@ struct DashboardView: View {
             }.compactMap { neg -> PendingNegotiation? in
                 print("[DashboardView] Mapping negotiation: \(neg)")
                 guard let negId = neg["negotiationId"] as? String else {
-                    print("[DashboardView] Missing negotiationId")
+                    print("[DashboardView] Missing negotiationId - keys: \(neg.keys)")
                     return nil
                 }
                 guard let listing = neg["listing"] as? [String: Any] else {
-                    print("[DashboardView] Missing listing")
+                    print("[DashboardView] Missing listing - keys: \(neg.keys)")
                     return nil
                 }
                 guard let otherUser = neg["otherUser"] as? [String: Any] else {
-                    print("[DashboardView] Missing otherUser")
+                    print("[DashboardView] Missing otherUser - keys: \(neg.keys)")
                     return nil
                 }
                 guard let proposedTime = neg["currentProposedTime"] as? String else {
-                    print("[DashboardView] Missing currentProposedTime")
+                    print("[DashboardView] Missing currentProposedTime - keys: \(neg.keys)")
                     return nil
                 }
                 guard let currency = listing["currency"] as? String else {
-                    print("[DashboardView] Missing currency")
+                    print("[DashboardView] Missing currency in listing - keys: \(listing.keys)")
                     return nil
                 }
                 guard let acceptCurrency = listing["acceptCurrency"] as? String else {
-                    print("[DashboardView] Missing acceptCurrency")
+                    print("[DashboardView] Missing acceptCurrency in listing - keys: \(listing.keys), values: \(listing)")
                     return nil
                 }
                 guard let buyerName = otherUser["name"] as? String else {
-                    print("[DashboardView] Missing buyerName")
+                    print("[DashboardView] Missing buyerName in otherUser - keys: \(otherUser.keys)")
                     return nil
                 }
                 guard let status = neg["status"] as? String else {
-                    print("[DashboardView] Missing status")
+                    print("[DashboardView] Missing status - keys: \(neg.keys)")
                     return nil
                 }
                 
@@ -454,7 +454,18 @@ struct DashboardView: View {
                 
                 let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
                 
-                let willRound = (listing["willRoundToNearestDollar"] as? Bool) ?? false
+                // Handle willRoundToNearestDollar - could be Bool or Int
+                let willRound: Bool
+                if let boolVal = listing["willRoundToNearestDollar"] as? Bool {
+                    willRound = boolVal
+                } else if let intVal = listing["willRoundToNearestDollar"] as? Int {
+                    willRound = intVal != 0
+                } else {
+                    willRound = false
+                }
+                
+                let actionRequired = (neg["actionRequired"] as? Bool) ?? false
+                let userRole = (neg["userRole"] as? String) ?? "buyer"
                 
                 let pending = PendingNegotiation(
                     id: negId,
@@ -465,7 +476,9 @@ struct DashboardView: View {
                     proposedTime: proposedTime,
                     convertedAmount: convertedAmount,
                     status: status,
-                    willRoundToNearestDollar: willRound
+                    willRoundToNearestDollar: willRound,
+                    actionRequired: actionRequired,
+                    userRole: userRole
                 )
                 print("[DashboardView] Created PendingNegotiation: \(pending.id) - \(proposedTime)")
                 return pending
@@ -473,6 +486,8 @@ struct DashboardView: View {
             
             print("[DashboardView] Final pendingNegotiations count: \(pending.count)")
             self.pendingNegotiations = pending
+            print("[DashboardView] Updated self.pendingNegotiations to: \(self.pendingNegotiations.count) items")
+            print("[DashboardView] pendingNegotiations is now: \(self.pendingNegotiations)")
         }
     }
     
@@ -685,6 +700,9 @@ struct MainDashboardView: View {
                     if !pendingNegotiations.isEmpty {
                         PendingNegotiationsSection(negotiations: pendingNegotiations)
                             .padding(.horizontal)
+                            .onAppear {
+                                print("[MainDashboardView] Rendering PendingNegotiationsSection with \(pendingNegotiations.count) items")
+                            }
                     }
                     
                     // Active Exchanges
@@ -1393,6 +1411,8 @@ struct PendingNegotiation: Identifiable {
     let convertedAmount: Double?
     let status: String
     let willRoundToNearestDollar: Bool
+    let actionRequired: Bool
+    let userRole: String // "buyer" or "seller"
 }
 
 // MARK: - Pending Negotiations Section
@@ -1410,31 +1430,15 @@ struct PendingNegotiationsSection: View {
                 
                 Spacer()
                 
-                // Show different badge based on negotiation statuses
-                let statuses = Set(negotiations.map { $0.status })
-                if statuses.contains("proposed") || statuses.contains("countered") {
-                    Text("ACTION REQUIRED")
+                // Check if any negotiations require action from current user
+                let badgeText = getPendingBadgeText()
+                if let badgeText = badgeText {
+                    Text(badgeText)
                         .font(.system(size: 11, weight: .bold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 4)
-                        .background(Color.orange)
-                        .cornerRadius(12)
-                } else if statuses.contains("paid_partial") {
-                    Text("AWAITING PAYMENT")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.blue)
-                        .cornerRadius(12)
-                } else if statuses.contains("agreed") {
-                    Text("AGREED - PAY TO UNLOCK")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.green)
+                        .background(badgeText == "ACTION REQUIRED" ? Color.orange : Color.blue)
                         .cornerRadius(12)
                 }
             }
@@ -1456,10 +1460,46 @@ struct PendingNegotiationsSection: View {
         )
         .cornerRadius(16)
     }
+    
+    private func getPendingBadgeText() -> String? {
+        // Check if any negotiations require action from current user
+        let hasActionRequired = negotiations.contains { neg in
+            return neg.actionRequired
+        }
+        
+        let hasPaidPartial = negotiations.contains { neg in
+            return neg.status == "paid_partial"
+        }
+        
+        if hasActionRequired {
+            return "ACTION REQUIRED"
+        } else if hasPaidPartial {
+            return "AWAITING PAYMENT"
+        }
+        
+        return nil
+    }
 }
 
 struct PendingNegotiationCard: View {
     let negotiation: PendingNegotiation
+    
+    private var statusText: String {
+        switch negotiation.status {
+        case "proposed":
+            // Someone proposed, context-dependent
+            return negotiation.userRole == "seller" ? "💬 Review & Respond" : "⏳ Awaiting Response"
+        case "countered":
+            // Someone countered - seller is waiting, buyer needs to act
+            return negotiation.userRole == "seller" ? "⏳ Awaiting Response" : "🔴 Action Required"
+        case "agreed":
+            return "✓ Meeting Confirmed"
+        case "paid_partial", "paid_complete":
+            return "💰 Payment Pending"
+        default:
+            return "💬 Review & Respond"
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1503,7 +1543,8 @@ struct PendingNegotiationCard: View {
             }
             
             HStack {
-                Text("💬 Review & Respond")
+                let statusText = self.statusText
+                Text(statusText)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
                 

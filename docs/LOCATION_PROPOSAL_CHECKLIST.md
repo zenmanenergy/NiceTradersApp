@@ -168,13 +168,13 @@ The process involves both users' devices (iOS) and the backend server.
   - `negotiation_status: 'time_agreed'`
 
 ### User A's Device
-- [ ] **Success Message**: "Meeting time accepted!"
-- [ ] **Listing Status Updates**: Show as "Time Confirmed - Waiting for Location"
+- [x] **Success Message**: "Proposal accepted" (tested in iOS app)
+- [x] **Dashboard Shows Agreement**: ✅ TESTED - negotiation appears in "All Active Exchanges" with agreed status and correct meeting time
 
 ### User B's Device (iOS)
 - [ ] **APN Notification**: Receive notification that time was accepted
-- [ ] **Refresh Dashboard**: When user opens app, listing shows as "Time Agreed"
-- [ ] **Next Step**: Ready to propose location
+- [x] **Refresh Dashboard**: ✅ TESTED - listing shows as "Agreed" in active exchanges when app is reopened
+- [ ] **Next Step**: Proceed to payment phase
 
 ---
 

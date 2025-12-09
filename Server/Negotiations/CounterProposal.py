@@ -58,6 +58,7 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
             })
         
         seller_id = listing['user_id']
+        buyer_id = None  # Will be determined from proposals
         
         # Get latest proposal to check state
         cursor.execute("""
@@ -74,7 +75,8 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
                 'error': 'No proposals found for this negotiation'
             })
         
-        # Verify user is part of this negotiation and didn't make last proposal
+        # Verify user is part of this negotiation (either buyer or seller)
+        # Get all distinct proposers to find the buyer
         cursor.execute("""
             SELECT DISTINCT proposed_by FROM negotiation_history
             WHERE negotiation_id = %s
@@ -83,7 +85,8 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
         participants = cursor.fetchall()
         participant_ids = [p['proposed_by'] for p in participants]
         
-        if user_id not in participant_ids:
+        # User must be either the seller or one of the proposers (buyers)
+        if user_id != seller_id and user_id not in participant_ids:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
