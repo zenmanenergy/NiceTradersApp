@@ -22,6 +22,7 @@ struct NegotiationDetailView: View {
     @State private var isProcessing = false
     @State private var actionMessage: String?
     @State private var navigateToDashboard = false
+    @State private var showRejectConfirmation = false
     
     var body: some View {
         return ZStack {
@@ -132,6 +133,14 @@ struct NegotiationDetailView: View {
             if let negotiation = negotiation, negotiation.userRole == "seller" {
                 BuyerInfoView(buyerId: negotiation.buyer.userId)
             }
+        }
+        .alert("End Negotiation", isPresented: $showRejectConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reject", role: .destructive) {
+                rejectNegotiation()
+            }
+        } message: {
+            Text("Are you sure you want to reject this negotiation? This action cannot be undone and will permanently end this negotiation.")
         }
         .onChange(of: navigateToDashboard) { newValue in
             if newValue {
@@ -401,7 +410,7 @@ struct NegotiationDetailView: View {
                         .cornerRadius(12)
                 }
                 
-                Button(action: { rejectNegotiation() }) {
+                Button(action: { showRejectConfirmation = true }) {
                     Text(localizationManager.localize("REJECT"))
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)

@@ -49,7 +49,7 @@ def pay_negotiation_fee(negotiation_id, session_id):
         
         # Get buyer/seller from listing
         cursor.execute("""
-            SELECT created_by, ListingId FROM listings WHERE ListingId = %s
+            SELECT user_id, listing_id FROM listings WHERE listing_id = %s
         """, (negotiation['listing_id'],))
         
         listing = cursor.fetchone()
@@ -59,7 +59,7 @@ def pay_negotiation_fee(negotiation_id, session_id):
                 'error': 'Listing not found'
             })
         
-        seller_id = listing['created_by']
+        seller_id = listing['user_id']
         buyer_id = negotiation['initiator_id']
         
         # Verify user is part of this negotiation
@@ -155,18 +155,18 @@ def pay_negotiation_fee(negotiation_id, session_id):
         payment_action = 'buyer_paid' if is_buyer else 'seller_paid'
         cursor.execute("""
             INSERT INTO negotiation_history (
-                history_id, negotiation_id, action, proposed_by, paid_by
+                history_id, negotiation_id, listing_id, action, proposed_by
             ) VALUES (%s, %s, %s, %s, %s)
-        """, (str(uuid.uuid4()), negotiation_id, payment_action, user_id, user_id))
+        """, (str(uuid.uuid4()), negotiation_id, negotiation['listing_id'], payment_action, user_id))
         
         # Check if both parties have now paid
         cursor.execute("""
-            SELECT COUNT(DISTINCT paid_by) as paying_users FROM negotiation_history
-            WHERE negotiation_id = %s AND paid_by IN (%s, %s)
-        """, (negotiation_id, buyer_id, seller_id))
+            SELECT COUNT(DISTINCT action) as paid_count FROM negotiation_history
+            WHERE negotiation_id = %s AND action IN ('buyer_paid', 'seller_paid')
+        """, (negotiation_id,))
         
         payment_count = cursor.fetchone()
-        both_paid = (payment_count['paying_users'] == 2)
+        both_paid = (payment_count['paid_count'] == 2)
         
         if both_paid:
             # Both paid - auto-reject other negotiations for this listing

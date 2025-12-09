@@ -144,6 +144,10 @@ def get_my_negotiations(session_id):
             buyer_paid = payment_check['buyer_paid_count'] > 0
             seller_paid = payment_check['seller_paid_count'] > 0
             
+            # Check if both parties have paid - if so, override status to paid_complete
+            if buyer_paid and seller_paid:
+                status = 'paid_complete'
+            
             # Determine if action is required for current user
             # Action required if: status is proposed/countered AND last proposal was NOT made by current user
             action_required = False

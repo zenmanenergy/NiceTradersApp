@@ -157,8 +157,8 @@ def get_negotiation(negotiation_id, session_id):
             'accepted_time': 'agreed',
             'accepted_location': 'agreed',
             'rejected': 'rejected',
-            'buyer_paid': 'paidPartial',
-            'seller_paid': 'paidPartial',
+            'buyer_paid': 'paid_partial',
+            'seller_paid': 'paid_partial',
         }
         ios_status = status_mapping.get(latest_action, latest_action)
         
@@ -167,7 +167,7 @@ def get_negotiation(negotiation_id, session_id):
         has_seller_paid = any(h['action'] == 'seller_paid' for h in history_records)
         
         if has_buyer_paid and has_seller_paid:
-            ios_status = 'completed'
+            ios_status = 'paid_complete'
         
         # Find the most recent accepted location (if any)
         accepted_location = None
