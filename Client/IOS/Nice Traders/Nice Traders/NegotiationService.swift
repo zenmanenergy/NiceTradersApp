@@ -26,7 +26,7 @@ class NegotiationService {
         
         let isoTime = ISO8601DateFormatter().string(from: proposedTime)
         
-        let urlString = "\(baseURL)/Negotiations/Propose?listingId=\(listingId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(baseURL)/MeetingTime/Propose?listingId=\(listingId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         
         guard let url = URL(string: urlString) else {
@@ -89,7 +89,7 @@ class NegotiationService {
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/Get?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Get?listingId=\(negotiationId)&sessionId=\(sessionId)"
         print("[NegotiationService] getNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -142,7 +142,7 @@ class NegotiationService {
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/Accept?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Accept?listingId=\(negotiationId)&sessionId=\(sessionId)"
         print("[NegotiationService] acceptProposal URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -194,7 +194,7 @@ class NegotiationService {
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/Reject?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Reject?listingId=\(negotiationId)&sessionId=\(sessionId)"
         print("[NegotiationService] rejectNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -247,7 +247,7 @@ class NegotiationService {
         
         let isoTime = ISO8601DateFormatter().string(from: proposedTime)
         
-        let urlString = "\(baseURL)/Negotiations/Counter?negotiationId=\(negotiationId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(baseURL)/MeetingTime/Counter?listingId=\(negotiationId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -282,7 +282,7 @@ class NegotiationService {
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/Pay?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/ListingPayment/Pay?listingId=\(negotiationId)&sessionId=\(sessionId)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -337,7 +337,7 @@ class NegotiationService {
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/GetMyNegotiations?sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/GetMy?sessionId=\(sessionId)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -357,6 +357,170 @@ class NegotiationService {
             
             do {
                 let result = try JSONDecoder().decode(MyNegotiationsResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Propose Meeting Location
+    
+    func proposeMeetingLocation(listingId: String, latitude: Double, longitude: Double, locationName: String?, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/MeetingLocation/Propose"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "listingId": listingId,
+            "sessionId": sessionId,
+            "latitude": latitude,
+            "longitude": longitude,
+            "locationName": locationName ?? ""
+        ]
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(LocationResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Counter Meeting Location
+    
+    func counterMeetingLocation(listingId: String, latitude: Double, longitude: Double, locationName: String?, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/MeetingLocation/Counter"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "listingId": listingId,
+            "sessionId": sessionId,
+            "latitude": latitude,
+            "longitude": longitude,
+            "locationName": locationName ?? ""
+        ]
+        
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(LocationResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Accept Meeting Location
+    
+    func acceptMeetingLocation(listingId: String, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/MeetingLocation/Accept?listingId=\(listingId)&sessionId=\(sessionId)"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(LocationResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Reject Meeting Location
+    
+    func rejectMeetingLocation(listingId: String, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/MeetingLocation/Reject?listingId=\(listingId)&sessionId=\(sessionId)"
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let result = try JSONDecoder().decode(LocationResponse.self, from: data)
                 completion(.success(result))
             } catch {
                 completion(.failure(error))

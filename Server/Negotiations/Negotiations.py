@@ -9,6 +9,10 @@ from .CounterProposal import counter_proposal
 from .PayNegotiationFee import pay_negotiation_fee
 from .GetMyNegotiations import get_my_negotiations
 from .GetBuyerInfo import get_buyer_info
+from .ProposeMeetingLocation import propose_meeting_location
+from .CounterMeetingLocation import counter_meeting_location
+from .AcceptMeetingLocation import accept_meeting_location
+from .RejectMeetingLocation import reject_meeting_location
 
 # Create the Negotiations blueprint
 negotiations_bp = Blueprint('negotiations', __name__)
@@ -17,6 +21,29 @@ negotiations_bp = Blueprint('negotiations', __name__)
 @cross_origin()
 def ProposeNegotiation():
     """Buyer proposes initial meeting time for a listing"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        proposed_time = request.args.get('proposedTime')
+        
+        if not all([listing_id, session_id, proposed_time]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId, sessionId, and proposedTime are required'
+            })
+        
+        result = propose_negotiation(listing_id, session_id, proposed_time)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingTime/Propose', methods=['GET'])
+@cross_origin()
+def ProposeMeetingTime():
+    """Buyer proposes initial meeting time for a listing (refactored)"""
     try:
         from flask import request
         listing_id = request.args.get('listingId')
@@ -203,4 +230,247 @@ def GetBuyerInfo():
     except Exception as e:
         return Debugger(e)
 
+# ============================================================================
+# NEW REFACTORED ROUTES - Using MeetingTime and MeetingLocation prefixes
+# ============================================================================
 
+@negotiations_bp.route('/MeetingTime/Counter', methods=['GET'])
+@cross_origin()
+def CounterMeetingTime():
+    """Counter-propose a new meeting time (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        proposed_time = request.args.get('proposedTime')
+        
+        if not all([listing_id, session_id, proposed_time]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId, sessionId, and proposedTime are required'
+            })
+        
+        result = counter_proposal(listing_id, session_id, proposed_time)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingTime/Accept', methods=['GET'])
+@cross_origin()
+def AcceptMeetingTime():
+    """Accept the current meeting time proposal (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId and sessionId are required'
+            })
+        
+        result = accept_proposal(listing_id, session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingTime/Reject', methods=['GET'])
+@cross_origin()
+def RejectMeetingTime():
+    """Reject meeting time proposal (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId and sessionId are required'
+            })
+        
+        result = reject_negotiation(listing_id, session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingTime/Get', methods=['GET'])
+@cross_origin()
+def GetMeetingTimeDetails():
+    """Get meeting time negotiation details (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId and sessionId are required'
+            })
+        
+        result = get_negotiation(listing_id, session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingTime/GetMy', methods=['GET'])
+@cross_origin()
+def GetMyMeetingTimes():
+    """Get user's active meeting time negotiations (refactored)"""
+    try:
+        from flask import request
+        session_id = request.args.get('sessionId')
+        
+        if not session_id:
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'sessionId is required'
+            })
+        
+        result = get_my_negotiations(session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingLocation/Propose', methods=['POST'])
+@cross_origin()
+def ProposeMeetingLocation():
+    """Propose a meeting location (refactored)"""
+    try:
+        from flask import request
+        import json
+        
+        listing_id = request.args.get('listingId') or (request.json or {}).get('listingId')
+        session_id = request.args.get('sessionId') or (request.json or {}).get('sessionId')
+        latitude = request.args.get('latitude') or (request.json or {}).get('latitude')
+        longitude = request.args.get('longitude') or (request.json or {}).get('longitude')
+        location_name = request.args.get('locationName') or (request.json or {}).get('locationName')
+        
+        if not all([listing_id, session_id, latitude, longitude]):
+            return json.dumps({
+                'success': False,
+                'error': 'listingId, sessionId, latitude, and longitude are required'
+            })
+        
+        result = propose_meeting_location(listing_id, session_id, latitude, longitude, location_name)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingLocation/Counter', methods=['POST'])
+@cross_origin()
+def CounterMeetingLocation():
+    """Counter-propose a meeting location (refactored)"""
+    try:
+        from flask import request
+        import json
+        
+        listing_id = request.args.get('listingId') or (request.json or {}).get('listingId')
+        session_id = request.args.get('sessionId') or (request.json or {}).get('sessionId')
+        latitude = request.args.get('latitude') or (request.json or {}).get('latitude')
+        longitude = request.args.get('longitude') or (request.json or {}).get('longitude')
+        location_name = request.args.get('locationName') or (request.json or {}).get('locationName')
+        
+        if not all([listing_id, session_id, latitude, longitude]):
+            return json.dumps({
+                'success': False,
+                'error': 'listingId, sessionId, latitude, and longitude are required'
+            })
+        
+        result = counter_meeting_location(listing_id, session_id, latitude, longitude, location_name)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingLocation/Accept', methods=['GET'])
+@cross_origin()
+def AcceptMeetingLocation():
+    """Accept meeting location proposal (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId and sessionId are required'
+            })
+        
+        result = accept_meeting_location(listing_id, session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/MeetingLocation/Reject', methods=['GET'])
+@cross_origin()
+def RejectMeetingLocation():
+    """Reject meeting location proposal (refactored)"""
+    try:
+        from flask import request
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            import json
+            return json.dumps({
+                'success': False,
+                'error': 'listingId and sessionId are required'
+            })
+        
+        result = reject_meeting_location(listing_id, session_id)
+        return result
+        
+    except Exception as e:
+        return Debugger(e)
+
+@negotiations_bp.route('/ListingPayment/Pay', methods=['GET'])
+@cross_origin()
+def PayListingFee():
+    """Pay $2 listing fee (refactored)"""
+    try:
+        from flask import request, Response
+        import json
+        listing_id = request.args.get('listingId')
+        session_id = request.args.get('sessionId')
+        
+        if not all([listing_id, session_id]):
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'listingId and sessionId are required'
+                }),
+                mimetype='application/json'
+            )
+        
+        result = pay_negotiation_fee(listing_id, session_id)
+        return Response(result, mimetype='application/json')
+        
+    except Exception as e:
+        import json
+        print(f"[ListingPayment/Pay] Exception: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            json.dumps({
+                'success': False,
+                'error': f'Payment processing failed: {str(e)}'
+            }),
+            mimetype='application/json'
+        )

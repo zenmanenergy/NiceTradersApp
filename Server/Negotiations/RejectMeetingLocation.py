@@ -1,10 +1,11 @@
 import json
 import uuid
+from datetime import datetime
 from _Lib import Database
 
-def reject_negotiation(listing_id, session_id):
+def reject_meeting_location(listing_id, session_id):
     """
-    Reject time negotiation (ends the negotiation)
+    Reject the current location proposal
     
     Args:
         listing_id: ID of the listing
@@ -28,19 +29,32 @@ def reject_negotiation(listing_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get time negotiation for this listing
+        # Get location negotiation for this listing
         cursor.execute("""
-            SELECT time_negotiation_id, buyer_id, accepted_at, rejected_at
-            FROM listing_meeting_time
+            SELECT location_negotiation_id, buyer_id, accepted_at, rejected_at
+            FROM listing_meeting_location
             WHERE listing_id = %s
         """, (listing_id,))
         
-        time_neg = cursor.fetchone()
+        location_neg = cursor.fetchone()
         
-        if not time_neg:
+        if not location_neg:
             return json.dumps({
                 'success': False,
-                'error': 'No time proposal found for this listing'
+                'error': 'No location proposal found for this listing'
+            })
+        
+        # Check if already rejected or accepted
+        if location_neg['rejected_at'] is not None:
+            return json.dumps({
+                'success': False,
+                'error': 'This location proposal has already been rejected'
+            })
+        
+        if location_neg['accepted_at'] is not None:
+            return json.dumps({
+                'success': False,
+                'error': 'Cannot reject an accepted proposal'
             })
         
         # Get listing info
@@ -58,47 +72,27 @@ def reject_negotiation(listing_id, session_id):
         seller_id = listing['user_id']
         
         # Verify user is part of this negotiation
-        if user_id != seller_id and user_id != time_neg['buyer_id']:
+        if user_id != seller_id and user_id != location_neg['buyer_id']:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
-        # Check if already rejected or accepted
-        if time_neg['rejected_at'] is not None:
-            return json.dumps({
-                'success': False,
-                'error': 'This negotiation has already been rejected'
-            })
-        
-        if time_neg['accepted_at'] is not None:
-            return json.dumps({
-                'success': False,
-                'error': 'Cannot reject an accepted proposal'
-            })
-        
-        # Reject the time negotiation
+        # Reject the location negotiation
         cursor.execute("""
-            UPDATE listing_meeting_time
+            UPDATE listing_meeting_location
             SET rejected_at = NOW(), updated_at = NOW()
-            WHERE listing_id = %s
-        """, (listing_id,))
-        
-        # Clear buyer_id in listings table
-        cursor.execute("""
-            UPDATE listings
-            SET buyer_id = NULL
             WHERE listing_id = %s
         """, (listing_id,))
         
         connection.commit()
         
-        print(f"[Negotiations] RejectNegotiation success: listing_id={listing_id}, user_id={user_id}")
+        print(f"[Negotiations] RejectMeetingLocation success: listing_id={listing_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,
             'status': 'rejected',
-            'message': 'Negotiation rejected'
+            'message': 'Location proposal rejected'
         })
         
     except Exception as e:
@@ -106,12 +100,12 @@ def reject_negotiation(listing_id, session_id):
             connection.rollback()
         except:
             pass
-        print(f"[Negotiations] RejectNegotiation error: {str(e)}")
+        print(f"[Negotiations] RejectMeetingLocation error: {str(e)}")
         import traceback
         print(f"[Negotiations] Traceback: {traceback.format_exc()}")
         return json.dumps({
             'success': False,
-            'error': 'Failed to reject negotiation'
+            'error': 'Failed to reject location proposal'
         })
     
     finally:

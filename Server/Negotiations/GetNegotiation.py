@@ -1,13 +1,19 @@
 import json
 from _Lib import Database
+from _Lib.NegotiationStatus import (
+    get_time_negotiation_status,
+    get_location_negotiation_status,
+    get_payment_status,
+    get_negotiation_overall_status
+)
 from datetime import timezone
 
-def get_negotiation(negotiation_id, session_id):
+def get_negotiation(listing_id, session_id):
     """
-    Get negotiation details including buyer/seller info from negotiation_history
+    Get negotiation details from new normalized tables
     
     Args:
-        negotiation_id: ID of the negotiation
+        listing_id: ID of the listing
         session_id: User's session ID
     
     Returns:
@@ -28,50 +34,15 @@ def get_negotiation(negotiation_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details from negotiation_history table
-        cursor.execute("""
-            SELECT 
-                negotiation_id,
-                listing_id,
-                action,
-                proposed_time,
-                accepted_time,
-                proposed_location,
-                accepted_location,
-                proposed_by,
-                created_at,
-                proposed_latitude,
-                proposed_longitude,
-                accepted_latitude,
-                accepted_longitude,
-                notes
-            FROM negotiation_history
-            WHERE negotiation_id = %s
-            ORDER BY created_at ASC
-        """, (negotiation_id,))
-        
-        history_records = cursor.fetchall()
-        
-        if not history_records:
-            print(f"[Negotiations] GetNegotiation: No records found for negotiation_id {negotiation_id}")
-            return json.dumps({
-                'success': False,
-                'error': 'Negotiation not found'
-            })
-        
-        # Get listing_id and basic info from first record
-        listing_id = history_records[0]['listing_id']
-        
         # Get listing details
         cursor.execute("""
-            SELECT l.currency, l.amount, l.accept_currency, l.location, l.will_round_to_nearest_dollar, l.user_id
-            FROM listings l
-            WHERE l.listing_id = %s
+            SELECT currency, amount, accept_currency, location, will_round_to_nearest_dollar, user_id
+            FROM listings
+            WHERE listing_id = %s
         """, (listing_id,))
         
         listing = cursor.fetchone()
         if not listing:
-            print(f"[Negotiations] GetNegotiation: Listing not found for listing_id {listing_id}")
             return json.dumps({
                 'success': False,
                 'error': 'Listing not found'
@@ -79,126 +50,97 @@ def get_negotiation(negotiation_id, session_id):
         
         seller_id = listing['user_id']
         
-        # Get all participants (proposers) in negotiation
+        # Get time negotiation
         cursor.execute("""
-            SELECT DISTINCT proposed_by FROM negotiation_history
-            WHERE negotiation_id = %s
-        """, (negotiation_id,))
+            SELECT time_negotiation_id, buyer_id, proposed_by, meeting_time, accepted_at, rejected_at, created_at, updated_at
+            FROM listing_meeting_time
+            WHERE listing_id = %s
+        """, (listing_id,))
         
-        participants = cursor.fetchall()
-        participant_ids = [p['proposed_by'] for p in participants]
+        time_neg = cursor.fetchone()
         
-        # The buyer is the one who is NOT the seller
-        buyer_id = next((p for p in participant_ids if p != seller_id), None)
-        
-        if not buyer_id:
-            print(f"[Negotiations] GetNegotiation: Could not determine buyer_id")
+        if not time_neg:
             return json.dumps({
                 'success': False,
-                'error': 'Invalid negotiation state'
+                'error': 'No time proposal found for this listing'
             })
+        
+        buyer_id = time_neg['buyer_id']
         
         # Verify user is either buyer or seller
         if user_id not in (buyer_id, seller_id):
-            print(f"[Negotiations] GetNegotiation: User {user_id} not authorized for negotiation between {buyer_id} and {seller_id}")
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
+        # Get location negotiation (if exists)
+        cursor.execute("""
+            SELECT location_negotiation_id, proposed_by, meeting_location_lat, meeting_location_lng, 
+                   meeting_location_name, accepted_at, rejected_at
+            FROM listing_meeting_location
+            WHERE listing_id = %s
+        """, (listing_id,))
+        
+        location_neg = cursor.fetchone()
+        
+        # Get payment status
+        cursor.execute("""
+            SELECT payment_id, buyer_paid_at, seller_paid_at
+            FROM listing_payments
+            WHERE listing_id = %s
+        """, (listing_id,))
+        
+        payment = cursor.fetchone()
+        
         # Get buyer and seller user info
         cursor.execute("""
-            SELECT u.UserId, u.FirstName, u.LastName, u.Rating, u.TotalExchanges
-            FROM users u
-            WHERE u.UserId IN (%s, %s)
+            SELECT UserId, FirstName, LastName, Rating, TotalExchanges
+            FROM users
+            WHERE UserId IN (%s, %s)
         """, (buyer_id, seller_id))
         
         users = cursor.fetchall()
         buyer_info = next((u for u in users if u['UserId'] == buyer_id), None)
         seller_info = next((u for u in users if u['UserId'] == seller_id), None)
         
-        
         # Determine user's role
         user_role = 'buyer' if user_id == buyer_id else 'seller'
         
-        # Format history from records
-        history_formatted = []
-        current_proposed_time = None
-        proposed_by = None
+        # Calculate statuses
+        time_status = get_time_negotiation_status(time_neg)
+        location_status = get_location_negotiation_status(location_neg)
+        payment_status = get_payment_status(payment)
+        overall_status = get_negotiation_overall_status(time_neg, location_neg, payment)
         
-        for h in history_records:
-            proposed_time = h['proposed_time']
-            if proposed_time and proposed_time.tzinfo is None:
-                proposed_time = proposed_time.replace(tzinfo=timezone.utc)
-            
-            # Track the current proposed time (most recent proposal)
-            if h['action'] in ('initial_proposal', 'time_proposal', 'counter_proposal', 'location_proposal'):
-                current_proposed_time = proposed_time
-                proposed_by = h['proposed_by']
-            
-            history_formatted.append({
-                'action': h['action'],
-                'proposedTime': proposed_time.isoformat() if proposed_time else None,
-                'proposedLocation': h['proposed_location'],
-                'timestamp': h['created_at'].isoformat() if h['created_at'] else None,
-                'proposedBy': h['proposed_by'],
-                'notes': h['notes']
-            })
+        # Format meeting time with timezone
+        meeting_time = time_neg['meeting_time']
+        if meeting_time and meeting_time.tzinfo is None:
+            meeting_time = meeting_time.replace(tzinfo=timezone.utc)
         
-        # Determine current status based on latest action
-        latest_action = history_records[-1]['action'] if history_records else 'initial_proposal'
-        
-        status_mapping = {
-            'initial_proposal': 'proposed',
-            'time_proposal': 'proposed',
-            'location_proposal': 'proposed',
-            'counter_proposal': 'countered',
-            'accepted': 'agreed',
-            'accepted_time': 'agreed',
-            'accepted_location': 'agreed',
-            'rejected': 'rejected',
-            'buyer_paid': 'paid_partial',
-            'seller_paid': 'paid_partial',
-        }
-        ios_status = status_mapping.get(latest_action, latest_action)
-        
-        # Check if both have paid
-        has_buyer_paid = any(h['action'] == 'buyer_paid' for h in history_records)
-        has_seller_paid = any(h['action'] == 'seller_paid' for h in history_records)
-        
-        if has_buyer_paid and has_seller_paid:
-            ios_status = 'paid_complete'
-        
-        # Find the most recent accepted location (if any)
-        accepted_location = None
-        accepted_time = None
-        for h in reversed(history_records):
-            if h['action'] == 'accepted_location':
-                accepted_location = h['accepted_location']
-                break
-        
-        # Get last accepted time
-        for h in reversed(history_records):
-            if h['action'] in ('accepted_time', 'accepted_location'):
-                if h['accepted_time']:
-                    accepted_time = h['accepted_time']
-                    break
+        # Build location response if exists
+        location_response = None
+        if location_neg:
+            location_response = {
+                'latitude': float(location_neg['meeting_location_lat']),
+                'longitude': float(location_neg['meeting_location_lng']),
+                'name': location_neg['meeting_location_name'],
+                'proposedBy': location_neg['proposed_by'],
+                'status': location_status
+            }
         
         # Build response
         response = {
             'success': True,
             'negotiation': {
-                'negotiationId': negotiation_id,
                 'listingId': listing_id,
-                'status': ios_status,
-                'currentProposedTime': current_proposed_time.isoformat() if current_proposed_time else None,
-                'proposedBy': proposed_by,
-                'buyerPaid': has_buyer_paid,
-                'sellerPaid': has_seller_paid,
-                'agreementReachedAt': None,  # Not tracked in negotiation_history yet
-                'paymentDeadline': None,  # Not tracked in negotiation_history yet
-                'createdAt': history_records[0]['created_at'].isoformat() if history_records[0]['created_at'] else None,
-                'updatedAt': history_records[-1]['created_at'].isoformat() if history_records[-1]['created_at'] else None
+                'status': overall_status,
+                'currentProposedTime': meeting_time.isoformat() if meeting_time else None,
+                'proposedBy': time_neg['proposed_by'],
+                'buyerPaid': payment['buyer_paid_at'] is not None if payment else False,
+                'sellerPaid': payment['seller_paid_at'] is not None if payment else False,
+                'createdAt': time_neg['created_at'].isoformat() if time_neg['created_at'] else None,
+                'updatedAt': time_neg['updated_at'].isoformat() if time_neg['updated_at'] else None
             },
             'listing': {
                 'currency': listing['currency'],
@@ -207,25 +149,28 @@ def get_negotiation(negotiation_id, session_id):
                 'location': listing['location'],
                 'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
             },
+            'location': location_response,
             'buyer': {
                 'userId': buyer_id,
                 'firstName': buyer_info['FirstName'] if buyer_info else 'Unknown',
                 'lastName': buyer_info['LastName'] if buyer_info else 'Unknown',
-                'rating': float(buyer_info['Rating']) if buyer_info and buyer_info['Rating'] else 0,
+                'rating': float(buyer_info['Rating']) if buyer_info and buyer_info['Rating'] else 0.0,
                 'totalExchanges': buyer_info['TotalExchanges'] if buyer_info else 0
             },
             'seller': {
                 'userId': seller_id,
                 'firstName': seller_info['FirstName'] if seller_info else 'Unknown',
                 'lastName': seller_info['LastName'] if seller_info else 'Unknown',
-                'rating': float(seller_info['Rating']) if seller_info and seller_info['Rating'] else 0,
+                'rating': float(seller_info['Rating']) if seller_info and seller_info['Rating'] else 0.0,
                 'totalExchanges': seller_info['TotalExchanges'] if seller_info else 0
             },
             'userRole': user_role,
-            'history': history_formatted
+            'history': []
         }
         
-        print(f"[Negotiations] GetNegotiation success: negotiation_id={negotiation_id}, status={ios_status}, user_role={user_role}")
+        print(f"[Negotiations] GetNegotiation success: listing_id={listing_id}, status={overall_status}, user_role={user_role}")
+        return json.dumps(response)
+        print(f"[Negotiations] GetNegotiation success: listing_id={listing_id}, status={overall_status}, user_role={user_role}")
         return json.dumps(response)
         
     except Exception as e:

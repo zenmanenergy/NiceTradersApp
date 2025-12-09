@@ -52,13 +52,11 @@ def delete_listing(SessionId, ListingId, Permanent):
         
         # Check if there are any paid negotiations for this listing
         paid_check_query = """
-            SELECT COUNT(DISTINCT negotiation_id) as paid_count 
-            FROM negotiation_history 
+            SELECT COUNT(*) as paid_count 
+            FROM listing_payments 
             WHERE listing_id = %s 
-            AND action IN ('buyer_paid', 'seller_paid')
-            AND (SELECT COUNT(*) FROM negotiation_history nh2 
-                 WHERE nh2.negotiation_id = negotiation_history.negotiation_id 
-                 AND nh2.action IN ('buyer_paid', 'seller_paid')) >= 2
+            AND buyer_paid_at IS NOT NULL
+            AND seller_paid_at IS NOT NULL
         """
         cursor.execute(paid_check_query, (listing_id,))
         paid_result = cursor.fetchone()
@@ -72,10 +70,9 @@ def delete_listing(SessionId, ListingId, Permanent):
         
         # Get all negotiating/pending buyers to notify them
         notify_query = """
-            SELECT DISTINCT proposed_by FROM negotiation_history 
-            WHERE listing_id = %s 
-            AND action IN ('time_proposal', 'location_proposal', 'counter_proposal')
-            AND proposed_by != %s
+            SELECT DISTINCT lmt.buyer_id FROM listing_meeting_time lmt
+            WHERE lmt.listing_id = %s 
+            AND lmt.buyer_id != %s
         """
         cursor.execute(notify_query, (listing_id, user_id))
         buyers_to_notify = cursor.fetchall()

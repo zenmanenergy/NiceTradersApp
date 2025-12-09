@@ -67,22 +67,23 @@ def propose_negotiation(listing_id, session_id, proposed_time):
                 'error': 'Listing is not active'
             })
         
-        # Check if buyer already has an active time proposal for this listing
+        # Check if listing already has an active time proposal (UNIQUE constraint)
         cursor.execute("""
-            SELECT DISTINCT negotiation_id FROM negotiation_history
-            WHERE listing_id = %s 
-            AND action IN ('time_proposal', 'accepted_time')
-            AND proposed_by = %s
-            LIMIT 1
-        """, (listing_id, buyer_id))
+            SELECT time_negotiation_id, accepted_at, rejected_at
+            FROM listing_meeting_time
+            WHERE listing_id = %s
+        """, (listing_id,))
         
-        existing_proposal = cursor.fetchone()
+        existing_time_neg = cursor.fetchone()
         
-        if existing_proposal:
-            return json.dumps({
-                'success': False,
-                'error': 'You already have an active time proposal for this listing'
-            })
+        if existing_time_neg:
+            # If time negotiation exists and is not rejected, another proposal is in progress
+            if existing_time_neg['rejected_at'] is None:
+                return json.dumps({
+                    'success': False,
+                    'error': 'An active time proposal already exists for this listing'
+                })
+            # If rejected, we allow a new proposal (clean slate)
         
         # Parse and validate proposed time
         try:
@@ -100,19 +101,25 @@ def propose_negotiation(listing_id, session_id, proposed_time):
                 'error': 'Proposed time must be in the future'
             })
         
-        # Create a unique negotiation_id for this time proposal
-        negotiation_id = str(uuid.uuid4())
+        # Create a unique time_negotiation_id
+        time_negotiation_id = str(uuid.uuid4())
         
-        # Create initial time proposal in negotiation_history
-        history_id = str(uuid.uuid4())
+        # Delete old rejected record if exists (clean slate for re-proposal)
+        if existing_time_neg and existing_time_neg['rejected_at'] is not None:
+            cursor.execute("""
+                DELETE FROM listing_meeting_time
+                WHERE listing_id = %s
+            """, (listing_id,))
+        
+        # Create new time proposal in listing_meeting_time
         cursor.execute("""
-            INSERT INTO negotiation_history (
-                history_id, negotiation_id, listing_id, action, proposed_time, proposed_by, created_at
-            ) VALUES (%s, %s, %s, 'time_proposal', %s, %s, NOW())
-        """, (history_id, negotiation_id, listing_id, proposed_datetime, buyer_id))
+            INSERT INTO listing_meeting_time (
+                time_negotiation_id, listing_id, buyer_id, proposed_by, meeting_time, created_at, updated_at
+            ) VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+        """, (time_negotiation_id, listing_id, buyer_id, buyer_id, proposed_datetime))
         
         connection.commit()
-        print(f"[Negotiations] Created time proposal: {history_id} with negotiation_id: {negotiation_id}")
+        print(f"[Negotiations] Created time proposal: {time_negotiation_id}")
         
         # Get buyer's name for notification
         cursor.execute("""
@@ -130,7 +137,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
                 buyer_name=buyer_name,
                 proposed_time=proposed_time,
                 listing_id=listing_id,
-                negotiation_id=negotiation_id
+                negotiation_id=time_negotiation_id
                 # session_id is automatically fetched inside notification_service
             )
             print(f"[Negotiations] Sent APN notification to seller {seller_id}")
@@ -140,20 +147,23 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         
         return json.dumps({
             'success': True,
-            'negotiationId': negotiation_id,
+            'negotiationId': time_negotiation_id,
             'status': 'proposed',
             'proposedTime': proposed_time,
             'message': 'Time proposal sent successfully'
         })
         
     except Exception as e:
-        connection.rollback()
+        try:
+            connection.rollback()
+        except:
+            pass
         print(f"[Negotiations] ProposeNegotiation error: {str(e)}")
         import traceback
         print(f"[Negotiations] Traceback: {traceback.format_exc()}")
         return json.dumps({
             'success': False,
-            'error': f'Failed to create negotiation proposal: {str(e)}'
+            'error': f'Failed to create time proposal: {str(e)}'
         })
     
     finally:

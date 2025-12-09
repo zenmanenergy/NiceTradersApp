@@ -3,17 +3,17 @@ import uuid
 from datetime import datetime
 from _Lib import Database
 
-def counter_proposal(negotiation_id, session_id, proposed_time):
+def counter_proposal(listing_id, session_id, proposed_time):
     """
     Counter-propose a new meeting time
     
     Args:
-        negotiation_id: ID of the negotiation
+        listing_id: ID of the listing
         session_id: User's session ID
         proposed_time: New proposed meeting time (ISO 8601 format)
     
     Returns:
-        JSON response with updated negotiation
+        JSON response with updated time negotiation
     """
     cursor, connection = Database.ConnectToDatabase()
     
@@ -30,25 +30,24 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
         
         user_id = session_result['UserId']
         
-        # Get negotiation details from history
+        # Get time negotiation for this listing
         cursor.execute("""
-            SELECT DISTINCT negotiation_id, listing_id FROM negotiation_history
-            WHERE negotiation_id = %s
-            LIMIT 1
-        """, (negotiation_id,))
+            SELECT time_negotiation_id, buyer_id, proposed_by FROM listing_meeting_time
+            WHERE listing_id = %s
+        """, (listing_id,))
         
-        negotiation = cursor.fetchone()
+        time_neg = cursor.fetchone()
         
-        if not negotiation:
+        if not time_neg:
             return json.dumps({
                 'success': False,
-                'error': 'Negotiation not found'
+                'error': 'No time proposal found for this listing'
             })
         
-        # Get listing info to determine buyer/seller
+        # Get listing to find seller_id
         cursor.execute("""
             SELECT user_id FROM listings WHERE listing_id = %s
-        """, (negotiation['listing_id'],))
+        """, (listing_id,))
         
         listing = cursor.fetchone()
         if not listing:
@@ -58,41 +57,16 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
             })
         
         seller_id = listing['user_id']
-        buyer_id = None  # Will be determined from proposals
-        
-        # Get latest proposal to check state
-        cursor.execute("""
-            SELECT proposed_by FROM negotiation_history
-            WHERE negotiation_id = %s
-            ORDER BY created_at DESC
-            LIMIT 1
-        """, (negotiation_id,))
-        
-        last_proposal = cursor.fetchone()
-        if not last_proposal:
-            return json.dumps({
-                'success': False,
-                'error': 'No proposals found for this negotiation'
-            })
         
         # Verify user is part of this negotiation (either buyer or seller)
-        # Get all distinct proposers to find the buyer
-        cursor.execute("""
-            SELECT DISTINCT proposed_by FROM negotiation_history
-            WHERE negotiation_id = %s
-        """, (negotiation_id,))
-        
-        participants = cursor.fetchall()
-        participant_ids = [p['proposed_by'] for p in participants]
-        
-        # User must be either the seller or one of the proposers (buyers)
-        if user_id != seller_id and user_id not in participant_ids:
+        if user_id != seller_id and user_id != time_neg['buyer_id']:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
-        if user_id == last_proposal['proposed_by']:
+        # Cannot counter your own proposal
+        if user_id == time_neg['proposed_by']:
             return json.dumps({
                 'success': False,
                 'error': 'You cannot counter your own proposal'
@@ -114,27 +88,29 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
                 'error': 'Proposed time must be in the future'
             })
         
-        # Log counter-proposal to history
-        history_id = str(uuid.uuid4())
+        # Update time negotiation with new proposal
         cursor.execute("""
-            INSERT INTO negotiation_history (
-                history_id, negotiation_id, listing_id, action, proposed_time, proposed_by, created_at
-            ) VALUES (%s, %s, %s, 'counter_proposal', %s, %s, NOW())
-        """, (history_id, negotiation_id, negotiation['listing_id'], proposed_datetime, user_id))
+            UPDATE listing_meeting_time
+            SET meeting_time = %s, proposed_by = %s, accepted_at = NULL, updated_at = NOW()
+            WHERE listing_id = %s
+        """, (proposed_datetime, user_id, listing_id))
         
         connection.commit()
         
-        print(f"[Negotiations] CounterProposal success: negotiation_id={negotiation_id}, user_id={user_id}")
+        print(f"[Negotiations] CounterProposal success: listing_id={listing_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,
-            'status': 'countered',
+            'status': 'proposed',
             'proposedTime': proposed_time,
             'message': 'Counter-proposal sent'
         })
         
     except Exception as e:
-        connection.rollback()
+        try:
+            connection.rollback()
+        except:
+            pass
         print(f"[Negotiations] CounterProposal error: {str(e)}")
         import traceback
         print(f"[Negotiations] Traceback: {traceback.format_exc()}")

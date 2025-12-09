@@ -217,6 +217,7 @@ struct NegotiationDetailResponse: Codable {
     let success: Bool
     let negotiation: NegotiationInfo?
     let listing: ListingInfo?
+    let location: LocationInfo?
     let buyer: UserInfo?
     let seller: UserInfo?
     let userRole: String?
@@ -243,6 +244,14 @@ struct NegotiationDetailResponse: Codable {
         let acceptCurrency: String
         let location: String
         let willRoundToNearestDollar: Bool?
+    }
+    
+    struct LocationInfo: Codable {
+        let latitude: Double?
+        let longitude: Double?
+        let name: String?
+        let proposedBy: String?
+        let status: String?
     }
     
     struct UserInfo: Codable {
@@ -318,6 +327,7 @@ struct MyNegotiationItem: Codable, Identifiable {
     let status: NegotiationStatus
     let currentProposedTime: String
     let proposedBy: String
+    let actionRequired: Bool
     let buyerPaid: Bool
     let sellerPaid: Bool
     let agreementReachedAt: String?
@@ -325,6 +335,7 @@ struct MyNegotiationItem: Codable, Identifiable {
     let createdAt: String
     let updatedAt: String
     let listing: ListingInfo
+    let location: LocationInfo?
     let userRole: String
     let otherUser: OtherUserInfo
     
@@ -334,6 +345,7 @@ struct MyNegotiationItem: Codable, Identifiable {
         case status
         case currentProposedTime
         case proposedBy
+        case actionRequired
         case buyerPaid
         case sellerPaid
         case agreementReachedAt
@@ -341,6 +353,7 @@ struct MyNegotiationItem: Codable, Identifiable {
         case createdAt
         case updatedAt
         case listing
+        case location
         case userRole
         case otherUser
     }
@@ -351,6 +364,14 @@ struct MyNegotiationItem: Codable, Identifiable {
         let acceptCurrency: String
         let location: String
         let willRoundToNearestDollar: Bool?
+    }
+    
+    struct LocationInfo: Codable {
+        let latitude: Double?
+        let longitude: Double?
+        let name: String?
+        let proposedBy: String?
+        let status: String?
     }
     
     struct OtherUserInfo: Codable {
@@ -364,4 +385,21 @@ struct BuyerInfoResponse: Codable {
     let success: Bool
     let buyer: BuyerInfo?
     let error: String?
+}
+
+struct LocationResponse: Codable {
+    let success: Bool
+    let status: String?
+    let proposedLocation: LocationInfo?
+    let acceptedLocation: LocationInfo?
+    let message: String?
+    let error: String?
+    
+    struct LocationInfo: Codable {
+        let latitude: Double?
+        let longitude: Double?
+        let name: String?
+        let proposedBy: String?
+        let status: String?
+    }
 }

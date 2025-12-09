@@ -1,9 +1,16 @@
 import json
 from _Lib import Database
+from _Lib.NegotiationStatus import (
+    get_time_negotiation_status,
+    get_location_negotiation_status,
+    get_payment_status,
+    get_negotiation_overall_status,
+    action_required_for_user
+)
 
 def get_my_negotiations(session_id):
     """
-    Get user's active negotiations (as buyer or seller)
+    Get user's active negotiations (as buyer or seller) from new tables
     
     Args:
         session_id: User's session ID
@@ -27,144 +34,107 @@ def get_my_negotiations(session_id):
         user_id = session_result['UserId']
         print(f"[GetMyNegotiations] Processing request for user: {user_id}")
         
-        # Get all active negotiations where user is participant
-        # Use a subquery to get distinct negotiation_ids, avoiding duplicates
+        # Get all time negotiations where user is buyer or seller
+        # Query: buyer_id = user_id OR seller (via listing.user_id) = user_id
         cursor.execute("""
-            SELECT DISTINCT nh.negotiation_id, nh.listing_id
-            FROM negotiation_history nh
-            WHERE nh.action NOT IN ('rejected')
-            AND (
-                nh.proposed_by = %s
-                OR nh.listing_id IN (
-                    SELECT listing_id FROM listings WHERE user_id = %s
-                )
-            )
-            ORDER BY nh.negotiation_id DESC
+            SELECT DISTINCT lmt.time_negotiation_id, lmt.listing_id, lmt.buyer_id, lmt.proposed_by,
+                   lmt.meeting_time, lmt.accepted_at, lmt.rejected_at, 
+                   lmt.created_at, lmt.updated_at, l.user_id
+            FROM listing_meeting_time lmt
+            JOIN listings l ON lmt.listing_id = l.listing_id
+            WHERE lmt.buyer_id = %s OR l.user_id = %s
+            ORDER BY lmt.updated_at DESC
         """, (user_id, user_id))
         
-        negotiation_ids = cursor.fetchall()
-        print(f"[GetMyNegotiations] Found {len(negotiation_ids)} negotiations for user {user_id}")
+        time_negotiations = cursor.fetchall()
+        print(f"[GetMyNegotiations] Found {len(time_negotiations)} negotiations for user {user_id}")
         
         # Format negotiations
         negotiations_list = []
         
-        for neg in negotiation_ids:
-            negotiation_id = neg['negotiation_id']
-            listing_id = neg['listing_id']
-            print(f"[GetMyNegotiations] Processing negotiation {negotiation_id} for listing {listing_id}")
+        for time_neg in time_negotiations:
+            listing_id = time_neg['listing_id']
+            buyer_id = time_neg['buyer_id']
+            seller_id = time_neg['user_id']
+            
+            print(f"[GetMyNegotiations] Processing listing {listing_id}")
             
             # Get listing info
             cursor.execute("""
-                SELECT l.currency, l.amount, l.accept_currency, l.location, 
-                       l.will_round_to_nearest_dollar, l.user_id
-                FROM listings l
-                WHERE l.listing_id = %s
+                SELECT currency, amount, accept_currency, location, will_round_to_nearest_dollar
+                FROM listings
+                WHERE listing_id = %s
             """, (listing_id,))
             
             listing = cursor.fetchone()
             if not listing:
                 print(f"[GetMyNegotiations] Listing {listing_id} not found, skipping")
                 continue
-            print(f"[GetMyNegotiations] Found listing: {listing['currency']} {listing['amount']}")
             
-            seller_id = listing['user_id']
-            is_buyer = (user_id != seller_id)
+            # Determine user role
+            is_buyer = (user_id == buyer_id)
+            other_user_id = seller_id if is_buyer else buyer_id
             
-            # Get all participants
+            # Get location negotiation if exists
             cursor.execute("""
-                SELECT DISTINCT proposed_by FROM negotiation_history
-                WHERE negotiation_id = %s
-            """, (negotiation_id,))
+                SELECT location_negotiation_id, proposed_by, meeting_location_lat, 
+                       meeting_location_lng, meeting_location_name, accepted_at, rejected_at
+                FROM listing_meeting_location
+                WHERE listing_id = %s
+            """, (listing_id,))
             
-            participants = cursor.fetchall()
-            participant_ids = [p['proposed_by'] for p in participants]
+            location_neg = cursor.fetchone()
             
-            # Skip if user not involved
-            if user_id not in participant_ids and user_id != seller_id:
-                continue
-            
-            buyer_id = participant_ids[0] if participant_ids else None
-            
-            # Get last action to determine status
+            # Get payment status
             cursor.execute("""
-                SELECT action, proposed_time, accepted_time, proposed_by, created_at FROM negotiation_history
-                WHERE negotiation_id = %s
-                ORDER BY created_at DESC
-                LIMIT 1
-            """, (negotiation_id,))
+                SELECT payment_id, buyer_paid_at, seller_paid_at
+                FROM listing_payments
+                WHERE listing_id = %s
+            """, (listing_id,))
             
-            last_action = cursor.fetchone()
-            action = last_action['action'] if last_action else 'proposed'
+            payment = cursor.fetchone()
             
-            # Map action names to standardized status names for iOS compatibility
-            status_mapping = {
-                'time_proposal': 'proposed',
-                'counter_proposal': 'countered',
-                'accepted_time': 'agreed',
-                'accepted_location': 'agreed',
-                'location_proposal': 'proposed',
-                'rejected': 'rejected',
-                'buyer_paid': 'paid_partial',
-                'seller_paid': 'paid_partial',
-                'proposed': 'proposed',
-                'countered': 'countered',
-                'agreed': 'agreed'
-            }
+            # Calculate statuses using NegotiationStatus functions
+            time_status = get_time_negotiation_status(time_neg)
+            location_status = get_location_negotiation_status(location_neg)
+            payment_status = get_payment_status(payment)
+            overall_status = get_negotiation_overall_status(time_neg, location_neg, payment)
             
-            status = status_mapping.get(action, action)
+            # Only show negotiations that are not fully rejected/completed (filter for active)
+            if overall_status in ('rejected',):
+                continue  # Skip rejected negotiations
             
-            # Get the current meeting time (use accepted_time if agreed, otherwise proposed_time)
-            current_time = None
-            if last_action:
-                if status == 'agreed' and last_action['accepted_time']:
-                    current_time = last_action['accepted_time']
-                elif last_action['proposed_time']:
-                    current_time = last_action['proposed_time']
-                print(f"[GetMyNegotiations] Last action: {action} -> status: {status}, time: {current_time}")
-            else:
-                print(f"[GetMyNegotiations] No last action found")
+            # Check if action required
+            action_req = action_required_for_user(user_id, time_neg)
             
             # Get other user info
-            other_user_id = seller_id if is_buyer else buyer_id
             cursor.execute("""
                 SELECT FirstName, LastName, Rating FROM users WHERE UserId = %s
             """, (other_user_id,))
             
             other_user = cursor.fetchone()
             
-            # Get payment status
-            cursor.execute("""
-                SELECT COUNT(CASE WHEN action = 'buyer_paid' THEN 1 END) as buyer_paid_count,
-                       COUNT(CASE WHEN action = 'seller_paid' THEN 1 END) as seller_paid_count
-                FROM negotiation_history
-                WHERE negotiation_id = %s
-            """, (negotiation_id,))
-            
-            payment_check = cursor.fetchone()
-            buyer_paid = payment_check['buyer_paid_count'] > 0
-            seller_paid = payment_check['seller_paid_count'] > 0
-            
-            # Check if both parties have paid - if so, override status to paid_complete
-            if buyer_paid and seller_paid:
-                status = 'paid_complete'
-            
-            # Determine if action is required for current user
-            # Action required if: status is proposed/countered AND last proposal was NOT made by current user
-            action_required = False
-            if last_action and status in ('proposed', 'countered'):
-                action_required = (last_action['proposed_by'] != user_id)
+            # Build location object if exists
+            location_obj = None
+            if location_neg:
+                location_obj = {
+                    'latitude': float(location_neg['meeting_location_lat']),
+                    'longitude': float(location_neg['meeting_location_lng']),
+                    'name': location_neg['meeting_location_name'],
+                    'proposedBy': location_neg['proposed_by'],
+                    'status': location_status
+                }
             
             neg_dict = {
-                'negotiationId': negotiation_id,
                 'listingId': listing_id,
-                'status': status,
-                'currentProposedTime': current_time.isoformat() if current_time else None,
-                'proposedBy': last_action['proposed_by'] if last_action else None,
-                'actionRequired': action_required,
-                'buyerPaid': buyer_paid,
-                'sellerPaid': seller_paid,
-                'createdAt': last_action['created_at'].isoformat() if last_action else None,
-                'updatedAt': last_action['created_at'].isoformat() if last_action else None,
+                'status': overall_status,
+                'currentProposedTime': time_neg['meeting_time'].isoformat() if time_neg['meeting_time'] else None,
+                'proposedBy': time_neg.get('proposed_by'),  # Last who proposed
+                'actionRequired': action_req,
+                'buyerPaid': payment['buyer_paid_at'] is not None if payment else False,
+                'sellerPaid': payment['seller_paid_at'] is not None if payment else False,
+                'createdAt': time_neg['created_at'].isoformat() if time_neg['created_at'] else None,
+                'updatedAt': time_neg['updated_at'].isoformat() if time_neg['updated_at'] else None,
                 'listing': {
                     'currency': listing['currency'],
                     'amount': float(listing['amount']),
@@ -172,15 +142,16 @@ def get_my_negotiations(session_id):
                     'location': listing['location'],
                     'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
                 },
+                'location': location_obj,
                 'userRole': 'buyer' if is_buyer else 'seller',
                 'otherUser': {
                     'userId': other_user_id,
                     'name': f"{other_user['FirstName']} {other_user['LastName']}" if other_user else 'Unknown',
-                    'rating': float(other_user['Rating']) if other_user and other_user['Rating'] else 0
+                    'rating': float(other_user['Rating']) if other_user and other_user['Rating'] else 0.0
                 }
             }
             negotiations_list.append(neg_dict)
-            print(f"[GetMyNegotiations] Added negotiation {negotiation_id} to list, proposedTime: {neg_dict['currentProposedTime']}")
+            print(f"[GetMyNegotiations] Added listing {listing_id}, status: {overall_status}")
         
         print(f"[GetMyNegotiations] Returning {len(negotiations_list)} negotiations")
         return json.dumps({

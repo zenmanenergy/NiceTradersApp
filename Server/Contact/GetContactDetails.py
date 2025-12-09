@@ -156,11 +156,12 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
         if session_id:
             print(f"[GetContactDetails] Fetching meeting for listing_id: {listing_id}")
             meeting_query = """
-                SELECT DISTINCT nh.proposed_time, nh.created_at
-                FROM negotiation_history nh
-                WHERE nh.listing_id = %s 
-                AND nh.action IN ('accepted_time', 'accepted_location')
-                ORDER BY nh.created_at DESC
+                SELECT lmt.meeting_time, lmt.accepted_at,
+                       lml.meeting_location_lat, lml.meeting_location_lng, lml.meeting_location_name, lml.accepted_at as location_accepted_at
+                FROM listing_meeting_time lmt
+                LEFT JOIN listing_meeting_location lml ON lmt.listing_id = lml.listing_id
+                WHERE lmt.listing_id = %s 
+                AND lmt.accepted_at IS NOT NULL
                 LIMIT 1
             """
             try:
@@ -169,10 +170,10 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 print(f"[GetContactDetails] Meeting query result: {meeting_result}")
                 if meeting_result:
                     listing_data['current_meeting'] = {
-                        'location': '',  # Location comes from meeting_proposals if needed
-                        'time': meeting_result['proposed_time'].isoformat() if meeting_result['proposed_time'] else None,
+                        'location': meeting_result.get('meeting_location_name') or '',
+                        'time': meeting_result['meeting_time'].isoformat() if meeting_result['meeting_time'] else None,
                         'message': None,
-                        'agreed_at': meeting_result['created_at'].isoformat() if meeting_result['created_at'] else None
+                        'agreed_at': meeting_result['accepted_at'].isoformat() if meeting_result['accepted_at'] else None
                     }
                     print(f"[GetContactDetails] Meeting added to response: {listing_data['current_meeting']}")
                 else:

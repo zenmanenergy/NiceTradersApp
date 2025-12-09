@@ -1,18 +1,18 @@
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from _Lib import Database
 
-def accept_proposal(listing_id, session_id):
+def accept_meeting_location(listing_id, session_id):
     """
-    Accept the current time proposal
+    Accept the current location proposal
     
     Args:
         listing_id: ID of the listing
         session_id: User's session ID
     
     Returns:
-        JSON response with updated negotiation status
+        JSON response with accepted location
     """
     cursor, connection = Database.ConnectToDatabase()
     
@@ -29,32 +29,33 @@ def accept_proposal(listing_id, session_id):
         
         user_id = session_result['UserId']
         
-        # Get time negotiation for this listing
+        # Get location negotiation for this listing
         cursor.execute("""
-            SELECT time_negotiation_id, buyer_id, meeting_time, accepted_at, rejected_at
-            FROM listing_meeting_time
+            SELECT location_negotiation_id, buyer_id, meeting_location_lat, 
+                   meeting_location_lng, meeting_location_name, accepted_at, rejected_at
+            FROM listing_meeting_location
             WHERE listing_id = %s
         """, (listing_id,))
         
-        time_neg = cursor.fetchone()
+        location_neg = cursor.fetchone()
         
-        if not time_neg:
+        if not location_neg:
             return json.dumps({
                 'success': False,
-                'error': 'No time proposal found for this listing'
+                'error': 'No location proposal found for this listing'
             })
         
         # Check if already accepted or rejected
-        if time_neg['accepted_at'] is not None:
+        if location_neg['accepted_at'] is not None:
             return json.dumps({
                 'success': False,
-                'error': 'This time proposal has already been accepted'
+                'error': 'This location proposal has already been accepted'
             })
         
-        if time_neg['rejected_at'] is not None:
+        if location_neg['rejected_at'] is not None:
             return json.dumps({
                 'success': False,
-                'error': 'This time proposal has been rejected'
+                'error': 'This location proposal has been rejected'
             })
         
         # Get listing to verify user is part of negotiation
@@ -71,38 +72,33 @@ def accept_proposal(listing_id, session_id):
         
         seller_id = listing['user_id']
         
-        # Verify user is part of this negotiation (buyer or seller)
-        if user_id != seller_id and user_id != time_neg['buyer_id']:
+        # Verify user is part of this negotiation
+        if user_id != seller_id and user_id != location_neg['buyer_id']:
             return json.dumps({
                 'success': False,
                 'error': 'You do not have access to this negotiation'
             })
         
-        # Accept the time proposal
+        # Accept the location proposal
         cursor.execute("""
-            UPDATE listing_meeting_time
+            UPDATE listing_meeting_location
             SET accepted_at = NOW(), updated_at = NOW()
             WHERE listing_id = %s
         """, (listing_id,))
         
-        # Set buyer_id in listings table (mark buyer as winner)
-        cursor.execute("""
-            UPDATE listings
-            SET buyer_id = %s
-            WHERE listing_id = %s
-        """, (time_neg['buyer_id'], listing_id))
-        
         connection.commit()
         
-        agreement_time = datetime.now()
-        
-        print(f"[Negotiations] AcceptProposal success: listing_id={listing_id}, user_id={user_id}")
+        print(f"[Negotiations] AcceptMeetingLocation success: listing_id={listing_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,
             'status': 'agreed',
-            'agreementReachedAt': agreement_time.isoformat(),
-            'message': 'Meeting time accepted. Location negotiation phase begins.'
+            'acceptedLocation': {
+                'latitude': float(location_neg['meeting_location_lat']) if location_neg['meeting_location_lat'] else None,
+                'longitude': float(location_neg['meeting_location_lng']) if location_neg['meeting_location_lng'] else None,
+                'name': location_neg['meeting_location_name']
+            },
+            'message': 'Meeting location accepted. Payment phase begins.'
         })
         
     except Exception as e:
@@ -110,12 +106,12 @@ def accept_proposal(listing_id, session_id):
             connection.rollback()
         except:
             pass
-        print(f"[Negotiations] AcceptProposal error: {str(e)}")
+        print(f"[Negotiations] AcceptMeetingLocation error: {str(e)}")
         import traceback
         print(f"[Negotiations] Traceback: {traceback.format_exc()}")
         return json.dumps({
             'success': False,
-            'error': 'Failed to accept proposal'
+            'error': 'Failed to accept location proposal'
         })
     
     finally:
