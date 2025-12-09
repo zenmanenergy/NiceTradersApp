@@ -84,32 +84,50 @@ class NegotiationService {
     
     func getNegotiation(negotiationId: String, completion: @escaping (Result<NegotiationDetailResponse, Error>) -> Void) {
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("[NegotiationService] Error: No active session")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
         let urlString = "\(baseURL)/Negotiations/Get?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        print("[NegotiationService] getNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
+            print("[NegotiationService] Error: Invalid URL")
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("[NegotiationService] Response received for negotiationId: \(negotiationId)")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("[NegotiationService] HTTP Status: \(httpResponse.statusCode)")
+            }
+            
             if let error = error {
+                print("[NegotiationService] Network error: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
             
             guard let data = data else {
+                print("[NegotiationService] Error: No data received")
                 completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
             }
             
+            // Log raw response data
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[NegotiationService] Raw response: \(jsonString.prefix(500))")
+            }
+            
             do {
                 let result = try JSONDecoder().decode(NegotiationDetailResponse.self, from: data)
+                print("[NegotiationService] Successfully decoded NegotiationDetailResponse")
                 completion(.success(result))
             } catch {
+                print("[NegotiationService] Decoding error: \(error)")
                 completion(.failure(error))
             }
         }.resume()
@@ -119,32 +137,49 @@ class NegotiationService {
     
     func acceptProposal(negotiationId: String, completion: @escaping (Result<AcceptResponse, Error>) -> Void) {
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("[NegotiationService] Error: No active session for acceptProposal")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
         let urlString = "\(baseURL)/Negotiations/Accept?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        print("[NegotiationService] acceptProposal URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
+            print("[NegotiationService] Error: Invalid URL for acceptProposal")
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("[NegotiationService] acceptProposal response received")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("[NegotiationService] acceptProposal HTTP Status: \(httpResponse.statusCode)")
+            }
+            
             if let error = error {
+                print("[NegotiationService] acceptProposal network error: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
             
             guard let data = data else {
+                print("[NegotiationService] acceptProposal error: No data received")
                 completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
             }
             
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[NegotiationService] acceptProposal raw response: \(jsonString.prefix(500))")
+            }
+            
             do {
                 let result = try JSONDecoder().decode(AcceptResponse.self, from: data)
+                print("[NegotiationService] acceptProposal successfully decoded")
                 completion(.success(result))
             } catch {
+                print("[NegotiationService] acceptProposal decoding error: \(error)")
                 completion(.failure(error))
             }
         }.resume()
@@ -154,32 +189,49 @@ class NegotiationService {
     
     func rejectNegotiation(negotiationId: String, completion: @escaping (Result<RejectResponse, Error>) -> Void) {
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("[NegotiationService] Error: No active session for rejectNegotiation")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
         let urlString = "\(baseURL)/Negotiations/Reject?negotiationId=\(negotiationId)&sessionId=\(sessionId)"
+        print("[NegotiationService] rejectNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
+            print("[NegotiationService] Error: Invalid URL for rejectNegotiation")
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("[NegotiationService] rejectNegotiation response received")
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("[NegotiationService] rejectNegotiation HTTP Status: \(httpResponse.statusCode)")
+            }
+            
             if let error = error {
+                print("[NegotiationService] rejectNegotiation network error: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
             
             guard let data = data else {
+                print("[NegotiationService] rejectNegotiation error: No data received")
                 completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
             }
             
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[NegotiationService] rejectNegotiation raw response: \(jsonString.prefix(500))")
+            }
+            
             do {
                 let result = try JSONDecoder().decode(RejectResponse.self, from: data)
+                print("[NegotiationService] rejectNegotiation successfully decoded")
                 completion(.success(result))
             } catch {
+                print("[NegotiationService] rejectNegotiation decoding error: \(error)")
                 completion(.failure(error))
             }
         }.resume()

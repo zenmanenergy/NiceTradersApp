@@ -44,22 +44,44 @@ def accept_proposal(negotiation_id, session_id):
                 'error': 'Negotiation not found'
             })
         
+        # Get the most recent proposal to get the proposed_time
+        cursor.execute("""
+            SELECT proposed_time FROM negotiation_history
+            WHERE negotiation_id = %s AND action IN ('time_proposal', 'counter_proposal')
+            ORDER BY created_at DESC
+            LIMIT 1
+        """, (negotiation_id,))
+        
+        proposal = cursor.fetchone()
+        if not proposal or not proposal['proposed_time']:
+            return json.dumps({
+                'success': False,
+                'error': 'No valid proposal found to accept'
+            })
+        
+        proposed_time = proposal['proposed_time']
+        
         # Create acceptance record in negotiation_history
         history_id = str(uuid.uuid4())
+        agreement_time = datetime.now()
+        payment_deadline = agreement_time + timedelta(hours=6)
+        
         cursor.execute("""
             INSERT INTO negotiation_history (
-                history_id, negotiation_id, listing_id, action, proposed_by, created_at
-            ) VALUES (%s, %s, %s, 'accepted', %s, NOW())
-        """, (history_id, negotiation_id, negotiation['listing_id'], user_id))
+                history_id, negotiation_id, listing_id, action, accepted_time, proposed_by, created_at
+            ) VALUES (%s, %s, %s, 'accepted_time', %s, %s, NOW())
+        """, (history_id, negotiation_id, negotiation['listing_id'], proposed_time, user_id))
         
         connection.commit()
+        
+        print(f"[Negotiations] AcceptProposal success: negotiation_id={negotiation_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,
             'status': 'agreed',
             'agreementReachedAt': agreement_time.isoformat(),
             'paymentDeadline': payment_deadline.isoformat(),
-            'message': 'Proposal accepted. Both parties must pay $2 within 6 hours.'
+            'message': 'Proposal accepted. Both parties must pay within 6 hours.'
         })
         
     except Exception as e:

@@ -91,14 +91,18 @@ struct NegotiationHistoryEntry: Codable, Identifiable {
     let id = UUID()
     let action: String
     let proposedTime: String?
+    let proposedLocation: String?
     let timestamp: String
-    let userName: String
+    let proposedBy: String
+    let notes: String?
     
     enum CodingKeys: String, CodingKey {
         case action
         case proposedTime
+        case proposedLocation
         case timestamp
-        case userName
+        case proposedBy
+        case notes
     }
 }
 

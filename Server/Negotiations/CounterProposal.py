@@ -47,7 +47,7 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
         
         # Get listing info to determine buyer/seller
         cursor.execute("""
-            SELECT created_by FROM listings WHERE ListingId = %s
+            SELECT user_id FROM listings WHERE listing_id = %s
         """, (negotiation['listing_id'],))
         
         listing = cursor.fetchone()
@@ -57,7 +57,7 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
                 'error': 'Listing not found'
             })
         
-        seller_id = listing['created_by']
+        seller_id = listing['user_id']
         
         # Get latest proposal to check state
         cursor.execute("""
@@ -115,11 +115,13 @@ def counter_proposal(negotiation_id, session_id, proposed_time):
         history_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO negotiation_history (
-                history_id, negotiation_id, action, proposed_time, proposed_by
-            ) VALUES (%s, %s, 'counter_proposal', %s, %s)
-        """, (history_id, negotiation_id, proposed_datetime, user_id))
+                history_id, negotiation_id, listing_id, action, proposed_time, proposed_by, created_at
+            ) VALUES (%s, %s, %s, 'counter_proposal', %s, %s, NOW())
+        """, (history_id, negotiation_id, negotiation['listing_id'], proposed_datetime, user_id))
         
         connection.commit()
+        
+        print(f"[Negotiations] CounterProposal success: negotiation_id={negotiation_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,

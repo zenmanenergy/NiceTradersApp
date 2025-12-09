@@ -28,15 +28,18 @@ def get_my_negotiations(session_id):
         print(f"[GetMyNegotiations] Processing request for user: {user_id}")
         
         # Get all active negotiations where user is participant
+        # Use a subquery to get distinct negotiation_ids, avoiding duplicates
         cursor.execute("""
-            SELECT DISTINCT nh.negotiation_id, nh.listing_id, nh.created_at
+            SELECT DISTINCT nh.negotiation_id, nh.listing_id
             FROM negotiation_history nh
-            WHERE nh.proposed_by = %s
-            OR nh.listing_id IN (
-                SELECT listing_id FROM listings WHERE user_id = %s
+            WHERE nh.action NOT IN ('rejected')
+            AND (
+                nh.proposed_by = %s
+                OR nh.listing_id IN (
+                    SELECT listing_id FROM listings WHERE user_id = %s
+                )
             )
-            AND nh.action NOT IN ('rejected')
-            ORDER BY nh.created_at DESC
+            ORDER BY nh.negotiation_id DESC
         """, (user_id, user_id))
         
         negotiation_ids = cursor.fetchall()
@@ -84,7 +87,7 @@ def get_my_negotiations(session_id):
             
             # Get last action to determine status
             cursor.execute("""
-                SELECT action, proposed_time, created_at FROM negotiation_history
+                SELECT action, proposed_time, accepted_time, created_at FROM negotiation_history
                 WHERE negotiation_id = %s
                 ORDER BY created_at DESC
                 LIMIT 1
@@ -109,8 +112,15 @@ def get_my_negotiations(session_id):
             }
             
             status = status_mapping.get(action, action)
+            
+            # Get the current meeting time (use accepted_time if agreed, otherwise proposed_time)
+            current_time = None
             if last_action:
-                print(f"[GetMyNegotiations] Last action: {action} -> status: {status}, proposed_time: {last_action['proposed_time']}")
+                if status == 'agreed' and last_action['accepted_time']:
+                    current_time = last_action['accepted_time']
+                elif last_action['proposed_time']:
+                    current_time = last_action['proposed_time']
+                print(f"[GetMyNegotiations] Last action: {action} -> status: {status}, time: {current_time}")
             else:
                 print(f"[GetMyNegotiations] No last action found")
             
@@ -138,7 +148,7 @@ def get_my_negotiations(session_id):
                 'negotiationId': negotiation_id,
                 'listingId': listing_id,
                 'status': status,
-                'currentProposedTime': last_action['proposed_time'].isoformat() if last_action and last_action['proposed_time'] else None,
+                'currentProposedTime': current_time.isoformat() if current_time else None,
                 'buyerPaid': buyer_paid,
                 'sellerPaid': seller_paid,
                 'createdAt': last_action['created_at'].isoformat() if last_action else None,

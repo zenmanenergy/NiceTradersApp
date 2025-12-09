@@ -506,7 +506,6 @@ CREATE TABLE IF NOT EXISTS user_credits (
     INDEX idx_expires_at (expires_at),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE SET NULL,
     FOREIGN KEY (applied_to_negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

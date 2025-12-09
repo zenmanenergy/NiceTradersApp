@@ -74,12 +74,33 @@ struct NegotiationDetailView: View {
                     }
                     .padding()
                 }
+            } else {
+                // Fallback for blank state
+                VStack(spacing: 16) {
+                    Image(systemName: "questionmark.circle")
+                        .font(.largeTitle)
+                        .foregroundColor(.gray)
+                    Text("[NegotiationDetailView] Unexpected State")
+                        .font(.headline)
+                    Text("isLoading: \(isLoading) | hasNegotiation: \(negotiation != nil) | hasError: \(errorMessage != nil)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Text("negotiationId: \(negotiationId)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                    Button(localizationManager.localize("RETRY")) {
+                        loadNegotiation()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
             }
         }
         .navigationTitle(localizationManager.localize("NEGOTIATION_DETAILS"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            print("VIEW: NegotiationDetailView")
+            print("[NegotiationDetailView] onAppear called with negotiationId: \(negotiationId)")
+            print("[NegotiationDetailView] Current state - isLoading: \(isLoading), negotiation: \(negotiation != nil), errorMessage: \(errorMessage ?? "nil")")
             loadNegotiation()
         }
         .sheet(isPresented: $showCounterProposal) {
@@ -416,10 +437,11 @@ struct NegotiationDetailView: View {
             ForEach(negotiation.history) { entry in
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: iconForAction(entry.action))
-                        .foregroundColor(.blue)
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(entry.userName)
+                        // Get user name from proposedBy (either buyer or seller)
+                        let proposer = entry.proposedBy == negotiation.buyer.userId ? negotiation.buyer : negotiation.seller
+                        Text("\(proposer.firstName) \(proposer.lastName)")
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         Text(labelForAction(entry.action))
@@ -429,6 +451,17 @@ struct NegotiationDetailView: View {
                             Text(NegotiationService.formatDate(time))
                                 .font(.caption)
                                 .foregroundColor(.blue)
+                        }
+                        if let location = entry.proposedLocation {
+                            Text(location)
+                                .font(.caption)
+                                .foregroundColor(.green)
+                        }
+                        if let notes = entry.notes {
+                            Text(notes)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
                         }
                         Text(NegotiationService.formatDate(entry.timestamp))
                             .font(.caption2)
@@ -452,18 +485,28 @@ struct NegotiationDetailView: View {
         isLoading = true
         errorMessage = nil
         
+        print("[NegotiationDetailView] Loading negotiation ID: \(negotiationId)")
+        
         NegotiationService.shared.getNegotiation(negotiationId: negotiationId) { result in
             DispatchQueue.main.async {
                 isLoading = false
                 
                 switch result {
                 case .success(let response):
+                    print("[NegotiationDetailView] API Response received: success=\(response.success)")
+                    print("[NegotiationDetailView] Response data: \(response)")
+                    
                     if response.success, let neg = response.toNegotiationDetail() {
+                        print("[NegotiationDetailView] Successfully converted to NegotiationDetail")
                         negotiation = neg
                     } else {
-                        errorMessage = response.error ?? localizationManager.localize("UNKNOWN_ERROR")
+                        let errorMsg = response.error ?? localizationManager.localize("UNKNOWN_ERROR")
+                        print("[NegotiationDetailView] API returned error: \(errorMsg)")
+                        errorMessage = errorMsg
                     }
                 case .failure(let error):
+                    print("[NegotiationDetailView] Network error: \(error.localizedDescription)")
+                    print("[NegotiationDetailView] Full error: \(error)")
                     errorMessage = error.localizedDescription
                 }
             }
@@ -473,20 +516,25 @@ struct NegotiationDetailView: View {
     private func acceptProposal() {
         isProcessing = true
         
+        print("[NegotiationDetailView] acceptProposal called for negotiationId: \(negotiationId)")
+        
         NegotiationService.shared.acceptProposal(negotiationId: negotiationId) { result in
             DispatchQueue.main.async {
                 isProcessing = false
                 
                 switch result {
                 case .success(let response):
+                    print("[NegotiationDetailView] acceptProposal success response: \(response)")
                     if response.success {
                         actionMessage = response.message
                         loadNegotiation()
                     } else {
                         errorMessage = response.error
+                        print("[NegotiationDetailView] acceptProposal error: \(response.error ?? "unknown")")
                     }
                 case .failure(let error):
                     errorMessage = error.localizedDescription
+                    print("[NegotiationDetailView] acceptProposal failure: \(error)")
                 }
             }
         }
@@ -494,6 +542,8 @@ struct NegotiationDetailView: View {
     
     private func rejectNegotiation() {
         isProcessing = true
+        
+        print("[NegotiationDetailView] rejectNegotiation called for negotiationId: \(negotiationId)")
         
         NegotiationService.shared.rejectNegotiation(negotiationId: negotiationId) { result in
             DispatchQueue.main.async {

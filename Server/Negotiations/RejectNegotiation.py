@@ -45,7 +45,7 @@ def reject_negotiation(negotiation_id, session_id):
         
         # Get listing info to determine buyer/seller
         cursor.execute("""
-            SELECT created_by FROM listings WHERE ListingId = %s
+            SELECT user_id FROM listings WHERE listing_id = %s
         """, (negotiation['listing_id'],))
         
         listing = cursor.fetchone()
@@ -90,11 +90,13 @@ def reject_negotiation(negotiation_id, session_id):
         history_id = str(uuid.uuid4())
         cursor.execute("""
             INSERT INTO negotiation_history (
-                history_id, negotiation_id, action, proposed_by
-            ) VALUES (%s, %s, 'rejected', %s)
-        """, (history_id, negotiation_id, user_id))
+                history_id, negotiation_id, listing_id, action, proposed_by, created_at
+            ) VALUES (%s, %s, %s, 'rejected', %s, NOW())
+        """, (history_id, negotiation_id, negotiation['listing_id'], user_id))
         
         connection.commit()
+        
+        print(f"[Negotiations] RejectNegotiation success: negotiation_id={negotiation_id}, user_id={user_id}")
         
         return json.dumps({
             'success': True,

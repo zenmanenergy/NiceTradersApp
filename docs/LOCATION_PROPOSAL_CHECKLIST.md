@@ -123,17 +123,17 @@ The process involves both users' devices (iOS) and the backend server.
 - [ ] **APN Notification**: Receive notification that User B proposed a time
   - Message: "User B proposed to meet on Dec 15 at 2:00 PM"
 - [x] **Navigate to Negotiation**: Open app or go to Dashboard
-- [ ] **View Pending Proposal**: Show listing with pending proposal details
+- [x] **View Pending Proposal**: Show listing with pending proposal details
   - Show proposed time
   - Show User B's name and rating
-- [ ] **Response Options**: Three buttons available:
+- [x] **Response Options**: Three buttons available:
   - Accept button
   - Reject button
   - Counter-propose button
 
 ### Scenario 3A: User A Accepts the Time Proposal
 
-- [ ] **UI - Accept Button Tapped**: User A taps "Accept" button
+- [x] **UI - Accept Button Tapped**: User A taps "Accept" button
 - [ ] **Client Network Request**: App calls `/Negotiations/Respond` endpoint with:
   - `negotiationId` (or `proposalId`)
   - `sessionId` (User A's session)
