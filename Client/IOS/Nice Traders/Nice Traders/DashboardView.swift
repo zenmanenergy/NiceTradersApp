@@ -295,29 +295,58 @@ struct DashboardView: View {
                 
                 // Process active exchanges from dashboard response
                 if let activeExchangesData = dashboardData["activeExchanges"] as? [[String: Any]] {
+                    print("[DashboardView] Found \(activeExchangesData.count) active exchanges in response")
                     let dashboardExchanges = activeExchangesData.compactMap { exchangeDict -> ActiveExchange? in
-                        guard let listingId = exchangeDict["listingId"] as? String,
-                              let currency = exchangeDict["currency"] as? String,
-                              let acceptCurrency = exchangeDict["acceptCurrency"] as? String,
-                              let location = exchangeDict["location"] as? String else {
+                        guard let listingId = exchangeDict["listingId"] as? String else {
+                            print("[DashboardView] Missing listingId in exchange")
+                            return nil
+                        }
+                        
+                        // Try to get listing data from nested 'listing' object, fallback to top level
+                        let listingData: [String: Any]
+                        if let nested = exchangeDict["listing"] as? [String: Any] {
+                            print("[DashboardView] Using nested listing object for \(listingId)")
+                            listingData = nested
+                        } else {
+                            print("[DashboardView] Using top-level fields for \(listingId)")
+                            listingData = exchangeDict
+                        }
+                        
+                        guard let currency = listingData["currency"] as? String else {
+                            print("[DashboardView] Missing currency in listing for \(listingId)")
+                            return nil
+                        }
+                        guard let acceptCurrency = listingData["acceptCurrency"] as? String ?? listingData["accept_currency"] as? String else {
+                            print("[DashboardView] Missing acceptCurrency/accept_currency in listing for \(listingId)")
+                            return nil
+                        }
+                        guard let location = listingData["location"] as? String else {
+                            print("[DashboardView] Missing location in listing for \(listingId)")
                             return nil
                         }
                         
                         let amount: Double
-                        if let amountInt = exchangeDict["amount"] as? Int {
+                        if let amountInt = listingData["amount"] as? Int {
                             amount = Double(amountInt)
-                        } else if let amountDouble = exchangeDict["amount"] as? Double {
+                        } else if let amountDouble = listingData["amount"] as? Double {
                             amount = amountDouble
                         } else {
+                            print("[DashboardView] Missing/invalid amount in listing for \(listingId)")
                             return nil
                         }
                         
+                        let latitude = (listingData["latitude"] as? Double) ?? 0.0
+                        let longitude = (listingData["longitude"] as? Double) ?? 0.0
+                        let radius = (listingData["radius"] as? Int) ?? 0
+                        
+                        print("[DashboardView] Processing exchange \(listingId): currency=\(currency), amount=\(amount), location=\(location), lat=\(latitude), lng=\(longitude), radius=\(radius)")
+                        
                         let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
-                        let willRound = (exchangeDict["willRoundToNearestDollar"] as? Bool) ?? false
+                        let willRound = (listingData["willRoundToNearestDollar"] as? Bool) ?? (listingData["will_round_to_nearest_dollar"] as? Bool) ?? false
                         let userRole = (exchangeDict["userRole"] as? String) ?? "buyer"
                         let otherUser = exchangeDict["otherUser"] as? [String: Any]
                         let otherUserName = otherUser?["name"] as? String ?? "Unknown User"
-                        let negotiationStatus = (exchangeDict["negotiationStatus"] as? String) ?? "proposed"
+                        let negotiationStatus = (exchangeDict["negotiationStatus"] as? String) ?? (exchangeDict["status"] as? String) ?? "proposed"
                         let actionRequired = (exchangeDict["actionRequired"] as? Bool) ?? false
                         
                         let exchangeType: ActiveExchange.ExchangeType = userRole == "buyer" ? .buyer : .seller
@@ -330,6 +359,9 @@ struct DashboardView: View {
                             convertedAmount: convertedAmount,
                             traderName: otherUserName,
                             location: location,
+                            latitude: latitude,
+                            longitude: longitude,
+                            radius: radius,
                             type: exchangeType,
                             willRoundToNearestDollar: willRound,
                             meetingTime: nil,
@@ -338,7 +370,10 @@ struct DashboardView: View {
                         )
                     }
                     
+                    print("[DashboardView] Successfully parsed \(dashboardExchanges.count) exchanges")
                     self.allActiveExchanges.append(contentsOf: dashboardExchanges)
+                } else {
+                    print("[DashboardView] No activeExchanges found in response or wrong type")
                 }
             } else {
             }
@@ -379,6 +414,9 @@ struct DashboardView: View {
                 let willRound = (listing["will_round_to_nearest_dollar"] as? Bool) ?? false
                 let meetingTime = contact["current_meeting"] as? [String: Any] ?? nil
                 let meetingTimeStr = (meetingTime?["time"] as? String) ?? nil
+                let latitude = (listing["latitude"] as? Double) ?? 0.0
+                let longitude = (listing["longitude"] as? Double) ?? 0.0
+                let radius = (listing["radius"] as? Int) ?? 0
                 
                 return ActiveExchange(
                     id: listingId,
@@ -388,6 +426,9 @@ struct DashboardView: View {
                     convertedAmount: convertedAmount,
                     traderName: sellerName,
                     location: location,
+                    latitude: latitude,
+                    longitude: longitude,
+                    radius: radius,
                     type: .buyer,
                     willRoundToNearestDollar: willRound,
                     meetingTime: meetingTimeStr,
@@ -439,6 +480,9 @@ struct DashboardView: View {
                 // Calculate converted amount using exchange rates
                 let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
                 let willRound = (listing["will_round_to_nearest_dollar"] as? Bool) ?? false
+                let latitude = (listing["latitude"] as? Double) ?? 0.0
+                let longitude = (listing["longitude"] as? Double) ?? 0.0
+                let radius = (listing["radius"] as? Int) ?? 0
                 
                 return ActiveExchange(
                     id: listingId,
@@ -448,6 +492,9 @@ struct DashboardView: View {
                     convertedAmount: convertedAmount,
                     traderName: buyerName,
                     location: location,
+                    latitude: latitude,
+                    longitude: longitude,
+                    radius: radius,
                     type: .seller,
                     willRoundToNearestDollar: willRound,
                     meetingTime: nil,
@@ -998,9 +1045,9 @@ struct ActiveExchangesSection: View {
                                 preferredCurrency: exchange.currencyTo,
                                 meetingPreference: nil,
                                 location: exchange.location,
-                                latitude: 0.0,
-                                longitude: 0.0,
-                                radius: 0,
+                                latitude: exchange.latitude,
+                                longitude: exchange.longitude,
+                                radius: exchange.radius,
                                 willRoundToNearestDollar: exchange.willRoundToNearestDollar
                             )
                             let otherUser = OtherUser(
@@ -1444,6 +1491,9 @@ struct ActiveExchange: Identifiable {
     let convertedAmount: Double?
     let traderName: String
     let location: String
+    let latitude: Double
+    let longitude: Double
+    let radius: Int
     let type: ExchangeType
     let willRoundToNearestDollar: Bool
     let meetingTime: String? // ISO datetime string

@@ -89,6 +89,7 @@ def get_user_dashboard(SessionId):
         # Get user's active exchanges (listings user is negotiating on as buyer or seller)
         active_exchanges_query = """
             SELECT l.listing_id, l.currency, l.amount, l.accept_currency, l.location, 
+                   l.latitude, l.longitude, l.location_radius,
                    l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar,
                    lmt.buyer_id, l.user_id as seller_id,
                    lmt.accepted_at, lmt.rejected_at,
@@ -150,21 +151,31 @@ def get_user_dashboard(SessionId):
             'activeExchanges': [
                 {
                     'listingId': exchange['listing_id'],
+                    'listing': {
+                        'currency': exchange['currency'],
+                        'amount': float(exchange['amount']) if isinstance(exchange['amount'], Decimal) else exchange['amount'],
+                        'acceptCurrency': exchange['accept_currency'],
+                        'location': exchange['location'],
+                        'latitude': float(exchange['latitude']) if exchange['latitude'] is not None else 0.0,
+                        'longitude': float(exchange['longitude']) if exchange['longitude'] is not None else 0.0,
+                        'radius': int(exchange['location_radius']) if exchange['location_radius'] is not None else 0,
+                        'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False
+                    },
                     'currency': exchange['currency'],
                     'amount': float(exchange['amount']) if isinstance(exchange['amount'], Decimal) else exchange['amount'],
                     'acceptCurrency': exchange['accept_currency'],
                     'location': exchange['location'],
-                    'status': exchange['status'],
-                    'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
-                    'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,
-                    'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False,
                     'userRole': 'buyer' if exchange['buyer_id'] == user_id else 'seller',
                     'otherUser': {
                         'name': f"{exchange['seller_first_name']} {exchange['seller_last_name']}" if exchange['buyer_id'] == user_id else f"{exchange['buyer_first_name']} {exchange['buyer_last_name']}"
                     },
+                    'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
+                    'status': exchange['status'],
+                    'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
+                    'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,
+                    'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False,
                     'acceptedAt': exchange['accepted_at'].isoformat() if exchange['accepted_at'] else None,
                     'rejectedAt': exchange['rejected_at'].isoformat() if exchange['rejected_at'] else None,
-                    'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
                     'actionRequired': exchange['accepted_at'] is None and exchange['buyer_id'] != user_id  # Seller needs to accept
                 }
                 for exchange in active_exchanges

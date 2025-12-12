@@ -32,6 +32,18 @@ struct MeetingLocationView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
+                // DEBUG: Show listing location info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("[DEBUG] Listing Location: \(String(format: "%.4f", contactData.listing.latitude)), \(String(format: "%.4f", contactData.listing.longitude))")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                    Text("[DEBUG] Radius: \(contactData.listing.radius) miles")
+                        .font(.caption2)
+                        .foregroundColor(.orange)
+                }
+                .padding(8)
+                .background(Color.yellow.opacity(0.2))
+                
                 // Location Status Section
                 if !meetingProposals.isEmpty {
                     let latestProposal = meetingProposals.first!
@@ -150,12 +162,15 @@ struct MeetingLocationView: View {
                         .mapStyle(.standard)
                         .frame(height: 300)
                         .onAppear {
+                            print("[DEBUG MLV] Map appeared - centering on listing")
+                            print("[DEBUG MLV] Listing lat: \(contactData.listing.latitude), lng: \(contactData.listing.longitude)")
                             centerMapOnListing()
                         }
                     } else {
                         Color(hex: "e2e8f0")
                             .frame(height: 300)
                             .onAppear {
+                                print("[DEBUG MLV] Map initializing...")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                                     mapIsReady = true
                                 }
@@ -269,7 +284,7 @@ struct MeetingLocationView: View {
                 
                 // Bottom content area
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(spacing: 12) {
                         if !meetingProposals.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(localizationManager.localize("MEETING_PROPOSALS"))
@@ -335,6 +350,15 @@ struct MeetingLocationView: View {
                 )
             }
         }
+        .onAppear {
+            print("[DEBUG MLV] MeetingLocationView appeared")
+            print("[DEBUG MLV] Listing: \(contactData.listing.latitude), \(contactData.listing.longitude)")
+            print("[DEBUG MLV] Radius: \(contactData.listing.radius)")
+            
+            if contactData.listing.latitude == 0 && contactData.listing.longitude == 0 {
+                print("[DEBUG MLV] WARNING: Listing coordinates are 0,0!")
+            }
+        }
     }
     
     private func centerMapOnListing() {
@@ -343,15 +367,32 @@ struct MeetingLocationView: View {
             longitude: contactData.listing.longitude
         )
         
+        print("[DEBUG MLV centerMapOnListing] Starting...")
+        print("[DEBUG MLV centerMapOnListing] Listing coordinate: \(listingCoord.latitude), \(listingCoord.longitude)")
+        print("[DEBUG MLV centerMapOnListing] Radius: \(contactData.listing.radius) miles")
+        
+        // Check for invalid coordinates
+        if listingCoord.latitude == 0 && listingCoord.longitude == 0 {
+            print("[DEBUG MLV centerMapOnListing] ERROR: Listing coordinates are 0,0 (ocean)!")
+        }
+        
         let radiusKm = Double(contactData.listing.radius) * 1.60934
         let latitudeDelta = max(0.01, (radiusKm * 2.2) / 111.0)
         let longitudeDelta = latitudeDelta
+        
+        print("[DEBUG MLV centerMapOnListing] Calculated radius in km: \(radiusKm)")
+        print("[DEBUG MLV centerMapOnListing] Latitude delta: \(latitudeDelta), Longitude delta: \(longitudeDelta)")
+        
         currentMapSpan = MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
         
-        cameraPosition = .region(MKCoordinateRegion(
+        let region = MKCoordinateRegion(
             center: listingCoord,
             span: currentMapSpan
-        ))
+        )
+        
+        print("[DEBUG MLV centerMapOnListing] Setting camera position to region: center=(\(region.center.latitude), \(region.center.longitude)), span=(\(region.span.latitudeDelta), \(region.span.longitudeDelta))")
+        
+        cameraPosition = .region(region)
     }
     
     private func zoomIn() {
@@ -389,6 +430,8 @@ struct MeetingLocationView: View {
             return
         }
         
+        print("[DEBUG MLV searchLocations] Starting search for: '\(searchText)'")
+        
         isSearching = true
         searchResults = []
         
@@ -396,6 +439,9 @@ struct MeetingLocationView: View {
             latitude: contactData.listing.latitude,
             longitude: contactData.listing.longitude
         )
+        
+        print("[DEBUG MLV searchLocations] Search center: \(listingCoord.latitude), \(listingCoord.longitude)")
+        print("[DEBUG MLV searchLocations] Radius: \(contactData.listing.radius) miles")
         
         let radiusKm = Double(contactData.listing.radius) * 1.60934
         let region = MKCoordinateRegion(
@@ -415,7 +461,17 @@ struct MeetingLocationView: View {
             DispatchQueue.main.async {
                 isSearching = false
                 
-                guard let response = response else { return }
+                if let error = error {
+                    print("[DEBUG MLV searchLocations] Search error: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let response = response else {
+                    print("[DEBUG MLV searchLocations] No response from search")
+                    return
+                }
+                
+                print("[DEBUG MLV searchLocations] Found \(response.mapItems.count) total results")
                 
                 // Filter results to only those within the radius
                 let filteredResults = response.mapItems.enumerated().compactMap { index, mapItem -> MapSearchResult? in
@@ -426,8 +482,11 @@ struct MeetingLocationView: View {
                         lon2: mapItem.placemark.coordinate.longitude
                     )
                     
+                    print("[DEBUG MLV searchLocations] Result \(index): '\(mapItem.name ?? "Unknown")' at \(mapItem.placemark.coordinate.latitude), \(mapItem.placemark.coordinate.longitude) - distance: \(distance) miles")
+                    
                     // Only include if within radius (convert km to miles)
                     if distance <= Double(contactData.listing.radius) {
+                        print("[DEBUG MLV searchLocations]   ✓ Within radius")
                         return MapSearchResult(
                             id: "\(index)",
                             name: mapItem.name ?? "Unknown",
@@ -435,10 +494,13 @@ struct MeetingLocationView: View {
                             address: mapItem.placemark.title ?? "",
                             distance: distance
                         )
+                    } else {
+                        print("[DEBUG MLV searchLocations]   ✗ Outside radius")
                     }
                     return nil
                 }
                 
+                print("[DEBUG MLV searchLocations] Filtered to \(filteredResults.count) results within radius")
                 searchResults = filteredResults
             }
         }
@@ -500,6 +562,9 @@ struct MeetingLocationView: View {
             return
         }
         
+        print("[DEBUG MLV proposeLocation] Proposing location: '\(location.name)'")
+        print("[DEBUG MLV proposeLocation] Coordinates: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        
         // Get the meeting time from either current meeting or latest proposal
         var meetingTimeToSend: String? = nil
         if let latestProposal = meetingProposals.first {
@@ -510,6 +575,8 @@ struct MeetingLocationView: View {
         } else if let currentTime = currentMeetingTime {
             meetingTimeToSend = currentTime
         }
+        
+        print("[DEBUG MLV proposeLocation] Meeting time: \(meetingTimeToSend ?? "nil")")
         
         // Location-only proposals are allowed without a time
         
@@ -538,6 +605,8 @@ struct MeetingLocationView: View {
             return
         }
         
+        print("[DEBUG MLV proposeLocation] Sending request to: \(url.absoluteString)")
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("ERROR: Network error: \(error.localizedDescription)")
@@ -548,6 +617,8 @@ struct MeetingLocationView: View {
                 print("ERROR: No data received")
                 return
             }
+            
+            print("[DEBUG MLV proposeLocation] Response: \(String(data: data, encoding: .utf8) ?? "no data")")
             
             do {
                 let result = try JSONDecoder().decode(LocationProposalResponse.self, from: data)
