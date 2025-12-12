@@ -26,6 +26,8 @@ struct MeetingDetailView: View {
     // Meeting state - shared with child views
     @State private var currentMeeting: CurrentMeeting?
     @State private var meetingProposals: [MeetingProposal] = []
+    @State private var timeAcceptedAt: String? = nil
+    @State private var locationAcceptedAt: String? = nil
     
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
@@ -215,10 +217,6 @@ struct MeetingDetailView: View {
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 // Who is exchanging what
-                let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(contactData.listing.amount, from: contactData.listing.currency, to: contactData.listing.acceptCurrency ?? "") ?? contactData.listing.amount
-                let formattedConverted = ExchangeRatesAPI.shared.formatAmount(convertedAmount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
-                let formattedOriginal = ExchangeRatesAPI.shared.formatAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
-                
                 VStack(alignment: .leading, spacing: 12) {
                     // You bringing...
                     HStack(spacing: 8) {
@@ -226,7 +224,7 @@ struct MeetingDetailView: View {
                             Text("You bring:")
                                 .font(.caption)
                                 .foregroundColor(Color(hex: "718096"))
-                            Text("$\(formattedOriginal) \(contactData.listing.currency)")
+                            Text("$\(formatExchangeAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)) \(contactData.listing.currency)")
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "2d3748"))
@@ -239,7 +237,7 @@ struct MeetingDetailView: View {
                             Text("They bring:")
                                 .font(.caption)
                                 .foregroundColor(Color(hex: "718096"))
-                            Text("\(formattedConverted) \(contactData.listing.acceptCurrency ?? "")")
+                            Text("\(formatConvertedAmount()) \(contactData.listing.acceptCurrency ?? "")")
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: "2d3748"))
@@ -251,128 +249,19 @@ struct MeetingDetailView: View {
                 }
                 
                 detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
-            }
-            .padding()
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-            
-            // Meeting Information
-            if let meeting = currentMeeting {
-                if meeting.location == nil || meeting.location?.isEmpty ?? true {
-                    // Location not set - show button to set it
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("⚠️ " + localizationManager.localize("MEETING_LOCATION_REQUIRED"))
-                                .font(.headline)
-                                .foregroundColor(Color(hex: "dc2626"))
-                            Spacer()
-                        }
-                        
-                        Text("You agreed on a meeting time, but the location needs to be set.")
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "4a5568"))
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                        }
-                        
-                        Button(action: {
-                            activeTab = .location
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 14))
-                                Text("SET MEETING LOCATION")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 12))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(Color(hex: "667eea"))
-                            .cornerRadius(8)
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "fee2e2"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                } else {
-                    // Location is set - show meeting details
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("✅ " + localizationManager.localize("MEETING_AGREED"))
-                                .font(.headline)
-                                .foregroundColor(Color(hex: "38a169"))
-                            Spacer()
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: localizationManager.localize("LOCATION") + ":", value: meeting.location ?? "Not set")
-                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                            if let message = meeting.message, !message.isEmpty {
-                                detailRow(label: localizationManager.localize("NOTE") + ":", value: message)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "f0fff4"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("❌ " + localizationManager.localize("MEETING_NOT_AGREED"))
-                            .font(.headline)
-                            .foregroundColor(Color(hex: "dc2626"))
+                
+                // General Area
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(localizationManager.localize("GENERAL_AREA"))
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "718096"))
+                    HStack(spacing: 8) {
+                        Image(systemName: "location.fill")
+                            .foregroundColor(Color(hex: "667eea"))
+                        Text(contactData.listing.location)
+                            .foregroundColor(Color(hex: "2d3748"))
                         Spacer()
                     }
-                    
-                    Text("You need to agree on a meeting location and time before completing this exchange.")
-                        .font(.subheadline)
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    Button(action: {
-                        activeTab = .location
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "location.fill")
-                                .font(.system(size: 14))
-                            Text("PROPOSE MEETING LOCATION")
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color(hex: "667eea"))
-                        .cornerRadius(8)
-                    }
-                }
-                .padding()
-                .background(Color(hex: "fee2e2"))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-            }
-            
-            // Location Information
-            VStack(alignment: .leading, spacing: 12) {
-                Text(localizationManager.localize("GENERAL_AREA"))
-                    .font(.headline)
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                HStack(spacing: 8) {
-                    Image(systemName: "location.fill")
-                        .foregroundColor(Color(hex: "667eea"))
-                    Text(contactData.listing.location)
-                        .foregroundColor(Color(hex: "2d3748"))
-                    Spacer()
                 }
             }
             .padding()
@@ -407,30 +296,170 @@ struct MeetingDetailView: View {
             .cornerRadius(16)
             .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             
-            // Complete Exchange Button
-            Button(action: completeExchange) {
-                HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 16))
-                    Text("MARK EXCHANGE COMPLETE")
-                        .font(.system(size: 14, weight: .semibold))
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
+            // Button Set 1: Accept/Reject/Counter - show when listing_meeting_time.accepted_at is null
+            print("[BUTTON DEBUG] SET 1: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', isEmpty=\(timeAcceptedAt?.isEmpty ?? true)")
+            if timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true {
+                VStack(alignment: .center, spacing: 12) {
+                    Text("Accept this exchange?")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: "2d3748"))
+                    
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            acceptExchange()
+                        }) {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14))
+                                Text("Accept")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "38a169"))
+                            .cornerRadius(8)
+                        }
+                        
+                        Button(action: {
+                            counterExchange()
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.system(size: 14))
+                                Text("Counter")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "f59e0b"))
+                            .cornerRadius(8)
+                        }
+                    }
+                    
+                    Button(action: {
+                        rejectExchange()
+                    }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Reject")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color(hex: "dc2626"))
+                        .cornerRadius(8)
+                    }
                 }
-                .frame(maxWidth: .infinity)
                 .padding()
-                .foregroundColor(.white)
-                .background(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(hex: "10b981"), Color(hex: "059669")]),
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(12)
+                .background(Color(hex: "f0f9ff"))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
-            .padding()
+            
+            // Button Set 2: Propose Location - show when listing_meeting_time.accepted_at is NOT null AND listing_meeting_location.accepted_at IS null
+            print("[BUTTON DEBUG] SET 2: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
+            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("⚠️ " + localizationManager.localize("MEETING_LOCATION_REQUIRED"))
+                            .font(.headline)
+                            .foregroundColor(Color(hex: "dc2626"))
+                        Spacer()
+                    }
+                    
+                    Text("You need to agree on a meeting location and time before completing this exchange.")
+                        .font(.subheadline)
+                        .foregroundColor(Color(hex: "4a5568"))
+                    
+                    if let meeting = currentMeeting {
+                        VStack(alignment: .leading, spacing: 8) {
+                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
+                        }
+                    }
+                    
+                    Button(action: {
+                        activeTab = .location
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 14))
+                            Text("PROPOSE MEETING LOCATION")
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color(hex: "667eea"))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+                .background(Color(hex: "fee2e2"))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            }
+            
+            // Show meeting details when both time and location are accepted
+            print("[BUTTON DEBUG] SET 3 DETAILS: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
+            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
+                if let meeting = currentMeeting {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("✅ " + localizationManager.localize("MEETING_AGREED"))
+                                .font(.headline)
+                                .foregroundColor(Color(hex: "38a169"))
+                            Spacer()
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            detailRow(label: localizationManager.localize("LOCATION") + ":", value: meeting.location ?? "Not set")
+                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
+                            if let message = meeting.message, !message.isEmpty {
+                                detailRow(label: localizationManager.localize("NOTE") + ":", value: message)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(hex: "f0fff4"))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                }
+            }
+            
+            // Button Set 3: Mark Exchange Complete - show when both accepted_at values are NOT null
+            print("[BUTTON DEBUG] SET 3 BUTTON: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
+            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
+                Button(action: completeExchange) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16))
+                        Text("MARK EXCHANGE COMPLETE")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .foregroundColor(.white)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(hex: "10b981"), Color(hex: "059669")]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(12)
+                }
+                .padding()
+            }
             
             // Rating Section
             if showRatingView && !hasSubmittedRating {
@@ -704,6 +733,10 @@ struct MeetingDetailView: View {
                             let latitude: Double? = meetingData["latitude"] as? Double
                             let longitude: Double? = meetingData["longitude"] as? Double
                             let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
+                            let acceptedAt: String? = meetingData["accepted_at"] as? String
+                            let locationAcceptedAt: String? = meetingData["location_accepted_at"] as? String
+                            
+                            print("[DEBUG LOAD] Parsed from response - acceptedAt: \(acceptedAt ?? "nil"), locationAcceptedAt: \(locationAcceptedAt ?? "nil")")
                             
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
@@ -711,13 +744,159 @@ struct MeetingDetailView: View {
                                 longitude: longitude,
                                 time: time,
                                 message: meetingData["message"] as? String,
-                                agreedAt: agreedAt
+                                agreedAt: agreedAt,
+                                acceptedAt: acceptedAt,
+                                locationAcceptedAt: locationAcceptedAt
                             )
+                            self.timeAcceptedAt = acceptedAt
+                            self.locationAcceptedAt = locationAcceptedAt
+                            print("[DEBUG LOAD] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
                         }
                     }
                 }
             }
         }.resume()
+    }
+    
+    private func acceptExchange() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[DEBUG] No session ID available")
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/MeetingTime/Accept")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
+        ]
+        
+        guard let url = components.url else {
+            print("[DEBUG] Failed to construct URL")
+            return
+        }
+        
+        print("[DEBUG] Accept button tapped - calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("[DEBUG] Accept response received")
+                if let error = error {
+                    print("[DEBUG] Accept error: \(error.localizedDescription)")
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[DEBUG] Accept HTTP status: \(httpResponse.statusCode)")
+                }
+                
+                if let data = data {
+                    print("[DEBUG] Accept response data: \(String(data: data, encoding: .utf8) ?? "no data")")
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        print("[DEBUG] Accept JSON parsed: \(json)")
+                        if let success = json["success"] as? Bool, success {
+                            print("[DEBUG ACCEPT] Accept successful")
+                            // Get accepted_at from response - try both field names
+                            if let acceptedAtFromResponse = json["agreementReachedAt"] as? String {
+                                print("[DEBUG ACCEPT] Got agreementReachedAt from response: \(acceptedAtFromResponse)")
+                                self.timeAcceptedAt = acceptedAtFromResponse
+                            } else if let acceptedAtFromResponse = json["accepted_at"] as? String {
+                                print("[DEBUG ACCEPT] Got accepted_at from response: \(acceptedAtFromResponse)")
+                                self.timeAcceptedAt = acceptedAtFromResponse
+                            } else {
+                                print("[DEBUG ACCEPT] No timestamp in response, generating locally")
+                                self.timeAcceptedAt = self.iso8601Now()
+                            }
+                            print("[DEBUG ACCEPT] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
+                            print("[DEBUG ACCEPT] Reloading meeting proposals...")
+                            self.loadMeetingProposals()
+                        } else {
+                            self.errorMessage = json["error"] as? String ?? "Failed to accept exchange"
+                            print("[DEBUG] Accept failed: \(self.errorMessage)")
+                        }
+                    } else {
+                        print("[DEBUG] Failed to parse JSON")
+                        self.errorMessage = "Invalid response format"
+                    }
+                } else {
+                    print("[DEBUG] No data in response")
+                    self.errorMessage = "No response data"
+                }
+            }
+        }.resume()
+    }
+    
+    private func counterExchange() {
+        // Counter should propose a new meeting time
+        // For now, show an alert that they need to propose a counter time
+        print("[DEBUG] Counter tapped - user should propose a new meeting time")
+        // TODO: Open ProposeTimeView or similar
+        errorMessage = "Please propose a new meeting time"
+    }
+    
+    private func rejectExchange() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[DEBUG] No session ID available for reject")
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/MeetingTime/Reject")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
+        ]
+        
+        guard let url = components.url else {
+            print("[DEBUG] Failed to construct reject URL")
+            return
+        }
+        
+        print("[DEBUG] Reject button tapped - calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("[DEBUG] Reject response received")
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[DEBUG] Reject HTTP status: \(httpResponse.statusCode)")
+                }
+                
+                if let error = error {
+                    print("[DEBUG] Reject error: \(error.localizedDescription)")
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    print("[DEBUG] Reject successful")
+                    self.dismiss()
+                } else {
+                    let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
+                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to reject exchange"
+                    print("[DEBUG] Reject failed: \(self.errorMessage)")
+                }
+            }
+        }.resume()
+    }
+    
+    private func iso8601Now() -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: Date())
+    }
+    
+    private func formatExchangeAmount(_ amount: Double, shouldRound: Bool) -> String {
+        return ExchangeRatesAPI.shared.formatAmount(amount, shouldRound: shouldRound)
+    }
+    
+    private func formatConvertedAmount() -> String {
+        let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(contactData.listing.amount, from: contactData.listing.currency, to: contactData.listing.acceptCurrency ?? "") ?? contactData.listing.amount
+        return ExchangeRatesAPI.shared.formatAmount(convertedAmount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)
     }
 }
 
@@ -783,4 +962,6 @@ struct CurrentMeeting {
     let time: String
     let message: String?
     let agreedAt: String
+    let acceptedAt: String?
+    let locationAcceptedAt: String?
 }

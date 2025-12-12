@@ -212,3 +212,10 @@ Do NOT make summary documents unless I specifically ask for them.
 Do not compile unless I ask you to.
 
 I don't need excessive explanations of the code you write. Just write the code.
+
+## Debugging Rules
+
+**If you are working on the same problem for more than 2 attempts without resolution:**
+1. Add comprehensive debugging print statements to the code
+2. Ask the user to run the app and show you the debug output
+3. Do NOT continue guessing - wait for the actual debug data before making more changes
