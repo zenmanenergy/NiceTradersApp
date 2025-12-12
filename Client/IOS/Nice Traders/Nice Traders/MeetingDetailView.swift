@@ -359,8 +359,56 @@ struct MeetingDetailView: View {
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
             
-            // Button Set 2: Propose Location - show when listing_meeting_time.accepted_at is NOT null AND listing_meeting_location.accepted_at IS null
-            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
+            // Button Set 2a: Show when there's a PENDING location proposal (waiting for response)
+            let locationProposals = meetingProposals.filter { $0.proposedLocation != "" }
+            if let pendingLocationProposal = locationProposals.first(where: { $0.status == "pending" }) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("🕒 " + localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
+                            .font(.headline)
+                            .foregroundColor(Color(hex: "f59e0b"))
+                        Spacer()
+                    }
+                    
+                    Text("Waiting for the other trader to respond to your location proposal.")
+                        .font(.subheadline)
+                        .foregroundColor(Color(hex: "4a5568"))
+                    
+                    // Show proposed location details
+                    VStack(alignment: .leading, spacing: 8) {
+                        detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
+                        if let meeting = currentMeeting {
+                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(hex: "fffbeb"))
+                    .cornerRadius(8)
+                    
+                    Button(action: {
+                        cancelLocationProposal(proposalId: pendingLocationProposal.proposalId)
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Cancel Proposal")
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color(hex: "ef4444"))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+                .background(Color(hex: "fef3c7"))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            }
+            // Button Set 2b: Show when time is accepted but no location proposal exists
+            else if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("⚠️ " + localizationManager.localize("MEETING_LOCATION_REQUIRED"))
@@ -727,9 +775,10 @@ struct MeetingDetailView: View {
                             let proposedLocation = dict["proposed_location"] as? String ?? ""
                             let proposedTime = dict["proposed_time"] as? String ?? ""
                             let isFromMe = dict["is_from_me"] as? Bool ?? false
-                            let firstName = (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown"
+                            // Try new format first (proposed_by_name), fallback to old format (proposer.first_name)
+                            let firstName = dict["proposed_by_name"] as? String ?? (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown"
                             
-                            print("🟠 [MDV-LOAD] Parsed proposal: id=\(proposalId), status=\(status), location=\(proposedLocation), time=\(proposedTime), fromMe=\(isFromMe)")
+                            print("🟠 [MDV-LOAD] Parsed proposal: id=\(proposalId), status=\(status), location=\(proposedLocation), time=\(proposedTime), fromMe=\(isFromMe), proposer=\(firstName)")
                             
                             return MeetingProposal(
                                 proposalId: proposalId,
@@ -916,6 +965,54 @@ struct MeetingDetailView: View {
                     let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
                     self.errorMessage = errorMsg?["error"] as? String ?? "Failed to reject exchange"
                     print("[DEBUG] Reject failed: \(self.errorMessage)")
+                }
+            }
+        }.resume()
+    }
+    
+    private func cancelLocationProposal(proposalId: String) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[DEBUG] No session ID available for cancel location")
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Meeting/RejectProposal")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "proposalId", value: proposalId)
+        ]
+        
+        guard let url = components.url else {
+            print("[DEBUG] Failed to construct cancel location URL")
+            return
+        }
+        
+        print("[DEBUG] Cancel location button tapped - calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("[DEBUG] Cancel location response received")
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[DEBUG] Cancel location HTTP status: \(httpResponse.statusCode)")
+                }
+                
+                if let error = error {
+                    print("[DEBUG] Cancel location error: \(error.localizedDescription)")
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    print("[DEBUG] Cancel location successful")
+                    self.loadMeetingProposals()
+                } else {
+                    let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
+                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to cancel proposal"
+                    print("[DEBUG] Cancel location failed: \(self.errorMessage)")
                 }
             }
         }.resume()

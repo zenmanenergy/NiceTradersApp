@@ -59,10 +59,12 @@ def get_meeting_proposals(session_id, listing_id):
         # Get time proposals
         print(f"🟠 [GetMeetingProposals] Fetching time proposals...")
         cursor.execute("""
-            SELECT time_negotiation_id, meeting_time, accepted_at, rejected_at, proposed_by, created_at, updated_at
-            FROM listing_meeting_time
-            WHERE listing_id = %s
-            ORDER BY created_at DESC
+            SELECT t.time_negotiation_id, t.meeting_time, t.accepted_at, t.rejected_at, t.proposed_by, t.created_at, t.updated_at,
+                   u.firstName as proposer_name
+            FROM listing_meeting_time t
+            LEFT JOIN users u ON t.proposed_by = u.user_id
+            WHERE t.listing_id = %s
+            ORDER BY t.created_at DESC
         """, (listing_id,))
         
         time_proposals = cursor.fetchall()
@@ -71,14 +73,16 @@ def get_meeting_proposals(session_id, listing_id):
         time_accepted_at = None
         for proposal in time_proposals:
             status = 'accepted' if proposal['accepted_at'] else ('rejected' if proposal['rejected_at'] else 'pending')
-            print(f"  - Time proposal: id={proposal['time_negotiation_id']}, status={status}, time={proposal['meeting_time']}, proposed_by={proposal['proposed_by']}")
+            proposer_name = proposal.get('proposer_name') or 'Unknown'
+            print(f"  - Time proposal: id={proposal['time_negotiation_id']}, status={status}, time={proposal['meeting_time']}, proposed_by={proposer_name}")
             
             response['proposals'].append({
                 'proposal_id': proposal['time_negotiation_id'],
                 'type': 'time',
                 'proposed_time': proposal['meeting_time'].isoformat() if proposal['meeting_time'] else None,
                 'proposed_location': '',
-                'proposed_by': proposal['proposed_by'],
+                'proposed_by_id': proposal['proposed_by'],
+                'proposed_by_name': proposer_name,
                 'status': status,
                 'is_from_me': proposal['proposed_by'] == user_id,
                 'created_at': proposal['created_at'].isoformat() if 'created_at' in proposal else None
@@ -101,11 +105,13 @@ def get_meeting_proposals(session_id, listing_id):
         # Get location proposals
         print(f"🟠 [GetMeetingProposals] Fetching location proposals...")
         cursor.execute("""
-            SELECT location_negotiation_id, meeting_location_lat, meeting_location_lng, 
-                   meeting_location_name, accepted_at, rejected_at, proposed_by, created_at, updated_at
-            FROM listing_meeting_location
-            WHERE listing_id = %s
-            ORDER BY created_at DESC
+            SELECT l.location_negotiation_id, l.meeting_location_lat, l.meeting_location_lng, 
+                   l.meeting_location_name, l.accepted_at, l.rejected_at, l.proposed_by, l.created_at, l.updated_at,
+                   u.firstName as proposer_name
+            FROM listing_meeting_location l
+            LEFT JOIN users u ON l.proposed_by = u.user_id
+            WHERE l.listing_id = %s
+            ORDER BY l.created_at DESC
         """, (listing_id,))
         
         location_proposals = cursor.fetchall()
@@ -113,7 +119,8 @@ def get_meeting_proposals(session_id, listing_id):
         
         for proposal in location_proposals:
             status = 'accepted' if proposal['accepted_at'] else ('rejected' if proposal['rejected_at'] else 'pending')
-            print(f"  - Location proposal: id={proposal['location_negotiation_id']}, status={status}, location={proposal['meeting_location_name']}, proposed_by={proposal['proposed_by']}")
+            proposer_name = proposal.get('proposer_name') or 'Unknown'
+            print(f"  - Location proposal: id={proposal['location_negotiation_id']}, status={status}, location={proposal['meeting_location_name']}, proposed_by={proposer_name}")
             
             response['proposals'].append({
                 'proposal_id': proposal['location_negotiation_id'],
@@ -122,7 +129,8 @@ def get_meeting_proposals(session_id, listing_id):
                 'proposed_time': '',
                 'latitude': float(proposal['meeting_location_lat']) if proposal['meeting_location_lat'] else None,
                 'longitude': float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None,
-                'proposed_by': proposal['proposed_by'],
+                'proposed_by_id': proposal['proposed_by'],
+                'proposed_by_name': proposer_name,
                 'status': status,
                 'is_from_me': proposal['proposed_by'] == user_id,
                 'created_at': proposal['created_at'].isoformat() if 'created_at' in proposal else None

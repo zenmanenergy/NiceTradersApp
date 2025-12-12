@@ -818,7 +818,7 @@ struct MeetingLocationView: View {
                                 message: dict["message"] as? String,
                                 status: status,
                                 isFromMe: dict["is_from_me"] as? Bool ?? false,
-                                proposer: ProposerInfo(firstName: (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown")
+                                proposer: ProposerInfo(firstName: dict["proposed_by_name"] as? String ?? (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown")
                             )
                         }
                         
