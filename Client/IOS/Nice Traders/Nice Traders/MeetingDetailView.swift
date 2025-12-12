@@ -297,7 +297,6 @@ struct MeetingDetailView: View {
             .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             
             // Button Set 1: Accept/Reject/Counter - show when listing_meeting_time.accepted_at is null
-            print("[BUTTON DEBUG] SET 1: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', isEmpty=\(timeAcceptedAt?.isEmpty ?? true)")
             if timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true {
                 VStack(alignment: .center, spacing: 12) {
                     Text("Accept this exchange?")
@@ -361,7 +360,6 @@ struct MeetingDetailView: View {
             }
             
             // Button Set 2: Propose Location - show when listing_meeting_time.accepted_at is NOT null AND listing_meeting_location.accepted_at IS null
-            print("[BUTTON DEBUG] SET 2: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
             if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
@@ -407,7 +405,6 @@ struct MeetingDetailView: View {
             }
             
             // Show meeting details when both time and location are accepted
-            print("[BUTTON DEBUG] SET 3 DETAILS: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
             if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
                 if let meeting = currentMeeting {
                     VStack(alignment: .leading, spacing: 12) {
@@ -434,7 +431,6 @@ struct MeetingDetailView: View {
             }
             
             // Button Set 3: Mark Exchange Complete - show when both accepted_at values are NOT null
-            print("[BUTTON DEBUG] SET 3 BUTTON: timeAcceptedAt='\(timeAcceptedAt ?? "nil")', locAcceptedAt='\(locationAcceptedAt ?? "nil")'")
             if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
                 Button(action: completeExchange) {
                     HStack(spacing: 8) {
@@ -733,10 +729,10 @@ struct MeetingDetailView: View {
                             let latitude: Double? = meetingData["latitude"] as? Double
                             let longitude: Double? = meetingData["longitude"] as? Double
                             let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
-                            let acceptedAt: String? = meetingData["accepted_at"] as? String
-                            let locationAcceptedAt: String? = meetingData["location_accepted_at"] as? String
+                            let timeAcceptedAt: String? = meetingData["timeAcceptedAt"] as? String
+                            let locationAcceptedAt: String? = meetingData["locationAcceptedAt"] as? String
                             
-                            print("[DEBUG LOAD] Parsed from response - acceptedAt: \(acceptedAt ?? "nil"), locationAcceptedAt: \(locationAcceptedAt ?? "nil")")
+                            print("[DEBUG LOAD] Parsed from response - timeAcceptedAt: \(timeAcceptedAt ?? "nil"), locationAcceptedAt: \(locationAcceptedAt ?? "nil")")
                             
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
@@ -745,10 +741,10 @@ struct MeetingDetailView: View {
                                 time: time,
                                 message: meetingData["message"] as? String,
                                 agreedAt: agreedAt,
-                                acceptedAt: acceptedAt,
+                                acceptedAt: timeAcceptedAt,
                                 locationAcceptedAt: locationAcceptedAt
                             )
-                            self.timeAcceptedAt = acceptedAt
+                            self.timeAcceptedAt = timeAcceptedAt
                             self.locationAcceptedAt = locationAcceptedAt
                             print("[DEBUG LOAD] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
                         }
@@ -799,12 +795,12 @@ struct MeetingDetailView: View {
                         if let success = json["success"] as? Bool, success {
                             print("[DEBUG ACCEPT] Accept successful")
                             // Get accepted_at from response - try both field names
-                            if let acceptedAtFromResponse = json["agreementReachedAt"] as? String {
-                                print("[DEBUG ACCEPT] Got agreementReachedAt from response: \(acceptedAtFromResponse)")
-                                self.timeAcceptedAt = acceptedAtFromResponse
-                            } else if let acceptedAtFromResponse = json["accepted_at"] as? String {
-                                print("[DEBUG ACCEPT] Got accepted_at from response: \(acceptedAtFromResponse)")
-                                self.timeAcceptedAt = acceptedAtFromResponse
+                            if let timeAcceptedAtFromResponse = json["timeAcceptedAt"] as? String {
+                                print("[DEBUG ACCEPT] Got timeAcceptedAt from response: \(timeAcceptedAtFromResponse)")
+                                self.timeAcceptedAt = timeAcceptedAtFromResponse
+                            } else if let agreementReachedAt = json["agreementReachedAt"] as? String {
+                                print("[DEBUG ACCEPT] Got agreementReachedAt from response: \(agreementReachedAt)")
+                                self.timeAcceptedAt = agreementReachedAt
                             } else {
                                 print("[DEBUG ACCEPT] No timestamp in response, generating locally")
                                 self.timeAcceptedAt = self.iso8601Now()

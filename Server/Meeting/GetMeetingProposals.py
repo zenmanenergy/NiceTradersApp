@@ -58,6 +58,7 @@ def get_meeting_proposals(session_id, listing_id):
         """, (listing_id,))
         
         time_proposals = cursor.fetchall()
+        time_accepted_at = None
         for proposal in time_proposals:
             status = 'accepted' if proposal['accepted_at'] else ('rejected' if proposal['rejected_at'] else 'proposed')
             response['proposals'].append({
@@ -69,12 +70,15 @@ def get_meeting_proposals(session_id, listing_id):
                 'created_at': proposal['created_at'].isoformat() if 'created_at' in proposal else None
             })
             
-            # If this is the accepted time, include it in current_meeting
+            # If this is the accepted time, store it for current_meeting
             if status == 'accepted':
+                time_accepted_at = proposal['accepted_at']
                 response['current_meeting'] = {
                     'time': proposal['meeting_time'].isoformat() if proposal['meeting_time'] else None,
-                    'location': '',
-                    'agreed_at': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None
+                    'location': None,
+                    'agreed_at': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None,
+                    'timeAcceptedAt': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None,
+                    'locationAcceptedAt': None
                 }
         
         # Get location proposals
@@ -101,8 +105,23 @@ def get_meeting_proposals(session_id, listing_id):
             })
             
             # If this is the accepted location, update current_meeting
-            if status == 'accepted' and response['current_meeting']:
-                response['current_meeting']['location'] = proposal['meeting_location_name']
+            if status == 'accepted':
+                if response['current_meeting']:
+                    response['current_meeting']['location'] = proposal['meeting_location_name']
+                    response['current_meeting']['latitude'] = float(proposal['meeting_location_lat']) if proposal['meeting_location_lat'] else None
+                    response['current_meeting']['longitude'] = float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None
+                    response['current_meeting']['locationAcceptedAt'] = proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None
+                else:
+                    # Location accepted but no time accepted yet
+                    response['current_meeting'] = {
+                        'time': None,
+                        'location': proposal['meeting_location_name'],
+                        'latitude': float(proposal['meeting_location_lat']) if proposal['meeting_location_lat'] else None,
+                        'longitude': float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None,
+                        'agreed_at': None,
+                        'timeAcceptedAt': None,
+                        'locationAcceptedAt': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None
+                    }
         
         connection.close()
         
