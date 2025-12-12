@@ -305,7 +305,7 @@ struct SignupView: View {
                             
                             // Save user ID if available
                             if let user_id = json["user_id"] as? String {
-                                UserDefaults.standard.set(user_id, forKey: "UserId")
+                                UserDefaults.standard.set(user_id, forKey: "user_id")
                                 
                                 // If device token is already available, update it now
                                 if let deviceToken = DeviceTokenManager.shared.deviceToken {

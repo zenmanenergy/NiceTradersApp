@@ -36,12 +36,12 @@ class SessionManager: ObservableObject {
     }
     
     var user_id: String? {
-        get { UserDefaults.standard.string(forKey: "UserId") }
+        get { UserDefaults.standard.string(forKey: "user_id") }
         set { 
             if let value = newValue {
-                UserDefaults.standard.set(value, forKey: "UserId")
+                UserDefaults.standard.set(value, forKey: "user_id")
             } else {
-                UserDefaults.standard.removeObject(forKey: "UserId")
+                UserDefaults.standard.removeObject(forKey: "user_id")
             }
         }
     }

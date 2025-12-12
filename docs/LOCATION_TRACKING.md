@@ -34,7 +34,7 @@ Three new REST endpoints added to Flask Meeting blueprint:
 2. **GET /Meeting/Location/Get**
    - Retrieves other user's current location and details
    - Params: `proposalId, sessionId`
-   - Response: `{otherUserId, name, latitude, longitude, distance_from_meeting, timestamp}`
+   - Response: `{other_user_id, name, latitude, longitude, distance_from_meeting, timestamp}`
 
 3. **GET /Meeting/Location/Status**
    - Checks if tracking is currently enabled for an exchange

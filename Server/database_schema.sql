@@ -46,7 +46,7 @@ CREATE TABLE users (
 CREATE TABLE user_settings (
     user_id CHAR(39) PRIMARY KEY,
     SettingsJson TEXT,
-    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create usersessions table (matching existing structure exactly)
@@ -55,7 +55,7 @@ CREATE TABLE usersessions (
     user_id CHAR(39) NOT NULL,
     DateAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
-    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create history table (used by History.py for audit logging)
@@ -369,7 +369,7 @@ CREATE TABLE IF NOT EXISTS user_devices (
     INDEX idx_device_type (device_type),
     INDEX idx_is_active (is_active),
     INDEX idx_registered_at (registered_at),
-    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create APN logs table for tracking push notifications sent
@@ -385,7 +385,7 @@ CREATE TABLE IF NOT EXISTS apn_logs (
     
     INDEX idx_user_id (user_id),
     INDEX idx_sent_at (sent_at),
-    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -450,7 +450,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     ResetToken VARCHAR(255) NOT NULL UNIQUE,
     TokenExpires DATETIME NOT NULL,
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     INDEX idx_reset_token (ResetToken),
     INDEX idx_user_id (user_id),
     INDEX idx_expires (TokenExpires)

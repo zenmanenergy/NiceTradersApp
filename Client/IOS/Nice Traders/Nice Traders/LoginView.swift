@@ -262,7 +262,7 @@ green: 0.29, blue: 0.64)]),
                             
                             // Save user ID if available
                             if let user_id = json["user_id"] as? String {
-                                UserDefaults.standard.set(user_id, forKey: "UserId")
+                                UserDefaults.standard.set(user_id, forKey: "user_id")
                                 
                                 // If device token is already available, update it now
                                 if let deviceToken = DeviceTokenManager.shared.deviceToken {
@@ -278,7 +278,7 @@ green: 0.29, blue: 0.64)]),
                             // Clear any stored credentials
                             UserDefaults.standard.removeObject(forKey: "SessionId")
                             UserDefaults.standard.removeObject(forKey: "UserType")
-                            UserDefaults.standard.removeObject(forKey: "UserId")
+                            UserDefaults.standard.removeObject(forKey: "user_id")
                             
                             alertMessage = localizationManager.localize("INVALID_LOGIN_CREDENTIALS")
                             showingAlert = true

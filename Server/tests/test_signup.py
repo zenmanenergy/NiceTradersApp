@@ -27,7 +27,7 @@ class TestSignupEndpoints:
         assert 'sessionId' in data
         assert 'userType' in data
         
-        # Cleanup - need to get userId from session
+        # Cleanup - need to get user_id from session
         session_id = data['sessionId']
         cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()

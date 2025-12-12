@@ -81,9 +81,9 @@ class DeviceTokenManager: ObservableObject {
     private func updateBackendWithDeviceToken(_ token: String, user_id: String? = nil) {
         
         // Use provided user_id or get from SessionManager
-        let userIdToUse = user_id ?? SessionManager.shared.user_id
+        let user_id_to_use = user_id ?? SessionManager.shared.user_id
         
-        guard let userIdToUse = userIdToUse else {
+        guard let user_id_to_use = user_id_to_use else {
             return
         }
         
@@ -95,7 +95,7 @@ class DeviceTokenManager: ObservableObject {
         // Build query parameters
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Profile/UpdateDeviceToken")
         components?.queryItems = [
-            URLQueryItem(name: "user_id", value: userIdToUse),
+            URLQueryItem(name: "user_id", value: user_id_to_use),
             URLQueryItem(name: "deviceToken", value: token),
             URLQueryItem(name: "deviceType", value: "ios"),
             URLQueryItem(name: "appVersion", value: appVersion),
