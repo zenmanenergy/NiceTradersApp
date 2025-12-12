@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timedelta
 
 def propose_meeting(session_id, listing_id, proposed_location, proposed_time, proposed_latitude=None, proposed_longitude=None, message=None):
-    """Propose a meeting time and/or location for an exchange"""
+    """Propose a meeting time and/or location for an exchange (using new normalized tables)"""
     try:
         print(f"[ProposeMeeting] ===== START PROPOSAL =====")
         print(f"[ProposeMeeting] Input params:")
@@ -14,7 +14,6 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         print(f"  proposed_time: {proposed_time}")
         print(f"  proposed_latitude: {proposed_latitude}")
         print(f"  proposed_longitude: {proposed_longitude}")
-        print(f"  message: {message}")
         
         # Either location or time must be provided
         if not session_id or not listing_id or (not proposed_location and not proposed_time):
@@ -45,7 +44,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         
         # Get listing info and determine recipient
         listing_query = """
-            SELECT l.user_id as listing_owner_id
+            SELECT l.user_id as listing_owner_id, l.buyer_id
             FROM listings l
             WHERE l.listing_id = %s
         """
@@ -60,109 +59,129 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
             })
         
         listing_owner_id = listing_result['listing_owner_id']
+        buyer_id = listing_result['buyer_id']
         
-        # Determine recipient based on who is proposing
+        # Determine recipient and validate access
         if proposer_id == listing_owner_id:
-            # Listing owner is proposing - find the buyer from contact_access
-            recipient_query = """
-                SELECT user_id FROM contact_access 
-                WHERE listing_id = %s AND status = 'active'
-                ORDER BY purchased_at DESC LIMIT 1
-            """
-            cursor.execute(recipient_query, (listing_id,))
-            recipient_result = cursor.fetchone()
-            
-            if not recipient_result:
+            # Listing owner is proposing - must have a buyer
+            if not buyer_id:
                 connection.close()
                 return json.dumps({
                     'success': False,
-                    'error': 'No active contact access found for this listing'
+                    'error': 'No buyer has been set for this listing yet'
                 })
-            recipient_id = recipient_result['user_id']
+            recipient_id = buyer_id
         else:
-            # Buyer is proposing to listing owner
-            # Verify buyer has access to this listing
-            access_query = """
-                SELECT access_id FROM contact_access 
-                WHERE listing_id = %s AND user_id = %s AND status = 'active'
-            """
-            cursor.execute(access_query, (listing_id, proposer_id))
-            if not cursor.fetchone():
+            # Buyer is proposing
+            if proposer_id != buyer_id:
                 connection.close()
                 return json.dumps({
                     'success': False,
-                    'error': 'You do not have access to propose meetings for this listing'
+                    'error': 'You are not the buyer for this listing'
                 })
             recipient_id = listing_owner_id
         
-        # For meeting proposals (location/time), we work directly with negotiation_history
-        # Get any existing negotiation for this listing to link proposals together
-        negotiation_query = """
-            SELECT negotiation_id FROM negotiation_history
-            WHERE listing_id = %s 
-            LIMIT 1
-        """
-        cursor.execute(negotiation_query, (listing_id,))
-        negotiation = cursor.fetchone()
+        results = {
+            'success': True,
+            'proposal_ids': {},
+            'message': 'Meeting proposal created'
+        }
         
-        if negotiation:
-            negotiation_id_str = negotiation['negotiation_id']
-            is_counter_proposal = True  # Existing proposals exist, so this is a counter-proposal
-            print(f"[ProposeMeeting] Existing negotiation found: {negotiation_id_str}")
-        else:
-            # Create new negotiation ID for this listing
-            negotiation_id_str = str(uuid.uuid4())
-            is_counter_proposal = False  # First proposal
-            print(f"[ProposeMeeting] Creating NEW negotiation: {negotiation_id_str}")
-        
-        # Parse proposed time if provided
-        proposed_datetime = None
+        # Handle TIME proposal
         if proposed_time:
             try:
                 proposed_datetime = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
-                print(f"[ProposeMeeting] Parsed time (ISO format): {proposed_datetime}")
-            except ValueError:
+            except:
                 try:
                     proposed_datetime = datetime.strptime(proposed_time, '%Y-%m-%d %H:%M:%S')
-                    print(f"[ProposeMeeting] Parsed time (SQL format): {proposed_datetime}")
-                except ValueError:
-                    # If we can't parse it, just ignore it and continue with location-only proposal
-                    print(f"[ProposeMeeting] Warning: Could not parse time format: {proposed_time}")
-                    proposed_datetime = None
+                except:
+                    connection.close()
+                    return json.dumps({
+                        'success': False,
+                        'error': 'Invalid time format'
+                    })
+            
+            time_negotiation_id = f"TNL-{uuid.uuid4().hex[:35]}"
+            
+            # Check if time negotiation already exists for this listing
+            cursor.execute("""
+                SELECT time_negotiation_id FROM listing_meeting_time 
+                WHERE listing_id = %s
+                LIMIT 1
+            """, (listing_id,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Update existing time negotiation
+                cursor.execute("""
+                    UPDATE listing_meeting_time 
+                    SET meeting_time = %s, proposed_by = %s, updated_at = NOW()
+                    WHERE listing_id = %s
+                """, (proposed_datetime, proposer_id, listing_id))
+            else:
+                # Create new time negotiation
+                cursor.execute("""
+                    INSERT INTO listing_meeting_time
+                    (time_negotiation_id, listing_id, buyer_id, proposed_by, meeting_time, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, NOW(), NOW())
+                """, (time_negotiation_id, listing_id, buyer_id, proposer_id, proposed_datetime))
+            
+            results['proposal_ids']['time'] = time_negotiation_id
+            print(f"[ProposeMeeting] Time proposal created/updated: {time_negotiation_id}")
         
-        # Create history record in negotiation_history table
-        history_id = str(uuid.uuid4())
-        
-        # Determine action type
-        if proposed_location and is_counter_proposal:
-            action = 'counter_proposal'  # Counter-proposing a different location
-        elif proposed_location:
-            action = 'location_proposal'  # First location proposal
-        else:
-            action = 'time_proposal'  # First time proposal (location will be added later)
-        
-        print(f"[ProposeMeeting] Action type: {action}")
-        print(f"[ProposeMeeting] Proposed location: {proposed_location}")
-        print(f"[ProposeMeeting] Proposed datetime: {proposed_datetime}")
-        print(f"[ProposeMeeting] Coordinates: ({proposed_latitude}, {proposed_longitude})")
-        
-        insert_query = """
-            INSERT INTO negotiation_history 
-            (history_id, negotiation_id, listing_id, action, proposed_time, proposed_location, 
-             proposed_latitude, proposed_longitude, proposed_by, notes, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        """
-        print(f"[ProposeMeeting] Inserting record with:")
-        print(f"  history_id: {history_id}")
-        print(f"  negotiation_id: {negotiation_id_str}")
-        print(f"  listing_id: {listing_id}")
-        print(f"  action: {action}")
-        
-        cursor.execute(insert_query, (
-            history_id, negotiation_id_str, listing_id, action,
-            proposed_datetime, proposed_location, proposed_latitude, proposed_longitude,
-            proposer_id, message
-        ))
+        # Handle LOCATION proposal
+        if proposed_location and proposed_latitude is not None and proposed_longitude is not None:
+            try:
+                lat = float(proposed_latitude)
+                lng = float(proposed_longitude)
+                
+                # Validate coordinates
+                if lat < -90 or lat > 90 or lng < -180 or lng > 180:
+                    connection.close()
+                    return json.dumps({
+                        'success': False,
+                        'error': 'Invalid coordinates'
+                    })
+            except:
+                connection.close()
+                return json.dumps({
+                    'success': False,
+                    'error': 'Coordinates must be valid numbers'
+                })
+            
+            location_negotiation_id = f"LOC-{uuid.uuid4().hex[:35]}"
+            
+            # Check if location negotiation already exists for this listing
+            cursor.execute("""
+                SELECT location_negotiation_id FROM listing_meeting_location 
+                WHERE listing_id = %s
+                LIMIT 1
+            """, (listing_id,))
+            existing = cursor.fetchone()
+            
+            if existing:
+                # Update existing location negotiation
+                cursor.execute("""
+                    UPDATE listing_meeting_location 
+                    SET meeting_location_lat = %s, 
+                        meeting_location_lng = %s,
+                        meeting_location_name = %s,
+                        proposed_by = %s,
+                        updated_at = NOW()
+                    WHERE listing_id = %s
+                """, (lat, lng, proposed_location, proposer_id, listing_id))
+            else:
+                # Create new location negotiation
+                cursor.execute("""
+                    INSERT INTO listing_meeting_location
+                    (location_negotiation_id, listing_id, buyer_id, proposed_by, 
+                     meeting_location_lat, meeting_location_lng, meeting_location_name,
+                     created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                """, (location_negotiation_id, listing_id, buyer_id, proposer_id, lat, lng, proposed_location))
+            
+            results['proposal_ids']['location'] = location_negotiation_id
+            print(f"[ProposeMeeting] Location proposal created/updated: {location_negotiation_id}")
         
         connection.commit()
         print(f"[ProposeMeeting] Database commit successful")
@@ -172,34 +191,23 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         proposer = cursor.fetchone()
         proposer_name = f"{proposer['FirstName']} {proposer['LastName']}" if proposer else "A user"
         
-        # Format the proposed time for the notification (if available)
-        time_str = proposed_datetime.strftime('%b %d at %I:%M %p') if proposed_datetime else "TBD"
-        
         # Send APN notification to recipient
         try:
             from Admin.NotificationService import notification_service
             notification_service.send_meeting_proposal_notification(
                 recipient_id=recipient_id,
                 proposer_name=proposer_name,
-                proposed_time=time_str,
+                proposed_time='',
                 listing_id=listing_id,
-                proposal_id=history_id
-                # session_id is automatically fetched inside notification_service
+                proposal_id=results['proposal_ids'].get('time') or results['proposal_ids'].get('location')
             )
         except Exception as apn_error:
-            # Log error but don't fail the transaction
             print(f"[ProposeMeeting] Error sending APN notification: {apn_error}")
         
         connection.close()
         
-        print(f"[ProposeMeeting] Meeting proposal created successfully: {history_id}")
         print(f"[ProposeMeeting] ===== END PROPOSAL =====")
-        
-        return json.dumps({
-            'success': True,
-            'proposal_id': history_id,
-            'message': 'Meeting proposal sent successfully'
-        })
+        return json.dumps(results)
         
     except Exception as e:
         print(f"[ProposeMeeting] Error: {str(e)}")

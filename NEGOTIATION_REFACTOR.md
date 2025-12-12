@@ -874,13 +874,28 @@ def get_my_negotiations(session_id):
     - reset_negotiation.py (utility script - acceptable for archive operations)
     - Meeting/ folder (disabled endpoints - acceptable as archived code)
 
-### 6.2 iOS Migration Notice
-- [ ] iOS still calls old Meeting endpoints for location proposals (ContactView.swift, ContactLocationView.swift, ContactDetailView.swift, DashboardView.swift)
-- [ ] These calls will now fail since Meeting.blueprint is disabled
-- [ ] **TODO**: Update iOS to use new Negotiations flow:
-  - For location negotiation: Use NegotiationService.proposeMeetingLocation(), counterMeetingLocation(), acceptMeetingLocation(), rejectMeetingLocation()
-  - These endpoints require time to be accepted first (new workflow requirement)
-  - Must update ContactView.swift, ContactLocationView.swift, ContactDetailView.swift, DashboardView.swift to use new methods
+### 6.2 iOS Location Proposals - Backward Compatibility
+- [x] **Decision**: Keep old Meeting endpoints active for backward compatibility
+  - iOS location proposal flow allows proposals anytime (before/after time agreement)
+  - New Negotiations location endpoints require time to be accepted first (different workflow)
+  - Instead of forcing iOS UI changes, Meeting endpoints remain as a compatibility layer
+  
+- [x] **Migration approach**: Updated ALL Meeting endpoints to use new tables internally
+  - [x] Meeting/ProposeMeeting.py → Updated to use listing_meeting_time and listing_meeting_location instead of negotiation_history
+  - [x] Meeting/RespondToMeeting.py → Updated to use listing_meeting_time and listing_meeting_location instead of negotiation_history
+  - [x] Meeting/GetMeetingProposals.py → Updated to use listing_meeting_time and listing_meeting_location instead of negotiation_history
+  - [x] Meeting/GetExactLocation.py → Updated to use listing_meeting_location and listing_meeting_time for location time checks
+  - [x] Meeting/LocationTrackingService.py → Updated to use listing_meeting_location and listing_meeting_time for tracking
+  - Old versions backed up as *_old_negotiation_history.py files
+  - iOS continues calling old endpoints without changes
+  - Behind the scenes, all data is stored in new normalized tables
+  - All imports verified working
+  
+- [ ] **TODO - If iOS UI is redesigned in future**:
+  - iOS could migrate to new Negotiations flow (location after time accepted)
+  - This would simplify backend (remove Meeting compatibility layer)
+  - Would require redesigning UI to enforce new workflow
+  - For now, backward compatibility approach is sufficient
 
 ---
 

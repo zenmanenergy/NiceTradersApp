@@ -1,139 +1,101 @@
 from _Lib import Database
 import json
-import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
-def respond_to_meeting(session_id, proposal_id, response):
-    """Accept or reject a meeting proposal stored in negotiation_history"""
+def respond_to_meeting(session_id, proposal_type, proposal_id, response):
+    """Accept or reject a meeting proposal (using new normalized tables)"""
     try:
-        print(f"[RespondToMeeting] Responding to proposal: {proposal_id} with: {response}")
+        print(f"[RespondToMeeting] Processing {response} for {proposal_type} proposal: {proposal_id}")
         
-        if not session_id or not proposal_id or response not in ['accepted', 'rejected']:
+        if not all([session_id, proposal_type, proposal_id, response]):
             return json.dumps({
                 'success': False,
-                'error': 'Session ID, proposal ID, and valid response (accepted/rejected) are required'
+                'error': 'Missing required parameters'
+            })
+        
+        if response not in ['accepted', 'rejected']:
+            return json.dumps({
+                'success': False,
+                'error': 'Response must be "accepted" or "rejected"'
             })
         
         # Connect to database
         cursor, connection = Database.ConnectToDatabase()
         
-        # Verify session and get user ID
-        session_query = """
-            SELECT UserId FROM usersessions 
-            WHERE SessionId = %s
-        """
-        cursor.execute(session_query, (session_id,))
+        # Verify session
+        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
             connection.close()
-            return json.dumps({
-                'success': False,
-                'error': 'Invalid or expired session'
-            })
+            return json.dumps({'success': False, 'error': 'Invalid session'})
         
         user_id = session_result['UserId']
         
-        # Get proposal details from negotiation_history only
-        proposal_query = """
-            SELECT nh.history_id, nh.negotiation_id, nh.proposed_location, nh.proposed_time, 
-                   nh.proposed_latitude, nh.proposed_longitude, nh.notes, nh.proposed_by,
-                   nh.listing_id,
-                   u.FirstName, u.LastName
-            FROM negotiation_history nh
-            JOIN users u ON nh.proposed_by = u.UserId
-            WHERE nh.history_id = %s
-        """
-        cursor.execute(proposal_query, (proposal_id,))
-        proposal_result = cursor.fetchone()
-        
-        if not proposal_result:
+        # Handle different proposal types
+        if proposal_type == 'time':
+            # Update listing_meeting_time
+            timestamp_field = 'accepted_at' if response == 'accepted' else 'rejected_at'
+            
+            cursor.execute(f"""
+                UPDATE listing_meeting_time 
+                SET {timestamp_field} = NOW(), updated_at = NOW()
+                WHERE time_negotiation_id = %s
+            """, (proposal_id,))
+            
+            # Get listing_id for response
+            cursor.execute("""
+                SELECT listing_id FROM listing_meeting_time 
+                WHERE time_negotiation_id = %s
+            """, (proposal_id,))
+            result = cursor.fetchone()
+            listing_id = result['listing_id'] if result else None
+            
+        elif proposal_type == 'location':
+            # Update listing_meeting_location
+            timestamp_field = 'accepted_at' if response == 'accepted' else 'rejected_at'
+            
+            cursor.execute(f"""
+                UPDATE listing_meeting_location 
+                SET {timestamp_field} = NOW(), updated_at = NOW()
+                WHERE location_negotiation_id = %s
+            """, (proposal_id,))
+            
+            # Get listing_id for response
+            cursor.execute("""
+                SELECT listing_id FROM listing_meeting_location 
+                WHERE location_negotiation_id = %s
+            """, (proposal_id,))
+            result = cursor.fetchone()
+            listing_id = result['listing_id'] if result else None
+        else:
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': 'Meeting proposal not found'
+                'error': 'Invalid proposal type'
             })
         
-        # Verify user is not the proposer (can't accept own proposal)
-        if proposal_result['proposed_by'] == user_id:
+        if not listing_id:
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': 'You cannot respond to your own proposal'
+                'error': 'Proposal not found'
             })
-        
-        # Create acceptance/rejection record in negotiation_history
-        # For 'accepted' action, copy the proposed values to accepted_* columns
-        response_history_id = str(uuid.uuid4())
-        response_query = """
-            INSERT INTO negotiation_history 
-            (history_id, negotiation_id, action, proposed_time, proposed_location,
-             proposed_latitude, proposed_longitude, accepted_time, accepted_location,
-             accepted_latitude, accepted_longitude, proposed_by, notes, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
-        """
-        
-        # If accepting, copy proposed values to accepted columns; if rejecting, leave NULL
-        accepted_time = proposal_result['proposed_time'] if response == 'accepted' else None
-        accepted_location = proposal_result['proposed_location'] if response == 'accepted' else None
-        accepted_latitude = proposal_result['proposed_latitude'] if response == 'accepted' else None
-        accepted_longitude = proposal_result['proposed_longitude'] if response == 'accepted' else None
-        
-        # Use 'accepted_time' for time proposals, 'accepted_location' for location-only proposals
-        action = response
-        if response == 'accepted':
-            # Determine if this is a time acceptance or location acceptance
-            if accepted_time is not None:
-                action = 'accepted_time'
-            elif accepted_location is not None:
-                action = 'accepted_location'
-        
-        cursor.execute(response_query, (
-            response_history_id,
-            proposal_result['negotiation_id'],
-            action,
-            proposal_result['proposed_time'],
-            proposal_result['proposed_location'],
-            proposal_result['proposed_latitude'],
-            proposal_result['proposed_longitude'],
-            accepted_time,
-            accepted_location,
-            accepted_latitude,
-            accepted_longitude,
-            user_id,  # responder
-            f"Responded: {response}"
-        ))
         
         connection.commit()
         connection.close()
         
-        print(f"[RespondToMeeting] Proposal {proposal_id} {response} successfully")
-        
-        # Format proposed_time with timezone
-        proposed_time = proposal_result['proposed_time']
-        if proposed_time and proposed_time.tzinfo is None:
-            proposed_time = proposed_time.replace(tzinfo=timezone.utc)
+        print(f"[RespondToMeeting] {proposal_type} proposal {response.upper()}: {proposal_id}")
         
         return json.dumps({
             'success': True,
-            'message': f'Meeting proposal {response} successfully',
-            'proposal': {
-                'proposal_id': proposal_result['history_id'],
-                'listing_id': proposal_result['final_listing_id'],
-                'proposed_location': proposal_result['proposed_location'],
-                'proposed_time': proposed_time.isoformat() if proposed_time else None,
-                'message': proposal_result['notes'],
-                'status': response,
-                'proposer': {
-                    'first_name': proposal_result['FirstName'],
-                    'last_name': proposal_result['LastName']
-                }
-            }
+            'message': f'Proposal {response} successfully',
+            'listing_id': listing_id
         })
         
     except Exception as e:
         print(f"[RespondToMeeting] Error: {str(e)}")
         return json.dumps({
             'success': False,
-            'error': f'Failed to respond to meeting proposal: {str(e)}'
+            'error': f'Failed to process response: {str(e)}'
         })
