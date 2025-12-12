@@ -146,6 +146,23 @@ struct MeetingLocationView: View {
                                 }
                             }
                             
+                            // Proposed location pin
+                            let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                            if let proposedLocation = locationProposals.first,
+                               let lat = proposedLocation.latitude,
+                               let lng = proposedLocation.longitude {
+                                Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)) {
+                                    VStack {
+                                        Image(systemName: "mappin.circle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.green)
+                                        Text("Proposed")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
+                                }
+                            }
+                            
                             // Search result pins
                             ForEach(searchResults, id: \.id) { result in
                                 Annotation("", coordinate: result.coordinate) {
@@ -274,7 +291,7 @@ struct MeetingLocationView: View {
                                         )
                                     }
                                 }
-                                .padding(.bottom, 8)
+                                .padding(.bottom, 20)
                             }
                             .frame(maxHeight: 300)
                         }
@@ -429,6 +446,41 @@ struct MeetingLocationView: View {
     private func centerMapOnResult(_ result: MapSearchResult) {
         let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
         cameraPosition = .region(MKCoordinateRegion(center: result.coordinate, span: span))
+    }
+    
+    private func centerMapOnProposedLocation() {
+        // Get the proposed location from meetingProposals
+        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+        guard let proposedLocation = locationProposals.first,
+              let lat = proposedLocation.latitude,
+              let lng = proposedLocation.longitude else {
+            print("[DEBUG MLV] No proposed location to center on")
+            return
+        }
+        
+        let proposedCoord = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+        
+        // If we have user location, calculate region to show both
+        if let userCoord = locationManager.location?.coordinate {
+            // Calculate center between user and proposed location
+            let centerLat = (userCoord.latitude + proposedCoord.latitude) / 2
+            let centerLng = (userCoord.longitude + proposedCoord.longitude) / 2
+            let centerCoord = CLLocationCoordinate2D(latitude: centerLat, longitude: centerLng)
+            
+            // Calculate distance between points to determine appropriate span
+            let latDiff = abs(userCoord.latitude - proposedCoord.latitude)
+            let lngDiff = abs(userCoord.longitude - proposedCoord.longitude)
+            
+            // Add padding (30% extra)
+            let span = MKCoordinateSpan(latitudeDelta: latDiff * 1.3, longitudeDelta: lngDiff * 1.3)
+            
+            print("[DEBUG MLV] Centering map on both user and proposed location")
+            cameraPosition = .region(MKCoordinateRegion(center: centerCoord, span: span))
+        } else {
+            // Just center on proposed location
+            let span = MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            cameraPosition = .region(MKCoordinateRegion(center: proposedCoord, span: span))
+        }
     }
     
     private func searchLocations() {
@@ -665,6 +717,11 @@ struct MeetingLocationView: View {
                         print("🟠 [MLV-PROPOSE] Reloading meeting proposals from server...")
                         // NOW reload proposals from server
                         reloadMeetingProposals()
+                        
+                        // Center map on proposed location and user location
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            centerMapOnProposedLocation()
+                        }
                         
                         // Hide success message after 3 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {

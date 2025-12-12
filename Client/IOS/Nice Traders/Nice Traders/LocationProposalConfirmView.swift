@@ -97,7 +97,7 @@ struct LocationProposalConfirmView: View {
                                     .foregroundColor(.gray)
                                     .textCase(.uppercase)
                                 
-                                Text(meetingTime)
+                                Text(DateFormatters.formatCompact(meetingTime))
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(Color(hex: "2d3748"))
                             }
