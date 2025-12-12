@@ -1,14 +1,14 @@
 //
-//  ContactDetailView.swift
+//  MeetingDetailView.swift
 //  Nice Traders
 //
 //  Contact detail page with messaging and meeting coordination
-//  (Refactored to use separate ContactChatView and ContactLocationView)
+//  (Refactored to use separate ContactChatView and MeetingLocationView)
 //
 
 import SwiftUI
 
-struct ContactDetailView: View {
+struct MeetingDetailView: View {
     let contactData: ContactData
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
@@ -111,7 +111,7 @@ struct ContactDetailView: View {
                             case .details:
                                 detailsView
                             case .location:
-                                ContactLocationView(
+                                MeetingLocationView(
                                     contactData: contactData,
                                     currentMeeting: $currentMeeting,
                                     meetingProposals: $meetingProposals,
@@ -199,7 +199,7 @@ struct ContactDetailView: View {
         }
         .navigationBarHidden(true)
         .onAppear {
-            print("VIEW: ContactDetailView")
+            print("VIEW: MeetingDetailView")
             loadMeetingProposals()
         }
     }

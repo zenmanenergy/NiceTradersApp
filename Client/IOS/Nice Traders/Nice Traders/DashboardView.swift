@@ -8,7 +8,7 @@
 import SwiftUI
 import MapKit
 
-// Note: ContactData, ContactListing, and OtherUser types are defined in ContactDetailView.swift
+// Note: ContactData, ContactListing, and OtherUser types are defined in MeetingDetailView.swift
 // They should be moved to a shared models file, but for now we reference them here
 
 struct DashboardView: View {
@@ -40,8 +40,8 @@ struct DashboardView: View {
                     loadDashboardData()
                 }
             } else if navigateToContact && selectedContactData != nil {
-                // Show ContactDetailView instead of DashboardView - no navigationDestination needed
-                ContactDetailView(contactData: selectedContactData!, navigateToContact: $navigateToContact)
+                // Show MeetingDetailView instead of DashboardView - no navigationDestination needed
+                MeetingDetailView(contactData: selectedContactData!, navigateToContact: $navigateToContact)
             } else {
                 MainDashboardView(
                     user: user,
@@ -989,8 +989,37 @@ struct ActiveExchangesSection: View {
                 ForEach(exchanges) { exchange in
                     ActiveExchangeCard(exchange: exchange)
                         .onTapGesture {
-                            selectedExchangeId = exchange.id
-                            navigateToNegotiation = true
+                            // Convert ActiveExchange to ContactData and navigate to MeetingDetailView
+                            let listing = ContactListing(
+                                listingId: exchange.id,
+                                currency: exchange.currencyFrom,
+                                amount: exchange.amount,
+                                acceptCurrency: exchange.currencyTo,
+                                preferredCurrency: exchange.currencyTo,
+                                meetingPreference: nil,
+                                location: exchange.location,
+                                latitude: 0.0,
+                                longitude: 0.0,
+                                radius: 0,
+                                willRoundToNearestDollar: exchange.willRoundToNearestDollar
+                            )
+                            let otherUser = OtherUser(
+                                firstName: exchange.traderName,
+                                lastName: "",
+                                rating: 0.0,
+                                totalTrades: 0
+                            )
+                            let contactData = ContactData(
+                                listing: listing,
+                                otherUser: otherUser,
+                                lockedAmount: nil,
+                                exchangeRate: nil,
+                                fromCurrency: exchange.currencyFrom,
+                                toCurrency: exchange.currencyTo,
+                                purchasedAt: nil
+                            )
+                            selectedContactData = contactData
+                            navigateToContact = true
                         }
                 }
             }

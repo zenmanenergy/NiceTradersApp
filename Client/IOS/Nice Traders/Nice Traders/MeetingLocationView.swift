@@ -1,5 +1,5 @@
 //
-//  ContactLocationView.swift
+//  MeetingLocationView.swift
 //  Nice Traders
 //
 
@@ -7,7 +7,7 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-struct ContactLocationView: View {
+struct MeetingLocationView: View {
     let contactData: ContactData
     @ObservedObject var localizationManager = LocalizationManager.shared
     @ObservedObject var locationManager = LocationManager()
