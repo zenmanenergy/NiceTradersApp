@@ -16,11 +16,6 @@ def get_search_filters():
             FROM listings l
             WHERE l.status = 'active' 
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
             ORDER BY accept_currency
         """)
         currencies = [row['accept_currency'] for row in cursor.fetchall()]
@@ -32,31 +27,21 @@ def get_search_filters():
             FROM listings l
             WHERE l.status = 'active' 
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
             ORDER BY currency
         """)
         accept_currencies = [row['currency'] for row in cursor.fetchall()]
         
-        # Get distinct locations (excluding sold/completed listings)
+        # Get distinct locations
         cursor.execute("""
             SELECT DISTINCT location 
             FROM listings l
             WHERE l.status = 'active' AND l.location IS NOT NULL AND l.location != ''
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
             ORDER BY location
         """)
         locations = [row['location'] for row in cursor.fetchall()]
         
-        # Get amount ranges (excluding sold/completed listings)
+        # Get amount ranges
         cursor.execute("""
             SELECT 
                 MIN(amount) as min_amount,
@@ -65,11 +50,6 @@ def get_search_filters():
             FROM listings l
             WHERE l.status = 'active'
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
         """)
         amount_stats = cursor.fetchone()
         

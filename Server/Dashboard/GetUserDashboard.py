@@ -45,64 +45,73 @@ def get_user_dashboard(SessionId):
         cursor.execute(user_query, (user_id,))
         user_data = cursor.fetchone()
         
-        # Get user's active listings count (excluding sold/completed listings)
+        # Get user's active listings count (listings created by user as seller)
         active_listings_query = """
             SELECT COUNT(*) as count 
             FROM listings l
             WHERE l.user_id = %s 
             AND l.status = 'active'
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
         """
         cursor.execute(active_listings_query, (user_id,))
         active_listings_count = cursor.fetchone()['count']
         
-        # Get user's completed transactions count
-        completed_transactions_query = """
-            SELECT COUNT(*) as count 
-            FROM exchange_transactions 
-            WHERE (seller_id = %s OR buyer_id = %s) AND status = 'completed'
+        # Get active exchanges count (listings user is actively negotiating on as buyer or seller)
+        active_exchanges_query = """
+            SELECT COUNT(DISTINCT lmt.listing_id) as count
+            FROM listing_meeting_time lmt
+            JOIN listings l ON lmt.listing_id = l.listing_id
+            WHERE (lmt.buyer_id = %s OR l.user_id = %s)
+            AND l.status = 'active'
+            AND l.available_until > NOW()
+            AND lmt.rejected_at IS NULL
         """
-        cursor.execute(completed_transactions_query, (user_id, user_id))
-        completed_transactions_count = cursor.fetchone()['count']
+        cursor.execute(active_exchanges_query, (user_id, user_id))
+        active_exchanges_count = cursor.fetchone()['count']
         
-        # Get recent active listings (last 10 listings, excluding sold/completed)
-        recent_listings_query = """
-            SELECT listing_id, currency, amount, accept_currency, location, 
-                   status, created_at, available_until, will_round_to_nearest_dollar
+        # Placeholder for completed transactions count (no transaction table yet)
+        completed_transactions_count = 0
+        
+        # Get user's active listings (last 10 listings created by user as seller)
+        user_listings_query = """
+            SELECT l.listing_id, l.currency, l.amount, l.accept_currency, l.location, 
+                   l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar
             FROM listings l
             WHERE l.user_id = %s 
             AND l.status = 'active'
             AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
             ORDER BY l.created_at DESC 
             LIMIT 10
         """
-        cursor.execute(recent_listings_query, (user_id,))
-        recent_listings = cursor.fetchall()
+        cursor.execute(user_listings_query, (user_id,))
+        user_listings = cursor.fetchall()
         
-        # Get pending offers on user's listings
-        pending_offers_query = """
-            SELECT o.offer_id, o.offered_amount, o.offered_currency, o.message,
-                   o.created_at, l.listing_id, l.currency, l.amount,
-                   u.FirstName, u.LastName
-            FROM exchange_offers o
-            JOIN listings l ON o.listing_id = l.listing_id
-            JOIN users u ON o.user_id = u.UserId
-            WHERE l.user_id = %s AND o.status = 'pending'
-            ORDER BY o.created_at DESC
-            LIMIT 5
+        # Get user's active exchanges (listings user is negotiating on as buyer or seller)
+        active_exchanges_query = """
+            SELECT l.listing_id, l.currency, l.amount, l.accept_currency, l.location, 
+                   l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar,
+                   lmt.buyer_id, l.user_id as seller_id,
+                   lmt.accepted_at, lmt.rejected_at,
+                   MAX(lmt.updated_at) as last_activity,
+                   u_buyer.FirstName as buyer_first_name, u_buyer.LastName as buyer_last_name,
+                   u_seller.FirstName as seller_first_name, u_seller.LastName as seller_last_name
+            FROM listings l
+            JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+            LEFT JOIN users u_buyer ON lmt.buyer_id = u_buyer.UserId
+            LEFT JOIN users u_seller ON l.user_id = u_seller.UserId
+            WHERE (lmt.buyer_id = %s OR l.user_id = %s)
+            AND l.status = 'active'
+            AND l.available_until > NOW()
+            AND lmt.rejected_at IS NULL
+            GROUP BY l.listing_id
+            ORDER BY last_activity DESC 
+            LIMIT 10
         """
-        cursor.execute(pending_offers_query, (user_id,))
-        pending_offers = cursor.fetchall()
+        cursor.execute(active_exchanges_query, (user_id, user_id))
+        active_exchanges = cursor.fetchall()
+        
+        # Placeholder for pending offers (exchange_offers table is not being used)
+        pending_offers = []
         
         connection.close()
         
@@ -120,10 +129,11 @@ def get_user_dashboard(SessionId):
             },
             'stats': {
                 'activeListings': active_listings_count,
+                'activeExchanges': active_exchanges_count,
                 'completedTransactions': completed_transactions_count,
                 'pendingOffers': len(pending_offers)
             },
-            'recentListings': [
+            'activeListings': [
                 {
                     'listingId': listing['listing_id'],
                     'currency': listing['currency'],
@@ -135,7 +145,29 @@ def get_user_dashboard(SessionId):
                     'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
                     'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
                 }
-                for listing in recent_listings
+                for listing in user_listings
+            ],
+            'activeExchanges': [
+                {
+                    'listingId': exchange['listing_id'],
+                    'currency': exchange['currency'],
+                    'amount': float(exchange['amount']) if isinstance(exchange['amount'], Decimal) else exchange['amount'],
+                    'acceptCurrency': exchange['accept_currency'],
+                    'location': exchange['location'],
+                    'status': exchange['status'],
+                    'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
+                    'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,
+                    'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False,
+                    'userRole': 'buyer' if exchange['buyer_id'] == user_id else 'seller',
+                    'otherUser': {
+                        'name': f"{exchange['seller_first_name']} {exchange['seller_last_name']}" if exchange['buyer_id'] == user_id else f"{exchange['buyer_first_name']} {exchange['buyer_last_name']}"
+                    },
+                    'acceptedAt': exchange['accepted_at'].isoformat() if exchange['accepted_at'] else None,
+                    'rejectedAt': exchange['rejected_at'].isoformat() if exchange['rejected_at'] else None,
+                    'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
+                    'actionRequired': exchange['accepted_at'] is None and exchange['buyer_id'] != user_id  # Seller needs to accept
+                }
+                for exchange in active_exchanges
             ],
             'pendingOffers': [
                 {

@@ -97,7 +97,7 @@ struct NegotiationCard: View {
     @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
-        NavigationLink(destination: NegotiationDetailView(negotiationId: negotiation.id)) {
+        NavigationLink(destination: NegotiationDetailView(listingId: negotiation.id, navigateToNegotiation: .constant(false))) {
             VStack(alignment: .leading, spacing: 12) {
                 // Header: Role + Status
                 HStack {
@@ -204,6 +204,7 @@ struct StatusBadge: View {
     var statusText: String {
         switch status {
         case .proposed: return localizationManager.localize("STATUS_PROPOSED")
+        case .negotiating: return localizationManager.localize("STATUS_NEGOTIATING")
         case .countered: return localizationManager.localize("STATUS_COUNTERED")
         case .agreed: return localizationManager.localize("STATUS_AGREED")
         case .rejected: return localizationManager.localize("STATUS_REJECTED")
@@ -216,7 +217,7 @@ struct StatusBadge: View {
     
     var statusColor: Color {
         switch status {
-        case .proposed, .countered: return .blue
+        case .proposed, .negotiating, .countered: return .blue
         case .agreed: return .green
         case .paidPartial: return .orange
         case .paidComplete: return .purple

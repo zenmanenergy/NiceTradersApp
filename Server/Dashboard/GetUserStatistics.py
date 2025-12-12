@@ -44,28 +44,16 @@ def get_user_statistics(SessionId):
         cursor.execute(listings_stats_query, (user_id,))
         listings_stats = cursor.fetchall()
         
-        # Get transaction statistics by status
-        transaction_stats_query = """
-            SELECT status, COUNT(*) as count
-            FROM exchange_transactions 
-            WHERE seller_id = %s OR buyer_id = %s
-            GROUP BY status
-        """
-        cursor.execute(transaction_stats_query, (user_id, user_id))
-        transaction_stats = cursor.fetchall()
+        # Placeholder for transaction statistics (exchange_transactions table is not being used)
+        transaction_stats = []
         
-        # Get total volume traded
-        volume_query = """
-            SELECT 
-                SUM(CASE WHEN seller_id = %s THEN amount_sold ELSE 0 END) as sold_volume,
-                SUM(CASE WHEN buyer_id = %s THEN amount_bought ELSE 0 END) as bought_volume,
-                COUNT(CASE WHEN seller_id = %s THEN 1 END) as times_sold,
-                COUNT(CASE WHEN buyer_id = %s THEN 1 END) as times_bought
-            FROM exchange_transactions 
-            WHERE (seller_id = %s OR buyer_id = %s) AND status = 'completed'
-        """
-        cursor.execute(volume_query, (user_id, user_id, user_id, user_id, user_id, user_id))
-        volume_data = cursor.fetchone()
+        # Placeholder for volume data
+        volume_data = {
+            'sold_volume': 0,
+            'bought_volume': 0,
+            'times_sold': 0,
+            'times_bought': 0
+        }
         
         # Get most traded currencies
         currency_stats_query = """

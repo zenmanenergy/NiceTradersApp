@@ -14,9 +14,6 @@ DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS contact_access;
 -- Original tables
-DROP TABLE IF EXISTS user_favorites;
-DROP TABLE IF EXISTS exchange_transactions;
-DROP TABLE IF EXISTS exchange_offers;
 DROP TABLE IF EXISTS listings;
 DROP TABLE IF EXISTS history;
 DROP TABLE IF EXISTS usersessions;
@@ -101,69 +98,6 @@ CREATE TABLE listings (
     INDEX idx_user_id (user_id),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE
-);
-
--- Create exchange_offers table for offers on listings
-CREATE TABLE exchange_offers (
-    offer_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    user_id CHAR(39) NOT NULL,
-    offered_amount DECIMAL(15,2) NOT NULL,
-    offered_currency VARCHAR(10) NOT NULL,
-    message TEXT,
-    status ENUM('pending', 'accepted', 'rejected', 'expired') DEFAULT 'pending',
-    expires_at DATETIME NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    INDEX idx_expires_at (expires_at),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE
-);
-
--- Create exchange_transactions table to track completed exchanges
-CREATE TABLE exchange_transactions (
-    transaction_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    offer_id CHAR(39),
-    seller_id CHAR(39) NOT NULL,
-    buyer_id CHAR(39) NOT NULL,
-    currency_sold VARCHAR(10) NOT NULL,
-    amount_sold DECIMAL(15,2) NOT NULL,
-    currency_bought VARCHAR(10) NOT NULL,
-    amount_bought DECIMAL(15,2) NOT NULL,
-    exchange_rate DECIMAL(10,6) NOT NULL,
-    meeting_location TEXT,
-    meeting_time DATETIME,
-    status ENUM('pending', 'confirmed', 'disputed', 'completed', 'cancelled') DEFAULT 'pending',
-    seller_rating TINYINT CHECK (seller_rating >= 1 AND seller_rating <= 5),
-    buyer_rating TINYINT CHECK (buyer_rating >= 1 AND buyer_rating <= 5),
-    seller_feedback TEXT,
-    buyer_feedback TEXT,
-    completed_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_seller_id (seller_id),
-    INDEX idx_buyer_id (buyer_id),
-    INDEX idx_status (status),
-    INDEX idx_completed_at (completed_at),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (offer_id) REFERENCES exchange_offers(offer_id) ON DELETE SET NULL,
-    FOREIGN KEY (seller_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(UserId) ON DELETE CASCADE
-);
-
--- Create user_favorites table for users to save favorite listings
-CREATE TABLE user_favorites (
-    user_id CHAR(39) NOT NULL,
-    listing_id CHAR(39) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, listing_id),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE
 );
 
 -- Create contact_access table for tracking paid contact access

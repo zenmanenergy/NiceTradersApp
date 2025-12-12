@@ -17,7 +17,7 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             if session_result:
                 current_user_id = session_result['UserId']
         
-        # Build the base query (excluding sold/completed listings)
+        # Build the base query (excluding sold/completed listings and proposals by current user)
         base_query = """
             SELECT 
                 l.listing_id,
@@ -43,11 +43,6 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             FROM listings l
             JOIN users u ON l.user_id = u.UserId
             WHERE l.status = 'active' AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
         """
         
         # Build filter conditions
@@ -57,6 +52,12 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         # Exclude current user's own listings
         if current_user_id:
             conditions.append("l.user_id != %s")
+            params.append(current_user_id)
+            # Exclude listings where current user has a pending proposal
+            conditions.append("""l.listing_id NOT IN (
+                SELECT listing_id FROM listing_meeting_time 
+                WHERE buyer_id = %s AND accepted_at IS NULL AND rejected_at IS NULL
+            )""")
             params.append(current_user_id)
         
         if Currency:
@@ -133,24 +134,19 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         
         print(f"[SearchListings] Query executed successfully, returned {len(listings)} rows")
         
-        # Get total count for pagination (excluding sold/completed listings)
+        # Get total count for pagination
         count_query = """
             SELECT COUNT(*) as total
             FROM listings l
             WHERE l.status = 'active' AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
         """
         
-        if conditions:
-            count_query += " AND " + " AND ".join(conditions)
-            # Use only the filter params, not the pagination params
-            count_params = [p for i, p in enumerate(params) if i < len(conditions)]
-        else:
-            count_params = []
+        # Build count params - must match the order of conditions in base_query
+        count_conditions_for_count = list(conditions)  # Copy the conditions list
+        count_params = list(params[:len(count_conditions_for_count)])  # Only use params for conditions, not pagination
+        
+        if count_conditions_for_count:
+            count_query += " AND " + " AND ".join(count_conditions_for_count)
             
         cursor.execute(count_query, tuple(count_params))
         total_count = cursor.fetchone()['total']

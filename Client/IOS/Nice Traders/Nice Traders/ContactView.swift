@@ -704,8 +704,7 @@ struct ContactView: View {
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color(hex: "e2e8f0"), lineWidth: 1)
                 )
-                .onTapGesture { }
-                .simultaneousGesture(TapGesture().onEnded { })
+                .fixedSize(horizontal: false, vertical: true)
             
             Button(action: sendMessage) {
                 Text(localizationManager.localize("SEND_MESSAGE"))

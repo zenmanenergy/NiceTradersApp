@@ -39,6 +39,7 @@ struct Negotiation: Codable, Identifiable {
 
 enum NegotiationStatus: String, Codable {
     case proposed
+    case negotiating
     case countered
     case agreed
     case rejected
@@ -225,7 +226,7 @@ struct NegotiationDetailResponse: Codable {
     let error: String?
     
     struct NegotiationInfo: Codable {
-        let negotiationId: String
+        let negotiationId: String?
         let listingId: String
         let status: NegotiationStatus
         let currentProposedTime: String
@@ -275,7 +276,7 @@ struct NegotiationDetailResponse: Codable {
         
         return NegotiationDetail(
             negotiation: NegotiationDetail.NegotiationInfo(
-                negotiationId: negotiation.negotiationId,
+                negotiationId: negotiation.negotiationId ?? negotiation.listingId,
                 listingId: negotiation.listingId,
                 status: negotiation.status,
                 currentProposedTime: negotiation.currentProposedTime,

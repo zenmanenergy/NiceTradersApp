@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct NegotiationDetailView: View {
-    let negotiationId: String
+    var listingId: String
+    @Binding var navigateToNegotiation: Bool
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
@@ -86,7 +87,7 @@ struct NegotiationDetailView: View {
                     Text("isLoading: \(isLoading) | hasNegotiation: \(negotiation != nil) | hasError: \(errorMessage != nil)")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    Text("negotiationId: \(negotiationId)")
+                    Text("listingId: \(listingId)")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                     Button(localizationManager.localize("RETRY")) {
@@ -100,14 +101,14 @@ struct NegotiationDetailView: View {
         .navigationTitle(localizationManager.localize("NEGOTIATION_DETAILS"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            print("[NegotiationDetailView] onAppear called with negotiationId: \(negotiationId)")
+            print("[NegotiationDetailView] onAppear called with listingId: \(listingId)")
             print("[NegotiationDetailView] Current state - isLoading: \(isLoading), negotiation: \(negotiation != nil), errorMessage: \(errorMessage ?? "nil")")
             loadNegotiation()
         }
         .sheet(isPresented: $showCounterProposal) {
             if let negotiation = negotiation {
                 CounterProposalSheet(
-                    negotiationId: negotiationId,
+                    negotiationId: listingId,
                     currentTime: negotiation.negotiation.currentProposedTime
                 ) {
                     loadNegotiation()
@@ -117,7 +118,7 @@ struct NegotiationDetailView: View {
         .sheet(isPresented: $showPayment) {
             if let negotiation = negotiation {
                 PaymentView(
-                    negotiationId: negotiationId,
+                    negotiationId: listingId,
                     userRole: negotiation.userRole,
                     otherUserName: negotiation.userRole == "buyer" ? negotiation.seller.firstName : negotiation.buyer.firstName,
                     onComplete: {
@@ -494,9 +495,9 @@ struct NegotiationDetailView: View {
         isLoading = true
         errorMessage = nil
         
-        print("[NegotiationDetailView] Loading negotiation ID: \(negotiationId)")
+        print("[NegotiationDetailView] Loading negotiation for listing ID: \(listingId)")
         
-        NegotiationService.shared.getNegotiation(negotiationId: negotiationId) { result in
+        NegotiationService.shared.getNegotiation(negotiationId: listingId) { result in
             DispatchQueue.main.async {
                 isLoading = false
                 
@@ -525,9 +526,9 @@ struct NegotiationDetailView: View {
     private func acceptProposal() {
         isProcessing = true
         
-        print("[NegotiationDetailView] acceptProposal called for negotiationId: \(negotiationId)")
+        print("[NegotiationDetailView] acceptProposal called for listingId: \(listingId)")
         
-        NegotiationService.shared.acceptProposal(negotiationId: negotiationId) { result in
+        NegotiationService.shared.acceptProposal(negotiationId: listingId) { result in
             DispatchQueue.main.async {
                 isProcessing = false
                 
@@ -552,9 +553,9 @@ struct NegotiationDetailView: View {
     private func rejectNegotiation() {
         isProcessing = true
         
-        print("[NegotiationDetailView] rejectNegotiation called for negotiationId: \(negotiationId)")
+        print("[NegotiationDetailView] rejectNegotiation called for listingId: \(listingId)")
         
-        NegotiationService.shared.rejectNegotiation(negotiationId: negotiationId) { result in
+        NegotiationService.shared.rejectNegotiation(negotiationId: listingId) { result in
             DispatchQueue.main.async {
                 isProcessing = false
                 
@@ -695,6 +696,6 @@ struct CounterProposalSheet: View {
 
 #Preview {
     NavigationView {
-        NegotiationDetailView(negotiationId: "NEG-123")
+        NegotiationDetailView(listingId: "listing-123", navigateToNegotiation: .constant(true))
     }
 }

@@ -28,6 +28,8 @@ struct DashboardView: View {
     @State private var navigateToContact = false
     @State private var selectedContactData: ContactData?
     @State private var selectedTab = 0
+    @State private var navigateToNegotiation = false
+    @State private var selectedExchangeId: String?
     
     var body: some View {
         return ZStack {
@@ -53,7 +55,26 @@ struct DashboardView: View {
                     navigateToSearch: $navigateToSearch,
                     navigateToProfile: $navigateToProfile,
                     navigateToMessages: $navigateToMessages,
-                    onRefresh: loadDashboardData
+                    navigateToNegotiation: $navigateToNegotiation,
+                    selectedExchangeId: $selectedExchangeId,
+                    onRefresh: {
+                        self.loadDashboardData()
+                    },
+                    onRefreshAsync: { completion in
+                        self.loadDashboardData()
+                        // Wait for data to load
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            // Keep checking until loading is done or timeout
+                            var waitTime = 0.0
+                            let checkTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                                waitTime += 0.1
+                                if !self.isLoading || waitTime > 5.0 {
+                                    timer.invalidate()
+                                    completion()
+                                }
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -69,6 +90,11 @@ struct DashboardView: View {
         }
         .navigationDestination(isPresented: $navigateToMessages) {
             MessagesView(navigateToMessages: $navigateToMessages)
+        }
+        .navigationDestination(isPresented: $navigateToNegotiation) {
+            if let listingId = selectedExchangeId {
+                NegotiationDetailView(listingId: listingId, navigateToNegotiation: $navigateToNegotiation)
+            }
         }
         .onAppear {
             print("VIEW: DashboardView - Displaying dashboard")
@@ -266,6 +292,54 @@ struct DashboardView: View {
                     }
                 } else {
                 }
+                
+                // Process active exchanges from dashboard response
+                if let activeExchangesData = dashboardData["activeExchanges"] as? [[String: Any]] {
+                    let dashboardExchanges = activeExchangesData.compactMap { exchangeDict -> ActiveExchange? in
+                        guard let listingId = exchangeDict["listingId"] as? String,
+                              let currency = exchangeDict["currency"] as? String,
+                              let acceptCurrency = exchangeDict["acceptCurrency"] as? String,
+                              let location = exchangeDict["location"] as? String else {
+                            return nil
+                        }
+                        
+                        let amount: Double
+                        if let amountInt = exchangeDict["amount"] as? Int {
+                            amount = Double(amountInt)
+                        } else if let amountDouble = exchangeDict["amount"] as? Double {
+                            amount = amountDouble
+                        } else {
+                            return nil
+                        }
+                        
+                        let convertedAmount = ExchangeRatesAPI.shared.convertAmountSync(amount, from: currency, to: acceptCurrency)
+                        let willRound = (exchangeDict["willRoundToNearestDollar"] as? Bool) ?? false
+                        let userRole = (exchangeDict["userRole"] as? String) ?? "buyer"
+                        let otherUser = exchangeDict["otherUser"] as? [String: Any]
+                        let otherUserName = otherUser?["name"] as? String ?? "Unknown User"
+                        let negotiationStatus = (exchangeDict["negotiationStatus"] as? String) ?? "proposed"
+                        let actionRequired = (exchangeDict["actionRequired"] as? Bool) ?? false
+                        
+                        let exchangeType: ActiveExchange.ExchangeType = userRole == "buyer" ? .buyer : .seller
+                        
+                        return ActiveExchange(
+                            id: listingId,
+                            currencyFrom: currency,
+                            currencyTo: acceptCurrency,
+                            amount: amount,
+                            convertedAmount: convertedAmount,
+                            traderName: otherUserName,
+                            location: location,
+                            type: exchangeType,
+                            willRoundToNearestDollar: willRound,
+                            meetingTime: nil,
+                            status: negotiationStatus,
+                            actionRequired: actionRequired
+                        )
+                    }
+                    
+                    self.allActiveExchanges.append(contentsOf: dashboardExchanges)
+                }
             } else {
             }
             
@@ -316,7 +390,9 @@ struct DashboardView: View {
                     location: location,
                     type: .buyer,
                     willRoundToNearestDollar: willRound,
-                    meetingTime: meetingTimeStr
+                    meetingTime: meetingTimeStr,
+                    status: "proposed",
+                    actionRequired: false
                 )
             }
             
@@ -374,7 +450,9 @@ struct DashboardView: View {
                     location: location,
                     type: .seller,
                     willRoundToNearestDollar: willRound,
-                    meetingTime: nil
+                    meetingTime: nil,
+                    status: "proposed",
+                    actionRequired: true
                 )
             }
             
@@ -684,7 +762,10 @@ struct MainDashboardView: View {
     @Binding var navigateToSearch: Bool
     @Binding var navigateToProfile: Bool
     @Binding var navigateToMessages: Bool
+    @Binding var navigateToNegotiation: Bool
+    @Binding var selectedExchangeId: String?
     var onRefresh: (() -> Void)?
+    var onRefreshAsync: ((@escaping () -> Void) -> Void)?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -710,7 +791,9 @@ struct MainDashboardView: View {
                         exchanges: allActiveExchanges,
                         purchasedContactsData: purchasedContactsData,
                         selectedContactData: $selectedContactData,
-                        navigateToContact: $navigateToContact
+                        navigateToContact: $navigateToContact,
+                        navigateToNegotiation: $navigateToNegotiation,
+                        selectedExchangeId: $selectedExchangeId
                     )
                     .padding(.horizontal)
                     
@@ -721,7 +804,12 @@ struct MainDashboardView: View {
                     Spacer(minLength: 80)
                 }
                 .refreshable {
-                    onRefresh?()
+                    // Create async wrapper for the refresh callback
+                    return await withCheckedContinuation { continuation in
+                        onRefreshAsync? { () in
+                            continuation.resume()
+                        }
+                    }
                 }
             }
             
@@ -871,6 +959,8 @@ struct ActiveExchangesSection: View {
     let purchasedContactsData: [[String: Any]]
     @Binding var selectedContactData: ContactData?
     @Binding var navigateToContact: Bool
+    @Binding var navigateToNegotiation: Bool
+    @Binding var selectedExchangeId: String?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -899,7 +989,8 @@ struct ActiveExchangesSection: View {
                 ForEach(exchanges) { exchange in
                     ActiveExchangeCard(exchange: exchange)
                         .onTapGesture {
-                            openContactDetail(for: exchange)
+                            selectedExchangeId = exchange.id
+                            navigateToNegotiation = true
                         }
                 }
             }
@@ -913,79 +1004,6 @@ struct ActiveExchangesSection: View {
             )
         )
         .cornerRadius(16)
-    }
-    
-    private func openContactDetail(for exchange: ActiveExchange) {
-        // Find the purchased contact data for this exchange
-        if let contactDict = purchasedContactsData.first(where: { dict in
-            (dict["listing_id"] as? String) == exchange.id
-        }) {
-            // Parse the contact data into ContactData struct
-            guard let listing = contactDict["listing"] as? [String: Any],
-                  let seller = contactDict["seller"] as? [String: Any],
-                  let currency = listing["currency"] as? String,
-                  let location = listing["location"] as? String,
-                  let sellerFirstName = seller["name"] as? String else {
-                return
-            }
-            
-            let amount: Double
-            if let amountInt = listing["amount"] as? Int {
-                amount = Double(amountInt)
-            } else if let amountDouble = listing["amount"] as? Double {
-                amount = amountDouble
-            } else {
-                return
-            }
-            
-            let nameParts = sellerFirstName.split(separator: " ")
-            let firstName = String(nameParts.first ?? "")
-            let lastName = nameParts.count > 1 ? String(nameParts.dropFirst().joined(separator: " ")) : ""
-            
-            let contactData = ContactData(
-                listing: ContactListing(
-                    listingId: exchange.id,
-                    currency: currency,
-                    amount: amount,
-                    acceptCurrency: listing["accept_currency"] as? String,
-                    preferredCurrency: nil,
-                    meetingPreference: listing["meeting_preference"] as? String,
-                    location: location,
-                    latitude: {
-                        if let latDouble = listing["latitude"] as? Double {
-                            return latDouble
-                        } else if let latString = listing["latitude"] as? String, let latDouble = Double(latString) {
-                            return latDouble
-                        }
-                        return 0.0
-                    }(),
-                    longitude: {
-                        if let lngDouble = listing["longitude"] as? Double {
-                            return lngDouble
-                        } else if let lngString = listing["longitude"] as? String, let lngDouble = Double(lngString) {
-                            return lngDouble
-                        }
-                        return 0.0
-                    }(),
-                    radius: (listing["location_radius"] as? Int) ?? 5,
-                    willRoundToNearestDollar: listing["will_round_to_nearest_dollar"] as? Bool
-                ),
-                otherUser: OtherUser(
-                    firstName: firstName,
-                    lastName: lastName,
-                    rating: nil,
-                    totalTrades: nil
-                ),
-                lockedAmount: contactDict["locked_amount"] as? Double,
-                exchangeRate: contactDict["exchange_rate"] as? Double,
-                fromCurrency: contactDict["from_currency"] as? String,
-                toCurrency: contactDict["to_currency"] as? String,
-                purchasedAt: contactDict["purchased_at"] as? String
-            )
-            
-            selectedContactData = contactData
-            navigateToContact = true
-        }
     }
 }
 
@@ -1076,8 +1094,13 @@ struct ActiveExchangeCard: View {
                 Text(formatDateTime(meetingTime))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.8))
+            } else if exchange.actionRequired {
+                Text("⚠️ Action required")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
             } else {
-                Text("⏳ Waiting for location response")
+                Text("⏳ Waiting for acceptance")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)
@@ -1395,6 +1418,8 @@ struct ActiveExchange: Identifiable {
     let type: ExchangeType
     let willRoundToNearestDollar: Bool
     let meetingTime: String? // ISO datetime string
+    let status: String? // "proposed", "accepted", etc
+    let actionRequired: Bool
     
     enum ExchangeType {
         case buyer, seller
@@ -1444,7 +1469,7 @@ struct PendingNegotiationsSection: View {
             }
             
             ForEach(negotiations) { negotiation in
-                NavigationLink(destination: NegotiationDetailView(negotiationId: negotiation.id)) {
+                NavigationLink(destination: NegotiationDetailView(listingId: negotiation.id, navigateToNegotiation: .constant(false))) {
                     PendingNegotiationCard(negotiation: negotiation)
                 }
                 .buttonStyle(PlainButtonStyle())

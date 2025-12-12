@@ -38,11 +38,6 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
             FROM listings l
             JOIN users u ON l.user_id = u.UserId
             WHERE l.status = 'active' AND l.available_until > NOW()
-            AND NOT EXISTS (
-                SELECT 1 FROM exchange_transactions et 
-                WHERE et.listing_id = l.listing_id 
-                AND et.status = 'completed'
-            )
         """
         
         params = []

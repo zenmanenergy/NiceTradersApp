@@ -13,6 +13,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Suppress known UIKit constraint warnings for keyboard input views
+        // These are system-level warnings that don't affect functionality
+        // See: https://developer.apple.com/forums/thread/707024
+        UserDefaults.standard.set(true, forKey: "UIConstraintBasedLayoutVisualizeMutuallyExclusiveConstraints")
+        
         // Initialize device token manager and request notification permissions
         _ = DeviceTokenManager.shared
         return true
