@@ -122,6 +122,7 @@ class LocalizationManager: NSObject, ObservableObject {
             "COUNTER_PROPOSE_LOCATION": "Counter Propose Location",
             "LOCATION_PROPOSED": "Location Proposed",
             "AWAITING_LOCATION_RESPONSE": "Awaiting Location Response",
+            "WAITING_FOR_LOCATION_ACCEPTANCE": "Waiting for location acceptance",
             "LOCATION_ACCEPTED": "Location Accepted",
             "PROPOSED_BY": "Proposed by",
             "MESSAGE": "Message",

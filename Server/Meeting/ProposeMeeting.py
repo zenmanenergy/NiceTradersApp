@@ -127,7 +127,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                 print(f"🟠 [ProposeMeeting] Updating existing time negotiation: {existing['time_negotiation_id']}")
                 cursor.execute("""
                     UPDATE listing_meeting_time 
-                    SET meeting_time = %s, proposed_by = %s, updated_at = NOW()
+                    SET meeting_time = %s, proposed_by = %s, accepted_at = NULL, rejected_at = NULL, updated_at = NOW()
                     WHERE listing_id = %s
                 """, (proposed_datetime, proposer_id, listing_id))
                 results['proposal_ids']['time'] = existing['time_negotiation_id']
@@ -185,6 +185,8 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                         meeting_location_lng = %s,
                         meeting_location_name = %s,
                         proposed_by = %s,
+                        accepted_at = NULL,
+                        rejected_at = NULL,
                         updated_at = NOW()
                     WHERE listing_id = %s
                 """, (lat, lng, proposed_location, proposer_id, listing_id))

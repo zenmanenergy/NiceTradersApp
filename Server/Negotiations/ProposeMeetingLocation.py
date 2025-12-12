@@ -90,10 +90,11 @@ def propose_meeting_location(listing_id, session_id, latitude, longitude, locati
         
         existing_location = cursor.fetchone()
         
-        # Delete old rejected record if exists (clean slate for re-proposal)
+        # Clear rejected_at if exists (allow re-proposal after rejection)
         if existing_location and existing_location['rejected_at'] is not None:
             cursor.execute("""
-                DELETE FROM listing_meeting_location
+                UPDATE listing_meeting_location
+                SET rejected_at = NULL, updated_at = NOW()
                 WHERE listing_id = %s
             """, (listing_id,))
         elif existing_location:

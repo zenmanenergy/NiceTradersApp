@@ -365,50 +365,119 @@ struct MeetingDetailView: View {
             let locationProposals = meetingProposals.filter { $0.proposedLocation != "" }
             if (timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)),
                let pendingLocationProposal = locationProposals.first(where: { $0.status == "pending" }) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("🕒 " + localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
-                            .font(.headline)
-                            .foregroundColor(Color(hex: "f59e0b"))
-                        Spacer()
-                    }
-                    
-                    Text("Waiting for the other trader to respond to your location proposal.")
-                        .font(.subheadline)
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    // Show proposed location details
-                    VStack(alignment: .leading, spacing: 8) {
-                        detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
-                        if let meeting = currentMeeting {
-                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                        }
-                    }
-                    .padding(12)
-                    .background(Color(hex: "fffbeb"))
-                    .cornerRadius(8)
-                    
-                    Button(action: {
-                        cancelLocationProposal(proposalId: pendingLocationProposal.proposalId)
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
-                            Text("Cancel Proposal")
-                                .fontWeight(.semibold)
+                
+                if pendingLocationProposal.isFromMe {
+                    // I proposed the location, waiting for them to respond
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("🕒 " + localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
+                                .font(.headline)
+                                .foregroundColor(Color(hex: "f59e0b"))
                             Spacer()
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color(hex: "ef4444"))
+                        
+                        Text("Waiting for the other trader to respond to your location proposal.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "4a5568"))
+                        
+                        // Show proposed location details
+                        VStack(alignment: .leading, spacing: 8) {
+                            detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
+                            if let meeting = currentMeeting {
+                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
+                            }
+                        }
+                        .padding(12)
+                        .background(Color(hex: "fffbeb"))
                         .cornerRadius(8)
+                        
+                        Button(action: {
+                            cancelLocationProposal(proposalId: pendingLocationProposal.proposalId)
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                Text("Cancel Proposal")
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "ef4444"))
+                            .cornerRadius(8)
+                        }
                     }
+                    .padding()
+                    .background(Color(hex: "fef3c7"))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                } else {
+                    // They proposed the location, I need to respond (Accept or Counter)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("📍 Location Proposal")
+                                .font(.headline)
+                                .foregroundColor(Color(hex: "059669"))
+                            Spacer()
+                        }
+                        
+                        Text("\(pendingLocationProposal.proposer.firstName) proposed a location.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "4a5568"))
+                        
+                        // Show proposed location details
+                        VStack(alignment: .leading, spacing: 8) {
+                            detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
+                            if let meeting = currentMeeting {
+                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
+                            }
+                        }
+                        .padding(12)
+                        .background(Color(hex: "f0fdf4"))
+                        .cornerRadius(8)
+                        
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                respondToLocationProposal(proposalId: pendingLocationProposal.proposalId, response: "accepted")
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 14))
+                                    Text("Accept")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color(hex: "10b981"))
+                                .cornerRadius(8)
+                            }
+                            
+                            Button(action: {
+                                activeTab = .location
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "pencil.circle.fill")
+                                        .font(.system(size: 14))
+                                    Text("Change")
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color(hex: "f59e0b"))
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(hex: "ecfdf5"))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                 }
-                .padding()
-                .background(Color(hex: "fef3c7"))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
             // Button Set 2b: Show when time is accepted but no location proposal exists
             else if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
@@ -975,7 +1044,7 @@ struct MeetingDetailView: View {
         }.resume()
     }
     
-    private func cancelLocationProposal(proposalId: String) {
+                    private func cancelLocationProposal(proposalId: String) {
         guard let sessionId = SessionManager.shared.sessionId else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available for cancel location")
@@ -983,10 +1052,11 @@ struct MeetingDetailView: View {
         }
         
         let baseURL = Settings.shared.baseURL
-        var components = URLComponents(string: "\(baseURL)/Meeting/RejectProposal")!
+        var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
-            URLQueryItem(name: "proposalId", value: proposalId)
+            URLQueryItem(name: "proposalId", value: proposalId),
+            URLQueryItem(name: "response", value: "rejected")
         ]
         
         guard let url = components.url else {
@@ -1018,6 +1088,55 @@ struct MeetingDetailView: View {
                     let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
                     self.errorMessage = errorMsg?["error"] as? String ?? "Failed to cancel proposal"
                     print("[DEBUG] Cancel location failed: \(self.errorMessage)")
+                }
+            }
+        }.resume()
+    }
+    
+    private func respondToLocationProposal(proposalId: String, response: String) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[DEBUG] No session ID available for respond to location")
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "proposalId", value: proposalId),
+            URLQueryItem(name: "response", value: response)
+        ]
+        
+        guard let url = components.url else {
+            print("[DEBUG] Failed to construct respond to location URL")
+            return
+        }
+        
+        print("[DEBUG] Respond to location - calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("[DEBUG] Respond to location response received")
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[DEBUG] Respond to location HTTP status: \(httpResponse.statusCode)")
+                }
+                
+                if let error = error {
+                    print("[DEBUG] Respond to location error: \(error.localizedDescription)")
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    print("[DEBUG] Respond to location successful")
+                    self.loadMeetingProposals()
+                } else {
+                    let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
+                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to respond to proposal"
+                    print("[DEBUG] Respond to location failed: \(self.errorMessage)")
                 }
             }
         }.resume()

@@ -220,8 +220,15 @@ struct DashboardView: View {
                     joinDate: formatJoinDate(dateCreated)
                 )
                 
+                // Initialize dispatch group and maps for fetching all proposals
+                var proposalCounts: [String: Int] = [:]
+                var hasLocationProposalMap: [String: Bool] = [:]
+                var meetingDataMap: [String: [String: Any?]] = [:]
+                let dispatchGroup = DispatchGroup()
+                
                 // Process listings
                 if let recentListings = dashboardData["recentListings"] as? [[String: Any]] {
+                    print("[DEBUG] Found \(recentListings.count) recent listings")
                     
                     myListings = recentListings.compactMap { listingDict -> Listing? in
                         
@@ -261,68 +268,73 @@ struct DashboardView: View {
                     }
                     
                     // Fetch meeting proposals for each listing
-                    var proposalCounts: [String: Int] = [:]
-                    var hasLocationProposalMap: [String: Bool] = [:]
-                    let dispatchGroup = DispatchGroup()
-                    
+                    print("[DEBUG] Starting dispatchGroup with \(myListings.count) myListings")
+                    print("[DEBUG] myListings count: \(myListings.count)")
                     for listing in myListings {
+                        print("[DEBUG] Fetching proposals for listing: \(listing.id)")
                         dispatchGroup.enter()
                         getMeetingProposals(sessionId: sessionId, listingId: listing.id) { result in
+                            print("[DEBUG] GetMeetingProposals result for listing \(listing.id):")
+                            print("[DEBUG] Result: \(result ?? [:])")
+                            
                             if let result = result,
                                let proposals = result["proposals"] as? [[String: Any]] {
+                                print("[DEBUG] Found \(proposals.count) proposals")
+                                for proposal in proposals {
+                                    print("[DEBUG]   - Type: \(proposal["type"] ?? "unknown"), Status: \(proposal["status"] ?? "unknown")")
+                                }
+                                
                                 let pendingCount = proposals.filter { prop in
                                     (prop["status"] as? String) == "pending"
                                 }.count
                                 proposalCounts[listing.id] = pendingCount
                                 
-                                // Check if there's any location proposal (pending or accepted)
+                                // Check if there's any location proposal (pending or accepted, but not rejected)
                                 let hasLocationProposal = proposals.contains { prop in
-                                    (prop["type"] as? String) == "location"
+                                    (prop["type"] as? String) == "location" &&
+                                    (prop["status"] as? String) != "rejected"
                                 }
+                                print("[DEBUG] hasLocationProposal for \(listing.id): \(hasLocationProposal)")
                                 hasLocationProposalMap[listing.id] = hasLocationProposal
+                                
+                                // Extract meeting time and location acceptance status
+                                var meetingTime: String? = nil
+                                var timeAccepted: Bool = false
+                                var locationAccepted: Bool = false
+                                
+                                for proposal in proposals {
+                                    if let type = proposal["type"] as? String {
+                                        if type == "time" && (proposal["status"] as? String) == "accepted" {
+                                            meetingTime = proposal["proposed_time"] as? String
+                                            timeAccepted = true
+                                            print("[DEBUG] Time accepted: \(meetingTime ?? "nil")")
+                                        } else if type == "location" && (proposal["status"] as? String) == "accepted" {
+                                            locationAccepted = true
+                                            print("[DEBUG] Location accepted")
+                                        }
+                                    }
+                                }
+                                
+                                meetingDataMap[listing.id] = [
+                                    "meetingTime": meetingTime,
+                                    "timeAccepted": timeAccepted,
+                                    "locationAccepted": locationAccepted
+                                ]
                             } else {
+                                print("[DEBUG] No proposals found")
                                 proposalCounts[listing.id] = 0
                                 hasLocationProposalMap[listing.id] = false
+                                meetingDataMap[listing.id] = [
+                                    "meetingTime": nil,
+                                    "timeAccepted": false,
+                                    "locationAccepted": false
+                                ]
                             }
                             dispatchGroup.leave()
                         }
                     }
-                    
-                    dispatchGroup.notify(queue: .main) {
-                        // Update listings with proposal counts
-                        self.myListings = self.myListings.map { listing in
-                            var updatedListing = listing
-                            if let pendingCount = proposalCounts[listing.id] {
-                                updatedListing.pendingLocationProposals = pendingCount
-                            }
-                            return updatedListing
-                        }
-                        
-                        // Recreate active exchanges with location proposal status
-                        self.allActiveExchanges = self.allActiveExchanges.map { exchange in
-                            // Create new exchange with updated hasLocationProposal value
-                            return ActiveExchange(
-                                id: exchange.id,
-                                currencyFrom: exchange.currencyFrom,
-                                currencyTo: exchange.currencyTo,
-                                amount: exchange.amount,
-                                convertedAmount: exchange.convertedAmount,
-                                traderName: exchange.traderName,
-                                location: exchange.location,
-                                latitude: exchange.latitude,
-                                longitude: exchange.longitude,
-                                radius: exchange.radius,
-                                type: exchange.type,
-                                willRoundToNearestDollar: exchange.willRoundToNearestDollar,
-                                meetingTime: exchange.meetingTime,
-                                status: exchange.status,
-                                hasLocationProposal: hasLocationProposalMap[exchange.id] ?? false,
-                                timeAccepted: exchange.timeAccepted,
-                                locationAccepted: exchange.locationAccepted
-                            )
-                        }
-                    }
                 } else {
+                    print("[DEBUG] No recent listings found")
                 }
                 
                 // Process active exchanges from dashboard response
@@ -398,6 +410,7 @@ struct DashboardView: View {
                             meetingTime: nil,
                             status: negotiationStatus,
                             hasLocationProposal: false,
+                            isLocationProposalFromMe: false,
                             timeAccepted: false,
                             locationAccepted: false
                         )
@@ -405,8 +418,127 @@ struct DashboardView: View {
                     
                     print("[DashboardView] Successfully parsed \(dashboardExchanges.count) exchanges")
                     self.allActiveExchanges.append(contentsOf: dashboardExchanges)
+                    
+                    // Also fetch proposals for active exchanges (buyer's perspective)
+                    print("[DEBUG] Fetching proposals for \(dashboardExchanges.count) active exchanges")
+                    for exchange in dashboardExchanges {
+                        print("[DEBUG] Fetching proposals for exchange: \(exchange.id)")
+                        dispatchGroup.enter()
+                        getMeetingProposals(sessionId: sessionId, listingId: exchange.id) { result in
+                            print("[DEBUG] GetMeetingProposals result for exchange \(exchange.id):")
+                            print("[DEBUG] Result: \(result ?? [:])")
+                            
+                            if let result = result,
+                               let proposals = result["proposals"] as? [[String: Any]] {
+                                print("[DEBUG] Found \(proposals.count) proposals for exchange")
+                                for proposal in proposals {
+                                    print("[DEBUG]   - Type: \(proposal["type"] ?? "unknown"), Status: \(proposal["status"] ?? "unknown")")
+                                }
+                                
+                                // Check if there's any location proposal (pending or accepted, but not rejected)
+                                let hasLocationProposal = proposals.contains { prop in
+                                    (prop["type"] as? String) == "location" &&
+                                    (prop["status"] as? String) != "rejected"
+                                }
+                                print("[DEBUG] hasLocationProposal for \(exchange.id): \(hasLocationProposal)")
+                                hasLocationProposalMap[exchange.id] = hasLocationProposal
+                                
+                                // Extract meeting time and location acceptance status
+                                var meetingTime: String? = nil
+                                var timeAccepted: Bool = false
+                                var locationAccepted: Bool = false
+                                var isLocationProposalFromMe: Bool = false
+                                
+                                for proposal in proposals {
+                                    if let type = proposal["type"] as? String {
+                                        if type == "time" && (proposal["status"] as? String) == "accepted" {
+                                            meetingTime = proposal["proposed_time"] as? String
+                                            timeAccepted = true
+                                            print("[DEBUG] Time accepted for exchange: \(meetingTime ?? "nil")")
+                                        } else if type == "location" && (proposal["status"] as? String) != "rejected" {
+                                            // Location proposal exists (pending or accepted)
+                                            isLocationProposalFromMe = (proposal["is_from_me"] as? Bool) ?? false
+                                            if (proposal["status"] as? String) == "accepted" {
+                                                locationAccepted = true
+                                                print("[DEBUG] Location accepted for exchange")
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                meetingDataMap[exchange.id] = [
+                                    "meetingTime": meetingTime,
+                                    "timeAccepted": timeAccepted,
+                                    "locationAccepted": locationAccepted,
+                                    "isLocationProposalFromMe": isLocationProposalFromMe
+                                ]
+                            } else {
+                                print("[DEBUG] No proposals found for exchange")
+                                hasLocationProposalMap[exchange.id] = false
+                                meetingDataMap[exchange.id] = [
+                                    "meetingTime": nil,
+                                    "timeAccepted": false,
+                                    "locationAccepted": false,
+                                    "isLocationProposalFromMe": false
+                                ]
+                            }
+                            dispatchGroup.leave()
+                        }
+                    }
                 } else {
                     print("[DashboardView] No activeExchanges found in response or wrong type")
+                }
+                
+                // Now notify after all proposals have been fetched
+                dispatchGroup.notify(queue: .main) {
+                    print("[DEBUG] All proposals fetched. Updating exchanges...")
+                    
+                    // Update listings with proposal counts
+                    self.myListings = self.myListings.map { listing in
+                        var updatedListing = listing
+                        if let pendingCount = proposalCounts[listing.id] {
+                            updatedListing.pendingLocationProposals = pendingCount
+                        }
+                        return updatedListing
+                    }
+                    
+                    // Recreate active exchanges with meeting data
+                    self.allActiveExchanges = self.allActiveExchanges.map { exchange in
+                        let meetingData = meetingDataMap[exchange.id] ?? [:]
+                        let meetingTime = meetingData["meetingTime"] as? String
+                        let timeAccepted = meetingData["timeAccepted"] as? Bool ?? false
+                        let locationAccepted = meetingData["locationAccepted"] as? Bool ?? false
+                        let isLocationProposalFromMe = meetingData["isLocationProposalFromMe"] as? Bool ?? false
+                        
+                        print("[DEBUG] Updating exchange \(exchange.id):")
+                        print("[DEBUG]   meetingTime: \(meetingTime ?? "nil")")
+                        print("[DEBUG]   timeAccepted: \(timeAccepted)")
+                        print("[DEBUG]   locationAccepted: \(locationAccepted)")
+                        print("[DEBUG]   hasLocationProposal: \(hasLocationProposalMap[exchange.id] ?? false)")
+                        print("[DEBUG]   isLocationProposalFromMe: \(isLocationProposalFromMe)")
+                        
+                        // Create new exchange with updated meeting data
+                        return ActiveExchange(
+                            id: exchange.id,
+                            currencyFrom: exchange.currencyFrom,
+                            currencyTo: exchange.currencyTo,
+                            amount: exchange.amount,
+                            convertedAmount: exchange.convertedAmount,
+                            traderName: exchange.traderName,
+                            location: exchange.location,
+                            latitude: exchange.latitude,
+                            longitude: exchange.longitude,
+                            radius: exchange.radius,
+                            type: exchange.type,
+                            willRoundToNearestDollar: exchange.willRoundToNearestDollar,
+                            meetingTime: meetingTime,
+                            status: exchange.status,
+                            hasLocationProposal: hasLocationProposalMap[exchange.id] ?? false,
+                            isLocationProposalFromMe: isLocationProposalFromMe,
+                            timeAccepted: timeAccepted,
+                            locationAccepted: locationAccepted
+                        )
+                    }
                 }
             } else {
             }
@@ -467,6 +599,7 @@ struct DashboardView: View {
                     meetingTime: meetingTimeStr,
                     status: "proposed",
                     hasLocationProposal: false,
+                    isLocationProposalFromMe: false,
                     timeAccepted: false,
                     locationAccepted: false
                 )
@@ -535,6 +668,7 @@ struct DashboardView: View {
                     meetingTime: nil,
                     status: "proposed",
                     hasLocationProposal: false,
+                    isLocationProposalFromMe: false,
                     timeAccepted: false,
                     locationAccepted: false
                 )
@@ -1203,39 +1337,83 @@ struct ActiveExchangeCard: View {
                     geocodeLocation(exchange.location)
                 }
             
-            if let meetingTime = exchange.meetingTime {
-                Text(formatDateTime(meetingTime))
-                    .font(.system(size: 13))
-                    .foregroundColor(.white.opacity(0.8))
-            } else if !exchange.hasLocationProposal {
-                Text("🎯 Action: Propose location")
-                    .font(.system(size: 13))
-                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-                    .fontWeight(.semibold)
-            } else if exchange.timeAccepted && exchange.locationAccepted {
+            // Determine status message based on proposal state
+            if exchange.timeAccepted && exchange.locationAccepted {
+                // Both time and location accepted - show meeting details
+                if let meetingTime = exchange.meetingTime {
+                    Text(DateFormatters.formatCompact(meetingTime))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
                 Text("✅ Meeting confirmed")
                     .font(.system(size: 13))
                     .foregroundColor(Color(hex: "10b981"))
                     .fontWeight(.semibold)
-            } else if exchange.timeAccepted || exchange.locationAccepted {
-                Text("⏳ Waiting for location & time")
+            } else if exchange.timeAccepted && !exchange.locationAccepted && exchange.hasLocationProposal && !exchange.isLocationProposalFromMe {
+                // Time accepted, location proposal from them, I need to accept it
+                if let meetingTime = exchange.meetingTime {
+                    Text(DateFormatters.formatCompact(meetingTime))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                Text("⏳ Accept proposed location")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+                    .onAppear {
+                        print("[DEBUG] ActiveExchangeCard - Location proposal from them, need to accept for exchange \(exchange.id)")
+                        print("[DEBUG]   hasLocationProposal: \(exchange.hasLocationProposal)")
+                        print("[DEBUG]   isLocationProposalFromMe: \(exchange.isLocationProposalFromMe)")
+                    }
+            } else if exchange.timeAccepted && !exchange.locationAccepted && exchange.hasLocationProposal && exchange.isLocationProposalFromMe {
+                // Time accepted, location proposal from me, waiting for them to accept
+                if let meetingTime = exchange.meetingTime {
+                    Text(DateFormatters.formatCompact(meetingTime))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                Text("⏳ " + localizationManager.localize("WAITING_FOR_LOCATION_ACCEPTANCE"))
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if exchange.timeAccepted && !exchange.locationAccepted {
+                // Time accepted but no location proposal yet - I need to propose
+                if let meetingTime = exchange.meetingTime {
+                    Text(DateFormatters.formatCompact(meetingTime))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                Text("🎯 Action: Propose location")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if !exchange.timeAccepted && exchange.locationAccepted {
+                // Location accepted but time not
+                Text("⏳ Waiting for time proposal")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if exchange.hasLocationProposal && exchange.isLocationProposalFromMe {
+                // Location proposal from me, but time not accepted yet
+                Text("⏳ " + localizationManager.localize("WAITING_FOR_LOCATION_ACCEPTANCE"))
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if exchange.hasLocationProposal && !exchange.isLocationProposalFromMe {
+                // Location proposal from them
+                Text("⏳ Accept proposed location")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)
             } else {
-                Text("⏳ Waiting for location response")
+                // No proposals yet
+                Text("📍 Propose time & location")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)
             }
             
             HStack {
-                Text(exchange.type == .buyer ? "Buying from" : "Selling to")
-                    .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.9))
-                
-                Spacer()
-                
                 Text("💬 " + localizationManager.localize("START_CONVERSATION"))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
@@ -1243,6 +1421,8 @@ struct ActiveExchangeCard: View {
                     .padding(.vertical, 3)
                     .background(Color.white.opacity(0.2))
                     .cornerRadius(12)
+                
+                Spacer()
             }
         }
         .padding(16)
@@ -1546,6 +1726,7 @@ struct ActiveExchange: Identifiable {
     let meetingTime: String? // ISO datetime string
     let status: String? // "proposed", "accepted", etc
     let hasLocationProposal: Bool  // explicitly true if location proposal exists
+    let isLocationProposalFromMe: Bool // true if current user proposed the location
     let timeAccepted: Bool
     let locationAccepted: Bool
     

@@ -44,7 +44,7 @@ struct LocationProposalConfirmView: View {
                 
                 // Content
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 12) {
                         // Map preview
                         ZStack(alignment: .topTrailing) {
                             Map(position: $cameraPosition) {

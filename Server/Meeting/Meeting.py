@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from flask_cors import cross_origin
+import json
 from _Lib.Debugger import Debugger
 from Meeting.ProposeMeeting import propose_meeting
 from Meeting.RespondToMeeting import respond_to_meeting
@@ -52,7 +53,15 @@ def RespondToMeeting():
         proposal_id = request_data.get('proposalId')
         response = request_data.get('response')  # 'accepted' or 'rejected'
         
-        result = respond_to_meeting(session_id, proposal_id, response)
+        # Determine proposal type from proposal_id prefix
+        if proposal_id.startswith('LOC-'):
+            proposal_type = 'location'
+        elif proposal_id.startswith('TIME-'):
+            proposal_type = 'time'
+        else:
+            return json.dumps({'success': False, 'error': 'Invalid proposal ID format'})
+        
+        result = respond_to_meeting(session_id, proposal_type, proposal_id, response)
         return result
     except Exception as e:
         return Debugger(e)

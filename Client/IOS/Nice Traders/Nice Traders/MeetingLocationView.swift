@@ -32,74 +32,6 @@ struct MeetingLocationView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // DEBUG: Show listing location info
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("[DEBUG] Listing Location: \(String(format: "%.4f", contactData.listing.latitude)), \(String(format: "%.4f", contactData.listing.longitude))")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                    Text("[DEBUG] Radius: \(contactData.listing.radius) miles")
-                        .font(.caption2)
-                        .foregroundColor(.orange)
-                }
-                .padding(8)
-                .background(Color.yellow.opacity(0.2))
-                
-                // Location Status Section - only show if there's a location proposal
-                let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
-                if !locationProposals.isEmpty {
-                    let latestProposal = locationProposals.first!
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            if latestProposal.status == "accepted" {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.green)
-                                    .font(.system(size: 16))
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(localizationManager.localize("LOCATION_ACCEPTED"))
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.green)
-                                    Text(latestProposal.proposedLocation)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            } else if latestProposal.status == "pending" {
-                                Image(systemName: "clock.fill")
-                                    .foregroundColor(.orange)
-                                    .font(.system(size: 16))
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.orange)
-                                    Text(latestProposal.proposedLocation)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            } else if latestProposal.status == "rejected" {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.red)
-                                    .font(.system(size: 16))
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(localizationManager.localize("REJECT_LOCATION"))
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.red)
-                                    Text(latestProposal.proposedLocation)
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            
-                            Spacer()
-                        }
-                    }
-                    .padding(12)
-                    .background(Color(hex: "f0f9ff"))
-                    .cornerRadius(8)
-                    .padding(16)
-                }
-                
                 // Map at the top
                 ZStack {
                     if mapIsReady {
@@ -270,30 +202,27 @@ struct MeetingLocationView: View {
                                 .font(.caption)
                                 .foregroundColor(.gray)
                             
-                            ScrollView {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ForEach(searchResults, id: \.id) { result in
-                                        SearchResultRow(
-                                            result: result,
-                                            isSelected: selectedResultId == result.id,
-                                            onTap: {
-                                                selectedResultId = result.id
-                                                centerMapOnResult(result)
-                                            },
-                                            onProposeLocation: {
-                                                selectedLocationForProposal = result
-                                                // Load current meeting time from proposals if available
-                                                if let latestProposal = meetingProposals.first {
-                                                    currentMeetingTime = latestProposal.proposedTime
-                                                }
-                                                showLocationProposalConfirm = true
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(searchResults, id: \.id) { result in
+                                    SearchResultRow(
+                                        result: result,
+                                        isSelected: selectedResultId == result.id,
+                                        onTap: {
+                                            selectedResultId = result.id
+                                            centerMapOnResult(result)
+                                        },
+                                        onProposeLocation: {
+                                            selectedLocationForProposal = result
+                                            // Load current meeting time from proposals if available
+                                            if let latestProposal = meetingProposals.first {
+                                                currentMeetingTime = latestProposal.proposedTime
                                             }
-                                        )
-                                    }
+                                            showLocationProposalConfirm = true
+                                        }
+                                    )
                                 }
-                                .padding(.bottom, 20)
                             }
-                            .frame(maxHeight: 300)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
