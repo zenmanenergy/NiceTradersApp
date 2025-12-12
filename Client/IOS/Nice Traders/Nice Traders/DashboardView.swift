@@ -262,6 +262,7 @@ struct DashboardView: View {
                     
                     // Fetch meeting proposals for each listing
                     var proposalCounts: [String: Int] = [:]
+                    var hasLocationProposalMap: [String: Bool] = [:]
                     let dispatchGroup = DispatchGroup()
                     
                     for listing in myListings {
@@ -273,8 +274,15 @@ struct DashboardView: View {
                                     (prop["status"] as? String) == "pending"
                                 }.count
                                 proposalCounts[listing.id] = pendingCount
+                                
+                                // Check if there's any location proposal (pending or accepted)
+                                let hasLocationProposal = proposals.contains { prop in
+                                    (prop["type"] as? String) == "location"
+                                }
+                                hasLocationProposalMap[listing.id] = hasLocationProposal
                             } else {
                                 proposalCounts[listing.id] = 0
+                                hasLocationProposalMap[listing.id] = false
                             }
                             dispatchGroup.leave()
                         }
@@ -288,6 +296,30 @@ struct DashboardView: View {
                                 updatedListing.pendingLocationProposals = pendingCount
                             }
                             return updatedListing
+                        }
+                        
+                        // Recreate active exchanges with location proposal status
+                        self.allActiveExchanges = self.allActiveExchanges.map { exchange in
+                            // Create new exchange with updated hasLocationProposal value
+                            return ActiveExchange(
+                                id: exchange.id,
+                                currencyFrom: exchange.currencyFrom,
+                                currencyTo: exchange.currencyTo,
+                                amount: exchange.amount,
+                                convertedAmount: exchange.convertedAmount,
+                                traderName: exchange.traderName,
+                                location: exchange.location,
+                                latitude: exchange.latitude,
+                                longitude: exchange.longitude,
+                                radius: exchange.radius,
+                                type: exchange.type,
+                                willRoundToNearestDollar: exchange.willRoundToNearestDollar,
+                                meetingTime: exchange.meetingTime,
+                                status: exchange.status,
+                                hasLocationProposal: hasLocationProposalMap[exchange.id] ?? false,
+                                timeAccepted: exchange.timeAccepted,
+                                locationAccepted: exchange.locationAccepted
+                            )
                         }
                     }
                 } else {
@@ -347,7 +379,6 @@ struct DashboardView: View {
                         let otherUser = exchangeDict["otherUser"] as? [String: Any]
                         let otherUserName = otherUser?["name"] as? String ?? "Unknown User"
                         let negotiationStatus = (exchangeDict["negotiationStatus"] as? String) ?? (exchangeDict["status"] as? String) ?? "proposed"
-                        let actionRequired = (exchangeDict["actionRequired"] as? Bool) ?? false
                         
                         let exchangeType: ActiveExchange.ExchangeType = userRole == "buyer" ? .buyer : .seller
                         
@@ -366,7 +397,9 @@ struct DashboardView: View {
                             willRoundToNearestDollar: willRound,
                             meetingTime: nil,
                             status: negotiationStatus,
-                            actionRequired: actionRequired
+                            hasLocationProposal: false,
+                            timeAccepted: false,
+                            locationAccepted: false
                         )
                     }
                     
@@ -433,7 +466,9 @@ struct DashboardView: View {
                     willRoundToNearestDollar: willRound,
                     meetingTime: meetingTimeStr,
                     status: "proposed",
-                    actionRequired: false
+                    hasLocationProposal: false,
+                    timeAccepted: false,
+                    locationAccepted: false
                 )
             }
             
@@ -499,7 +534,9 @@ struct DashboardView: View {
                     willRoundToNearestDollar: willRound,
                     meetingTime: nil,
                     status: "proposed",
-                    actionRequired: true
+                    hasLocationProposal: false,
+                    timeAccepted: false,
+                    locationAccepted: false
                 )
             }
             
@@ -1170,13 +1207,23 @@ struct ActiveExchangeCard: View {
                 Text(formatDateTime(meetingTime))
                     .font(.system(size: 13))
                     .foregroundColor(.white.opacity(0.8))
-            } else if exchange.actionRequired {
-                Text("⚠️ Action required")
+            } else if !exchange.hasLocationProposal {
+                Text("🎯 Action: Propose location")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if exchange.timeAccepted && exchange.locationAccepted {
+                Text("✅ Meeting confirmed")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(hex: "10b981"))
+                    .fontWeight(.semibold)
+            } else if exchange.timeAccepted || exchange.locationAccepted {
+                Text("⏳ Waiting for location & time")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)
             } else {
-                Text("⏳ Waiting for acceptance")
+                Text("⏳ Waiting for location response")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)
@@ -1498,7 +1545,9 @@ struct ActiveExchange: Identifiable {
     let willRoundToNearestDollar: Bool
     let meetingTime: String? // ISO datetime string
     let status: String? // "proposed", "accepted", etc
-    let actionRequired: Bool
+    let hasLocationProposal: Bool  // explicitly true if location proposal exists
+    let timeAccepted: Bool
+    let locationAccepted: Bool
     
     enum ExchangeType {
         case buyer, seller

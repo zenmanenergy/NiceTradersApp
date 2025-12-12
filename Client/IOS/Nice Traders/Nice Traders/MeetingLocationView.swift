@@ -44,9 +44,10 @@ struct MeetingLocationView: View {
                 .padding(8)
                 .background(Color.yellow.opacity(0.2))
                 
-                // Location Status Section
-                if !meetingProposals.isEmpty {
-                    let latestProposal = meetingProposals.first!
+                // Location Status Section - only show if there's a location proposal
+                let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                if !locationProposals.isEmpty {
+                    let latestProposal = locationProposals.first!
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
                             if latestProposal.status == "accepted" {
@@ -285,13 +286,14 @@ struct MeetingLocationView: View {
                 // Bottom content area
                 ScrollView {
                     VStack(spacing: 12) {
-                        if !meetingProposals.isEmpty {
+                        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                        if !locationProposals.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(localizationManager.localize("MEETING_PROPOSALS"))
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                 
-                                ForEach(meetingProposals, id: \.id) { proposal in
+                                ForEach(locationProposals, id: \.proposalId) { proposal in
                                     LocationProposalCard(
                                         proposal: proposal,
                                         onAccept: {
@@ -354,6 +356,11 @@ struct MeetingLocationView: View {
             print("[DEBUG MLV] MeetingLocationView appeared")
             print("[DEBUG MLV] Listing: \(contactData.listing.latitude), \(contactData.listing.longitude)")
             print("[DEBUG MLV] Radius: \(contactData.listing.radius)")
+            print("[DEBUG MLV] Meeting proposals count: \(meetingProposals.count)")
+            
+            for (i, proposal) in meetingProposals.enumerated() {
+                print("[DEBUG MLV] Proposal \(i): id=\(proposal.proposalId), location='\(proposal.proposedLocation)', status=\(proposal.status), type=location?\(!proposal.proposedLocation.isEmpty)")
+            }
             
             if contactData.listing.latitude == 0 && contactData.listing.longitude == 0 {
                 print("[DEBUG MLV] WARNING: Listing coordinates are 0,0!")
@@ -558,25 +565,30 @@ struct MeetingLocationView: View {
     
     private func proposeLocation(location: MapSearchResult, message: String?) {
         guard let sessionId = SessionManager.shared.sessionId else {
-            print("ERROR: No session ID available")
+            print("🔴 [MLV-PROPOSE] ERROR: No session ID available")
             return
         }
         
-        print("[DEBUG MLV proposeLocation] Proposing location: '\(location.name)'")
-        print("[DEBUG MLV proposeLocation] Coordinates: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        print("🟠 [MLV-PROPOSE] ===== START PROPOSE LOCATION =====")
+        print("🟠 [MLV-PROPOSE] Location name: '\(location.name)'")
+        print("🟠 [MLV-PROPOSE] Coordinates: \(location.coordinate.latitude), \(location.coordinate.longitude)")
+        print("🟠 [MLV-PROPOSE] Listing ID: \(contactData.listing.listingId)")
         
         // Get the meeting time from either current meeting or latest proposal
         var meetingTimeToSend: String? = nil
         if let latestProposal = meetingProposals.first {
             meetingTimeToSend = latestProposal.proposedTime
+            print("🟠 [MLV-PROPOSE] Using meeting time from latest proposal: \(meetingTimeToSend ?? "nil")")
         } else if let currentMeeting = currentMeeting {
             // If no proposals yet, use the current meeting time
             meetingTimeToSend = currentMeeting.time
+            print("🟠 [MLV-PROPOSE] Using meeting time from current meeting: \(meetingTimeToSend ?? "nil")")
         } else if let currentTime = currentMeetingTime {
             meetingTimeToSend = currentTime
+            print("🟠 [MLV-PROPOSE] Using meeting time from currentMeetingTime: \(meetingTimeToSend ?? "nil")")
         }
         
-        print("[DEBUG MLV proposeLocation] Meeting time: \(meetingTimeToSend ?? "nil")")
+        print("🟠 [MLV-PROPOSE] Final meeting time to send: \(meetingTimeToSend ?? "nil")")
         
         // Location-only proposals are allowed without a time
         
@@ -601,40 +613,58 @@ struct MeetingLocationView: View {
         components.queryItems = queryItems
         
         guard let url = components.url else {
-            print("ERROR: Failed to construct URL")
+            print("🔴 [MLV-PROPOSE] ERROR: Failed to construct URL")
             return
         }
         
-        print("[DEBUG MLV proposeLocation] Sending request to: \(url.absoluteString)")
+        print("🟠 [MLV-PROPOSE] Sending request to: \(url.absoluteString)")
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("🟠 [MLV-PROPOSE] Response received from server")
+            
             if let error = error {
-                print("ERROR: Network error: \(error.localizedDescription)")
+                print("🔴 [MLV-PROPOSE] Network error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    successMessageText = "❌ Network error: \(error.localizedDescription)"
+                    showSuccessMessage = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        showSuccessMessage = false
+                    }
+                }
                 return
             }
             
             guard let data = data else {
-                print("ERROR: No data received")
+                print("🔴 [MLV-PROPOSE] No data received from server")
                 return
             }
             
-            print("[DEBUG MLV proposeLocation] Response: \(String(data: data, encoding: .utf8) ?? "no data")")
+            let responseStr = String(data: data, encoding: .utf8) ?? "no data"
+            print("🟠 [MLV-PROPOSE] Response data: \(responseStr)")
             
             do {
                 let result = try JSONDecoder().decode(LocationProposalResponse.self, from: data)
+                print("🟠 [MLV-PROPOSE] Response decoded - success: \(result.success)")
+                
                 if result.success {
-                    print("✓ Location proposal sent successfully")
+                    print("✅ [MLV-PROPOSE] Location proposal sent successfully")
+                    print("✅ [MLV-PROPOSE] Proposal ID: \(result.proposal_id ?? "unknown")")
                     
                     DispatchQueue.main.async {
+                        print("🟠 [MLV-PROPOSE] Updating UI - showing success message")
                         successMessageText = "📍 \(location.name) proposed!"
                         showSuccessMessage = true
                         
-                        // Clear the form and reload proposals
+                        // Clear the form
                         selectedLocationForProposal = nil
                         searchText = ""
                         searchResults = []
                         selectedResultId = nil
                         showLocationProposalConfirm = false
+                        
+                        print("🟠 [MLV-PROPOSE] Reloading meeting proposals from server...")
+                        // NOW reload proposals from server
+                        reloadMeetingProposals()
                         
                         // Hide success message after 3 seconds
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -642,10 +672,131 @@ struct MeetingLocationView: View {
                         }
                     }
                 } else {
-                    print("ERROR: Server error: \(result.error ?? "Unknown error")")
+                    let errorMsg = result.error ?? "Unknown error"
+                    print("🔴 [MLV-PROPOSE] Server error: \(errorMsg)")
+                    DispatchQueue.main.async {
+                        successMessageText = "❌ Error: \(errorMsg)"
+                        showSuccessMessage = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                            showSuccessMessage = false
+                        }
+                    }
                 }
             } catch {
-                print("ERROR: Failed to parse response: \(error)")
+                print("🔴 [MLV-PROPOSE] Failed to parse response: \(error)")
+                DispatchQueue.main.async {
+                    successMessageText = "❌ Parse error: \(error.localizedDescription)"
+                    showSuccessMessage = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        showSuccessMessage = false
+                    }
+                }
+            }
+            
+            print("🟠 [MLV-PROPOSE] ===== END PROPOSE LOCATION =====")
+        }.resume()
+    }
+    
+    private func reloadMeetingProposals() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("🔴 [MLV-RELOAD] ERROR: No session ID available")
+            return
+        }
+        
+        print("🟠 [MLV-RELOAD] ===== START RELOAD PROPOSALS =====")
+        print("🟠 [MLV-RELOAD] Listing ID: \(contactData.listing.listingId)")
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Meeting/GetMeetingProposals")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: String(contactData.listing.listingId))
+        ]
+        
+        guard let url = components.url else {
+            print("🔴 [MLV-RELOAD] ERROR: Failed to construct URL")
+            return
+        }
+        
+        print("🟠 [MLV-RELOAD] Fetching from: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("🟠 [MLV-RELOAD] Response received from server")
+                
+                guard let data = data, error == nil else {
+                    print("🔴 [MLV-RELOAD] ERROR: Network error - \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                
+                let responseStr = String(data: data, encoding: .utf8) ?? "no data"
+                print("🟠 [MLV-RELOAD] Raw response: \(responseStr.prefix(200))...")
+                
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    
+                    print("✅ [MLV-RELOAD] Response successful")
+                    
+                    // Parse proposals
+                    if let proposalsData = json["proposals"] as? [[String: Any]] {
+                        print("🟠 [MLV-RELOAD] Found \(proposalsData.count) proposals")
+                        
+                        let newProposals = proposalsData.compactMap { dict -> MeetingProposal? in
+                            guard let proposalId = dict["proposal_id"] as? String,
+                                  let status = dict["status"] as? String else {
+                                print("🔴 [MLV-RELOAD] Skipping proposal - missing required fields")
+                                return nil
+                            }
+                            
+                            let proposedLocation = dict["proposed_location"] as? String ?? ""
+                            let proposedTime = dict["proposed_time"] as? String ?? ""
+                            let type = dict["type"] as? String ?? "unknown"
+                            
+                            print("🟠 [MLV-RELOAD] Parsed proposal: id=\(proposalId), type=\(type), status=\(status), location=\(proposedLocation), time=\(proposedTime)")
+                            
+                            return MeetingProposal(
+                                proposalId: proposalId,
+                                proposedLocation: proposedLocation,
+                                proposedTime: proposedTime,
+                                message: dict["message"] as? String,
+                                status: status,
+                                isFromMe: dict["is_from_me"] as? Bool ?? false,
+                                proposer: ProposerInfo(firstName: (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown")
+                            )
+                        }
+                        
+                        print("✅ [MLV-RELOAD] Updated meetingProposals: \(newProposals.count) items")
+                        self.meetingProposals = newProposals
+                    } else {
+                        print("🟠 [MLV-RELOAD] No proposals found in response")
+                        self.meetingProposals = []
+                    }
+                    
+                    // Update current meeting if available
+                    if let meetingData = json["current_meeting"] as? [String: Any] {
+                        print("🟠 [MLV-RELOAD] Parsing current_meeting...")
+                        if let time = meetingData["time"] as? String {
+                            self.currentMeeting = CurrentMeeting(
+                                location: meetingData["location"] as? String,
+                                latitude: meetingData["latitude"] as? Double,
+                                longitude: meetingData["longitude"] as? Double,
+                                time: time,
+                                message: meetingData["message"] as? String,
+                                agreedAt: (meetingData["agreed_at"] as? String) ?? "",
+                                acceptedAt: meetingData["timeAcceptedAt"] as? String,
+                                locationAcceptedAt: meetingData["locationAcceptedAt"] as? String
+                            )
+                            print("✅ [MLV-RELOAD] Updated current meeting")
+                        }
+                    }
+                } else {
+                    print("🔴 [MLV-RELOAD] ERROR: Response indicates failure")
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        print("🔴 [MLV-RELOAD] Error: \(json["error"] as? String ?? "unknown")")
+                    }
+                }
+                
+                print("🟠 [MLV-RELOAD] ===== END RELOAD PROPOSALS =====")
             }
         }.resume()
     }

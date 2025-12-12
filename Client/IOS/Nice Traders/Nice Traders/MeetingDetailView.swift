@@ -675,8 +675,12 @@ struct MeetingDetailView: View {
     
     private func loadMeetingProposals() {
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("🔴 [MDV-LOAD] ERROR: No session ID available")
             return
         }
+        
+        print("🟠 [MDV-LOAD] ===== START LOAD PROPOSALS =====")
+        print("🟠 [MDV-LOAD] Listing ID: \(contactData.listing.listingId)")
         
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Meeting/GetMeetingProposals")!
@@ -686,28 +690,46 @@ struct MeetingDetailView: View {
         ]
         
         guard let url = components.url else {
+            print("🔴 [MDV-LOAD] ERROR: Failed to construct URL")
             return
         }
         
+        print("🟠 [MDV-LOAD] Fetching from: \(url.absoluteString)")
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
+                print("🟠 [MDV-LOAD] Response received from server")
+                
                 guard let data = data, error == nil else {
+                    print("🔴 [MDV-LOAD] ERROR: Network error - \(error?.localizedDescription ?? "unknown")")
                     return
                 }
+                
+                let responseStr = String(data: data, encoding: .utf8) ?? "no data"
+                print("🟠 [MDV-LOAD] Raw response: \(responseStr.prefix(500))...")
                 
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let success = json["success"] as? Bool, success {
                     
+                    print("✅ [MDV-LOAD] Response successful")
+                    
                     // Parse proposals
                     if let proposalsData = json["proposals"] as? [[String: Any]] {
+                        print("🟠 [MDV-LOAD] Found \(proposalsData.count) proposals")
+                        
                         self.meetingProposals = proposalsData.compactMap { dict in
                             guard let proposalId = dict["proposal_id"] as? String,
-                                  let proposedLocation = dict["proposed_location"] as? String,
-                                  let proposedTime = dict["proposed_time"] as? String,
-                                  let status = dict["status"] as? String,
-                                  let isFromMe = dict["is_from_me"] as? Bool,
-                                  let proposerData = dict["proposer"] as? [String: Any],
-                                  let firstName = proposerData["first_name"] as? String else { return nil }
+                                  let status = dict["status"] as? String else {
+                                print("🔴 [MDV-LOAD] Skipping proposal - missing required fields")
+                                return nil
+                            }
+                            
+                            let proposedLocation = dict["proposed_location"] as? String ?? ""
+                            let proposedTime = dict["proposed_time"] as? String ?? ""
+                            let isFromMe = dict["is_from_me"] as? Bool ?? false
+                            let firstName = (dict["proposer"] as? [String: Any])?["first_name"] as? String ?? "Unknown"
+                            
+                            print("🟠 [MDV-LOAD] Parsed proposal: id=\(proposalId), status=\(status), location=\(proposedLocation), time=\(proposedTime), fromMe=\(isFromMe)")
                             
                             return MeetingProposal(
                                 proposalId: proposalId,
@@ -719,10 +741,19 @@ struct MeetingDetailView: View {
                                 proposer: ProposerInfo(firstName: firstName)
                             )
                         }
+                        
+                        print("✅ [MDV-LOAD] Successfully parsed \(self.meetingProposals.count) proposals")
+                        for (i, prop) in self.meetingProposals.enumerated() {
+                            print("  [\(i)] \(prop.proposalId) - \(prop.status) - \(prop.proposedLocation)")
+                        }
+                    } else {
+                        print("🟠 [MDV-LOAD] No proposals array in response")
+                        self.meetingProposals = []
                     }
                     
                     // Parse current meeting
                     if let meetingData = json["current_meeting"] as? [String: Any] {
+                        print("🟠 [MDV-LOAD] Parsing current_meeting...")
                         if let time = meetingData["time"] as? String {
                             // Handle location - if it's nil or null, set to nil
                             let location: String? = meetingData["location"] as? String
@@ -732,7 +763,7 @@ struct MeetingDetailView: View {
                             let timeAcceptedAt: String? = meetingData["timeAcceptedAt"] as? String
                             let locationAcceptedAt: String? = meetingData["locationAcceptedAt"] as? String
                             
-                            print("[DEBUG LOAD] Parsed from response - timeAcceptedAt: \(timeAcceptedAt ?? "nil"), locationAcceptedAt: \(locationAcceptedAt ?? "nil")")
+                            print("🟠 [MDV-LOAD] Current meeting - time=\(time), location=\(location ?? "nil"), timeAcceptedAt=\(timeAcceptedAt ?? "nil"), locationAcceptedAt=\(locationAcceptedAt ?? "nil")")
                             
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
@@ -746,10 +777,20 @@ struct MeetingDetailView: View {
                             )
                             self.timeAcceptedAt = timeAcceptedAt
                             self.locationAcceptedAt = locationAcceptedAt
-                            print("[DEBUG LOAD] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
+                            print("✅ [MDV-LOAD] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
+                            print("✅ [MDV-LOAD] Set self.locationAcceptedAt to: \(self.locationAcceptedAt ?? "nil")")
                         }
+                    } else {
+                        print("🟠 [MDV-LOAD] No current_meeting in response")
+                    }
+                } else {
+                    print("🔴 [MDV-LOAD] ERROR: Response indicates failure")
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        print("🔴 [MDV-LOAD] Error: \(json["error"] as? String ?? "unknown")")
                     }
                 }
+                
+                print("🟠 [MDV-LOAD] ===== END LOAD PROPOSALS =====")
             }
         }.resume()
     }

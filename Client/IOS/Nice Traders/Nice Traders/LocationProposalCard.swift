@@ -7,7 +7,6 @@ struct LocationProposalCard: View {
     var onCounterPropose: () -> Void
     
     @ObservedObject var localizationManager = LocalizationManager.shared
-    @State private var isExpanded: Bool = false
     
     var statusColor: Color {
         switch proposal.status {
@@ -56,47 +55,32 @@ struct LocationProposalCard: View {
                 }
                 
                 Spacer()
-                
-                if isExpanded {
-                    Image(systemName: "chevron.up")
-                        .foregroundColor(.gray)
-                } else {
-                    Image(systemName: "chevron.down")
-                        .foregroundColor(.gray)
-                }
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
             }
             
-            // Expanded details
-            if isExpanded {
-                Divider()
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    // Time
-                    HStack(spacing: 8) {
-                        Image(systemName: "clock")
-                            .font(.system(size: 12))
+            // Always visible details
+            Divider()
+            
+            VStack(alignment: .leading, spacing: 8) {
+                // Time
+                HStack(spacing: 8) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("MEETING_TIME")
+                            .font(.caption)
                             .foregroundColor(.gray)
+                            .textCase(.uppercase)
                         
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("MEETING_TIME")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                                .textCase(.uppercase)
-                            
-                            Text(proposal.proposedTime)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "2d3748"))
-                        }
-                        
-                        Spacer()
+                        Text(proposal.proposedTime)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "2d3748"))
                     }
+                    
+                    Spacer()
+                }
                     
                     // Proposer
                     if !proposal.proposer.firstName.isEmpty {
@@ -189,7 +173,6 @@ struct LocationProposalCard: View {
                         }
                     }
                 }
-            }
         }
         .padding(12)
         .background(Color.white)
