@@ -19,7 +19,7 @@ def counter_proposal(listing_id, session_id, proposed_time):
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -28,7 +28,7 @@ def counter_proposal(listing_id, session_id, proposed_time):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get time negotiation for this listing
         cursor.execute("""

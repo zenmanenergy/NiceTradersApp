@@ -10,9 +10,9 @@ def get_exchange_history(SessionId):
 	try:
 		# Get user ID from session
 		session_query = """
-			SELECT users.UserId
+			SELECT users.user_id
 			FROM usersessions 
-			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
+			INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 		"""
 		cursor.execute(session_query, (SessionId,))
@@ -22,14 +22,14 @@ def get_exchange_history(SessionId):
 			connection.close()
 			return '{"success": false, "error": "Invalid session"}'
 		
-		user_id = user_result['UserId']
+		user_id = user_result['user_id']
 		
 		# Get exchange history
 		history_query = """
 			SELECT ExchangeId, ExchangeDate, Currency, Amount, PartnerName, Rating, 
 				   TransactionType, created_at
 			FROM exchange_history 
-			WHERE UserId = %s 
+			WHERE user_id = %s 
 			ORDER BY ExchangeDate DESC
 			LIMIT 50
 		"""

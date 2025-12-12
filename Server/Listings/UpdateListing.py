@@ -33,7 +33,7 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -46,7 +46,7 @@ def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Locat
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Verify user owns the listing
         ownership_query = """

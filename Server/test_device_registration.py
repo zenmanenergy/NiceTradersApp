@@ -18,12 +18,12 @@ def setup_test_user():
     cursor, connection = Database.ConnectToDatabase()
     try:
         # Check if test user exists
-        cursor.execute("SELECT UserId FROM users WHERE UserId = %s", (test_user_id,))
+        cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (test_user_id,))
         if not cursor.fetchone():
             # Create test user
             hashed_password = hashlib.sha256("TestPassword123".encode()).hexdigest()
             cursor.execute(
-                "INSERT INTO users (UserId, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO users (user_id, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (test_user_id, "Test", "User", "test.device@example.com", "555-0100", hashed_password, "standard", datetime.datetime.now(), 1)
             )
             connection.commit()
@@ -48,14 +48,14 @@ def test_device_registration():
     
     try:
         # Check if test user exists
-        cursor.execute("SELECT UserId FROM users WHERE UserId = %s", (test_user_id,))
+        cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (test_user_id,))
         if not cursor.fetchone():
             # Create test user
             import hashlib
             import datetime
             hashed_password = hashlib.sha256("TestPassword123".encode()).hexdigest()
             cursor.execute(
-                "INSERT INTO users (UserId, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "INSERT INTO users (user_id, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (test_user_id, "Test", "User", "test.device@example.com", "555-0100", hashed_password, "standard", datetime.datetime.now(), 1)
             )
             connection.commit()
@@ -89,7 +89,7 @@ def test_device_registration():
     # Get the pending device ID from database
     cursor, connection = Database.ConnectToDatabase()
     try:
-        query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_token IS NULL LIMIT 1"
+        query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_token IS NULL LIMIT 1"
         cursor.execute(query, (test_user_id,))
         result = cursor.fetchone()
         if result:
@@ -126,7 +126,7 @@ def test_device_registration():
     # Verify in database
     cursor, connection = Database.ConnectToDatabase()
     try:
-        query = "SELECT device_id, device_token FROM user_devices WHERE UserId = %s AND device_type = 'ios'"
+        query = "SELECT device_id, device_token FROM user_devices WHERE user_id = %s AND device_type = 'ios'"
         cursor.execute(query, (test_user_id,))
         devices = cursor.fetchall()
         
@@ -154,7 +154,7 @@ def cleanup_test_data():
     """Clean up test data from database"""
     cursor, connection = Database.ConnectToDatabase()
     try:
-        query = "DELETE FROM user_devices WHERE UserId = %s"
+        query = "DELETE FROM user_devices WHERE user_id = %s"
         cursor.execute(query, ("USR-test-device-registration-00001",))
         connection.commit()
         print("\n✓ Test data cleaned up")

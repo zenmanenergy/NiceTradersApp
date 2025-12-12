@@ -19,7 +19,7 @@ def propose_location(negotiation_id, session_id, proposed_location, proposed_lat
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -32,7 +32,7 @@ def propose_location(negotiation_id, session_id, proposed_location, proposed_lat
                 'error': 'Invalid or expired session'
             })
         
-        proposer_id = session_result['UserId']
+        proposer_id = session_result['user_id']
         
         # Get negotiation details from history
         cursor.execute("""

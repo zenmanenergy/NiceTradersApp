@@ -108,7 +108,7 @@
 			<div class="results-list">
 				{#each $searchState.searchResults as result}
 					{#if $searchState.searchType === 'users' || $searchState.searchType === 'email'}
-						<div class="result-card" on:click={() => viewUser(result.UserId, `${result.FirstName} ${result.LastName}`)}>
+						<div class="result-card" on:click={() => viewUser(result.user_id, `${result.FirstName} ${result.LastName}`)}>
 							<div class="result-icon">👤</div>
 							<div class="result-info">
 								<h4>{result.FirstName} {result.LastName}</h4>

@@ -10,11 +10,11 @@ def get_profile(SessionId):
 	try:
 		# Get user ID from session
 		session_query = """
-			SELECT users.UserId, users.FirstName, users.LastName, users.Email, users.Phone, 
+			SELECT users.user_id, users.FirstName, users.LastName, users.Email, users.Phone, 
 				   users.DateCreated, users.Location, users.Bio, users.Rating, users.TotalExchanges,
 				   users.PreferredLanguage
 			FROM usersessions 
-			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
+			INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 		"""
 		cursor.execute(session_query, (SessionId,))

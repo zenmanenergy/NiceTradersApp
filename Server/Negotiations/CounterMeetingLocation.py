@@ -21,7 +21,7 @@ def counter_meeting_location(listing_id, session_id, latitude, longitude, locati
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -30,7 +30,7 @@ def counter_meeting_location(listing_id, session_id, latitude, longitude, locati
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get location negotiation for this listing
         cursor.execute("""
@@ -62,7 +62,7 @@ def counter_meeting_location(listing_id, session_id, latitude, longitude, locati
         
         # Get listing to verify access
         cursor.execute("""
-            SELECT SellerUserId FROM listings WHERE listing_id = %s
+            SELECT user_id FROM listings WHERE listing_id = %s
         """, (listing_id,))
         
         listing = cursor.fetchone()
@@ -72,7 +72,7 @@ def counter_meeting_location(listing_id, session_id, latitude, longitude, locati
                 'error': 'Listing not found'
             })
         
-        seller_id = listing['SellerUserId']
+        seller_id = listing['user_id']
         
         # Verify user is part of this negotiation
         if user_id != seller_id and user_id != location_neg['buyer_id']:

@@ -20,7 +20,7 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
         cursor, connection = Database.ConnectToDatabase()
         
         # Get user_id from session
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -28,7 +28,7 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
             connection.close()
             return json.dumps({'success': False, 'error': 'Invalid session'})
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Check if already has access
         cursor.execute("""
@@ -61,7 +61,7 @@ def purchase_contact_access(listing_id, session_id, payment_method='paypal'):
             return json.dumps({'success': False, 'error': 'Cannot purchase your own listing'})
         
         # Get buyer name for notification
-        cursor.execute("SELECT FirstName, LastName FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("SELECT FirstName, LastName FROM users WHERE user_id = %s", (user_id,))
         buyer = cursor.fetchone()
         buyer_name = f"{buyer['FirstName']} {buyer['LastName']}" if buyer else "A user"
         

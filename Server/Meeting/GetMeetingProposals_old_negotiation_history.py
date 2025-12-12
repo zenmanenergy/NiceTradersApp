@@ -28,13 +28,13 @@ def get_meeting_proposals(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         if not session_result:
             connection.close()
             return json.dumps({'success': False, 'error': 'Invalid or expired session'})
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Verify access
         cursor.execute("""
@@ -66,7 +66,7 @@ def get_meeting_proposals(session_id, listing_id):
                        nh.proposed_latitude, nh.proposed_longitude, nh.proposed_by, nh.notes, nh.created_at,
                        u.FirstName, u.LastName
                 FROM negotiation_history nh
-                JOIN users u ON nh.proposed_by = u.UserId
+                JOIN users u ON nh.proposed_by = u.user_id
                 WHERE nh.negotiation_id = %s
                 ORDER BY nh.created_at DESC
             """, (negotiation_id,))
@@ -105,7 +105,7 @@ def get_meeting_proposals(session_id, listing_id):
                        nh.proposed_latitude, nh.proposed_longitude, nh.proposed_by, nh.notes, nh.created_at,
                        u.FirstName, u.LastName
                 FROM negotiation_history nh
-                JOIN users u ON nh.proposed_by = u.UserId
+                JOIN users u ON nh.proposed_by = u.user_id
                 WHERE nh.negotiation_id = %s
                 AND nh.action IN ('accepted_time', 'accepted_location')
                 ORDER BY nh.created_at DESC

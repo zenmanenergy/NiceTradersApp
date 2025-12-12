@@ -137,11 +137,11 @@ def get_user_by_id():
     """Get user details by ID"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
-        query = "SELECT * FROM users WHERE UserId = %s"
+        query = "SELECT * FROM users WHERE user_id = %s"
         cursor.execute(query, (user_id,))
         user = cursor.fetchone()
         
@@ -162,9 +162,9 @@ def update_user():
     """Update basic user information"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         if not user_id:
-            return jsonify({'success': False, 'error': 'userId is required'})
+            return jsonify({'success': False, 'error': 'user_id is required'})
 
         allowed_fields = ['FirstName', 'LastName', 'Email', 'Phone', 'Location', 'Bio', 'IsActive']
         updates = {}
@@ -185,10 +185,10 @@ def update_user():
         set_clause = ', '.join(f"{field} = %s" for field in updates.keys())
         values = list(updates.values())
         values.append(user_id)
-        cursor.execute(f"UPDATE users SET {set_clause} WHERE UserId = %s", values)
+        cursor.execute(f"UPDATE users SET {set_clause} WHERE user_id = %s", values)
         connection.commit()
 
-        cursor.execute("SELECT * FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
         user = cursor.fetchone()
         cursor.close()
         connection.close()
@@ -204,7 +204,7 @@ def get_user_listings():
     """Get all listings for a user"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
@@ -226,7 +226,7 @@ def get_user_purchases():
     """Get all purchases by a user"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
@@ -248,7 +248,7 @@ def get_user_messages():
     """Get all messages for a user"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
@@ -274,7 +274,7 @@ def get_user_ratings():
     """Get all ratings for a user"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
@@ -303,15 +303,15 @@ def get_user_devices():
     """Get all registered devices for a user"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
-        user_id = params.get('userId')
+        user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
         query = """
-            SELECT device_id, UserId, device_type, device_token, device_name, 
+            SELECT device_id, user_id, device_type, device_token, device_name, 
                    app_version, os_version, is_active, registered_at, last_used_at, updated_at
             FROM user_devices 
-            WHERE UserId = %s 
+            WHERE user_id = %s 
             ORDER BY last_used_at DESC, registered_at DESC
         """
         cursor.execute(query, (user_id,))
@@ -443,22 +443,22 @@ def send_apn_message():
             cursor, connection = ConnectToDatabase()
             db_available = True
             # Test if user exists
-            cursor.execute("SELECT UserId FROM users WHERE UserId = %s", (user_id,))
+            cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
             user_exists = cursor.fetchone() is not None
             
             # Get device count
-            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE UserId = %s", (user_id,))
+            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE user_id = %s", (user_id,))
             device_count_result = cursor.fetchone()
             total_devices = device_count_result['count'] if device_count_result else 0
             
             # Get iOS device count
-            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE UserId = %s AND device_type = 'ios'", (user_id,))
+            cursor.execute("SELECT COUNT(*) as count FROM user_devices WHERE user_id = %s AND device_type = 'ios'", (user_id,))
             ios_count_result = cursor.fetchone()
             ios_devices = ios_count_result['count'] if ios_count_result else 0
             
             # Get device details
             cursor.execute(
-                "SELECT device_id, device_type, device_name, device_token, is_active FROM user_devices WHERE UserId = %s ORDER BY last_used_at DESC",
+                "SELECT device_id, device_type, device_name, device_token, is_active FROM user_devices WHERE user_id = %s ORDER BY last_used_at DESC",
                 (user_id,)
             )
             devices_list = cursor.fetchall()
@@ -499,7 +499,7 @@ def send_apn_message():
         try:
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT SessionId FROM usersessions WHERE UserId = %s ORDER BY DateAdded DESC LIMIT 1",
+                "SELECT SessionId FROM usersessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
                 (user_id,)
             )
             session_result = cursor.fetchone()

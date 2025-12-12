@@ -24,7 +24,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (SessionId,))
@@ -37,7 +37,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get ratings received by this user
         ratings_query = """
@@ -46,7 +46,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
                 ur.rating,
                 ur.review,
                 ur.created_at,
-                u.UserId as rater_user_id,
+                u.user_id as rater_user_id,
                 u.FirstName as rater_first_name,
                 u.LastName as rater_last_name,
                 u.Rating as rater_average_rating,
@@ -54,7 +54,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
                 t.amount,
                 t.currency
             FROM user_ratings ur
-            JOIN users u ON ur.rater_id = u.UserId
+            JOIN users u ON ur.rater_id = u.user_id
             LEFT JOIN transactions t ON ur.transaction_id = t.transaction_id
             WHERE ur.user_id = %s
             ORDER BY ur.created_at DESC
@@ -100,7 +100,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
                 'review': rating['review'],
                 'createdAt': str(rating['created_at']),
                 'rater': {
-                    'userId': rating['rater_user_id'],
+                    'user_id': rating['rater_user_id'],
                     'firstName': rating['rater_first_name'],
                     'lastName': rating['rater_last_name'],
                     'averageRating': float(rating['rater_average_rating']) if rating['rater_average_rating'] else 0

@@ -304,12 +304,12 @@ struct SignupView: View {
                             UserDefaults.standard.set(userType, forKey: "UserType")
                             
                             // Save user ID if available
-                            if let userId = json["userId"] as? String {
-                                UserDefaults.standard.set(userId, forKey: "UserId")
+                            if let user_id = json["user_id"] as? String {
+                                UserDefaults.standard.set(user_id, forKey: "UserId")
                                 
                                 // If device token is already available, update it now
                                 if let deviceToken = DeviceTokenManager.shared.deviceToken {
-                                    DeviceTokenManager.shared.updateDeviceTokenForUser(userId: userId, deviceToken: deviceToken)
+                                    DeviceTokenManager.shared.updateDeviceTokenForUser(user_id: user_id, deviceToken: deviceToken)
                                 }
                             }
                             // Send the locally-selected language preference to the backend

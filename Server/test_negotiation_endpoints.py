@@ -84,12 +84,12 @@ class RigorousNegotiationTests:
             self.test_listing_id = str(uuid.uuid4())
             
             cursor.execute("""
-                INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, Rating, TotalExchanges)
+                INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, Rating, TotalExchanges)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (self.buyer_id, "Test", "Buyer", f"buyer{uuid.uuid4().hex[:8]}@test.com", "hash", "buyer", 0, 0))
             
             cursor.execute("""
-                INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, Rating, TotalExchanges)
+                INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, Rating, TotalExchanges)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """, (self.seller_id, "Test", "Seller", f"seller{uuid.uuid4().hex[:8]}@test.com", "hash", "seller", 0, 0))
             
@@ -104,12 +104,12 @@ class RigorousNegotiationTests:
             self.seller_session_id = str(uuid.uuid4())
             
             cursor.execute("""
-                INSERT INTO usersessions (SessionId, UserId)
+                INSERT INTO usersessions (SessionId, user_id)
                 VALUES (%s, %s)
             """, (self.buyer_session_id, self.buyer_id))
             
             cursor.execute("""
-                INSERT INTO usersessions (SessionId, UserId)
+                INSERT INTO usersessions (SessionId, user_id)
                 VALUES (%s, %s)
             """, (self.seller_session_id, self.seller_id))
             
@@ -407,7 +407,7 @@ class RigorousNegotiationTests:
                 
                 # Verify TotalExchanges incremented for BOTH users
                 cursor.execute("""
-                    SELECT TotalExchanges FROM users WHERE UserId IN (%s, %s) ORDER BY UserId
+                    SELECT TotalExchanges FROM users WHERE user_id IN (%s, %s) ORDER BY user_id
                 """, (self.buyer_id, self.seller_id))
                 users = cursor.fetchall()
                 for user in users:
@@ -520,7 +520,7 @@ class RigorousNegotiationTests:
             cursor.execute("DELETE FROM listings WHERE listing_id = %s", (self.test_listing_id,))
             cursor.execute("DELETE FROM usersessions WHERE SessionId IN (%s, %s)", 
                          (self.buyer_session_id, self.seller_session_id))
-            cursor.execute("DELETE FROM users WHERE UserId IN (%s, %s)", 
+            cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", 
                          (self.buyer_id, self.seller_id))
             connection.commit()
             print("✓ Cleanup complete")

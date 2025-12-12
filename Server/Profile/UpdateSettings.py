@@ -10,9 +10,9 @@ def update_settings(SessionId, SettingsJson):
 	try:
 		# Get user ID from session
 		session_query = """
-			SELECT users.UserId
+			SELECT users.user_id
 			FROM usersessions 
-			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
+			INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 		"""
 		cursor.execute(session_query, (SessionId,))
@@ -22,20 +22,20 @@ def update_settings(SessionId, SettingsJson):
 			connection.close()
 			return '{"success": false, "error": "Invalid session"}'
 		
-		user_id = user_result['UserId']
+		user_id = user_result['user_id']
 		
 		# Check if settings record exists
-		check_query = "SELECT COUNT(*) as count FROM user_settings WHERE UserId = %s"
+		check_query = "SELECT COUNT(*) as count FROM user_settings WHERE user_id = %s"
 		cursor.execute(check_query, (user_id,))
 		exists = cursor.fetchone()['count'] > 0
 		
 		if exists:
 			# Update existing settings
-			update_query = "UPDATE user_settings SET SettingsJson = %s WHERE UserId = %s"
+			update_query = "UPDATE user_settings SET SettingsJson = %s WHERE user_id = %s"
 			cursor.execute(update_query, (SettingsJson, user_id))
 		else:
 			# Insert new settings
-			insert_query = "INSERT INTO user_settings (UserId, SettingsJson) VALUES (%s, %s)"
+			insert_query = "INSERT INTO user_settings (user_id, SettingsJson) VALUES (%s, %s)"
 			cursor.execute(insert_query, (user_id, SettingsJson))
 		
 		connection.commit()

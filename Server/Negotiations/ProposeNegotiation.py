@@ -22,7 +22,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         print(f"[Negotiations] ProposeNegotiation called with listing_id={listing_id}, session_id={session_id}, proposed_time={proposed_time}")
         
         # Verify session and get buyer user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         print(f"[Negotiations] Session lookup result: {session_result}")
@@ -33,7 +33,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
                 'error': 'Invalid or expired session'
             })
         
-        buyer_id = session_result['UserId']
+        buyer_id = session_result['user_id']
         print(f"[Negotiations] Buyer ID: {buyer_id}")
         
         # Get listing details and verify it exists
@@ -125,7 +125,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         cursor.execute("""
             SELECT FirstName, LastName
             FROM users
-            WHERE UserId = %s
+            WHERE user_id = %s
         """, (buyer_id,))
         buyer = cursor.fetchone()
         buyer_name = f"{buyer['FirstName']} {buyer['LastName']}" if buyer else "A buyer"

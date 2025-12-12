@@ -154,7 +154,7 @@ class LocationTrackingService:
             
             # Get other user's name for display
             user_query = """
-                SELECT FirstName, LastName FROM users WHERE UserId = %s
+                SELECT FirstName, LastName FROM users WHERE user_id = %s
             """
             cursor.execute(user_query, (other_user_id,))
             user_info = cursor.fetchone()

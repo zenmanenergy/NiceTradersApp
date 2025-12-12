@@ -104,7 +104,7 @@ def UpdateLocation():
         from _Lib.Database import Database
         cursor, connection = Database.ConnectToDatabase()
         
-        session_query = "SELECT UserId FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()
@@ -112,7 +112,7 @@ def UpdateLocation():
         if not session_result:
             return {"success": False, "error": "Invalid or expired session"}
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Update location
         result = LocationTrackingService.update_user_location(proposal_id, user_id, latitude, longitude)
@@ -139,7 +139,7 @@ def GetOtherUserLocation():
         from _Lib.Database import Database
         cursor, connection = Database.ConnectToDatabase()
         
-        session_query = "SELECT UserId FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()
@@ -147,7 +147,7 @@ def GetOtherUserLocation():
         if not session_result:
             return {"success": False, "error": "Invalid or expired session"}
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get other user's location
         result = LocationTrackingService.get_other_user_location(proposal_id, user_id)
@@ -172,7 +172,7 @@ def GetTrackingStatus():
         from _Lib.Database import Database
         cursor, connection = Database.ConnectToDatabase()
         
-        session_query = "SELECT UserId FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()
@@ -180,7 +180,7 @@ def GetTrackingStatus():
         if not session_result:
             return {"success": False, "error": "Invalid or expired session"}
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get tracking status
         result = LocationTrackingService.get_tracking_status(proposal_id, user_id)

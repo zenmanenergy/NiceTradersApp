@@ -23,13 +23,13 @@ class TestMeetingEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (proposer_id, "Proposer", "User", proposer_email, password, "standard", 1))
         
         proposer_session = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (proposer_session, proposer_id))
         
@@ -38,7 +38,7 @@ class TestMeetingEndpoints:
         recipient_email = f"recipient_{uuid.uuid4().hex[:8]}@example.com"
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (recipient_id, "Recipient", "User", recipient_email, password, "standard", 1))
         
@@ -86,8 +86,8 @@ class TestMeetingEndpoints:
         cursor.execute("DELETE FROM meeting_proposals WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM contact_access WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM usersessions WHERE UserId IN (%s, %s)", (proposer_id, recipient_id))
-        cursor.execute("DELETE FROM users WHERE UserId IN (%s, %s)", (proposer_id, recipient_id))
+        cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
+        cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
         connection.commit()
     
     def test_get_meeting_proposals(self, client, test_listing, test_user):
@@ -116,13 +116,13 @@ class TestMeetingEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user1_id, "User1", "Test", user1_email, password, "standard", 1))
         
         user1_session = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (user1_session, user1_id))
         
@@ -130,7 +130,7 @@ class TestMeetingEndpoints:
         user2_email = f"user2_{uuid.uuid4().hex[:8]}@example.com"
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user2_id, "User2", "Test", user2_email, password, "standard", 1))
         
@@ -176,6 +176,6 @@ class TestMeetingEndpoints:
         # Cleanup
         cursor.execute("DELETE FROM meeting_proposals WHERE proposal_id = %s", (proposal_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM usersessions WHERE UserId IN (%s, %s)", (user1_id, user2_id))
-        cursor.execute("DELETE FROM users WHERE UserId IN (%s, %s)", (user1_id, user2_id))
+        cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (user1_id, user2_id))
+        cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (user1_id, user2_id))
         connection.commit()

@@ -36,7 +36,7 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitu
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -49,7 +49,7 @@ def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitu
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         print(f"[CreateListing] Retrieved user_id: {user_id} (type: {type(user_id)})")
         
         # Generate unique listing ID

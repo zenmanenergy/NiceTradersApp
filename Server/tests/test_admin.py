@@ -13,7 +13,7 @@ def test_search_users_returns_matching_user(client, test_user):
     assert payload['success'] is True
 
     users = payload.get('data', [])
-    assert any(user['UserId'] == test_user['user_id'] for user in users), "Test user should appear in search results"
+    assert any(user['user_id'] == test_user['user_id'] for user in users), "Test user should appear in search results"
 
 
 def test_search_listings_returns_listing(client, test_listing):
@@ -30,12 +30,12 @@ def test_search_listings_returns_listing(client, test_listing):
 
 def test_get_user_by_id_returns_user(client, test_user):
     """The GetUserById endpoint should return the expected user record."""
-    response = client.get('/Admin/GetUserById', query_string={'userId': test_user['user_id']})
+    response = client.get('/Admin/GetUserById', query_string={'user_id': test_user['user_id']})
 
     assert response.status_code == 200
     payload = json.loads(response.data)
     assert payload['success'] is True
-    assert payload['user']['UserId'] == test_user['user_id']
+    assert payload['user']['user_id'] == test_user['user_id']
 
 
 def test_get_listing_by_id_returns_listing(client, test_listing):
@@ -51,7 +51,7 @@ def test_get_listing_by_id_returns_listing(client, test_listing):
 def test_update_user_allows_basic_edits(client, test_user):
     """The UpdateUser endpoint should persist edits to basic fields."""
     response = client.get('/Admin/UpdateUser', query_string={
-        'userId': test_user['user_id'],
+        'user_id': test_user['user_id'],
         'FirstName': 'Updated',
         'LastName': 'Admin',
         'Phone': '555-0101',

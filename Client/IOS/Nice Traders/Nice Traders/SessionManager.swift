@@ -35,7 +35,7 @@ class SessionManager: ObservableObject {
         }
     }
     
-    var userId: String? {
+    var user_id: String? {
         get { UserDefaults.standard.string(forKey: "UserId") }
         set { 
             if let value = newValue {
@@ -53,7 +53,7 @@ class SessionManager: ObservableObject {
     func logout() {
         sessionId = nil
         userType = nil
-        userId = nil
+        user_id = nil
     }
     
     func verifySession(completion: @escaping (Bool) -> Void) {

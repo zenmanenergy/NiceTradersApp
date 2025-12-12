@@ -17,7 +17,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
     let location: String?
     let sellerFirstName: String
     let sellerLastName: String
-    let sellerUserId: String
+    let seller_user_id: String
     let messageCount: Int
     let lastMessage: String?
     let lastMessageTime: String?
@@ -33,7 +33,7 @@ struct PurchasedContact: Identifiable, Codable, Hashable {
         case location
         case sellerFirstName = "seller_first_name"
         case sellerLastName = "seller_last_name"
-        case sellerUserId = "seller_user_id"
+        case seller_user_id = "seller_user_id"
         case messageCount = "message_count"
         case lastMessage = "last_message"
         case lastMessageTime = "last_message_time"

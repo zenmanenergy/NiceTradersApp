@@ -58,13 +58,13 @@ class TestContactEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (buyer_id, "Buyer", "User", buyer_email, password, "standard", 1))
         
         buyer_session = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (buyer_session, buyer_id))
         
@@ -73,7 +73,7 @@ class TestContactEndpoints:
         seller_email = f"seller_{uuid.uuid4().hex[:8]}@example.com"
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (seller_id, "Seller", "User", seller_email, password, "standard", 1))
         
@@ -105,8 +105,8 @@ class TestContactEndpoints:
         # Cleanup
         cursor.execute("DELETE FROM contact_access WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM usersessions WHERE UserId IN (%s, %s)", (buyer_id, seller_id))
-        cursor.execute("DELETE FROM users WHERE UserId IN (%s, %s)", (buyer_id, seller_id))
+        cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (buyer_id, seller_id))
+        cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (buyer_id, seller_id))
         connection.commit()
     
     def test_send_interest_message(self, client, test_listing, db_connection):
@@ -123,13 +123,13 @@ class TestContactEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user_id, "Sender", "User", email, password, "standard", 1))
         
         session_id = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (session_id, user_id))
         connection.commit()
@@ -150,8 +150,8 @@ class TestContactEndpoints:
         cursor.execute("DELETE FROM messages WHERE listing_id = %s AND sender_id = %s", 
                       (test_listing['listing_id'], user_id))
         cursor.execute("DELETE FROM notifications WHERE related_id = %s", (test_listing['listing_id'],))
-        cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
-        cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         connection.commit()
     
     def test_report_listing(self, client, test_listing, test_user):

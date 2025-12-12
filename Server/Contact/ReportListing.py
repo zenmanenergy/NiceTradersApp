@@ -12,7 +12,7 @@ def report_listing(listing_id, session_id, reason, description=''):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -21,7 +21,7 @@ def report_listing(listing_id, session_id, reason, description=''):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Check if listing exists
         cursor.execute("SELECT user_id, status FROM listings WHERE listing_id = %s", (listing_id,))

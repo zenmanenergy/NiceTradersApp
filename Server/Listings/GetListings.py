@@ -36,7 +36,7 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
                 u.Rating as user_rating,
                 u.TotalExchanges as user_total_exchanges
             FROM listings l
-            JOIN users u ON l.user_id = u.UserId
+            JOIN users u ON l.user_id = u.user_id
             WHERE l.status = 'active' AND l.available_until > NOW()
         """
         

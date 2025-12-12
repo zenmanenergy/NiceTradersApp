@@ -13,7 +13,7 @@ def verify_session(SessionId):
 	query = """
 		SELECT usersessions.SessionId, users.UserType 
 		FROM usersessions 
-		INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci 
+		INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci 
 		WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 	"""
 	values = (SessionId,)

@@ -267,7 +267,7 @@ def GetLockedExchangeRate():
         from _Lib import Database
         cursor, connection = Database.ConnectToDatabase()
         
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -278,7 +278,7 @@ def GetLockedExchangeRate():
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         cursor.close()
         connection.close()
         

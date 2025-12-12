@@ -52,7 +52,7 @@
 
 		try {
 			const response = await SuperFetch('/Admin/SendApnMessage', {
-				user_id: $userDetailState.currentUser.UserId,
+				user_id: $userDetailState.currentUser.user_id,
 				device_id: selectedDeviceId,
 				title: messageTitle,
 				body: messageBody,

@@ -10,39 +10,39 @@
 	import SuperFetch from '../SuperFetch.js';
 	import { viewState, userDetailState, listingDetailState, transactionDetailState } from '../lib/adminStore.js';
 	
-	async function viewUser(userId, userName = 'User') {
+	async function viewUser(user_id, userName = 'User') {
 		try {
 			// Get user details
-			const userResponse = await SuperFetch('/Admin/GetUserById', { userId });
+			const userResponse = await SuperFetch('/Admin/GetUserById', { user_id });
 			if (!userResponse.success) throw new Error('Failed to load user');
 			
 			const currentUser = userResponse.user;
 			
 			// Get user's listings
-			const listingsResponse = await SuperFetch('/Admin/GetUserListings', { userId });
+			const listingsResponse = await SuperFetch('/Admin/GetUserListings', { user_id });
 			const userListings = listingsResponse.success ? listingsResponse.listings : [];
 			
 			// Get user's purchases
-			const purchasesResponse = await SuperFetch('/Admin/GetUserPurchases', { userId });
+			const purchasesResponse = await SuperFetch('/Admin/GetUserPurchases', { user_id });
 			const userPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
 			
 			// Get user's messages
-			const messagesResponse = await SuperFetch('/Admin/GetUserMessages', { userId });
+			const messagesResponse = await SuperFetch('/Admin/GetUserMessages', { user_id });
 			const userMessages = messagesResponse.success ? messagesResponse.messages : [];
 			
 			// Get user's ratings
-			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { userId });
+			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { user_id });
 			const userRatings = ratingsResponse.success ? ratingsResponse.ratings : [];
 			
 			// Get user's devices
-			const devicesResponse = await SuperFetch('/Admin/GetUserDevices', { userId });
+			const devicesResponse = await SuperFetch('/Admin/GetUserDevices', { user_id });
 			const userDevices = devicesResponse.success ? devicesResponse.devices : [];
 			
 			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings, userDevices });
 			
 			viewState.update(state => ({
 				currentView: 'user',
-				breadcrumbs: [...state.breadcrumbs, { type: 'user', id: userId, label: userName }]
+				breadcrumbs: [...state.breadcrumbs, { type: 'user', id: user_id, label: userName }]
 			}));
 		} catch (err) {
 			console.error('Error loading user:', err);
@@ -57,7 +57,7 @@
 			const currentListing = listingResponse.listing;
 			
 			// Get listing owner
-			const ownerResponse = await SuperFetch('/Admin/GetUserById', { userId: currentListing.user_id });
+			const ownerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentListing.user_id });
 			const listingOwner = ownerResponse.success ? ownerResponse.user : null;
 			
 			// Get who purchased this listing
@@ -87,7 +87,7 @@
 			const currentTransaction = txResponse.transaction;
 			
 			// Get buyer details
-			const buyerResponse = await SuperFetch('/Admin/GetUserById', { userId: currentTransaction.user_id });
+			const buyerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentTransaction.user_id });
 			const transactionBuyer = buyerResponse.success ? buyerResponse.user : null;
 			
 			// Get seller details (listing owner)
@@ -96,7 +96,7 @@
 			let transactionListing = null;
 			if (listingResponse.success) {
 				transactionListing = listingResponse.listing;
-				const sellerResponse = await SuperFetch('/Admin/GetUserById', { userId: listingResponse.listing.user_id });
+				const sellerResponse = await SuperFetch('/Admin/GetUserById', { user_id: listingResponse.listing.user_id });
 				transactionSeller = sellerResponse.success ? sellerResponse.user : null;
 			}
 			

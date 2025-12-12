@@ -10,7 +10,7 @@ ratings_bp = Blueprint('ratings', __name__, url_prefix='/Ratings')
 def submit_rating_endpoint():
     """Submit a rating for a user after a transaction"""
     session_id = request.args.get('SessionId')
-    user_id = request.args.get('UserId')
+    user_id = request.args.get('user_id')
     rating = request.args.get('Rating')
     review = request.args.get('Review', '')
     transaction_id = request.args.get('TransactionId')
@@ -20,7 +20,7 @@ def submit_rating_endpoint():
 @ratings_bp.route('/GetUserRatings', methods=['GET'])
 def get_user_ratings_endpoint():
     """Get all ratings for a user"""
-    user_id = request.args.get('UserId')
+    user_id = request.args.get('user_id')
     limit = request.args.get('Limit', 10, type=int)
     offset = request.args.get('Offset', 0, type=int)
     
@@ -29,7 +29,7 @@ def get_user_ratings_endpoint():
 @ratings_bp.route('/GetRatingStats', methods=['GET'])
 def get_rating_stats_endpoint():
     """Get rating statistics for a user"""
-    user_id = request.args.get('UserId')
+    user_id = request.args.get('user_id')
     
     return get_rating_stats(user_id)
 

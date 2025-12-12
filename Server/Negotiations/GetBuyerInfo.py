@@ -16,7 +16,7 @@ def get_buyer_info(buyer_id, session_id):
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -28,14 +28,14 @@ def get_buyer_info(buyer_id, session_id):
         # Get buyer details
         cursor.execute("""
             SELECT 
-                UserId,
+                user_id,
                 FirstName,
                 LastName,
                 Rating,
                 TotalExchanges,
                 DateCreated
             FROM users
-            WHERE UserId = %s
+            WHERE user_id = %s
         """, (buyer_id,))
         
         buyer = cursor.fetchone()
@@ -54,7 +54,7 @@ def get_buyer_info(buyer_id, session_id):
                 Amount,
                 Rating
             FROM exchange_history
-            WHERE UserId = %s
+            WHERE user_id = %s
             ORDER BY ExchangeDate DESC
             LIMIT 10
         """, (buyer_id,))
@@ -104,7 +104,7 @@ def get_buyer_info(buyer_id, session_id):
         response = {
             'success': True,
             'buyer': {
-                'userId': buyer['UserId'],
+                'user_id': buyer['user_id'],
                 'firstName': buyer['FirstName'],
                 'lastName': buyer['LastName'],
                 'rating': avg_rating,

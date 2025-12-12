@@ -207,7 +207,7 @@ class NotificationService:
         try:
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT SettingsJson FROM user_settings WHERE UserId = %s",
+                "SELECT SettingsJson FROM user_settings WHERE user_id = %s",
                 (user_id,)
             )
             result = cursor.fetchone()
@@ -235,7 +235,7 @@ class NotificationService:
         try:
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT SessionId FROM usersessions WHERE UserId = %s ORDER BY DateAdded DESC LIMIT 1",
+                "SELECT SessionId FROM usersessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
                 (user_id,)
             )
             result = cursor.fetchone()

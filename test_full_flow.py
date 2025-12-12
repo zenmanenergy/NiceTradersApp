@@ -20,10 +20,10 @@ db = pymysql.connect(
 )
 cursor = db.cursor()
 
-cursor.execute("SELECT SessionId, UserId FROM usersessions LIMIT 1")
+cursor.execute("SELECT SessionId, user_id FROM usersessions LIMIT 1")
 session_row = cursor.fetchone()
 session_id = session_row['SessionId']
-user_id = session_row['UserId']
+user_id = session_row['user_id']
 
 listing_id = '684e682e-cd15-4084-b92b-3b5c3ab8e639'
 
@@ -54,7 +54,7 @@ if result_json['proposals']:
     if proposer_row:
         proposer_id = proposer_row['proposed_by']
         # Get proposer's session
-        cursor.execute("SELECT SessionId FROM usersessions WHERE UserId = %s LIMIT 1", (proposer_id,))
+        cursor.execute("SELECT SessionId FROM usersessions WHERE user_id = %s LIMIT 1", (proposer_id,))
         proposer_session_row = cursor.fetchone()
         
         if proposer_session_row:

@@ -132,7 +132,7 @@ struct NegotiationDetailView: View {
         }
         .sheet(isPresented: $showBuyerInfo) {
             if let negotiation = negotiation, negotiation.userRole == "seller" {
-                BuyerInfoView(buyerId: negotiation.buyer.userId)
+                BuyerInfoView(buyerId: negotiation.buyer.user_id)
             }
         }
         .alert("End Negotiation", isPresented: $showRejectConfirmation) {
@@ -170,7 +170,7 @@ struct NegotiationDetailView: View {
                     Spacer()
                 }
                 
-                let proposer = negotiation.negotiation.proposedBy == negotiation.buyer.userId ? negotiation.buyer : negotiation.seller
+                let proposer = negotiation.negotiation.proposedBy == negotiation.buyer.user_id ? negotiation.buyer : negotiation.seller
                 Text("\(localizationManager.localize("PROPOSED_BY")) \(proposer.firstName)")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -183,7 +183,7 @@ struct NegotiationDetailView: View {
                 StatusBadge(status: negotiation.negotiation.status)
                 
                 if negotiation.negotiation.status == .proposed || negotiation.negotiation.status == .countered {
-                    let isWaitingForMe = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.userId : negotiation.seller.userId)
+                    let isWaitingForMe = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.user_id : negotiation.seller.user_id)
                     
                     Text(isWaitingForMe ? 
                         localizationManager.localize("WAITING_FOR_YOUR_RESPONSE") :
@@ -223,7 +223,7 @@ struct NegotiationDetailView: View {
             StatusBadge(status: negotiation.negotiation.status)
             
             if negotiation.negotiation.status == .proposed || negotiation.negotiation.status == .countered {
-                let isWaitingForMe = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.userId : negotiation.seller.userId)
+                let isWaitingForMe = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.user_id : negotiation.seller.user_id)
                 
                 Text(isWaitingForMe ? 
                     localizationManager.localize("WAITING_FOR_YOUR_RESPONSE") :
@@ -330,7 +330,7 @@ struct NegotiationDetailView: View {
                 Spacer()
             }
             
-            let proposer = negotiation.negotiation.proposedBy == negotiation.buyer.userId ? negotiation.buyer : negotiation.seller
+            let proposer = negotiation.negotiation.proposedBy == negotiation.buyer.user_id ? negotiation.buyer : negotiation.seller
             Text("\(localizationManager.localize("PROPOSED_BY")) \(proposer.firstName)")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -377,7 +377,7 @@ struct NegotiationDetailView: View {
     
     @ViewBuilder
     private func actionButtons(_ negotiation: NegotiationDetail) -> some View {
-        let isMyTurn = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.userId : negotiation.seller.userId)
+        let isMyTurn = negotiation.negotiation.proposedBy != (negotiation.userRole == "buyer" ? negotiation.buyer.user_id : negotiation.seller.user_id)
         let isPaid = negotiation.userRole == "buyer" ? negotiation.negotiation.buyerPaid : negotiation.negotiation.sellerPaid
         
         VStack(spacing: 12) {
@@ -450,7 +450,7 @@ struct NegotiationDetailView: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         // Get user name from proposedBy (either buyer or seller)
-                        let proposer = entry.proposedBy == negotiation.buyer.userId ? negotiation.buyer : negotiation.seller
+                        let proposer = entry.proposedBy == negotiation.buyer.user_id ? negotiation.buyer : negotiation.seller
                         Text("\(proposer.firstName) \(proposer.lastName)")
                             .font(.subheadline)
                             .fontWeight(.semibold)

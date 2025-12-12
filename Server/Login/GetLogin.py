@@ -32,15 +32,15 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 		else:
 			print(result)
 			# Delete existing sessions for the user
-			query = "DELETE FROM usersessions WHERE UserId = %s"
-			values = (result['UserId'],)
+			query = "DELETE FROM usersessions WHERE user_id = %s"
+			values = (result['user_id'],)
 			cursor.execute(query, values)
 			connection.commit()
 
 			# Create a new session
 			SessionId = "SES" + str(uuid.uuid4())
-			query = "INSERT INTO usersessions(SessionId, UserId, DateAdded) VALUES (%s, %s, %s)"
-			values = (SessionId, result['UserId'], datetime.datetime.now(),)
+			query = "INSERT INTO usersessions(SessionId, user_id, DateAdded) VALUES (%s, %s, %s)"
+			values = (SessionId, result['user_id'], datetime.datetime.now(),)
 			cursor.execute(query, values)
 			connection.commit()
 
@@ -48,10 +48,10 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 			connection.close()
 			
 			# Always register device (token may be None initially, will be updated when APNs provides it)
-			register_device(result['UserId'], device_token, device_type, device_name, app_version, os_version)
+			register_device(result['user_id'], device_token, device_type, device_name, app_version, os_version)
 
 			# Return success with session data and user ID
-			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "UserId": "{result["UserId"]}"}}'
+			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}"}}'
 			
 	except Exception as e:
 		connection.close()

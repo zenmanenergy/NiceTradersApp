@@ -67,7 +67,7 @@ def search_listings_in_radius(session_id, listing_id, search_query, limit=5):
                     POW(69.1 * (%s - l.longitude) * COS(l.latitude / 57.3), 2)
                 ) * 1.60934, 2) AS distance_km
             FROM listings l
-            JOIN users u ON l.user_id = u.UserId
+            JOIN users u ON l.user_id = u.user_id
             WHERE l.listing_id != %s
             AND l.status = 'active'
             AND (l.available_until IS NULL OR l.available_until > NOW())

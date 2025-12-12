@@ -21,7 +21,7 @@ db = pymysql.connect(
 cursor = db.cursor()
 
 # Get a valid session ID
-cursor.execute("SELECT SessionId, UserId FROM usersessions LIMIT 1")
+cursor.execute("SELECT SessionId, user_id FROM usersessions LIMIT 1")
 session_row = cursor.fetchone()
 
 if not session_row:
@@ -29,7 +29,7 @@ if not session_row:
     sys.exit(1)
 
 session_id = session_row['SessionId']
-user_id = session_row['UserId']
+user_id = session_row['user_id']
 
 print(f"\nUsing session_id: {session_id}")
 print(f"User ID: {user_id}")

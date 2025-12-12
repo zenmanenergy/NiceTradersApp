@@ -80,13 +80,13 @@ class APNService:
             # If specific device_id provided, get only that device
             if device_id:
                 cursor.execute(
-                    "SELECT device_token, device_id, device_name FROM user_devices WHERE UserId = %s AND device_id = %s AND device_type = 'ios'",
+                    "SELECT device_token, device_id, device_name FROM user_devices WHERE user_id = %s AND device_id = %s AND device_type = 'ios'",
                     (user_id, device_id)
                 )
             else:
                 # Otherwise get all iOS devices
                 cursor.execute(
-                    "SELECT device_token, device_id, device_name FROM user_devices WHERE UserId = %s AND device_type = 'ios'",
+                    "SELECT device_token, device_id, device_name FROM user_devices WHERE user_id = %s AND device_type = 'ios'",
                     (user_id,)
                 )
             
@@ -224,7 +224,7 @@ class APNService:
             
             try:
                 cursor.execute(
-                    "INSERT INTO apn_logs (UserId, Data, DateSent) VALUES (%s, %s, NOW())",
+                    "INSERT INTO apn_logs (user_id, Data, DateSent) VALUES (%s, %s, NOW())",
                     (user_id, json.dumps(notification_log))
                 )
                 connection.commit()

@@ -12,10 +12,10 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         # Get current user ID from session to exclude their own listings
         current_user_id = None
         if SessionId:
-            cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (SessionId,))
+            cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (SessionId,))
             session_result = cursor.fetchone()
             if session_result:
-                current_user_id = session_result['UserId']
+                current_user_id = session_result['user_id']
         
         # Build the base query (excluding sold/completed listings and proposals by current user)
         base_query = """
@@ -41,7 +41,7 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
                 u.Rating,
                 u.TotalExchanges
             FROM listings l
-            JOIN users u ON l.user_id = u.UserId
+            JOIN users u ON l.user_id = u.user_id
             WHERE l.status = 'active' AND l.available_until > NOW()
         """
         

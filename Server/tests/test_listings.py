@@ -118,13 +118,13 @@ class TestListingsEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user_id, "Other", "User", email, password, "standard", 1))
         
         session_id = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (session_id, user_id))
         connection.commit()
@@ -140,8 +140,8 @@ class TestListingsEndpoints:
         assert data['success'] is False
         
         # Cleanup
-        cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
-        cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         connection.commit()
     
     def test_delete_listing_success(self, client, db_connection, test_user):

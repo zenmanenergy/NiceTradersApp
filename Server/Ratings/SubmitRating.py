@@ -3,13 +3,13 @@ import json
 from datetime import datetime
 import uuid
 
-def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
+def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
     """
     Submit a rating for a user after a transaction
     
     Args:
         SessionId: User session ID (rater)
-        UserId: User ID being rated
+        user_id: User ID being rated
         Rating: Rating from 1-5
         Review: Optional review text
         TransactionId: Optional transaction ID related to the rating
@@ -17,7 +17,7 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
     Returns: JSON response
     """
     try:
-        if not all([SessionId, UserId, Rating]):
+        if not all([SessionId, user_id, Rating]):
             return json.dumps({
                 'success': False,
                 'error': 'Session ID, User ID, and Rating are required'
@@ -42,7 +42,7 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
         
         # Verify session and get rater user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (SessionId,))
@@ -55,10 +55,10 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
                 'error': 'Invalid or expired session'
             })
         
-        rater_id = session_result['UserId']
+        rater_id = session_result['user_id']
         
         # Prevent self-rating
-        if rater_id == UserId:
+        if rater_id == user_id:
             connection.close()
             return json.dumps({
                 'success': False,
@@ -67,10 +67,10 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
         
         # Verify the user being rated exists
         user_query = """
-            SELECT UserId FROM users 
-            WHERE UserId = %s
+            SELECT user_id FROM users 
+            WHERE user_id = %s
         """
-        cursor.execute(user_query, (UserId,))
+        cursor.execute(user_query, (user_id,))
         user_result = cursor.fetchone()
         
         if not user_result:
@@ -105,7 +105,7 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
             AND user_id = %s 
             AND transaction_id <=> %s
         """
-        cursor.execute(existing_query, (rater_id, UserId, TransactionId))
+        cursor.execute(existing_query, (rater_id, user_id, TransactionId))
         existing_rating = cursor.fetchone()
         
         if existing_rating:
@@ -126,7 +126,7 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
                 (rating_id, user_id, rater_id, transaction_id, rating, review, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, NOW())
             """
-            cursor.execute(insert_query, (rating_id, UserId, rater_id, TransactionId, rating_value, Review or None))
+            cursor.execute(insert_query, (rating_id, user_id, rater_id, TransactionId, rating_value, Review or None))
             action = "submitted"
         
         # Update user's overall rating in users table
@@ -135,14 +135,14 @@ def submit_rating(SessionId, UserId, Rating, Review="", TransactionId=None):
             SET Rating = (
                 SELECT AVG(rating) FROM user_ratings WHERE user_id = %s
             )
-            WHERE UserId = %s
+            WHERE user_id = %s
         """
-        cursor.execute(update_user_query, (UserId, UserId))
+        cursor.execute(update_user_query, (user_id, user_id))
         
         connection.commit()
         connection.close()
         
-        print(f"[SubmitRating] Rating {action}: {rating_value} stars from {rater_id} to {UserId}")
+        print(f"[SubmitRating] Rating {action}: {rating_value} stars from {rater_id} to {user_id}")
         
         return json.dumps({
             'success': True,

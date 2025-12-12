@@ -80,11 +80,19 @@ struct NegotiationDetail: Codable {
     }
     
     struct UserInfo: Codable {
-        let userId: String
+        let user_id: String
         let firstName: String
         let lastName: String
         let rating: Double
         let totalExchanges: Int
+        
+        enum CodingKeys: String, CodingKey {
+            case user_id = "user_id"
+            case firstName
+            case lastName
+            case rating
+            case totalExchanges
+        }
     }
 }
 
@@ -108,7 +116,7 @@ struct NegotiationHistoryEntry: Codable, Identifiable {
 }
 
 struct BuyerInfo: Codable {
-    let userId: String
+    let user_id: String
     let firstName: String
     let lastName: String
     let rating: Double
@@ -116,6 +124,17 @@ struct BuyerInfo: Codable {
     let memberSince: String
     let transactionHistory: [TransactionHistoryEntry]
     let recentRatings: [RatingEntry]
+    
+    enum CodingKeys: String, CodingKey {
+        case user_id = "user_id"
+        case firstName
+        case lastName
+        case rating
+        case totalExchanges
+        case memberSince
+        case transactionHistory
+        case recentRatings
+    }
     
     struct TransactionHistoryEntry: Codable, Identifiable {
         let id = UUID()
@@ -256,11 +275,19 @@ struct NegotiationDetailResponse: Codable {
     }
     
     struct UserInfo: Codable {
-        let userId: String
+        let user_id: String
         let firstName: String
         let lastName: String
         let rating: Double
         let totalExchanges: Int
+        
+        enum CodingKeys: String, CodingKey {
+            case user_id = "user_id"
+            case firstName
+            case lastName
+            case rating
+            case totalExchanges
+        }
     }
     
     // Convert to NegotiationDetail
@@ -296,14 +323,14 @@ struct NegotiationDetailResponse: Codable {
                 willRoundToNearestDollar: listing.willRoundToNearestDollar
             ),
             buyer: NegotiationDetail.UserInfo(
-                userId: buyer.userId,
+                user_id: buyer.user_id,
                 firstName: buyer.firstName,
                 lastName: buyer.lastName,
                 rating: buyer.rating,
                 totalExchanges: buyer.totalExchanges
             ),
             seller: NegotiationDetail.UserInfo(
-                userId: seller.userId,
+                user_id: seller.user_id,
                 firstName: seller.firstName,
                 lastName: seller.lastName,
                 rating: seller.rating,
@@ -376,7 +403,7 @@ struct MyNegotiationItem: Codable, Identifiable {
     }
     
     struct OtherUserInfo: Codable {
-        let userId: String
+        let user_id: String
         let name: String
         let rating: Double
     }

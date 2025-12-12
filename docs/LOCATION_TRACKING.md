@@ -102,7 +102,7 @@ CREATE TABLE user_locations (
     distance_from_meeting DECIMAL(10, 4),
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_location (user_id, proposal_id),
-    FOREIGN KEY (user_id) REFERENCES users(UserId),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (proposal_id) REFERENCES meeting_proposals(proposal_id),
     INDEX idx_proposal_timestamp (proposal_id, timestamp),
     INDEX idx_user_timestamp (user_id, timestamp)

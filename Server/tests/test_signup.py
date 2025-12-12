@@ -29,12 +29,12 @@ class TestSignupEndpoints:
         
         # Cleanup - need to get userId from session
         session_id = data['sessionId']
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         if session_result:
-            user_id = session_result['UserId']
-            cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
-            cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+            user_id = session_result['user_id']
+            cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+            cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         else:
             cursor.execute("DELETE FROM users WHERE Email = %s", (test_email,))
         connection.commit()

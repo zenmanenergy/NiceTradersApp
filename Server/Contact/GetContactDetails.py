@@ -80,7 +80,7 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 4.5 as rating,
                 0 as total_trades
             FROM listings l
-            INNER JOIN users u ON l.user_id = u.UserId
+            INNER JOIN users u ON l.user_id = u.user_id
             WHERE l.listing_id = %s 
             AND l.status = 'active'
         """

@@ -136,7 +136,7 @@ self.client.send_notification(
    import pymysql
    db = pymysql.connect(host='localhost', user='stevenelson', password='mwitcitw711', database='nicetraders')
    cursor = db.cursor()
-   cursor.execute('SELECT UserId, device_token, created_at FROM user_devices ORDER BY created_at DESC LIMIT 5')
+   cursor.execute('SELECT user_id, device_token, created_at FROM user_devices ORDER BY created_at DESC LIMIT 5')
    for row in cursor.fetchall():
        print(row)
    cursor.close()

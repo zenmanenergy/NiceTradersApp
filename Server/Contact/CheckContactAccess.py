@@ -10,7 +10,7 @@ def check_contact_access(listing_id, session_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         print(f"[CheckContactAccess] Session lookup result: {session_result}")
         
@@ -21,7 +21,7 @@ def check_contact_access(listing_id, session_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         print(f"[CheckContactAccess] Found user_id: {user_id}")
         
         # Check if user has active contact access for this listing

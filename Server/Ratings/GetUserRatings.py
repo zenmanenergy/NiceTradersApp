@@ -1,19 +1,19 @@
 from _Lib import Database
 import json
 
-def get_user_ratings(UserId, Limit=10, Offset=0):
+def get_user_ratings(user_id, Limit=10, Offset=0):
     """
     Get all ratings for a specific user
     
     Args:
-        UserId: User ID to get ratings for
+        user_id: User ID to get ratings for
         Limit: Number of ratings to return (default 10)
         Offset: Pagination offset (default 0)
     
     Returns: JSON response with ratings list and statistics
     """
     try:
-        if not UserId:
+        if not user_id:
             return json.dumps({
                 'success': False,
                 'error': 'User ID is required'
@@ -29,21 +29,21 @@ def get_user_ratings(UserId, Limit=10, Offset=0):
                 ur.rating,
                 ur.review,
                 ur.created_at,
-                u.UserId as rater_id,
+                u.user_id as rater_id,
                 u.FirstName as rater_first_name,
                 u.LastName as rater_last_name,
                 t.transaction_id,
                 t.amount,
                 t.currency
             FROM user_ratings ur
-            JOIN users u ON ur.rater_id = u.UserId
+            JOIN users u ON ur.rater_id = u.user_id
             LEFT JOIN transactions t ON ur.transaction_id = t.transaction_id
             WHERE ur.user_id = %s
             ORDER BY ur.created_at DESC
             LIMIT %s OFFSET %s
         """
         
-        cursor.execute(ratings_query, (UserId, Limit, Offset))
+        cursor.execute(ratings_query, (user_id, Limit, Offset))
         ratings = cursor.fetchall()
         
         # Get count of total ratings
@@ -51,7 +51,7 @@ def get_user_ratings(UserId, Limit=10, Offset=0):
             SELECT COUNT(*) as total_count FROM user_ratings 
             WHERE user_id = %s
         """
-        cursor.execute(count_query, (UserId,))
+        cursor.execute(count_query, (user_id,))
         count_result = cursor.fetchone()
         total_ratings = count_result['total_count'] if count_result else 0
         
@@ -69,7 +69,7 @@ def get_user_ratings(UserId, Limit=10, Offset=0):
             WHERE user_id = %s
         """
         
-        cursor.execute(avg_query, (UserId,))
+        cursor.execute(avg_query, (user_id,))
         stats = cursor.fetchone()
         
         connection.close()
@@ -83,7 +83,7 @@ def get_user_ratings(UserId, Limit=10, Offset=0):
                 'review': rating['review'],
                 'createdAt': str(rating['created_at']),
                 'rater': {
-                    'userId': rating['rater_id'],
+                    'user_id': rating['rater_id'],
                     'firstName': rating['rater_first_name'],
                     'lastName': rating['rater_last_name']
                 },

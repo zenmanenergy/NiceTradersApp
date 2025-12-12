@@ -3,10 +3,10 @@
 	import { listingDetailState, viewState } from '../../lib/adminStore.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
 	
-	function viewUser(userId, userName) {
+	function viewUser(user_id, userName) {
 		viewState.update(state => ({
 			...state,
-			breadcrumbs: [...state.breadcrumbs, { type: 'user', id: userId, label: userName }]
+			breadcrumbs: [...state.breadcrumbs, { type: 'user', id: user_id, label: userName }]
 		}));
 	}
 	
@@ -37,7 +37,7 @@
 			</div>
 			
 			{#if $listingDetailState.listingOwner}
-				<div class="info-card clickable" on:click={() => viewUser($listingDetailState.listingOwner.UserId, `${$listingDetailState.listingOwner.FirstName} ${$listingDetailState.listingOwner.LastName}`)}>
+				<div class="info-card clickable" on:click={() => viewUser($listingDetailState.listingOwner.user_id, `${$listingDetailState.listingOwner.FirstName} ${$listingDetailState.listingOwner.LastName}`)}>
 					<h3>👤 Owner</h3>
 					<div class="info-row"><strong>Name:</strong> {$listingDetailState.listingOwner.FirstName} {$listingDetailState.listingOwner.LastName}</div>
 					<div class="info-row"><strong>Email:</strong> {$listingDetailState.listingOwner.Email}</div>

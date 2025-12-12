@@ -21,7 +21,7 @@ class TestLoginEndpoints:
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user_id, "Login", "Test", email, hashed_password, "standard", 1))
         connection.commit()
@@ -37,8 +37,8 @@ class TestLoginEndpoints:
         assert 'UserType' in data
         
         # Cleanup
-        cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
-        cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         connection.commit()
     
     def test_login_invalid_credentials(self, client):

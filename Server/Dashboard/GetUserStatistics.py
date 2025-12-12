@@ -19,7 +19,7 @@ def get_user_statistics(SessionId):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -32,7 +32,7 @@ def get_user_statistics(SessionId):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get listings statistics by status
         listings_stats_query = """

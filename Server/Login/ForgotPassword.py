@@ -22,7 +22,7 @@ def forgot_password(email):
         
         # Check if user exists
         cursor.execute("""
-            SELECT UserId, Email FROM users WHERE Email = %s
+            SELECT user_id, Email FROM users WHERE Email = %s
         """, (email,))
         
         user = cursor.fetchone()
@@ -43,7 +43,7 @@ def forgot_password(email):
         
         # Store reset token in database
         cursor.execute("""
-            INSERT INTO password_reset_tokens (TokenId, UserId, ResetToken, TokenExpires, CreatedAt)
+            INSERT INTO password_reset_tokens (TokenId, user_id, ResetToken, TokenExpires, CreatedAt)
             VALUES (%s, %s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE
             ResetToken = VALUES(ResetToken),
@@ -88,7 +88,7 @@ def reset_password(reset_token, new_password):
         
         # Check if token is valid and not expired
         cursor.execute("""
-            SELECT UserId FROM password_reset_tokens
+            SELECT user_id FROM password_reset_tokens
             WHERE ResetToken = %s AND TokenExpires > NOW()
         """, (reset_token,))
         
@@ -105,7 +105,7 @@ def reset_password(reset_token, new_password):
         # Update user password
         cursor.execute("""
             UPDATE users SET Password = SHA2(%s, 256)
-            WHERE UserId = %s
+            WHERE user_id = %s
         """, (new_password, user_id))
         
         # Delete the used reset token

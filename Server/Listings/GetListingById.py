@@ -34,13 +34,13 @@ def get_listing_by_id(ListingId):
                 l.created_at,
                 l.updated_at,
                 l.will_round_to_nearest_dollar,
-                u.UserId as user_id,
+                u.user_id as user_id,
                 CONCAT(u.FirstName, ' ', u.LastName) as user_name,
                 u.Email as user_email,
                 u.Rating as user_rating,
                 u.TotalExchanges as user_total_exchanges
             FROM listings l
-            JOIN users u ON l.user_id = u.UserId
+            JOIN users u ON l.user_id = u.user_id
             WHERE l.listing_id = %s
         """
         

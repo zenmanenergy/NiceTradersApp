@@ -23,7 +23,7 @@ def get_negotiation(listing_id, session_id):
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -32,7 +32,7 @@ def get_negotiation(listing_id, session_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get listing details
         cursor.execute("""
@@ -95,14 +95,14 @@ def get_negotiation(listing_id, session_id):
         
         # Get buyer and seller user info
         cursor.execute("""
-            SELECT UserId, FirstName, LastName, Rating, TotalExchanges
+            SELECT user_id, FirstName, LastName, Rating, TotalExchanges
             FROM users
-            WHERE UserId IN (%s, %s)
+            WHERE user_id IN (%s, %s)
         """, (buyer_id, seller_id))
         
         users = cursor.fetchall()
-        buyer_info = next((u for u in users if u['UserId'] == buyer_id), None)
-        seller_info = next((u for u in users if u['UserId'] == seller_id), None)
+        buyer_info = next((u for u in users if u['user_id'] == buyer_id), None)
+        seller_info = next((u for u in users if u['user_id'] == seller_id), None)
         
         # Determine user's role
         user_role = 'buyer' if user_id == buyer_id else 'seller'
@@ -151,14 +151,14 @@ def get_negotiation(listing_id, session_id):
             },
             'location': location_response,
             'buyer': {
-                'userId': buyer_id,
+                'user_id': buyer_id,
                 'firstName': buyer_info['FirstName'] if buyer_info else 'Unknown',
                 'lastName': buyer_info['LastName'] if buyer_info else 'Unknown',
                 'rating': float(buyer_info['Rating']) if buyer_info and buyer_info['Rating'] else 0.0,
                 'totalExchanges': buyer_info['TotalExchanges'] if buyer_info else 0
             },
             'seller': {
-                'userId': seller_id,
+                'user_id': seller_id,
                 'firstName': seller_info['FirstName'] if seller_info else 'Unknown',
                 'lastName': seller_info['LastName'] if seller_info else 'Unknown',
                 'rating': float(seller_info['Rating']) if seller_info and seller_info['Rating'] else 0.0,

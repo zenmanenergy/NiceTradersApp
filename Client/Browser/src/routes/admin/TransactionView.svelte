@@ -3,10 +3,10 @@
 	import { transactionDetailState, viewState } from '../../lib/adminStore.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
 	
-	function viewUser(userId, userName) {
+	function viewUser(user_id, userName) {
 		viewState.update(state => ({
 			...state,
-			breadcrumbs: [...state.breadcrumbs, { type: 'user', id: userId, label: userName }]
+			breadcrumbs: [...state.breadcrumbs, { type: 'user', id: user_id, label: userName }]
 		}));
 	}
 	
@@ -49,7 +49,7 @@
 			<h3>👥 Parties Involved</h3>
 			<div class="detail-grid">
 				{#if $transactionDetailState.transactionBuyer}
-					<div class="info-card clickable" on:click={() => viewUser($transactionDetailState.transactionBuyer.UserId, `${$transactionDetailState.transactionBuyer.FirstName} ${$transactionDetailState.transactionBuyer.LastName}`)}>
+					<div class="info-card clickable" on:click={() => viewUser($transactionDetailState.transactionBuyer.user_id, `${$transactionDetailState.transactionBuyer.FirstName} ${$transactionDetailState.transactionBuyer.LastName}`)}>
 						<h4>💳 Buyer</h4>
 						<div class="info-row"><strong>Name:</strong> {$transactionDetailState.transactionBuyer.FirstName} {$transactionDetailState.transactionBuyer.LastName}</div>
 						<div class="info-row"><strong>Email:</strong> {$transactionDetailState.transactionBuyer.Email}</div>
@@ -59,7 +59,7 @@
 				{/if}
 
 				{#if $transactionDetailState.transactionSeller}
-					<div class="info-card clickable" on:click={() => viewUser($transactionDetailState.transactionSeller.UserId, `${$transactionDetailState.transactionSeller.FirstName} ${$transactionDetailState.transactionSeller.LastName}`)}>
+					<div class="info-card clickable" on:click={() => viewUser($transactionDetailState.transactionSeller.user_id, `${$transactionDetailState.transactionSeller.FirstName} ${$transactionDetailState.transactionSeller.LastName}`)}>
 						<h4>💰 Seller</h4>
 						<div class="info-row"><strong>Name:</strong> {$transactionDetailState.transactionSeller.FirstName} {$transactionDetailState.transactionSeller.LastName}</div>
 						<div class="info-row"><strong>Email:</strong> {$transactionDetailState.transactionSeller.Email}</div>

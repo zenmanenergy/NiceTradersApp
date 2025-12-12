@@ -26,7 +26,7 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (SessionId,))
@@ -39,7 +39,7 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get negotiation details from history
         cursor.execute("""
@@ -94,7 +94,7 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         partner_id = seller_id if is_buyer else user_id  # Get the other person
         
         # Get partner name
-        partner_query = "SELECT first_name, last_name FROM users WHERE UserID = %s"
+        partner_query = "SELECT first_name, last_name FROM users WHERE user_id = %s"
         cursor.execute(partner_query, (partner_id,))
         partner_user = cursor.fetchone()
         partner_name = f"{partner_user['first_name']} {partner_user['last_name']}" if partner_user else "User"
@@ -108,7 +108,7 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         
         history_insert_query = """
             INSERT INTO exchange_history 
-            (ExchangeId, UserId, ExchangeDate, Currency, Amount, PartnerName, Rating, Notes, TransactionType, created_at)
+            (ExchangeId, user_id, ExchangeDate, Currency, Amount, PartnerName, Rating, Notes, TransactionType, created_at)
             VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, NOW())
         """
         cursor.execute(history_insert_query, (
@@ -132,7 +132,7 @@ def complete_exchange(SessionId, NegotiationId, CompletionNotes=""):
         
         
         # Get partner name for notification
-        partner_name_query = "SELECT first_name, last_name FROM users WHERE UserID = %s"
+        partner_name_query = "SELECT first_name, last_name FROM users WHERE user_id = %s"
         cursor.execute(partner_name_query, (user_id,))
         partner_user = cursor.fetchone()
         partner_display_name = f"{partner_user['first_name']} {partner_user['last_name']}" if partner_user else "User"

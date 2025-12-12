@@ -95,13 +95,13 @@ class TestProfileEndpoints:
         password = bcrypt.hashpw("TestPass123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         
         cursor.execute("""
-            INSERT INTO users (UserId, FirstName, LastName, Email, Password, UserType, IsActive)
+            INSERT INTO users (user_id, FirstName, LastName, Email, Password, UserType, IsActive)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (user_id, "Delete", "Test", email, password, "standard", 1))
         
         session_id = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, UserId)
+            INSERT INTO usersessions (SessionId, user_id)
             VALUES (%s, %s)
         """, (session_id, user_id))
         connection.commit()
@@ -116,5 +116,5 @@ class TestProfileEndpoints:
         assert data['success'] is True
         
         # Verify user is deleted
-        cursor.execute("SELECT * FROM users WHERE UserId = %s", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE user_id = %s", (user_id,))
         assert cursor.fetchone() is None

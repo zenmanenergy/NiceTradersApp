@@ -28,7 +28,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -41,7 +41,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                 'error': 'Invalid or expired session'
             })
         
-        proposer_id = session_result['UserId']
+        proposer_id = session_result['user_id']
         
         # Get listing info and determine recipient
         listing_query = """
@@ -168,7 +168,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         print(f"[ProposeMeeting] Database commit successful")
         
         # Get proposer name for notification
-        cursor.execute("SELECT FirstName, LastName FROM users WHERE UserId = %s", (proposer_id,))
+        cursor.execute("SELECT FirstName, LastName FROM users WHERE user_id = %s", (proposer_id,))
         proposer = cursor.fetchone()
         proposer_name = f"{proposer['FirstName']} {proposer['LastName']}" if proposer else "A user"
         

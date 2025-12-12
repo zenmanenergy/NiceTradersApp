@@ -20,7 +20,7 @@ def get_exact_location(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session and get user ID
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -30,7 +30,7 @@ def get_exact_location(session_id, listing_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Check if user has an accepted meeting for this listing
         meeting_query = """

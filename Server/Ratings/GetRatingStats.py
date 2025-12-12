@@ -1,17 +1,17 @@
 from _Lib import Database
 import json
 
-def get_rating_stats(UserId):
+def get_rating_stats(user_id):
     """
     Get comprehensive rating statistics for a user
     
     Args:
-        UserId: User ID to get stats for
+        user_id: User ID to get stats for
     
     Returns: JSON response with detailed rating statistics
     """
     try:
-        if not UserId:
+        if not user_id:
             return json.dumps({
                 'success': False,
                 'error': 'User ID is required'
@@ -22,11 +22,11 @@ def get_rating_stats(UserId):
         
         # Get user info
         user_query = """
-            SELECT UserId, FirstName, LastName, Rating, TotalExchanges 
+            SELECT user_id, FirstName, LastName, Rating, TotalExchanges 
             FROM users 
-            WHERE UserId = %s
+            WHERE user_id = %s
         """
-        cursor.execute(user_query, (UserId,))
+        cursor.execute(user_query, (user_id,))
         user = cursor.fetchone()
         
         if not user:
@@ -56,7 +56,7 @@ def get_rating_stats(UserId):
             FROM user_ratings 
             WHERE user_id = %s
         """
-        cursor.execute(stats_query, (UserId,))
+        cursor.execute(stats_query, (user_id,))
         stats = cursor.fetchone()
         
         # Get recent ratings summary
@@ -73,7 +73,7 @@ def get_rating_stats(UserId):
         """
         
         try:
-            cursor.execute(recent_query, (UserId,))
+            cursor.execute(recent_query, (user_id,))
             recent_ratings = cursor.fetchall()
         except:
             # Fallback if DATE_TRUNC not available
@@ -88,7 +88,7 @@ def get_rating_stats(UserId):
                 GROUP BY DATE_FORMAT(created_at, '%Y-%m')
                 ORDER BY period DESC
             """
-            cursor.execute(recent_query, (UserId,))
+            cursor.execute(recent_query, (user_id,))
             recent_ratings = cursor.fetchall()
         
         # Get trustworthiness score based on multiple factors
@@ -126,7 +126,7 @@ def get_rating_stats(UserId):
         return json.dumps({
             'success': True,
             'user': {
-                'userId': user['UserId'],
+                'user_id': user['user_id'],
                 'firstName': user['FirstName'],
                 'lastName': user['LastName'],
                 'totalExchanges': user['TotalExchanges']

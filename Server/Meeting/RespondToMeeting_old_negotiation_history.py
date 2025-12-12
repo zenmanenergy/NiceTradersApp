@@ -19,7 +19,7 @@ def respond_to_meeting(session_id, proposal_id, response):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -32,7 +32,7 @@ def respond_to_meeting(session_id, proposal_id, response):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get proposal details from negotiation_history only
         proposal_query = """
@@ -41,7 +41,7 @@ def respond_to_meeting(session_id, proposal_id, response):
                    nh.listing_id,
                    u.FirstName, u.LastName
             FROM negotiation_history nh
-            JOIN users u ON nh.proposed_by = u.UserId
+            JOIN users u ON nh.proposed_by = u.user_id
             WHERE nh.history_id = %s
         """
         cursor.execute(proposal_query, (proposal_id,))

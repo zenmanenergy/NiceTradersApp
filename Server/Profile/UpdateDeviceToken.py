@@ -32,7 +32,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 	
 	try:
 		# Check if this exact token already exists for this user
-		query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_token = %s"
+		query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_token = %s"
 		cursor.execute(query, (user_id, device_token))
 		existing = cursor.fetchone()
 		
@@ -63,17 +63,17 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 			return '{"success": true, "message": "Device token already registered"}'
 		
 		# Check if token exists for another user
-		check_query = "SELECT UserId FROM user_devices WHERE device_token = %s"
+		check_query = "SELECT user_id FROM user_devices WHERE device_token = %s"
 		cursor.execute(check_query, (device_token,))
 		other_user = cursor.fetchone()
 		
-		if other_user and other_user['UserId'] != user_id:
+		if other_user and other_user['user_id'] != user_id:
 			# Token is being reassigned to a different user - remove from old user
 			delete_query = "DELETE FROM user_devices WHERE device_token = %s"
 			cursor.execute(delete_query, (device_token,))
 		
 		# Find the pending device entry for this user with same device type
-		pending_query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_type = %s AND device_token IS NULL"
+		pending_query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_type = %s AND device_token IS NULL"
 		cursor.execute(pending_query, (user_id, device_type))
 		pending_device = cursor.fetchone()
 		
@@ -102,7 +102,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 		else:
 			# No pending device found, this is an update to an existing device
 			# Try to find any device of the same type for this user
-			existing_query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_type = %s LIMIT 1"
+			existing_query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_type = %s LIMIT 1"
 			cursor.execute(existing_query, (user_id, device_type))
 			existing_device = cursor.fetchone()
 			
@@ -131,7 +131,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 			else:
 				# This shouldn't happen - no device entry exists, but handle it anyway
 				# This means user logged in without device info, just update generic entry
-				update_query = "UPDATE user_devices SET device_token = %s WHERE UserId = %s AND device_type = %s"
+				update_query = "UPDATE user_devices SET device_token = %s WHERE user_id = %s AND device_type = %s"
 				cursor.execute(update_query, (device_token, user_id, device_type))
 		
 		connection.commit()

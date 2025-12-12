@@ -21,7 +21,7 @@ def get_user_dashboard(SessionId):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -34,13 +34,13 @@ def get_user_dashboard(SessionId):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get user profile information
         user_query = """
-            SELECT UserId, FirstName, LastName, Email, Phone, UserType, DateCreated, IsActive
+            SELECT user_id, FirstName, LastName, Email, Phone, UserType, DateCreated, IsActive
             FROM users 
-            WHERE UserId = %s
+            WHERE user_id = %s
         """
         cursor.execute(user_query, (user_id,))
         user_data = cursor.fetchone()
@@ -98,8 +98,8 @@ def get_user_dashboard(SessionId):
                    u_seller.FirstName as seller_first_name, u_seller.LastName as seller_last_name
             FROM listings l
             JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
-            LEFT JOIN users u_buyer ON lmt.buyer_id = u_buyer.UserId
-            LEFT JOIN users u_seller ON l.user_id = u_seller.UserId
+            LEFT JOIN users u_buyer ON lmt.buyer_id = u_buyer.user_id
+            LEFT JOIN users u_seller ON l.user_id = u_seller.user_id
             WHERE (lmt.buyer_id = %s OR l.user_id = %s)
             AND l.status = 'active'
             AND l.available_until > NOW()
@@ -119,7 +119,7 @@ def get_user_dashboard(SessionId):
         # Format the response data
         dashboard_data = {
             'user': {
-                'userId': user_data['UserId'],
+                'user_id': user_data['user_id'],
                 'firstName': user_data['FirstName'],
                 'lastName': user_data['LastName'],
                 'email': user_data['Email'],

@@ -34,7 +34,7 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 	try:
 		if device_token:
 			# Check if this device token already exists for this user
-			query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_token = %s"
+			query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_token = %s"
 			values = (user_id, device_token)
 			cursor.execute(query, values)
 			existing_device = cursor.fetchone()
@@ -51,11 +51,11 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 				cursor.execute(update_query, update_values)
 			else:
 				# Check if token already exists for another user (shouldn't happen but safeguard)
-				check_query = "SELECT UserId FROM user_devices WHERE device_token = %s"
+				check_query = "SELECT user_id FROM user_devices WHERE device_token = %s"
 				cursor.execute(check_query, (device_token,))
 				other_user = cursor.fetchone()
 				
-				if other_user and other_user['UserId'] != user_id:
+				if other_user and other_user['user_id'] != user_id:
 					# Token belongs to another user, remove it from there first
 					delete_query = "DELETE FROM user_devices WHERE device_token = %s"
 					cursor.execute(delete_query, (device_token,))
@@ -64,7 +64,7 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 				device_id = "DEV" + str(uuid.uuid4())
 				insert_query = """
 					INSERT INTO user_devices 
-					(device_id, UserId, device_type, device_token, device_name, app_version, os_version, is_active, registered_at)
+					(device_id, user_id, device_type, device_token, device_name, app_version, os_version, is_active, registered_at)
 					VALUES (%s, %s, %s, %s, %s, %s, %s, 1, NOW())
 				"""
 				insert_values = (device_id, user_id, device_type, device_token, device_name, app_version, os_version)
@@ -72,7 +72,7 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 		else:
 			# No device token yet - register device with pending token
 			# First check if this user already has a pending device entry for this device type
-			query = "SELECT device_id FROM user_devices WHERE UserId = %s AND device_type = %s AND device_token IS NULL"
+			query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_type = %s AND device_token IS NULL"
 			values = (user_id, device_type)
 			cursor.execute(query, values)
 			existing_device = cursor.fetchone()
@@ -92,7 +92,7 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 				device_id = "DEV" + str(uuid.uuid4())
 				insert_query = """
 					INSERT INTO user_devices 
-					(device_id, UserId, device_type, device_token, device_name, app_version, os_version, is_active, registered_at)
+					(device_id, user_id, device_type, device_token, device_name, app_version, os_version, is_active, registered_at)
 					VALUES (%s, %s, %s, NULL, %s, %s, %s, 1, NOW())
 				"""
 				insert_values = (device_id, user_id, device_type, device_name, app_version, os_version)

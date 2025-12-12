@@ -11,7 +11,7 @@ def get_listing_purchases(session_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -20,7 +20,7 @@ def get_listing_purchases(session_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # First check if exchange rate columns exist
         cursor.execute("DESCRIBE contact_access")
@@ -73,7 +73,7 @@ def get_listing_purchases(session_id):
                 AND (expires_at IS NULL OR expires_at > NOW())
             ) ca
             JOIN listings l ON ca.listing_id = l.listing_id
-            JOIN users u ON ca.user_id = u.UserId
+            JOIN users u ON ca.user_id = u.user_id
             WHERE l.user_id = %s 
             AND ca.rn = 1
             ORDER BY ca.purchased_at DESC
@@ -122,7 +122,7 @@ def get_listing_purchases(session_id):
                 AND (expires_at IS NULL OR expires_at > NOW())
             ) ca
             JOIN listings l ON ca.listing_id = l.listing_id
-            JOIN users u ON ca.user_id = u.UserId
+            JOIN users u ON ca.user_id = u.user_id
             WHERE l.user_id = %s 
             AND ca.rn = 1
             AND ca.user_id != l.user_id

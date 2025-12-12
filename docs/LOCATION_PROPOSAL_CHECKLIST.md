@@ -87,7 +87,7 @@ The process involves both users' devices (iOS) and the backend server.
 - [ ] **Endpoint Handler**: Flask route `/Negotiations/Propose` triggered
 - [ ] **Session Validation**: Verify User B's session ID
   - Query `usersessions` with `sessionId`
-  - Extract `UserId` (buyer_id = User B)
+  - Extract `user_id` (buyer_id = User B)
 - [ ] **Listing Lookup**: Verify listing exists and get seller
   - Query `listings` table for `listing_id`
   - Get `user_id` (seller_id = User A)
@@ -285,7 +285,7 @@ Once User A and User B have agreed on a meeting time:
 - [ ] **Endpoint Handler**: Flask route `/Meeting/ProposeMeeting` is triggered
 - [ ] **Session Validation**: Verify User A's session ID is valid
   - Query `usersessions` table with provided `sessionId`
-  - Extract `UserId` (User A)
+  - Extract `user_id` (User A)
 - [ ] **Listing Lookup**: Verify listing exists and get listing owner
   - Query `listings` table for `listing_id`
   - Get `user_id` (listing owner)

@@ -9,9 +9,9 @@ def delete_account(SessionId):
 	try:
 		# Get user ID from session
 		session_query = """
-			SELECT users.UserId
+			SELECT users.user_id
 			FROM usersessions 
-			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
+			INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 		"""
 		cursor.execute(session_query, (SessionId,))
@@ -21,23 +21,23 @@ def delete_account(SessionId):
 			connection.close()
 			return '{"success": false, "error": "Invalid session"}'
 		
-		user_id = user_result['UserId']
+		user_id = user_result['user_id']
 		
 		# Delete related data first (foreign key constraints)
 		# Delete user sessions
-		cursor.execute("DELETE FROM usersessions WHERE UserId = %s", (user_id,))
+		cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
 		
 		# Delete user settings
-		cursor.execute("DELETE FROM user_settings WHERE UserId = %s", (user_id,))
+		cursor.execute("DELETE FROM user_settings WHERE user_id = %s", (user_id,))
 		
 		# Delete exchange history
-		cursor.execute("DELETE FROM exchange_history WHERE UserId = %s", (user_id,))
+		cursor.execute("DELETE FROM exchange_history WHERE user_id = %s", (user_id,))
 		
 		# Delete user listings (if any) - listings table uses lowercase user_id
 		cursor.execute("DELETE FROM listings WHERE user_id = %s", (user_id,))
 		
 		# Finally delete the user
-		cursor.execute("DELETE FROM users WHERE UserId = %s", (user_id,))
+		cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
 		
 		connection.commit()
 		connection.close()

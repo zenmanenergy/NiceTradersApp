@@ -11,7 +11,7 @@ def get_contact_messages(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -20,7 +20,7 @@ def get_contact_messages(session_id, listing_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Verify user has access to this conversation (either listing owner or has purchased access)
         access_query = """
@@ -68,7 +68,7 @@ def get_contact_messages(session_id, listing_id):
         }
         
         # Get other user details
-        cursor.execute("SELECT FirstName, LastName, Email FROM users WHERE UserId = %s", (other_user_id,))
+        cursor.execute("SELECT FirstName, LastName, Email FROM users WHERE user_id = %s", (other_user_id,))
         other_user_result = cursor.fetchone()
         
         other_user_info = {
@@ -91,8 +91,8 @@ def get_contact_messages(session_id, listing_id):
                 recipient.FirstName as recipient_first_name,
                 recipient.LastName as recipient_last_name
             FROM messages m
-            JOIN users sender ON m.sender_id = sender.UserId
-            JOIN users recipient ON m.recipient_id = recipient.UserId
+            JOIN users sender ON m.sender_id = sender.user_id
+            JOIN users recipient ON m.recipient_id = recipient.user_id
             WHERE m.listing_id = %s
             AND ((m.sender_id = %s AND m.recipient_id = %s) 
                  OR (m.sender_id = %s AND m.recipient_id = %s))

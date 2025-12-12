@@ -22,7 +22,7 @@ def get_my_negotiations(session_id):
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -31,7 +31,7 @@ def get_my_negotiations(session_id):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         print(f"[GetMyNegotiations] Processing request for user: {user_id}")
         
         # Get all time negotiations where user is buyer or seller
@@ -109,7 +109,7 @@ def get_my_negotiations(session_id):
             
             # Get other user info
             cursor.execute("""
-                SELECT FirstName, LastName, Rating FROM users WHERE UserId = %s
+                SELECT FirstName, LastName, Rating FROM users WHERE user_id = %s
             """, (other_user_id,))
             
             other_user = cursor.fetchone()
@@ -145,7 +145,7 @@ def get_my_negotiations(session_id):
                 'location': location_obj,
                 'userRole': 'buyer' if is_buyer else 'seller',
                 'otherUser': {
-                    'userId': other_user_id,
+                    'user_id': other_user_id,
                     'name': f"{other_user['FirstName']} {other_user['LastName']}" if other_user else 'Unknown',
                     'rating': float(other_user['Rating']) if other_user and other_user['Rating'] else 0.0
                 }

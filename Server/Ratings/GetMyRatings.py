@@ -24,7 +24,7 @@ def get_my_ratings(SessionId, Limit=10, Offset=0):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (SessionId,))
@@ -37,7 +37,7 @@ def get_my_ratings(SessionId, Limit=10, Offset=0):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get ratings given by this user
         ratings_query = """
@@ -46,7 +46,7 @@ def get_my_ratings(SessionId, Limit=10, Offset=0):
                 ur.rating,
                 ur.review,
                 ur.created_at,
-                u.UserId as rated_user_id,
+                u.user_id as rated_user_id,
                 u.FirstName as rated_user_first_name,
                 u.LastName as rated_user_last_name,
                 u.Rating as rated_user_average_rating,
@@ -54,7 +54,7 @@ def get_my_ratings(SessionId, Limit=10, Offset=0):
                 t.amount,
                 t.currency
             FROM user_ratings ur
-            JOIN users u ON ur.user_id = u.UserId
+            JOIN users u ON ur.user_id = u.user_id
             LEFT JOIN transactions t ON ur.transaction_id = t.transaction_id
             WHERE ur.rater_id = %s
             ORDER BY ur.created_at DESC
@@ -84,7 +84,7 @@ def get_my_ratings(SessionId, Limit=10, Offset=0):
                 'review': rating['review'],
                 'createdAt': str(rating['created_at']),
                 'ratedUser': {
-                    'userId': rating['rated_user_id'],
+                    'user_id': rating['rated_user_id'],
                     'firstName': rating['rated_user_first_name'],
                     'lastName': rating['rated_user_last_name'],
                     'averageRating': float(rating['rated_user_average_rating']) if rating['rated_user_average_rating'] else 0

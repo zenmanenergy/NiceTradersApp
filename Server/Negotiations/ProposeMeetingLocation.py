@@ -21,7 +21,7 @@ def propose_meeting_location(listing_id, session_id, latitude, longitude, locati
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -30,7 +30,7 @@ def propose_meeting_location(listing_id, session_id, latitude, longitude, locati
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Get time negotiation to verify it's accepted
         cursor.execute("""

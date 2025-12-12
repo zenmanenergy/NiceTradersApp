@@ -23,14 +23,14 @@ def respond_to_meeting(session_id, proposal_type, proposal_id, response):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
             connection.close()
             return json.dumps({'success': False, 'error': 'Invalid session'})
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Handle different proposal types
         if proposal_type == 'time':

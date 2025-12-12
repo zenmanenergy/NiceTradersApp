@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS users;
 
 -- Create users table (matching existing structure exactly)
 CREATE TABLE users (
-    UserId CHAR(39) PRIMARY KEY,
+    user_id CHAR(39) PRIMARY KEY,
     FirstName VARCHAR(100),
     LastName VARCHAR(100),
     Email VARCHAR(255) UNIQUE NOT NULL,
@@ -44,18 +44,18 @@ CREATE TABLE users (
 
 -- Create user_settings table (matching existing structure from UpdateSettings.py)
 CREATE TABLE user_settings (
-    UserId CHAR(39) PRIMARY KEY,
+    user_id CHAR(39) PRIMARY KEY,
     SettingsJson TEXT,
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create usersessions table (matching existing structure exactly)
 CREATE TABLE usersessions (
     SessionId CHAR(39) PRIMARY KEY,
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     DateAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (UserId),
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    INDEX idx_user_id (user_id),
+    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create history table (used by History.py for audit logging)
@@ -64,13 +64,13 @@ CREATE TABLE history (
     TableName VARCHAR(100) NOT NULL,
     KeyName VARCHAR(100) NOT NULL,
     KeyValue VARCHAR(255),
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     Data TEXT,
     DateAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_table_key (TableName, KeyName),
-    INDEX idx_user_id (UserId),
+    INDEX idx_user_id (user_id),
     INDEX idx_date_added (DateAdded),
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create listings table for currency exchange listings
@@ -97,7 +97,7 @@ CREATE TABLE listings (
     INDEX idx_available_until (available_until),
     INDEX idx_user_id (user_id),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create contact_access table for tracking paid contact access
@@ -124,7 +124,7 @@ CREATE TABLE contact_access (
     INDEX idx_status (status),
     INDEX idx_purchased_at (purchased_at),
     INDEX idx_rate_calculation_date (rate_calculation_date),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
     UNIQUE KEY unique_active_access (user_id, listing_id, status)
 );
@@ -147,8 +147,8 @@ CREATE TABLE messages (
     INDEX idx_status (status),
     INDEX idx_sent_at (sent_at),
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create notifications table for user notifications
@@ -166,7 +166,7 @@ CREATE TABLE notifications (
     INDEX idx_type (type),
     INDEX idx_status (status),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create listing_reports table for reporting inappropriate listings
@@ -188,9 +188,9 @@ CREATE TABLE listing_reports (
     INDEX idx_status (status),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (reporter_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (reported_user_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (reviewed_by) REFERENCES users(UserId) ON DELETE SET NULL
+    FOREIGN KEY (reporter_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (reported_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
 -- Create admin_notifications table for admin alerts
@@ -231,7 +231,7 @@ CREATE TABLE transactions (
     INDEX idx_type (transaction_type),
     INDEX idx_status (status),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE SET NULL
 );
 
@@ -248,8 +248,8 @@ CREATE TABLE user_ratings (
     INDEX idx_rater_id (rater_id),
     INDEX idx_rating (rating),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (rater_id) REFERENCES users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (rater_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE SET NULL,
     UNIQUE KEY unique_rating (rater_id, transaction_id) -- Prevent multiple ratings for same transaction
 );
@@ -260,12 +260,12 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Insert sample data for testing (optional)
 -- You can uncomment these lines to populate with test data
 
--- INSERT INTO users (UserId, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES
+-- INSERT INTO users (user_id, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES
 -- ('USR-test-user-1', 'John', 'Doe', 'test1@example.com', '555-0001', '$2b$12$hash1', 'standard', NOW(), 1),
 -- ('USR-test-user-2', 'Jane', 'Smith', 'test2@example.com', '555-0002', '$2b$12$hash2', 'standard', NOW(), 1),
 -- ('USR-test-user-3', 'Bob', 'Johnson', 'test3@example.com', '555-0003', '$2b$12$hash3', 'standard', NOW(), 1);
 
--- INSERT INTO user_settings (UserId, SettingsJson) VALUES
+-- INSERT INTO user_settings (user_id, SettingsJson) VALUES
 -- ('USR-test-user-1', '{"preferredCurrency": "USD", "defaultLocationRadius": 10}'),
 -- ('USR-test-user-2', '{"preferredCurrency": "EUR", "defaultLocationRadius": 15}'),
 -- ('USR-test-user-3', '{"preferredCurrency": "GBP", "defaultLocationRadius": 5}');
@@ -306,8 +306,8 @@ CREATE TABLE meeting_proposals (
     INDEX idx_status (status),
     INDEX idx_proposed_time (proposed_time),
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposer_id) REFERENCES users(UserId) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (proposer_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- Create exchange rate download logs table
@@ -324,7 +324,7 @@ CREATE TABLE exchange_rate_logs (
 -- Create exchange history table for user exchange records
 CREATE TABLE exchange_history (
     ExchangeId CHAR(39) PRIMARY KEY,
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     ExchangeDate DATETIME NOT NULL,
     Currency VARCHAR(10) NOT NULL,
     Amount DECIMAL(15,2) NOT NULL,
@@ -333,7 +333,7 @@ CREATE TABLE exchange_history (
     Notes TEXT,
     TransactionType ENUM('buy', 'sell') DEFAULT 'sell',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (UserId),
+    INDEX idx_user_id (user_id),
     INDEX idx_exchange_date (ExchangeDate),
     INDEX idx_currency (Currency)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -354,7 +354,7 @@ CREATE TABLE translations (
 -- Create user_devices table for storing iOS/Android device tokens
 CREATE TABLE IF NOT EXISTS user_devices (
     device_id CHAR(39) PRIMARY KEY,
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     device_type ENUM('ios', 'android', 'web') NOT NULL,
     device_token VARCHAR(500) UNIQUE,
     device_name VARCHAR(255),
@@ -365,17 +365,17 @@ CREATE TABLE IF NOT EXISTS user_devices (
     last_used_at TIMESTAMP NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
-    INDEX idx_user_id (UserId),
+    INDEX idx_user_id (user_id),
     INDEX idx_device_type (device_type),
     INDEX idx_is_active (is_active),
     INDEX idx_registered_at (registered_at),
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create APN logs table for tracking push notifications sent
 CREATE TABLE IF NOT EXISTS apn_logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     notification_title VARCHAR(255),
     notification_body TEXT,
     device_count INT DEFAULT 0,
@@ -383,9 +383,9 @@ CREATE TABLE IF NOT EXISTS apn_logs (
     metadata JSON,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    INDEX idx_user_id (UserId),
+    INDEX idx_user_id (user_id),
     INDEX idx_sent_at (sent_at),
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE
+    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
@@ -415,8 +415,8 @@ CREATE TABLE IF NOT EXISTS negotiation_history (
     INDEX idx_paid_by (paid_by),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(UserId) ON DELETE SET NULL,
-    FOREIGN KEY (paid_by) REFERENCES users(UserId) ON DELETE SET NULL
+    FOREIGN KEY (proposed_by) REFERENCES users(user_id) ON DELETE SET NULL,
+    FOREIGN KEY (paid_by) REFERENCES users(user_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create user_credits table for managing user credits/refunds
@@ -439,20 +439,20 @@ CREATE TABLE IF NOT EXISTS user_credits (
     INDEX idx_applied_to (applied_to_negotiation_id),
     INDEX idx_expires_at (expires_at),
     INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (applied_to_negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create password_reset_tokens table for forgot password functionality
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     TokenId CHAR(39) PRIMARY KEY,
-    UserId CHAR(39) NOT NULL,
+    user_id CHAR(39) NOT NULL,
     ResetToken VARCHAR(255) NOT NULL UNIQUE,
     TokenExpires DATETIME NOT NULL,
     CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserId) REFERENCES users(UserId) ON DELETE CASCADE,
+    FOREIGN KEY (UserId) REFERENCES users(user_id) ON DELETE CASCADE,
     INDEX idx_reset_token (ResetToken),
-    INDEX idx_user_id (UserId),
+    INDEX idx_user_id (user_id),
     INDEX idx_expires (TokenExpires)
 );
 

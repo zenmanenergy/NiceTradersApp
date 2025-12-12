@@ -18,7 +18,7 @@ def get_meeting_proposals(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session
-        cursor.execute("SELECT UserId FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -26,7 +26,7 @@ def get_meeting_proposals(session_id, listing_id):
             connection.close()
             return json.dumps({'success': False, 'error': 'Invalid session'})
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         print(f"🟠 [GetMeetingProposals] Session verified - user_id: {user_id}")
         
         # Get current listing to verify access
@@ -62,7 +62,7 @@ def get_meeting_proposals(session_id, listing_id):
             SELECT t.time_negotiation_id, t.meeting_time, t.accepted_at, t.rejected_at, t.proposed_by, t.created_at, t.updated_at,
                    u.FirstName as proposer_name
             FROM listing_meeting_time t
-            LEFT JOIN users u ON t.proposed_by = u.UserId
+            LEFT JOIN users u ON t.proposed_by = u.user_id
             WHERE t.listing_id = %s
             ORDER BY t.created_at DESC
         """, (listing_id,))
@@ -109,7 +109,7 @@ def get_meeting_proposals(session_id, listing_id):
                    l.meeting_location_name, l.accepted_at, l.rejected_at, l.proposed_by, l.created_at, l.updated_at,
                    u.FirstName as proposer_name
             FROM listing_meeting_location l
-            LEFT JOIN users u ON l.proposed_by = u.UserId
+            LEFT JOIN users u ON l.proposed_by = u.user_id
             WHERE l.listing_id = %s
             ORDER BY l.created_at DESC
         """, (listing_id,))

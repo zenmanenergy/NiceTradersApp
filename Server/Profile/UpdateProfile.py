@@ -9,9 +9,9 @@ def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, 
 	try:
 		# Get user ID from session
 		session_query = """
-			SELECT users.UserId
+			SELECT users.user_id
 			FROM usersessions 
-			INNER JOIN users ON usersessions.UserId COLLATE utf8mb4_general_ci = users.UserId COLLATE utf8mb4_general_ci
+			INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
 		"""
 		cursor.execute(session_query, (SessionId,))
@@ -21,7 +21,7 @@ def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, 
 			connection.close()
 			return '{"success": false, "error": "Invalid session"}'
 		
-		user_id = user_result['UserId']
+		user_id = user_result['user_id']
 		
 		# Build dynamic update query based on provided fields
 		update_fields = []
@@ -78,7 +78,7 @@ def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, 
 		update_query = f"""
 			UPDATE users 
 			SET {', '.join(update_fields)}
-			WHERE UserId = %s
+			WHERE user_id = %s
 		"""
 		cursor.execute(update_query, update_values)
 		connection.commit()

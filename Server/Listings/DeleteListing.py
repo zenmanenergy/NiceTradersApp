@@ -21,7 +21,7 @@ def delete_listing(SessionId, ListingId, Permanent):
         
         # Verify session and get user ID
         session_query = """
-            SELECT UserId FROM usersessions 
+            SELECT user_id FROM usersessions 
             WHERE SessionId = %s
         """
         cursor.execute(session_query, (session_id,))
@@ -34,7 +34,7 @@ def delete_listing(SessionId, ListingId, Permanent):
                 'error': 'Invalid or expired session'
             })
         
-        user_id = session_result['UserId']
+        user_id = session_result['user_id']
         
         # Verify user owns the listing
         ownership_query = """
@@ -90,7 +90,7 @@ def delete_listing(SessionId, ListingId, Permanent):
             seller_id = listing_info[2]
             
             # Get seller name
-            seller_query = "SELECT first_name, last_name FROM users WHERE UserID = %s"
+            seller_query = "SELECT first_name, last_name FROM users WHERE user_id = %s"
             cursor.execute(seller_query, (seller_id,))
             seller = cursor.fetchone()
             seller_name = f"{seller[0]} {seller[1]}" if seller else "Seller"
