@@ -297,6 +297,7 @@ struct MeetingDetailView: View {
             .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             
             // Button Set 1: Accept/Reject/Counter - show when listing_meeting_time.accepted_at is null
+            // Button Set 1: Accept/Counter/Reject - show when time is NOT accepted (whether rejected or just not proposed yet)
             if timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true {
                 VStack(alignment: .center, spacing: 12) {
                     Text("Accept this exchange?")
@@ -360,8 +361,10 @@ struct MeetingDetailView: View {
             }
             
             // Button Set 2a: Show when there's a PENDING location proposal (waiting for response)
+            // Only show if time IS accepted (otherwise show Accept/Counter/Reject buttons instead)
             let locationProposals = meetingProposals.filter { $0.proposedLocation != "" }
-            if let pendingLocationProposal = locationProposals.first(where: { $0.status == "pending" }) {
+            if (timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)),
+               let pendingLocationProposal = locationProposals.first(where: { $0.status == "pending" }) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("🕒 " + localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
@@ -787,7 +790,9 @@ struct MeetingDetailView: View {
                                 message: dict["message"] as? String,
                                 status: status,
                                 isFromMe: isFromMe,
-                                proposer: ProposerInfo(firstName: firstName)
+                                proposer: ProposerInfo(firstName: firstName),
+                                latitude: dict["latitude"] as? Double,
+                                longitude: dict["longitude"] as? Double
                             )
                         }
                         
@@ -1083,6 +1088,8 @@ struct MeetingProposal: Identifiable {
     let status: String
     let isFromMe: Bool
     let proposer: ProposerInfo
+    let latitude: Double?
+    let longitude: Double?
 }
 
 struct ProposerInfo {

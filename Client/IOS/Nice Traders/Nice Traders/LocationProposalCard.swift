@@ -195,7 +195,9 @@ struct LocationProposalCard: View {
             message: "Great spot for meeting",
             status: "pending",
             isFromMe: false,
-            proposer: ProposerInfo(firstName: "John")
+            proposer: ProposerInfo(firstName: "John"),
+            latitude: 40.7829,
+            longitude: -73.9654
         ),
         onAccept: {},
         onReject: {},

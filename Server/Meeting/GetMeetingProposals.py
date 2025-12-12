@@ -60,9 +60,9 @@ def get_meeting_proposals(session_id, listing_id):
         print(f"🟠 [GetMeetingProposals] Fetching time proposals...")
         cursor.execute("""
             SELECT t.time_negotiation_id, t.meeting_time, t.accepted_at, t.rejected_at, t.proposed_by, t.created_at, t.updated_at,
-                   u.firstName as proposer_name
+                   u.FirstName as proposer_name
             FROM listing_meeting_time t
-            LEFT JOIN users u ON t.proposed_by = u.user_id
+            LEFT JOIN users u ON t.proposed_by = u.UserId
             WHERE t.listing_id = %s
             ORDER BY t.created_at DESC
         """, (listing_id,))
@@ -107,9 +107,9 @@ def get_meeting_proposals(session_id, listing_id):
         cursor.execute("""
             SELECT l.location_negotiation_id, l.meeting_location_lat, l.meeting_location_lng, 
                    l.meeting_location_name, l.accepted_at, l.rejected_at, l.proposed_by, l.created_at, l.updated_at,
-                   u.firstName as proposer_name
+                   u.FirstName as proposer_name
             FROM listing_meeting_location l
-            LEFT JOIN users u ON l.proposed_by = u.user_id
+            LEFT JOIN users u ON l.proposed_by = u.UserId
             WHERE l.listing_id = %s
             ORDER BY l.created_at DESC
         """, (listing_id,))
