@@ -5,7 +5,28 @@ This document outlines the complete end-to-end workflow for a negotiation betwee
 
 ---
 
+## Backend Status Reference
+
+The backend calculates status values based on timestamp states (not stored in database):
+
+| Backend Status | Display on Dashboard | Meaning |
+|---|---|---|
+| `negotiating` | "🎯 Action Required" (if actionRequired=true) or "⏳ Waiting for Acceptance" (if actionRequired=false) | Time or location negotiation in progress |
+| `agreed` | "✅ Payment Required" | Time and location agreed, payment pending |
+| `paid_partial` | "⏳ Awaiting Payment" | One party has paid $2 fee, waiting for other |
+| `paid_complete` | "✅ Ready to Meet" | Both parties paid, ready to meet |
+
+**Status Calculation Logic:**
+- `negotiating`: Time negotiation not yet accepted, or time accepted but location negotiation not yet accepted
+- `agreed`: Both time and location accepted, but payment not started
+- `paid_partial`: One party has paid fee, other hasn't
+- `paid_complete`: Both parties have paid fee
+- `rejected`: Either time or location negotiation was rejected (negotiation ended)
+
+---
+
 ## Phase 1: Listing Creation
+
 
 ### User A - Creates Listing
 - [x] AI verified | [ ] Human verified
@@ -38,15 +59,17 @@ This document outlines the complete end-to-end workflow for a negotiation betwee
 - User B is redirected to **ProposeTimeView**
 - User B selects a date and time for the meeting
 - User B submits the proposal
-- `listing_meeting_time` table is updated with:
+- `listing_meeting_time` table is created with:
   - `proposed_by`: User B's ID
-  - `proposed_at`: Current timestamp
+  - `meeting_time`: The proposed meeting datetime
+  - `created_at`: Current timestamp
   - `accepted_at`: NULL (not yet accepted)
 
 ### User B - Dashboard: Active Exchanges
 - [x] AI verified | [ ] Human verified
 - User B sees the listing in **Active Exchanges** section
-- **Status**: "⏳ Waiting for Acceptance"
+- **Backend Status**: `negotiating` (actionRequired=false)
+- **Dashboard Display**: "⏳ Waiting for Acceptance"
 - The proposed meeting time is displayed
 
 ### User B - Meeting Detail View
@@ -66,7 +89,8 @@ This document outlines the complete end-to-end workflow for a negotiation betwee
 ### User A - Dashboard: Active Exchanges
 - [x] AI verified | [ ] Human verified
 - User A sees the listing in **Active Exchanges** section
-- **Status**: "🎯 Action: Acceptance"
+- **Backend Status**: `negotiating` (actionRequired=true)
+- **Dashboard Display**: "🎯 Action Required"
 - The proposed meeting time is displayed
 
 ### User A - Actions Available
@@ -77,8 +101,9 @@ User A has three options:
 - [x] AI verified | [ ] Human verified
 - User A clicks **"Accept"** button
 - `listing_meeting_time.accepted_at` is updated with current timestamp
-- Dashboard status for **User A**: "🎯 Action: Payment"
-- Dashboard status for **User B**: "🎯 Action: Payment"
+- **Backend Status**: Changes from `negotiating` → `agreed` (both users)
+- **Dashboard Display** for User A: "✅ Payment Required"
+- **Dashboard Display** for User B: "✅ Payment Required"
 - Workflow moves to **Phase 4: Payment**
 
 #### Option 2: Counter the Proposal
@@ -88,10 +113,12 @@ User A has three options:
 - User A selects a different date/time
 - `listing_meeting_time` is updated with:
   - `proposed_by`: User A's ID
-  - `proposed_at`: Current timestamp
+  - `meeting_time`: The new proposed meeting datetime
+  - `updated_at`: Current timestamp
   - `accepted_at`: NULL (reset, awaiting User B's response)
-- Dashboard status for **User A**: "⏳ Waiting for Acceptance"
-- Dashboard status for **User B**: "🎯 Action: Acceptance"
+- **Backend Status**: Remains `negotiating` (both users)
+- **Dashboard Display** for User A: "⏳ Waiting for Acceptance"
+- **Dashboard Display** for User B: "🎯 Action Required"
 - Time proposals continue to go back and forth until one party accepts
 
 #### Option 3: Cancel the Listing
@@ -119,7 +146,8 @@ User A has three options:
 ### Both Users - Dashboard Status Update
 - [x] AI verified | [ ] Human verified
 - Once time proposal is **accepted by User A**:
-- Dashboard status for **both User A and User B**: "🎯 Action: Payment"
+- **Backend Status**: Changes to `agreed` (both users)
+- **Dashboard Display** for both User A and User B: "✅ Payment Required"
 - Both users need to pay the $2 fee before proceeding
 
 ### User B (Buyer) - Payment View
@@ -133,8 +161,9 @@ User A has three options:
   - `buyer_paid_at`: Current timestamp
   - `seller_paid_at`: NULL (User A hasn't paid yet)
 - If User A hasn't paid yet:
-  - User B's dashboard status: **"⏳ Waiting for Seller Payment"**
-  - User A's dashboard status: **"🎯 Action: Payment"**
+  - **Backend Status**: `paid_partial`
+  - **Dashboard Display** for User B: "⏳ Awaiting Payment"
+  - **Dashboard Display** for User A: "✅ Payment Required"
 
 ### User A (Seller) - Payment View
 - [x] AI verified | [ ] Human verified
@@ -150,8 +179,11 @@ User A has three options:
 ### Both Users - Payment Complete
 - [x] AI verified | [ ] Human verified
 - Once **both** have paid the $2 fee:
+- **Backend Status**: Changes to `paid_complete`
+- **Dashboard Display** for both User A and User B: "✅ Ready to Meet"
 - `listing_payments.buyer_paid_at` AND `listing_payments.seller_paid_at` are both set
-- Dashboard status for **both User A and User B**: "🎯 Action: Propose Location"
+- **Dashboard Display** for both User A and User B: "✅ Ready to Meet"
+- Workflow automatically advances to **Phase 5: Location Negotiation**
 
 ---
 
@@ -163,10 +195,12 @@ User A has three options:
 - User is redirected to **MeetingLocationView**
 - User searches for a location on the map
 - User clicks on a location to propose it
-- `listing_meeting_location` table is updated with:
+- `listing_meeting_location` table is created with:
   - `proposed_by`: Current user's ID
-  - `proposed_location`: Latitude, Longitude, or location string
-  - `proposed_at`: Current timestamp
+  - `meeting_location_lat`: Latitude of proposed location
+  - `meeting_location_lng`: Longitude of proposed location
+  - `meeting_location_name`: Location name/description
+  - `created_at`: Current timestamp
   - `accepted_at`: NULL (awaiting approval)
 - Buttons available: **"Propose Location"** (select and submit location)
 - After proposing:
@@ -175,13 +209,13 @@ User A has three options:
 
 ### User A - Dashboard Status
 - [x] AI verified | [ ] Human verified
-- If **User B proposed location**: "🎯 Action: Accept Location"
-- If **User A proposed location**: "⏳ Waiting for Acceptance"
+- If **User B proposed location**: **Backend Status** `negotiating` (actionRequired=true), **Display**: "🎯 Action Required"
+- If **User A proposed location**: **Backend Status** `negotiating` (actionRequired=false), **Display**: "⏳ Waiting for Acceptance"
 
 ### User B - Dashboard Status
 - [x] AI verified | [ ] Human verified
-- If **User A proposed location**: "🎯 Action: Accept Location"
-- If **User B proposed location**: "⏳ Waiting for Acceptance"
+- If **User A proposed location**: **Backend Status** `negotiating` (actionRequired=true), **Display**: "🎯 Action Required"
+- If **User B proposed location**: **Backend Status** `negotiating` (actionRequired=false), **Display**: "⏳ Waiting for Acceptance"
 
 ### Location Counter-Proposals
 - [x] AI verified | [ ] Human verified
@@ -190,29 +224,32 @@ User A has three options:
 - User proposes a different location
 - `listing_meeting_location` is updated with:
   - `proposed_by`: Current user's ID
-  - `proposed_location`: New location
-  - `proposed_at`: Current timestamp
+  - `meeting_location_lat`: New latitude
+  - `meeting_location_lng`: New longitude
+  - `meeting_location_name`: New location name
+  - `updated_at`: Current timestamp
   - `accepted_at`: NULL
-- Dashboard statuses revert:
-  - Proposer's status: "⏳ Waiting for Acceptance"
-  - Non-proposer's status: "🎯 Action: Accept Location"
+- **Backend Status**: Remains `negotiating` (both users)
+- Dashboard statuses update:
+  - Proposer's **Display**: "⏳ Waiting for Acceptance"
+  - Non-proposer's **Display**: "🎯 Action Required"
 - Location proposals continue back and forth until one party accepts
 
 ### User Accepts Location
 - [x] AI verified | [ ] Human verified
 - User clicks **"Accept Location"** button
 - `listing_meeting_location.accepted_at` is updated with current timestamp
+- **Backend Status**: Changes to `paid_complete` (since both time and location are now accepted, and payments already made)
 - Dashboard status updates:
-  - Accepter's status: "⏳ Waiting for [DATE/TIME]" (if both time and location are accepted)
-  - OR still "🎯 Action: Accept Location" (if waiting for other user to accept their location proposal)
+  - Both users: "✅ Ready to Meet"
 - After accepting:
-  - Button becomes **"Confirm Meeting"** or **"View Details"** (once both locations accepted)
+  - Buttons show **"MARK EXCHANGE COMPLETE"** (both users ready to finalize)
 
 ### Both Locations Accepted
 - [x] AI verified | [ ] Human verified
-- Once **both** time AND location are accepted:
-- Dashboard status for **both User A and User B**: "⏳ Waiting for [DATE/TIME]"
-  - Example: "⏳ Waiting for 12/26 at 2:30 PM"
+- Once **both** time AND location are accepted AND both parties have paid:
+- **Backend Status**: `paid_complete`
+- **Dashboard Display** for both User A and User B: "✅ Ready to Meet"
 - Meeting is confirmed and ready
 
 ---
@@ -221,11 +258,13 @@ User A has three options:
 
 ### Final Status
 - [x] AI verified | [ ] Human verified
-- **Dashboard Status**: "⏳ Waiting for 12/26 at 2:30 PM" (or applicable date/time)
+- **Backend Status**: `paid_complete`
+- **Dashboard Display**: "✅ Ready to Meet"
 - Both users can now see:
   - Confirmed meeting date and time
   - Confirmed meeting location
   - Payment completed (✅ marks)
+  - "MARK EXCHANGE COMPLETE" button
 - Users can proceed to meet in person
 
 ---
@@ -236,23 +275,35 @@ User A has three options:
 
 #### `listings`
 - `listing_id`: Primary key
-- `user_id`: Creator of listing
-- `currency_from`: Source currency
-- `currency_to`: Target currency
-- `amount`: Amount being offered
+- `user_id`: Creator/seller of listing
+- `currency`: Currency offering
+- `amount`: Amount offering
+- `accept_currency`: Currency accepting
+- `location`: Meeting location
+- `latitude`: Location latitude
+- `longitude`: Location longitude
+- `status`: Listing status (active/inactive)
+- `available_until`: Expiration timestamp
 
 #### `listing_meeting_time`
 - `listing_id`: Foreign key to listings
 - `proposed_by`: User ID of who proposed
-- `proposed_at`: When proposal was made
+- `meeting_time`: The proposed meeting datetime
+- `created_at`: When proposal was created
+- `updated_at`: When proposal was last updated
 - `accepted_at`: When accepted (NULL = not accepted)
+- `rejected_at`: When rejected (NULL = not rejected)
 
 #### `listing_meeting_location`
 - `listing_id`: Foreign key to listings
 - `proposed_by`: User ID of who proposed
-- `proposed_location`: Location coordinates/string
-- `proposed_at`: When proposal was made
+- `meeting_location_lat`: Latitude of proposed location
+- `meeting_location_lng`: Longitude of proposed location
+- `meeting_location_name`: Location name/description
+- `created_at`: When proposal was created
+- `updated_at`: When proposal was last updated
 - `accepted_at`: When accepted (NULL = not accepted)
+- `rejected_at`: When rejected (NULL = not rejected)
 
 #### `listing_payments`
 - `listing_id`: Foreign key to listings
@@ -267,29 +318,34 @@ User A has three options:
 LISTING CREATED
     ↓
 USER B PROPOSES TIME
+    └─ Backend Status: negotiating (actionRequired=false for B, true for A)
     ├─ User B: "⏳ Waiting for Acceptance"
-    └─ User A: "🎯 Action: Acceptance"
+    └─ User A: "🎯 Action Required"
     ↓
 USER A ACCEPTS OR COUNTERS
     
 If Accepted:
-    ├─ User A: "🎯 Action: Payment"
-    └─ User B: "🎯 Action: Payment"
+    └─ Backend Status: agreed
+    ├─ User A: "✅ Payment Required"
+    └─ User B: "✅ Payment Required"
     ↓
 BOTH USERS PAY $2 FEE
-    ├─ User A: "🎯 Action: Propose Location"
-    └─ User B: "🎯 Action: Propose Location"
+    └─ Backend Status: paid_complete
+    ├─ User A: "✅ Ready to Meet"
+    └─ User B: "✅ Ready to Meet"
     ↓
 LOCATION PROPOSED AND ACCEPTED
-    ├─ User A: "⏳ Waiting for 12/26 at 2:30 PM"
-    └─ User B: "⏳ Waiting for 12/26 at 2:30 PM"
+    └─ Backend Status: paid_complete (unchanged, both time and location accepted)
+    ├─ User A: "✅ Ready to Meet"
+    └─ User B: "✅ Ready to Meet"
     ↓
-MEETING CONFIRMED
-    └─ Ready to meet in person
+MARK EXCHANGE COMPLETE
+    └─ Both users mark exchange as complete and proceed to rating
 
-If Countered (repeats until accepted):
-    ├─ User A: "⏳ Waiting for Acceptance"
-    └─ User B: "🎯 Action: Acceptance"
+If Countered at Any Stage (repeats until accepted):
+    └─ Backend Status: negotiating (actionRequired toggles based on who proposed)
+    ├─ Proposer: "⏳ Waiting for Acceptance"
+    └─ Non-proposer: "🎯 Action Required"
     (reverses on each counter)
 ```
 

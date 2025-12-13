@@ -698,9 +698,9 @@ struct DashboardView: View {
                     print("[DashboardView] Skipping negotiation - no userRole: \(neg)")
                     return false
                 }
-                // Show negotiations where status is proposed/countered/agreed/paid_partial (active negotiations)
+                // Show negotiations where status is negotiating/agreed/paid_partial/paid_complete (active negotiations)
                 let status = neg["status"] as? String ?? ""
-                let include = status == "proposed" || status == "countered" || status == "agreed" || status == "paid_partial"
+                let include = status == "negotiating" || status == "agreed" || status == "paid_partial" || status == "paid_complete"
                 print("[DashboardView] Status filter: \(status) -> \(include)")
                 return include
             }.compactMap { neg -> PendingNegotiation? in
@@ -1831,16 +1831,19 @@ struct PendingNegotiationCard: View {
     
     private var statusText: String {
         switch negotiation.status {
-        case "proposed":
-            // Someone proposed, context-dependent
-            return negotiation.userRole == "seller" ? "💬 Review & Respond" : "⏳ Awaiting Response"
-        case "countered":
-            // Someone countered - seller is waiting, buyer needs to act
-            return negotiation.userRole == "seller" ? "⏳ Awaiting Response" : "🔴 Action Required"
+        case "negotiating":
+            // Time or location negotiation in progress
+            if negotiation.actionRequired {
+                return "🎯 Action Required"
+            } else {
+                return "⏳ Waiting for Acceptance"
+            }
         case "agreed":
-            return "✓ Meeting Confirmed"
-        case "paid_partial", "paid_complete":
-            return "💰 Payment Pending"
+            return "✅ Payment Required"
+        case "paid_partial":
+            return "⏳ Awaiting Payment"
+        case "paid_complete":
+            return "✅ Ready to Meet"
         default:
             return "💬 Review & Respond"
         }
