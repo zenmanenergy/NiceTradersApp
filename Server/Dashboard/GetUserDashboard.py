@@ -5,6 +5,10 @@ from decimal import Decimal
 
 def calculate_negotiation_status(exchange, user_id):
     """Calculate the human-readable negotiation status based on workflow state"""
+    # Need to check payment status
+    buyer_paid_at = exchange.get('buyer_paid_at')
+    seller_paid_at = exchange.get('seller_paid_at')
+    
     # Time proposal not yet accepted
     if exchange['accepted_at'] is None:
         # Determine who proposed
@@ -16,8 +20,27 @@ def calculate_negotiation_status(exchange, user_id):
         else:
             return "🎯 Action: Acceptance"
     else:
-        # Time is accepted, move to payment phase
-        return "🎯 Action: Payment"
+        # Time is accepted, check payment status
+        is_buyer = (exchange.get('buyer_id') == user_id)
+        
+        if buyer_paid_at is None and seller_paid_at is None:
+            # Neither has paid yet
+            return "🎯 Action: Payment"
+        elif buyer_paid_at is not None and seller_paid_at is None:
+            # Buyer paid, seller waiting
+            if is_buyer:
+                return "⏳ Waiting for Seller Payment"
+            else:
+                return "🎯 Action: Payment"
+        elif buyer_paid_at is None and seller_paid_at is not None:
+            # Seller paid, buyer waiting
+            if is_buyer:
+                return "🎯 Action: Payment"
+            else:
+                return "⏳ Waiting for Buyer Payment"
+        else:
+            # Both paid, move to location phase
+            return "🎯 Action: Propose Location"
 
 def get_user_dashboard(SessionId):
     """Get dashboard data for authenticated user"""
@@ -115,11 +138,13 @@ def get_user_dashboard(SessionId):
                    l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar,
                    lmt.buyer_id, l.user_id as seller_id,
                    lmt.accepted_at, lmt.rejected_at,
+                   lp.buyer_paid_at, lp.seller_paid_at,
                    MAX(lmt.updated_at) as last_activity,
                    u_buyer.FirstName as buyer_first_name, u_buyer.LastName as buyer_last_name,
                    u_seller.FirstName as seller_first_name, u_seller.LastName as seller_last_name
             FROM listings l
             JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+            LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
             LEFT JOIN users u_buyer ON lmt.buyer_id = u_buyer.user_id
             LEFT JOIN users u_seller ON l.user_id = u_seller.user_id
             WHERE (lmt.buyer_id = %s OR l.user_id = %s)

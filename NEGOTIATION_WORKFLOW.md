@@ -103,7 +103,7 @@ User A has three options:
   - Negotiation ends
 
 ### User A - Meeting Detail View
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - While time is not yet accepted:
   - Buttons available: **"Accept"**, **"Counter Proposal"**, **"Cancel"**
   - **"Cancel Proposal"** removes the counter-proposal if User A countered
@@ -117,13 +117,13 @@ User A has three options:
 ## Phase 4: Payment
 
 ### Both Users - Dashboard Status Update
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - Once time proposal is **accepted by User A**:
 - Dashboard status for **both User A and User B**: "🎯 Action: Payment"
 - Both users need to pay the $2 fee before proceeding
 
 ### User B (Buyer) - Payment View
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User B sees **"Payment Required"** or similar message
 - Fee amount: **$2.00**
 - User B clicks **"Confirm Payment"**
@@ -137,7 +137,7 @@ User A has three options:
   - User A's dashboard status: **"🎯 Action: Payment"**
 
 ### User A (Seller) - Payment View
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A sees **"Payment Required"** message
 - Fee amount: **$2.00**
 - User A clicks **"Confirm Payment"**
@@ -148,7 +148,7 @@ User A has three options:
   - Workflow automatically advances to **Phase 5: Location Negotiation**
 
 ### Both Users - Payment Complete
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - Once **both** have paid the $2 fee:
 - `listing_payments.buyer_paid_at` AND `listing_payments.seller_paid_at` are both set
 - Dashboard status for **both User A and User B**: "🎯 Action: Propose Location"
@@ -158,7 +158,7 @@ User A has three options:
 ## Phase 5: Location Negotiation
 
 ### Either User - Propose Location
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A or User B can initiate location proposal
 - User is redirected to **MeetingLocationView**
 - User searches for a location on the map
@@ -174,17 +174,17 @@ User A has three options:
   - Non-proposer sees: **"Accept Location"**, **"Counter Location"** buttons
 
 ### User A - Dashboard Status
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - If **User B proposed location**: "🎯 Action: Accept Location"
 - If **User A proposed location**: "⏳ Waiting for Acceptance"
 
 ### User B - Dashboard Status
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - If **User A proposed location**: "🎯 Action: Accept Location"
 - If **User B proposed location**: "⏳ Waiting for Acceptance"
 
 ### Location Counter-Proposals
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - Either user can counter the location proposal
 - User is redirected back to **MeetingLocationView**
 - User proposes a different location
@@ -199,7 +199,7 @@ User A has three options:
 - Location proposals continue back and forth until one party accepts
 
 ### User Accepts Location
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User clicks **"Accept Location"** button
 - `listing_meeting_location.accepted_at` is updated with current timestamp
 - Dashboard status updates:
@@ -209,7 +209,7 @@ User A has three options:
   - Button becomes **"Confirm Meeting"** or **"View Details"** (once both locations accepted)
 
 ### Both Locations Accepted
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - Once **both** time AND location are accepted:
 - Dashboard status for **both User A and User B**: "⏳ Waiting for [DATE/TIME]"
   - Example: "⏳ Waiting for 12/26 at 2:30 PM"
@@ -220,7 +220,7 @@ User A has three options:
 ## Phase 6: Meeting Confirmed
 
 ### Final Status
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - **Dashboard Status**: "⏳ Waiting for 12/26 at 2:30 PM" (or applicable date/time)
 - Both users can now see:
   - Confirmed meeting date and time
@@ -298,15 +298,17 @@ If Countered (repeats until accepted):
 ## Cancel Points
 
 ### User A Can Cancel:
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - **Before User B pays**: Removes listing and meeting_time entries
 - **After either user pays**: Cannot cancel (payment indicates commitment)
+- **Code verified**: DeleteListing.py checks `buyer_paid_at IS NOT NULL OR seller_paid_at IS NOT NULL` to block deletion
 
 ### User B Can Cancel:
-- [ ] AI verified | [ ] Human verified
-- **Before User A accepts**: Removes time proposal
-- **After User A accepts but before either user pays**: Negotiation can be ended
+- [x] AI verified | [ ] Human verified
+- **Before User A accepts**: Removes time proposal via `DELETE /Negotiations/RejectNegotiation`
+- **After User A accepts but before either user pays**: Negotiation can be ended via DeleteListing
 - **After payment starts**: Cannot cancel (payment indicates commitment)
+- **Code verified**: RejectNegotiation.py removes proposal, DeleteListing.py blocks if either user paid
 
 ---
 
@@ -327,6 +329,88 @@ If Countered (repeats until accepted):
 | Meeting Confirmed | View Details | View Details |
 | Both Paid | Propose Location / Accept Location | Propose Location / Accept Location |
 | Location Accepted | Confirm / View Details | Confirm / View Details |
+
+---
+
+## Phase 7: Exchange Complete & Rating
+
+### Mark Exchange Complete Button
+
+**Visibility:**
+- Button shows only when: `timeAcceptedAt != nil AND locationAcceptedAt != nil`
+- Button appears on both users' Meeting Detail View
+- Label: "MARK EXCHANGE COMPLETE" with checkmark icon
+
+**Endpoint:**
+- **GET** `/Negotiations/CompleteExchange`
+- **Parameters:** `SessionId`, `ListingId`
+- **User:** Both users can initiate completion
+
+**Prerequisites (all must be true):**
+- ✅ Time negotiation accepted (accepted_at IS NOT NULL)
+- ✅ Location negotiation accepted (accepted_at IS NOT NULL)
+- ✅ Buyer has paid $2.00 fee (buyer_paid_at IS NOT NULL)
+- ✅ Seller has paid $2.00 fee (seller_paid_at IS NOT NULL)
+
+**Backend Process:**
+1. Verify session is valid
+2. Fetch listing, time negotiation, location negotiation, and payment records
+3. Validate all prerequisites are met
+4. Determine user role (buyer or seller) and identify partner
+5. Create exchange_history record with:
+   - ExchangeId (UUID)
+   - user_id (person marking complete)
+   - ExchangeDate (current timestamp)
+   - Currency (from listing)
+   - Amount (from listing)
+   - PartnerName (opposite party's name)
+   - Rating (starts at 0, updated when user rates)
+   - Notes (completion notes or auto-generated message)
+   - TransactionType ('buy' if user is buyer, 'sell' if user is seller)
+6. Return success response with `partner_id` for rating step
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Exchange marked as completed",
+  "exchange_id": "UUID",
+  "listing_id": "listing_id",
+  "partner_id": "user_id_to_rate"
+}
+```
+
+**Error Conditions:**
+- ❌ Invalid session → "Invalid or expired session"
+- ❌ Listing not found → "Listing not found"
+- ❌ Time not agreed → "Time has not been agreed upon yet"
+- ❌ Location not agreed → "Location has not been agreed upon yet"
+- ❌ Either party hasn't paid → "Exchange must have both parties paid before completion"
+
+### Rating System (Follows Completion)
+
+**Trigger:**
+- Automatically shown after CompleteExchange returns success
+- iOS presents rating view with partner_id from response
+
+**UI Flow:**
+1. Confirmation alert: "Confirm Exchange Complete?"
+2. User taps "Complete"
+3. iOS sends request to CompleteExchange endpoint
+4. Backend returns partner_id
+5. Rating view appears with:
+   - 5-star rating selector
+   - Optional feedback text box
+   - "SUBMIT RATING" button
+
+**Rating Submission:**
+- **Endpoint:** `POST /Ratings/SubmitRating`
+- **Parameters:** `SessionId`, `user_id` (partner_id), `Rating` (1-5), `Review` (optional)
+- **Backend:** Creates user_ratings record and updates user's overall rating
+
+**Database Records Created:**
+1. **exchange_history**: Documents the completed transaction
+2. **user_ratings**: Records the rating given by current user to partner
 
 ---
 

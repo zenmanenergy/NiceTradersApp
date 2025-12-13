@@ -299,66 +299,114 @@ struct MeetingDetailView: View {
             
             // Button Set 1: Accept/Reject/Counter - show when listing_meeting_time.accepted_at is null
             // Button Set 1: Accept/Counter/Reject - show when time is NOT accepted (whether rejected or just not proposed yet)
+            // Determine if there's a pending time proposal
+            let timeProposals = meetingProposals.filter { $0.type == "time" }
+            let pendingTimeProposal = timeProposals.first(where: { $0.status == "pending" })
+            
             if timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true {
-                VStack(alignment: .center, spacing: 12) {
-                    Text("Accept this exchange?")
-                        .font(.headline)
-                        .foregroundColor(Color(hex: "2d3748"))
-                    
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            acceptExchange()
-                        }) {
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 14))
-                                Text("Accept")
-                                    .fontWeight(.semibold)
+                // Check if I am the one who proposed the time (waiting for response)
+                if let pendingTime = pendingTimeProposal, pendingTime.isFromMe {
+                    // I proposed the time, show option to cancel my proposal
+                    VStack(alignment: .center, spacing: 12) {
+                        Text("⏳ Waiting for Acceptance")
+                            .font(.headline)
+                            .foregroundColor(Color(hex: "f59e0b"))
+                        
+                        Text("You proposed a meeting time. Waiting for the other trader to accept or counter.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "4a5568"))
+                        
+                        if let meeting = currentMeeting, let timeStr = meeting.time {
+                            VStack(alignment: .leading, spacing: 8) {
+                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(timeStr))
                             }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(Color(hex: "38a169"))
+                            .padding(12)
+                            .background(Color(hex: "fffbeb"))
                             .cornerRadius(8)
                         }
                         
                         Button(action: {
-                            counterExchange()
+                            rejectExchange()
                         }) {
                             HStack {
-                                Image(systemName: "arrow.left.arrow.right")
+                                Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 14))
-                                Text("Counter")
+                                Text("Cancel Proposal")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
                             .foregroundColor(.white)
-                            .background(Color(hex: "f59e0b"))
+                            .background(Color(hex: "ef4444"))
                             .cornerRadius(8)
                         }
                     }
-                    
-                    Button(action: {
-                        rejectExchange()
-                    }) {
-                        HStack {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
-                            Text("Reject")
-                                .fontWeight(.semibold)
+                    .padding()
+                    .background(Color(hex: "fef3c7"))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                } else {
+                    // They proposed the time, I need to respond
+                    VStack(alignment: .center, spacing: 12) {
+                        Text("Accept this exchange?")
+                            .font(.headline)
+                            .foregroundColor(Color(hex: "2d3748"))
+                        
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                acceptExchange()
+                            }) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 14))
+                                    Text("Accept")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color(hex: "38a169"))
+                                .cornerRadius(8)
+                            }
+                            
+                            Button(action: {
+                                counterExchange()
+                            }) {
+                                HStack {
+                                    Image(systemName: "arrow.left.arrow.right")
+                                        .font(.system(size: 14))
+                                    Text("Counter")
+                                        .fontWeight(.semibold)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .foregroundColor(.white)
+                                .background(Color(hex: "f59e0b"))
+                                .cornerRadius(8)
+                            }
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .foregroundColor(.white)
-                        .background(Color(hex: "dc2626"))
-                        .cornerRadius(8)
+                        
+                        Button(action: {
+                            rejectExchange()
+                        }) {
+                            HStack {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                Text("Reject")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "dc2626"))
+                            .cornerRadius(8)
+                        }
                     }
+                    .padding()
+                    .background(Color(hex: "f0f9ff"))
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                 }
-                .padding()
-                .background(Color(hex: "f0f9ff"))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
             
             // Button Set 2a: Show when there's a PENDING location proposal (waiting for response)

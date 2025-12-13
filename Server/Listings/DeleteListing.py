@@ -50,13 +50,12 @@ def delete_listing(SessionId, ListingId, Permanent):
                 'error': 'You can only delete your own listings'
             })
         
-        # Check if there are any paid negotiations for this listing
+        # Check if either user has already paid
         paid_check_query = """
             SELECT COUNT(*) as paid_count 
             FROM listing_payments 
             WHERE listing_id = %s 
-            AND buyer_paid_at IS NOT NULL
-            AND seller_paid_at IS NOT NULL
+            AND (buyer_paid_at IS NOT NULL OR seller_paid_at IS NOT NULL)
         """
         cursor.execute(paid_check_query, (listing_id,))
         paid_result = cursor.fetchone()
@@ -65,7 +64,7 @@ def delete_listing(SessionId, ListingId, Permanent):
             connection.close()
             return json.dumps({
                 'success': False,
-                'error': 'Cannot delete listing - a buyer has already paid for this exchange'
+                'error': 'Cannot delete listing - payment has already been made for this exchange'
             })
         
         # Get all negotiating/pending buyers to notify them

@@ -45,6 +45,32 @@ def accept_meeting_location(listing_id, session_id):
                 'error': 'No location proposal found for this listing'
             })
         
+        # Verify time negotiation is accepted
+        cursor.execute("""
+            SELECT accepted_at FROM listing_meeting_time WHERE listing_id = %s
+        """, (listing_id,))
+        
+        time_neg = cursor.fetchone()
+        
+        if not time_neg or not time_neg['accepted_at']:
+            return json.dumps({
+                'success': False,
+                'error': 'Time negotiation must be accepted before accepting location'
+            })
+        
+        # Check if both parties have paid
+        cursor.execute("""
+            SELECT buyer_paid_at, seller_paid_at FROM listing_payments WHERE listing_id = %s
+        """, (listing_id,))
+        
+        payment = cursor.fetchone()
+        
+        if not payment or not payment['buyer_paid_at'] or not payment['seller_paid_at']:
+            return json.dumps({
+                'success': False,
+                'error': 'Both parties must pay the $2 fee before accepting location'
+            })
+        
         # Check if already accepted or rejected
         if location_neg['accepted_at'] is not None:
             return json.dumps({

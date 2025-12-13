@@ -60,6 +60,21 @@ def propose_meeting_location(listing_id, session_id, latitude, longitude, locati
                 'error': 'Time negotiation has been rejected'
             })
         
+        # Check if both parties have paid
+        cursor.execute("""
+            SELECT payment_id, buyer_paid_at, seller_paid_at
+            FROM listing_payments
+            WHERE listing_id = %s
+        """, (listing_id,))
+        
+        payment = cursor.fetchone()
+        
+        if not payment or not payment['buyer_paid_at'] or not payment['seller_paid_at']:
+            return json.dumps({
+                'success': False,
+                'error': 'Both parties must pay the $2 fee before proposing location'
+            })
+        
         # Get listing to verify access
         cursor.execute("""
             SELECT user_id FROM listings WHERE listing_id = %s
