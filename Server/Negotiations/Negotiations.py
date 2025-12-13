@@ -13,6 +13,7 @@ from .ProposeMeetingLocation import propose_meeting_location
 from .CounterMeetingLocation import counter_meeting_location
 from .AcceptMeetingLocation import accept_meeting_location
 from .RejectMeetingLocation import reject_meeting_location
+from .CompleteExchange import complete_exchange
 
 # Create the Negotiations blueprint
 negotiations_bp = Blueprint('negotiations', __name__)
@@ -471,6 +472,47 @@ def PayListingFee():
             json.dumps({
                 'success': False,
                 'error': f'Payment processing failed: {str(e)}'
+            }),
+            mimetype='application/json'
+        )
+
+@negotiations_bp.route('/Negotiations/CompleteExchange', methods=['GET'])
+@cross_origin()
+def CompleteExchange():
+    """Mark an exchange as completed and prepare for rating"""
+    try:
+        from flask import request, Response
+        import json
+        listing_id = request.args.get('ListingId')
+        session_id = request.args.get('SessionId')
+        negotiation_id = request.args.get('NegotiationId')
+        
+        print(f"[CompleteExchange] Endpoint called: SessionId={session_id}, ListingId={listing_id}, NegotiationId={negotiation_id}")
+        
+        if not all([session_id]) or not (listing_id or negotiation_id):
+            print(f"[CompleteExchange] Missing required parameters")
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'SessionId and (ListingId or NegotiationId) are required'
+                }),
+                mimetype='application/json'
+            )
+        
+        print(f"[CompleteExchange] Calling complete_exchange with: session_id={session_id}, id={negotiation_id or listing_id}")
+        result = complete_exchange(session_id, negotiation_id or listing_id)
+        print(f"[CompleteExchange] Result: {result}")
+        return Response(result, mimetype='application/json')
+        
+    except Exception as e:
+        import json
+        print(f"[CompleteExchange] Exception: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response(
+            json.dumps({
+                'success': False,
+                'error': f'Failed to complete exchange: {str(e)}'
             }),
             mimetype='application/json'
         )

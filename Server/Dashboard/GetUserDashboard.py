@@ -35,6 +35,7 @@ def get_user_dashboard(SessionId):
             })
         
         user_id = session_result['user_id']
+        print(f"[GetUserDashboard] User ID from session: {user_id}")
         
         # Get user profile information
         user_query = """
@@ -44,6 +45,7 @@ def get_user_dashboard(SessionId):
         """
         cursor.execute(user_query, (user_id,))
         user_data = cursor.fetchone()
+        print(f"[GetUserDashboard] User data: {user_data}")
         
         # Get user's active listings count (listings created by user as seller)
         active_listings_query = """
@@ -83,8 +85,12 @@ def get_user_dashboard(SessionId):
             ORDER BY l.created_at DESC 
             LIMIT 10
         """
+        print(f"[GetUserDashboard] Querying user listings for user_id: {user_id}")
         cursor.execute(user_listings_query, (user_id,))
         user_listings = cursor.fetchall()
+        print(f"[GetUserDashboard] Found {len(user_listings)} user listings")
+        for listing in user_listings:
+            print(f"[GetUserDashboard]   - Listing: {listing['listing_id']}, currency: {listing['currency']}, amount: {listing['amount']}, status: {listing['status']}")
         
         # Get user's active exchanges (listings user is negotiating on as buyer or seller)
         active_exchanges_query = """
@@ -110,6 +116,9 @@ def get_user_dashboard(SessionId):
         """
         cursor.execute(active_exchanges_query, (user_id, user_id))
         active_exchanges = cursor.fetchall()
+        print(f"[GetUserDashboard] Found {len(active_exchanges)} active exchanges")
+        for exchange in active_exchanges:
+            print(f"[GetUserDashboard]   - Exchange: {exchange['listing_id']}, buyer: {exchange['buyer_id']}, seller: {exchange['seller_id']}")
         
         # Placeholder for pending offers (exchange_offers table is not being used)
         pending_offers = []
@@ -134,7 +143,7 @@ def get_user_dashboard(SessionId):
                 'completedTransactions': completed_transactions_count,
                 'pendingOffers': len(pending_offers)
             },
-            'activeListings': [
+            'recentListings': [
                 {
                     'listingId': listing['listing_id'],
                     'currency': listing['currency'],

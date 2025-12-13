@@ -22,6 +22,7 @@ struct MeetingDetailView: View {
     // Rating state
     @State private var userRating: Int = 0
     @State private var ratingMessage: String = ""
+    @State private var partnerId: String? = nil
     
     // Meeting state - shared with child views
     @State private var currentMeeting: CurrentMeeting?
@@ -676,20 +677,25 @@ struct MeetingDetailView: View {
     // MARK: - Complete Exchange
     
     private func completeExchange() {
+        print("[MeetingDetailView] completeExchange: Button tapped, showing confirmation alert")
         let alert = UIAlertController(
             title: localizationManager.localize("CONFIRM_EXCHANGE_COMPLETE"),
             message: localizationManager.localize("EXCHANGE_COMPLETE_MESSAGE"),
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            print("[MeetingDetailView] completeExchange: User cancelled")
+        })
         alert.addAction(UIAlertAction(title: "Complete", style: .default) { _ in
+            print("[MeetingDetailView] completeExchange: User confirmed, calling submitCompleteExchange")
             self.submitCompleteExchange()
         })
         
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootVC = window.rootViewController else {
+            print("[MeetingDetailView] completeExchange: Failed to get root view controller")
             return
         }
         
@@ -699,37 +705,65 @@ struct MeetingDetailView: View {
     private func submitCompleteExchange() {
         guard let sessionId = SessionManager.shared.sessionId else {
             errorMessage = "No active session"
+            print("[MeetingDetailView] submitCompleteExchange: No session ID")
             return
         }
         
         let baseURL = Settings.shared.baseURL
-        let url = URL(string: "\(baseURL)/Negotiations/CompleteExchange?SessionId=\(sessionId)&ListingId=\(contactData.listing.listingId)")!
+        let listingId = contactData.listing.listingId
+        let urlString = "\(baseURL)/Negotiations/CompleteExchange?SessionId=\(sessionId)&ListingId=\(listingId)"
+        print("[MeetingDetailView] submitCompleteExchange: URL = \(urlString)")
+        
+        guard let url = URL(string: urlString) else {
+            errorMessage = "Invalid URL"
+            print("[MeetingDetailView] submitCompleteExchange: Invalid URL \(urlString)")
+            return
+        }
         
         isLoading = true
+        print("[MeetingDetailView] submitCompleteExchange: Making request to \(url)")
         
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("[MeetingDetailView] submitCompleteExchange: Response received")
+            print("[MeetingDetailView] submitCompleteExchange: Error: \(error?.localizedDescription ?? "none")")
+            
             guard let data = data, error == nil else {
                 DispatchQueue.main.async {
                     self.errorMessage = "Network error: \(error?.localizedDescription ?? "Unknown")"
                     self.isLoading = false
+                    print("[MeetingDetailView] submitCompleteExchange: Network error: \(error?.localizedDescription ?? "Unknown")")
                 }
                 return
             }
             
-            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let success = json["success"] as? Bool, success {
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    self.showRatingView = true
+            print("[MeetingDetailView] submitCompleteExchange: Received data, parsing JSON")
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                print("[MeetingDetailView] submitCompleteExchange: JSON = \(json)")
+                if let success = json["success"] as? Bool, success {
+                    print("[MeetingDetailView] submitCompleteExchange: Success! exchange_id = \(json["exchange_id"] ?? "none")")
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        // Capture partner_id for rating
+                        if let partnerIdStr = json["partner_id"] as? String {
+                            self.partnerId = partnerIdStr
+                            print("[MeetingDetailView] submitCompleteExchange: Set partnerId = \(partnerIdStr)")
+                        }
+                        self.showRatingView = true
+                        print("[MeetingDetailView] submitCompleteExchange: Showing rating view")
+                    }
+                } else {
+                    let errorMsg = json["error"] as? String ?? "Failed to complete exchange"
+                    print("[MeetingDetailView] submitCompleteExchange: Failed - \(errorMsg)")
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.errorMessage = errorMsg
+                    }
                 }
             } else {
+                print("[MeetingDetailView] submitCompleteExchange: Failed to parse JSON")
                 DispatchQueue.main.async {
                     self.isLoading = false
-                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        self.errorMessage = json["error"] as? String ?? "Failed to complete exchange"
-                    } else {
-                        self.errorMessage = "Failed to complete exchange"
-                    }
+                    self.errorMessage = "Failed to complete exchange"
                 }
             }
         }.resume()
@@ -748,15 +782,20 @@ struct MeetingDetailView: View {
             return
         }
         
+        guard let partnerIdToRate = partnerId else {
+            errorMessage = "Partner ID not found"
+            return
+        }
+        
         isLoading = true
         
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Ratings/SubmitRating")!
         components.queryItems = [
             URLQueryItem(name: "SessionId", value: sessionId),
-            URLQueryItem(name: "ListingId", value: contactData.listing.listingId),
+            URLQueryItem(name: "user_id", value: partnerIdToRate),
             URLQueryItem(name: "Rating", value: String(userRating)),
-            URLQueryItem(name: "Comments", value: ratingMessage)
+            URLQueryItem(name: "Review", value: ratingMessage)
         ]
         
         guard let url = components.url else {

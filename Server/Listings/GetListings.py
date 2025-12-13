@@ -2,8 +2,8 @@ from _Lib import Database
 import json
 from decimal import Decimal
 
-def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset):
-    """Get listings with optional filtering"""
+def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset, CurrentUserId=None):
+    """Get listings with optional filtering, excluding current user's listings"""
     try:
         # Parameters are passed directly from the blueprint
         currency = Currency
@@ -12,8 +12,9 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
         max_distance = MaxDistance
         limit = Limit or '20'
         offset = Offset or '0'
+        current_user_id = CurrentUserId
         
-        print(f"[GetListings] Fetching listings with filters: currency={currency}, accept_currency={accept_currency}")
+        print(f"[GetListings] Fetching listings with filters: currency={currency}, accept_currency={accept_currency}, exclude_user={current_user_id}")
         
         # Connect to database
         cursor, connection = Database.ConnectToDatabase()
@@ -41,6 +42,11 @@ def get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
         """
         
         params = []
+        
+        # Exclude current user's own listings
+        if current_user_id:
+            base_query += " AND l.user_id != %s"
+            params.append(current_user_id)
         
         if currency:
             base_query += " AND l.currency = %s"

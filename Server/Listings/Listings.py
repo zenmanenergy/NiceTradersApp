@@ -43,8 +43,9 @@ def GetListings():
 		MaxDistance = FilterData.get('maxDistance', None)
 		Limit = FilterData.get('limit', '20')
 		Offset = FilterData.get('offset', '0')
+		CurrentUserId = FilterData.get('currentUserId', None)  # Optional: exclude current user's listings
 		
-		result = get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset)
+		result = get_listings(Currency, AcceptCurrency, Location, MaxDistance, Limit, Offset, CurrentUserId)
 		return result
 	except Exception as e:
 		return Debugger(e)

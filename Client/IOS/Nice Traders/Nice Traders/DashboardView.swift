@@ -1347,7 +1347,7 @@ struct ActiveExchangeCard: View {
                 }
                 Text("✅ Meeting confirmed")
                     .font(.system(size: 13))
-                    .foregroundColor(Color(hex: "10b981"))
+                    .foregroundColor(.white)
                     .fontWeight(.semibold)
             } else if exchange.timeAccepted && !exchange.locationAccepted && exchange.hasLocationProposal && !exchange.isLocationProposalFromMe {
                 // Time accepted, location proposal from them, I need to accept it
@@ -1384,6 +1384,17 @@ struct ActiveExchangeCard: View {
                         .foregroundColor(.white.opacity(0.8))
                 }
                 Text("🎯 Action: Propose location")
+                    .font(.system(size: 13))
+                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
+                    .fontWeight(.semibold)
+            } else if !exchange.timeAccepted && exchange.meetingTime != nil {
+                // Time proposal sent but not yet accepted
+                if let meetingTime = exchange.meetingTime {
+                    Text(DateFormatters.formatCompact(meetingTime))
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                Text("⏳ Waiting for acceptance")
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
                     .fontWeight(.semibold)

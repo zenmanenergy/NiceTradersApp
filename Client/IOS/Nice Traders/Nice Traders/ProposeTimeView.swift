@@ -28,28 +28,6 @@ struct ProposeTimeView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Progress bar
-            VStack(spacing: 8) {
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.gray.opacity(0.2))
-                            .frame(height: 6)
-                        
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.blue)
-                            .frame(width: geometry.size.width * 1 / 3, height: 6)
-                    }
-                }
-                .frame(height: 6)
-                
-                Text("Step 1 of 3")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 16)
-            
             ScrollView {
                 VStack(spacing: 24) {
                     // Instructions
