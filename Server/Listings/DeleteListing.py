@@ -107,15 +107,22 @@ def delete_listing(SessionId, ListingId, Permanent):
             # Permanently delete from database
             delete_query = "DELETE FROM listings WHERE listing_id = %s"
             cursor.execute(delete_query, (listing_id,))
+            # Also delete associated meeting time proposals
+            cursor.execute("DELETE FROM listing_meeting_time WHERE listing_id = %s", (listing_id,))
+            # Also delete associated meeting location proposals
+            cursor.execute("DELETE FROM listing_meeting_location WHERE listing_id = %s", (listing_id,))
             message = 'Listing permanently deleted'
         else:
-            # Soft delete - mark as inactive
+            # Soft delete - mark as inactive and delete proposals
             update_query = """
                 UPDATE listings 
                 SET status = 'inactive', updated_at = NOW() 
                 WHERE listing_id = %s
             """
             cursor.execute(update_query, (listing_id,))
+            # Also delete associated proposals when listing is deactivated
+            cursor.execute("DELETE FROM listing_meeting_time WHERE listing_id = %s", (listing_id,))
+            cursor.execute("DELETE FROM listing_meeting_location WHERE listing_id = %s", (listing_id,))
             message = 'Listing deactivated'
         
         connection.commit()

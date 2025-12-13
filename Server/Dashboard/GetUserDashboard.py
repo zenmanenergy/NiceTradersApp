@@ -3,6 +3,22 @@ import json
 from datetime import datetime
 from decimal import Decimal
 
+def calculate_negotiation_status(exchange, user_id):
+    """Calculate the human-readable negotiation status based on workflow state"""
+    # Time proposal not yet accepted
+    if exchange['accepted_at'] is None:
+        # Determine who proposed
+        proposer_id = exchange.get('buyer_id')  # Usually buyer proposes first
+        is_current_user_proposer = (proposer_id == user_id)
+        
+        if is_current_user_proposer:
+            return "⏳ Waiting for Acceptance"
+        else:
+            return "🎯 Action: Acceptance"
+    else:
+        # Time is accepted, move to payment phase
+        return "🎯 Action: Payment"
+
 def get_user_dashboard(SessionId):
     """Get dashboard data for authenticated user"""
     try:
@@ -179,6 +195,7 @@ def get_user_dashboard(SessionId):
                         'name': f"{exchange['seller_first_name']} {exchange['seller_last_name']}" if exchange['buyer_id'] == user_id else f"{exchange['buyer_first_name']} {exchange['buyer_last_name']}"
                     },
                     'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
+                    'displayStatus': calculate_negotiation_status(exchange, user_id),
                     'status': exchange['status'],
                     'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
                     'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,

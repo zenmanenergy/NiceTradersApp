@@ -27,12 +27,13 @@ This document outlines the complete end-to-end workflow for a negotiation betwee
 ## Phase 2: Search & Proposal
 
 ### User B - Searches for Listing
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User B performs a search and finds User A's listing
 - Listing details are displayed with exchange rate, amount, and location
+- **No dashboard activity yet** - User B hasn't engaged with the listing
 
 ### User B - Proposes Date/Time
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User B clicks "Propose time & location" on the listing
 - User B is redirected to **ProposeTimeView**
 - User B selects a date and time for the meeting
@@ -43,39 +44,45 @@ This document outlines the complete end-to-end workflow for a negotiation betwee
   - `accepted_at`: NULL (not yet accepted)
 
 ### User B - Dashboard: Active Exchanges
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User B sees the listing in **Active Exchanges** section
 - **Status**: "⏳ Waiting for Acceptance"
 - The proposed meeting time is displayed
 
 ### User B - Meeting Detail View
-- [ ] AI verified | [ ] Human verified
-- User B can click on the listing to view details
-- Button available: **"Cancel Proposal"**
-- User B can cancel their time proposal at this stage
+- [x] AI verified | [ ] Human verified
+- During time negotiation (before acceptance):
+  - Button available: **"Cancel Proposal"**
+  - User B can cancel their time proposal at this stage
+- After time is accepted:
+  - Buttons available: **"Pay Fee"** (if not yet paid), **"View Details"** (if payment complete)
+- During location negotiation:
+  - Buttons available: **"Propose Location"**, **"Accept Location"**, **"Counter Location"**
 
 ---
 
 ## Phase 3: Seller Acceptance/Counter
 
 ### User A - Dashboard: Active Exchanges
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A sees the listing in **Active Exchanges** section
 - **Status**: "🎯 Action: Acceptance"
 - The proposed meeting time is displayed
 
 ### User A - Actions Available
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 User A has three options:
 
 #### Option 1: Accept the Proposal
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A clicks **"Accept"** button
 - `listing_meeting_time.accepted_at` is updated with current timestamp
+- Dashboard status for **User A**: "🎯 Action: Payment"
+- Dashboard status for **User B**: "🎯 Action: Payment"
 - Workflow moves to **Phase 4: Payment**
 
 #### Option 2: Counter the Proposal
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A clicks **"Counter Proposal"** button
 - User A is redirected to **ProposeTimeView**
 - User A selects a different date/time
@@ -88,7 +95,7 @@ User A has three options:
 - Time proposals continue to go back and forth until one party accepts
 
 #### Option 3: Cancel the Listing
-- [ ] AI verified | [ ] Human verified
+- [x] AI verified | [ ] Human verified
 - User A can **cancel the listing** at any time **UNLESS someone has already paid**
 - When cancelled:
   - `listings` row is **deleted** or marked as inactive
@@ -98,8 +105,12 @@ User A has three options:
 ### User A - Meeting Detail View
 - [ ] AI verified | [ ] Human verified
 - While time is not yet accepted:
-  - Button available: **"Cancel Proposal"**
-  - This allows User A to remove the counter-proposal
+  - Buttons available: **"Accept"**, **"Counter Proposal"**, **"Cancel"**
+  - **"Cancel Proposal"** removes the counter-proposal if User A countered
+- After time is accepted:
+  - Buttons available: **"Pay Fee"** (if not yet paid), **"View Details"** (if payment complete)
+- During location negotiation:
+  - Buttons available: **"Propose Location"**, **"Accept Location"**, **"Counter Location"**
 
 ---
 
@@ -107,10 +118,11 @@ User A has three options:
 
 ### Both Users - Dashboard Status Update
 - [ ] AI verified | [ ] Human verified
-- Once **both** time proposals are settled and User A has accepted:
+- Once time proposal is **accepted by User A**:
 - Dashboard status for **both User A and User B**: "🎯 Action: Payment"
+- Both users need to pay the $2 fee before proceeding
 
-### User B - Payment View
+### User B (Buyer) - Payment View
 - [ ] AI verified | [ ] Human verified
 - User B sees **"Payment Required"** or similar message
 - Fee amount: **$2.00**
@@ -120,8 +132,11 @@ User A has three options:
   - `listing_id`: The negotiation listing ID
   - `buyer_paid_at`: Current timestamp
   - `seller_paid_at`: NULL (User A hasn't paid yet)
+- If User A hasn't paid yet:
+  - User B's dashboard status: **"⏳ Waiting for Seller Payment"**
+  - User A's dashboard status: **"🎯 Action: Payment"**
 
-### User A - Payment View
+### User A (Seller) - Payment View
 - [ ] AI verified | [ ] Human verified
 - User A sees **"Payment Required"** message
 - Fee amount: **$2.00**
@@ -129,6 +144,8 @@ User A has three options:
 - Payment is processed
 - `listing_payments` table is updated with:
   - `seller_paid_at`: Current timestamp
+- If User B has already paid:
+  - Workflow automatically advances to **Phase 5: Location Negotiation**
 
 ### Both Users - Payment Complete
 - [ ] AI verified | [ ] Human verified
@@ -151,15 +168,19 @@ User A has three options:
   - `proposed_location`: Latitude, Longitude, or location string
   - `proposed_at`: Current timestamp
   - `accepted_at`: NULL (awaiting approval)
+- Buttons available: **"Propose Location"** (select and submit location)
+- After proposing:
+  - Proposer sees: **"View Details"**, **"Counter Location"** buttons
+  - Non-proposer sees: **"Accept Location"**, **"Counter Location"** buttons
 
 ### User A - Dashboard Status
 - [ ] AI verified | [ ] Human verified
-- If **User B proposed location**: "⏳ Accept proposed location"
+- If **User B proposed location**: "🎯 Action: Accept Location"
 - If **User A proposed location**: "⏳ Waiting for Acceptance"
 
 ### User B - Dashboard Status
 - [ ] AI verified | [ ] Human verified
-- If **User A proposed location**: "⏳ Accept proposed location"
+- If **User A proposed location**: "🎯 Action: Accept Location"
 - If **User B proposed location**: "⏳ Waiting for Acceptance"
 
 ### Location Counter-Proposals
@@ -172,12 +193,20 @@ User A has three options:
   - `proposed_location`: New location
   - `proposed_at`: Current timestamp
   - `accepted_at`: NULL
+- Dashboard statuses revert:
+  - Proposer's status: "⏳ Waiting for Acceptance"
+  - Non-proposer's status: "🎯 Action: Accept Location"
 - Location proposals continue back and forth until one party accepts
 
 ### User Accepts Location
 - [ ] AI verified | [ ] Human verified
 - User clicks **"Accept Location"** button
 - `listing_meeting_location.accepted_at` is updated with current timestamp
+- Dashboard status updates:
+  - Accepter's status: "⏳ Waiting for [DATE/TIME]" (if both time and location are accepted)
+  - OR still "🎯 Action: Accept Location" (if waiting for other user to accept their location proposal)
+- After accepting:
+  - Button becomes **"Confirm Meeting"** or **"View Details"** (once both locations accepted)
 
 ### Both Locations Accepted
 - [ ] AI verified | [ ] Human verified
@@ -289,6 +318,13 @@ If Countered (repeats until accepted):
 | User B Proposed | Accept / Counter / Cancel | Cancel Proposal |
 | User A Countered | Cancel Proposal | Accept / Counter / Cancel |
 | Time Accepted | Pay Fee | Pay Fee |
+| Buyer Paid, Seller Waiting | Pay Fee | View Details |
+| Seller Paid, Buyer Waiting | View Details | Pay Fee |
+| Both Paid | Propose Location / Accept Location | Propose Location / Accept Location |
+| Location Proposed (User A) | N/A | Counter / Accept Location |
+| Location Proposed (User B) | Counter / Accept Location | N/A |
+| Both Locations Accepted | View Details / Confirm | View Details / Confirm |
+| Meeting Confirmed | View Details | View Details |
 | Both Paid | Propose Location / Accept Location | Propose Location / Accept Location |
 | Location Accepted | Confirm / View Details | Confirm / View Details |
 
