@@ -11,10 +11,10 @@ SELLER_ID = 'USR53a3c642-4914-4de8-8217-03ee3da42224'
 BUYER_ID = 'USR387e9549-3339-4ea1-b0d2-f6a66c25c390'
 
 # Test user data (emails and passwords for reference, not used in scripts)
-SELLER_EMAIL = 'a@b.com'
+SELLER_EMAIL = 's@b.com'
 SELLER_PASSWORD = 'q'
 
-BUYER_EMAIL = 'c@b.com'
+BUYER_EMAIL = 'b@b.com'
 BUYER_PASSWORD = 'q'
 
 def connect_db():

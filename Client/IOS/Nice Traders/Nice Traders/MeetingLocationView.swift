@@ -9,6 +9,7 @@ import CoreLocation
 
 struct MeetingLocationView: View {
     let contactData: ContactData
+    let displayStatus: String?
     @ObservedObject var localizationManager = LocalizationManager.shared
     @ObservedObject var locationManager = LocationManager()
     
@@ -206,6 +207,7 @@ struct MeetingLocationView: View {
                                 ForEach(searchResults, id: \.id) { result in
                                     SearchResultRow(
                                         result: result,
+                                        displayStatus: displayStatus,
                                         isSelected: selectedResultId == result.id,
                                         onTap: {
                                             selectedResultId = result.id
@@ -242,6 +244,7 @@ struct MeetingLocationView: View {
                                 ForEach(locationProposals, id: \.proposalId) { proposal in
                                     LocationProposalCard(
                                         proposal: proposal,
+                                        displayStatus: displayStatus,
                                         onAccept: {
                                             respondToProposal(proposalId: proposal.proposalId, response: "accepted")
                                         },
@@ -811,6 +814,7 @@ struct MapSearchResult: Identifiable {
 
 struct SearchResultRow: View {
     let result: MapSearchResult
+    let displayStatus: String?
     let isSelected: Bool
     let onTap: () -> Void
     let onProposeLocation: () -> Void
@@ -849,7 +853,7 @@ struct SearchResultRow: View {
                 }
             }
             
-            if isSelected {
+            if isSelected && (displayStatus?.contains("Action: Propose Location") ?? false) {
                 Button(action: onProposeLocation) {
                     HStack {
                         Image(systemName: "checkmark.square")

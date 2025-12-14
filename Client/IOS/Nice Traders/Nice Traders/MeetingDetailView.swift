@@ -10,6 +10,7 @@ import SwiftUI
 
 struct MeetingDetailView: View {
     let contactData: ContactData
+    let displayStatus: String?
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToContact: Bool
@@ -120,6 +121,7 @@ struct MeetingDetailView: View {
                             case .location:
                                 MeetingLocationView(
                                     contactData: contactData,
+                                    displayStatus: displayStatus,
                                     currentMeeting: $currentMeeting,
                                     meetingProposals: $meetingProposals,
                                     onBackTapped: {

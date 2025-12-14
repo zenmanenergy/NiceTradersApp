@@ -3,6 +3,7 @@ import SwiftUI
 struct DashboardView: View {
     @StateObject private var viewModel = DashboardViewModel()
     @State private var selectedContactData: ContactData?
+    @State private var selectedDisplayStatus: String?
     @State private var navigateToContact = false
     @State private var navigateToCreateListing = false
     @State private var navigateToSearch = false
@@ -21,11 +22,12 @@ struct DashboardView: View {
                     viewModel.loadDashboardData()
                 }
             } else if navigateToContact && selectedContactData != nil {
-                MeetingDetailView(contactData: selectedContactData!, navigateToContact: $navigateToContact)
+                MeetingDetailView(contactData: selectedContactData!, displayStatus: selectedDisplayStatus, navigateToContact: $navigateToContact)
             } else {
                 MainDashboardView(
                     viewModel: viewModel,
                     selectedContactData: $selectedContactData,
+                    selectedDisplayStatus: $selectedDisplayStatus,
                     navigateToContact: $navigateToContact,
                     navigateToCreateListing: $navigateToCreateListing,
                     navigateToProfile: $navigateToProfile,
@@ -78,6 +80,13 @@ struct DashboardView: View {
                 onCreateListing: { navigateToCreateListing = true },
                 onMessages: { navigateToMessages = true }
             )
+        }
+        .onChange(of: navigateToContact) { oldValue, newValue in
+            // When returning from MeetingDetailView (navigateToContact becomes false), refresh dashboard
+            if !newValue && oldValue {
+                print("VIEW: DashboardView - Returned from MeetingDetailView, refreshing data")
+                viewModel.loadDashboardData()
+            }
         }
         .onDisappear {
             removeNavigationListeners()
@@ -152,6 +161,7 @@ struct DashboardView: View {
 struct MainDashboardView: View {
     @ObservedObject var viewModel: DashboardViewModel
     @Binding var selectedContactData: ContactData?
+    @Binding var selectedDisplayStatus: String?
     @Binding var navigateToContact: Bool
     @Binding var navigateToCreateListing: Bool
     @Binding var navigateToProfile: Bool
@@ -186,6 +196,7 @@ struct MainDashboardView: View {
                         exchanges: filteredActiveExchanges,
                         purchasedContactsData: viewModel.purchasedContactsData,
                         selectedContactData: $selectedContactData,
+                        selectedDisplayStatus: $selectedDisplayStatus,
                         navigateToContact: $navigateToContact,
                         navigateToNegotiation: $navigateToNegotiation,
                         selectedExchangeId: $selectedExchangeId

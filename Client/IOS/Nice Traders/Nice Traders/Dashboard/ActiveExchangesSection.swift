@@ -6,6 +6,7 @@ struct ActiveExchangesSection: View {
     let exchanges: [ActiveExchange]
     let purchasedContactsData: [[String: Any]]
     @Binding var selectedContactData: ContactData?
+    @Binding var selectedDisplayStatus: String?
     @Binding var navigateToContact: Bool
     @Binding var navigateToNegotiation: Bool
     @Binding var selectedExchangeId: String?
@@ -83,6 +84,7 @@ struct ActiveExchangesSection: View {
             purchasedAt: nil
         )
         selectedContactData = contactData
+        selectedDisplayStatus = exchange.displayStatus
         navigateToContact = true
     }
 }

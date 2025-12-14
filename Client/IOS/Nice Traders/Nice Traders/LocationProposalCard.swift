@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LocationProposalCard: View {
     let proposal: MeetingProposal
+    let displayStatus: String?
     var onAccept: () -> Void
     var onReject: () -> Void
     var onCounterPropose: () -> Void
@@ -123,8 +124,8 @@ struct LocationProposalCard: View {
                         .cornerRadius(6)
                     }
                     
-                    // Action buttons (only if pending)
-                    if proposal.status == "pending" && !proposal.isFromMe {
+                    // Action buttons (only if pending and displayStatus indicates we should accept/reject)
+                    if proposal.status == "pending" && !proposal.isFromMe && (displayStatus?.contains("Action: Acceptance") ?? false) {
                         HStack(spacing: 8) {
                             Button(action: onReject) {
                                 HStack(spacing: 4) {
@@ -199,6 +200,7 @@ struct LocationProposalCard: View {
             latitude: 40.7829,
             longitude: -73.9654
         ),
+        displayStatus: "🎯 Action: Acceptance",
         onAccept: {},
         onReject: {},
         onCounterPropose: {}
