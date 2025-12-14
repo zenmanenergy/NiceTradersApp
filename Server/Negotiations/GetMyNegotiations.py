@@ -126,6 +126,7 @@ def get_my_negotiations(session_id):
                 }
             
             neg_dict = {
+                'timeNegotiationId': time_neg['time_negotiation_id'],
                 'listingId': listing_id,
                 'status': overall_status,
                 'currentProposedTime': time_neg['meeting_time'].isoformat() if time_neg['meeting_time'] else None,

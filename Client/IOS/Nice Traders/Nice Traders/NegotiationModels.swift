@@ -368,7 +368,7 @@ struct MyNegotiationItem: Codable, Identifiable {
     let otherUser: OtherUserInfo
     
     enum CodingKeys: String, CodingKey {
-        case id = "negotiationId"
+        case id = "timeNegotiationId"
         case listingId
         case status
         case currentProposedTime

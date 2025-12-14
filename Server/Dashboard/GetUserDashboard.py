@@ -12,7 +12,7 @@ def calculate_negotiation_status(exchange, user_id):
     # Time proposal not yet accepted
     if exchange['accepted_at'] is None:
         # Determine who proposed
-        proposer_id = exchange.get('buyer_id')  # Usually buyer proposes first
+        proposer_id = exchange.get('proposed_by')
         is_current_user_proposer = (proposer_id == user_id)
         
         if is_current_user_proposer:
@@ -39,8 +39,25 @@ def calculate_negotiation_status(exchange, user_id):
             else:
                 return "⏳ Waiting for Buyer Payment"
         else:
-            # Both paid, move to location phase
-            return "🎯 Action: Propose Location"
+            # Both paid, check location proposal status
+            # Get location proposal info from the exchange
+            location_accepted = exchange.get('location_accepted_at')
+            has_location_proposal = exchange.get('has_location_proposal', False)
+            location_proposed_by = exchange.get('location_proposed_by')
+            
+            if location_accepted is not None:
+                # Location is accepted - ready to meet
+                return "✅ Meeting confirmed"
+            elif has_location_proposal:
+                # Someone has proposed a location
+                is_current_user_proposer = (location_proposed_by == user_id)
+                if is_current_user_proposer:
+                    return "⏳ Waiting for Acceptance"
+                else:
+                    return "🎯 Action: Acceptance"
+            else:
+                # No location proposal yet
+                return "🎯 Action: Propose Location"
 
 def get_user_dashboard(SessionId):
     """Get dashboard data for authenticated user"""
@@ -137,14 +154,18 @@ def get_user_dashboard(SessionId):
                    l.latitude, l.longitude, l.location_radius,
                    l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar,
                    lmt.buyer_id, l.user_id as seller_id,
-                   lmt.accepted_at, lmt.rejected_at,
+                   lmt.proposed_by, lmt.meeting_time, lmt.accepted_at, lmt.rejected_at,
                    lp.buyer_paid_at, lp.seller_paid_at,
+                   CASE WHEN lml.location_negotiation_id IS NOT NULL THEN 1 ELSE 0 END as has_location_proposal,
+                   lml.proposed_by as location_proposed_by,
+                   lml.accepted_at as location_accepted_at,
                    MAX(lmt.updated_at) as last_activity,
                    u_buyer.FirstName as buyer_first_name, u_buyer.LastName as buyer_last_name,
                    u_seller.FirstName as seller_first_name, u_seller.LastName as seller_last_name
             FROM listings l
             JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
             LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
+            LEFT JOIN listing_meeting_location lml ON l.listing_id = lml.listing_id
             LEFT JOIN users u_buyer ON lmt.buyer_id = u_buyer.user_id
             LEFT JOIN users u_seller ON l.user_id = u_seller.user_id
             WHERE (lmt.buyer_id = %s OR l.user_id = %s)
@@ -222,6 +243,7 @@ def get_user_dashboard(SessionId):
                     'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
                     'displayStatus': calculate_negotiation_status(exchange, user_id),
                     'status': exchange['status'],
+                    'meetingTime': exchange.get('meeting_time').isoformat() if exchange.get('meeting_time') else None,
                     'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
                     'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,
                     'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False,
