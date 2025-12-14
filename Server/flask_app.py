@@ -20,6 +20,7 @@ from Admin import Admin
 from Translations import Translations, AdminTranslations
 from Negotiations.Negotiations import negotiations_bp
 from Ratings import ratings_bp
+from Payments import Payments
 
 app.register_blueprint(Login.blueprint)
 app.register_blueprint(Signup.blueprint)
@@ -35,6 +36,7 @@ app.register_blueprint(Translations.translations_bp)
 app.register_blueprint(AdminTranslations.admin_translations_bp)
 app.register_blueprint(negotiations_bp)
 app.register_blueprint(ratings_bp)
+app.register_blueprint(Payments.payments_bp)
 
 @app.route("/")
 @cross_origin()

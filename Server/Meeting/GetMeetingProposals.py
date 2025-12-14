@@ -44,8 +44,14 @@ def get_meeting_proposals(session_id, listing_id):
         buyer_id = listing_result['buyer_id']
         print(f"🟠 [GetMeetingProposals] Listing found - owner: {listing_owner_id}, buyer: {buyer_id}")
         
-        # Verify user has access (is either owner or buyer)
-        if user_id != listing_owner_id and user_id != buyer_id:
+        # Check if user has proposed a time (is a negotiator on this listing)
+        cursor.execute("""
+            SELECT buyer_id FROM listing_meeting_time WHERE listing_id = %s AND buyer_id = %s
+        """, (listing_id, user_id))
+        proposed_result = cursor.fetchone()
+        
+        # Verify user has access (is owner, accepted buyer, or has proposed a time)
+        if user_id != listing_owner_id and user_id != buyer_id and not proposed_result:
             print(f"🔴 [GetMeetingProposals] ERROR: Access denied for user {user_id}")
             connection.close()
             return json.dumps({'success': False, 'error': 'Access denied'})
@@ -157,10 +163,78 @@ def get_meeting_proposals(session_id, listing_id):
                     }
                     print(f"  ✅ Location accepted at: {proposal['accepted_at']} (no time accepted yet)")
         
+        # Get payment information if time is accepted
+        if response['current_meeting']:
+            print(f"🟠 [GetMeetingProposals] Fetching payment information...")
+            
+            # Get listing details to know who is buyer and seller
+            cursor.execute("""
+                SELECT user_id, buyer_id FROM listings WHERE listing_id = %s
+            """, (listing_id,))
+            listing_info = cursor.fetchone()
+            seller_id = listing_info['user_id']
+            buyer_id = listing_info['buyer_id']
+            is_current_user_buyer = (user_id == buyer_id)
+            
+            print(f"🟠 [GetMeetingProposals] User roles - seller: {seller_id}, buyer: {buyer_id}, current user is buyer: {is_current_user_buyer}")
+            
+        
+        # Get payment information (regardless of whether time/location is accepted)
+        print(f"🟠 [GetMeetingProposals] Fetching payment information...")
+        
+        # Get listing details to know who is buyer and seller
+        cursor.execute("""
+            SELECT user_id, buyer_id FROM listings WHERE listing_id = %s
+        """, (listing_id,))
+        listing_info = cursor.fetchone()
+        seller_id = listing_info['user_id']
+        buyer_id = listing_info['buyer_id']
+        is_current_user_buyer = (user_id == buyer_id)
+        
+        print(f"🟠 [GetMeetingProposals] User roles - seller: {seller_id}, buyer: {buyer_id}, current user is buyer: {is_current_user_buyer}")
+        
+        cursor.execute("""
+            SELECT buyer_paid_at, seller_paid_at FROM listing_payments
+            WHERE listing_id = %s
+        """, (listing_id,))
+        payment_result = cursor.fetchone()
+        
+        user_paid_at = None
+        other_user_paid_at = None
+        
+        if payment_result:
+            buyer_paid_at = payment_result['buyer_paid_at'].isoformat() if payment_result['buyer_paid_at'] else None
+            seller_paid_at = payment_result['seller_paid_at'].isoformat() if payment_result['seller_paid_at'] else None
+            
+            # Map based on current user's role
+            if is_current_user_buyer:
+                user_paid_at = buyer_paid_at
+                other_user_paid_at = seller_paid_at
+            else:
+                user_paid_at = seller_paid_at
+                other_user_paid_at = buyer_paid_at
+            
+            print(f"  ✅ Payment info - buyer paid: {buyer_paid_at}, seller paid: {seller_paid_at}")
+            print(f"  ✅ Current user ({user_id}) paid: {user_paid_at}, other user paid: {other_user_paid_at}")
+        else:
+            print(f"  ⏳ No payment record yet")
+        
+        # Add payment info to current_meeting if it exists
+        if response['current_meeting']:
+            response['current_meeting']['userPaidAt'] = user_paid_at
+            response['current_meeting']['otherUserPaidAt'] = other_user_paid_at
+        else:
+            # Even if no current_meeting exists, return payment info at top level for UI to use
+            response['userPaidAt'] = user_paid_at
+            response['otherUserPaidAt'] = other_user_paid_at
+            print(f"🟠 [GetMeetingProposals] No current_meeting, returning payment info at top level")
+        
         connection.close()
         
         print(f"✅ [GetMeetingProposals] SUCCESS: Returning {len(response['proposals'])} proposals")
         print(f"✅ [GetMeetingProposals] Current meeting: {response['current_meeting']}")
+        print(f"✅ [GetMeetingProposals] Top-level userPaidAt: {response.get('userPaidAt', 'N/A')}")
+        print(f"✅ [GetMeetingProposals] Top-level otherUserPaidAt: {response.get('otherUserPaidAt', 'N/A')}")
         print(f"🟠 [GetMeetingProposals] ===== END GET PROPOSALS =====\n")
         return json.dumps(response)
         
@@ -172,3 +246,4 @@ def get_meeting_proposals(session_id, listing_id):
             'success': False,
             'error': f'Failed to fetch proposals: {str(e)}'
         })
+

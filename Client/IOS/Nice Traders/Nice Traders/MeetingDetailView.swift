@@ -30,6 +30,10 @@ struct MeetingDetailView: View {
     @State private var timeAcceptedAt: String? = nil
     @State private var locationAcceptedAt: String? = nil
     
+    // Payment state
+    @State private var userPaidAt: String? = nil
+    @State private var otherUserPaidAt: String? = nil
+    
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     
@@ -211,167 +215,302 @@ struct MeetingDetailView: View {
     
     private var detailsView: some View {
         VStack(spacing: 16) {
-            // Exchange Details
-            VStack(alignment: .leading, spacing: 16) {
-                Text(localizationManager.localize("EXCHANGE_DETAILS"))
-                    .font(.headline)
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                // Who is exchanging what
-                VStack(alignment: .leading, spacing: 12) {
-                    // You bringing...
-                    HStack(spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("You bring:")
-                                .font(.caption)
-                                .foregroundColor(Color(hex: "718096"))
-                            Text("$\(formatExchangeAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)) \(contactData.listing.currency)")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "2d3748"))
-                        }
-                        Spacer()
-                        Image(systemName: "arrow.right")
-                            .foregroundColor(Color(hex: "667eea"))
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("They bring:")
-                                .font(.caption)
-                                .foregroundColor(Color(hex: "718096"))
-                            Text("\(formatConvertedAmount()) \(contactData.listing.acceptCurrency ?? "")")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundColor(Color(hex: "2d3748"))
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "f7fafc"))
-                    .cornerRadius(8)
-                }
-                
-                detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
-                
-                // General Area
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(localizationManager.localize("GENERAL_AREA"))
-                        .font(.caption)
-                        .foregroundColor(Color(hex: "718096"))
-                    HStack(spacing: 8) {
-                        Image(systemName: "location.fill")
-                            .foregroundColor(Color(hex: "667eea"))
-                        Text(contactData.listing.location)
-                            .foregroundColor(Color(hex: "2d3748"))
-                        Spacer()
-                    }
-                }
-            }
-            .padding()
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            exchangeDetailsSection
+            traderInformationSection
+            timeProposalSection
+            paymentTrackingSection
+            locationProposalSection
+            ratingSection
+        }
+    }
+    
+    @ViewBuilder
+    private var exchangeDetailsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(localizationManager.localize("EXCHANGE_DETAILS"))
+                .font(.headline)
+                .foregroundColor(Color(hex: "2d3748"))
             
-            // Trader Information
             VStack(alignment: .leading, spacing: 12) {
-                Text(localizationManager.localize("TRADER_INFORMATION"))
-                    .font(.headline)
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                Text(contactData.otherUser.firstName + " " + contactData.otherUser.lastName)
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                HStack(spacing: 4) {
-                    ForEach(0..<5) { index in
-                        Image(systemName: index < Int(contactData.otherUser.rating ?? 0) ? "star.fill" : "star")
-                            .foregroundColor(index < Int(contactData.otherUser.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
+                HStack(spacing: 8) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("You bring:")
+                            .font(.caption)
+                            .foregroundColor(Color(hex: "718096"))
+                        Text("$\(formatExchangeAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)) \(contactData.listing.currency)")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "2d3748"))
                     }
-                    Text("(\(contactData.otherUser.totalTrades ?? 0) trades)")
-                        .font(.caption)
-                        .foregroundColor(Color(hex: "718096"))
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .foregroundColor(Color(hex: "667eea"))
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("They bring:")
+                            .font(.caption)
+                            .foregroundColor(Color(hex: "718096"))
+                        Text("\(formatConvertedAmount()) \(contactData.listing.acceptCurrency ?? "")")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "2d3748"))
+                    }
+                }
+                .padding()
+                .background(Color(hex: "f7fafc"))
+                .cornerRadius(8)
+            }
+            
+            detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizationManager.localize("GENERAL_AREA"))
+                    .font(.caption)
+                    .foregroundColor(Color(hex: "718096"))
+                HStack(spacing: 8) {
+                    Image(systemName: "location.fill")
+                        .foregroundColor(Color(hex: "667eea"))
+                    Text(contactData.listing.location)
+                        .foregroundColor(Color(hex: "2d3748"))
+                    Spacer()
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+    
+    @ViewBuilder
+    private var traderInformationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(localizationManager.localize("TRADER_INFORMATION"))
+                .font(.headline)
+                .foregroundColor(Color(hex: "2d3748"))
             
-            // Button Set 1: Accept/Reject/Counter - show when listing_meeting_time.accepted_at is null
-            // Button Set 1: Accept/Counter/Reject - show when time is NOT accepted (whether rejected or just not proposed yet)
-            // Determine if there's a pending time proposal
-            let timeProposals = meetingProposals.filter { $0.type == "time" }
-            let pendingTimeProposal = timeProposals.first(where: { $0.status == "pending" })
+            Text(contactData.otherUser.firstName + " " + contactData.otherUser.lastName)
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(Color(hex: "2d3748"))
             
-            if timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true {
-                // Check if I am the one who proposed the time (waiting for response)
-                if let pendingTime = pendingTimeProposal, pendingTime.isFromMe {
-                    // I proposed the time, show option to cancel my proposal
-                    VStack(alignment: .center, spacing: 12) {
-                        Text("⏳ Waiting for Acceptance")
-                            .font(.headline)
-                            .foregroundColor(Color(hex: "f59e0b"))
-                        
-                        Text("You proposed a meeting time. Waiting for the other trader to accept or counter.")
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "4a5568"))
-                        
-                        if let meeting = currentMeeting, let timeStr = meeting.time {
-                            VStack(alignment: .leading, spacing: 8) {
-                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(timeStr))
-                            }
-                            .padding(12)
-                            .background(Color(hex: "fffbeb"))
-                            .cornerRadius(8)
+            HStack(spacing: 4) {
+                ForEach(0..<5) { index in
+                    Image(systemName: index < Int(contactData.otherUser.rating ?? 0) ? "star.fill" : "star")
+                        .foregroundColor(index < Int(contactData.otherUser.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
+                }
+                Text("(\(contactData.otherUser.totalTrades ?? 0) trades)")
+                    .font(.caption)
+                    .foregroundColor(Color(hex: "718096"))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+    
+    @ViewBuilder
+    private var timeProposalSection: some View {
+        let pendingTimeProposal = meetingProposals.first(where: { 
+            !$0.proposedTime.isEmpty && $0.status == "pending"
+        })
+        
+        // Check if both users have paid (time is implicitly accepted when in payment/location phase)
+        let userHasPaid = !(userPaidAt?.isEmpty ?? true)
+        let otherUserHasPaid = !(otherUserPaidAt?.isEmpty ?? true)
+        let bothUsersPaid = userHasPaid && otherUserHasPaid
+        
+        if (timeAcceptedAt == nil || timeAcceptedAt?.isEmpty ?? true) && !bothUsersPaid {
+            // Time not accepted yet AND we haven't moved to payment phase - show proposal/response buttons
+            if let pendingTime = pendingTimeProposal, pendingTime.isFromMe {
+                // I proposed the time - show waiting/cancel message
+                VStack(alignment: .center, spacing: 12) {
+                    Text("⏳ Waiting for Acceptance")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: "f59e0b"))
+                    
+                    Text("You proposed a meeting time. Waiting for the other trader to accept or counter.")
+                        .font(.subheadline)
+                        .foregroundColor(Color(hex: "4a5568"))
+                    
+                    if let meeting = currentMeeting {
+                        VStack(alignment: .leading, spacing: 8) {
+                            detailRow(label: "TIME:", value: formatDateTime(meeting.time))
                         }
-                        
-                        Button(action: {
-                            rejectExchange()
-                        }) {
+                        .padding(12)
+                        .background(Color(hex: "fffbeb"))
+                        .cornerRadius(8)
+                    }
+                    
+                    Button(action: { rejectExchange() }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Cancel Proposal")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color(hex: "ef4444"))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+                .background(Color(hex: "fef3c7"))
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            } else if pendingTimeProposal != nil && !bothUsersPaid {
+                // They proposed the time AND we haven't moved to payment phase - show accept/counter/reject buttons
+                VStack(alignment: .center, spacing: 12) {
+                    Text("Accept this exchange?")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: "2d3748"))
+                    
+                    HStack(spacing: 12) {
+                        Button(action: { acceptExchange() }) {
                             HStack {
-                                Image(systemName: "xmark.circle.fill")
+                                Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 14))
-                                Text("Cancel Proposal")
+                                Text("Accept")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
                             .foregroundColor(.white)
-                            .background(Color(hex: "ef4444"))
+                            .background(Color(hex: "38a169"))
+                            .cornerRadius(8)
+                        }
+                        
+                        Button(action: { counterExchange() }) {
+                            HStack {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .font(.system(size: 14))
+                                Text("Counter")
+                                    .fontWeight(.semibold)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .foregroundColor(.white)
+                            .background(Color(hex: "f59e0b"))
                             .cornerRadius(8)
                         }
                     }
+                    
+                    Button(action: { rejectExchange() }) {
+                        HStack {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Reject")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(Color(hex: "ef4444"))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            }
+        } else {
+            EmptyView()
+        }
+    }
+    
+    @ViewBuilder
+    private var locationProposalSection: some View {
+        // Show location proposal UI if:
+        // 1. Time is explicitly accepted, OR
+        // 2. Both users have paid (implicit time acceptance)
+        let timeExplicitlyAccepted = timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)
+        let userHasPaid = userPaidAt != nil && !userPaidAt!.isEmpty
+        let otherUserHasPaid = otherUserPaidAt != nil && !otherUserPaidAt!.isEmpty
+        let bothUsersPaid = userHasPaid && otherUserHasPaid
+        let shouldShowLocationSection = timeExplicitlyAccepted || bothUsersPaid
+        
+        if shouldShowLocationSection {
+            let pendingLocationProposal = meetingProposals.first(where: { 
+                !$0.proposedLocation.isEmpty && $0.status == "pending"
+            })
+            let acceptedLocationProposal = meetingProposals.first(where: { 
+                !$0.proposedLocation.isEmpty && $0.status == "accepted"
+            })
+            
+            if let acceptedLoc = acceptedLocationProposal {
+                // Location has been accepted - show confirmation
+                VStack(alignment: .center, spacing: 12) {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(Color(hex: "38a169"))
+                            .font(.system(size: 20))
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Location Confirmed!")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: "38a169"))
+                            
+                            Text(acceptedLoc.proposedLocation)
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: "2d3748"))
+                        }
+                        
+                        Spacer()
+                    }
                     .padding()
-                    .background(Color(hex: "fef3c7"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                } else {
-                    // They proposed the time, I need to respond
-                    VStack(alignment: .center, spacing: 12) {
-                        Text("Accept this exchange?")
+                    .background(Color(hex: "ecfdf5"))
+                    .cornerRadius(8)
+                    
+                    HStack {
+                        Image(systemName: "map.fill")
+                            .foregroundColor(Color(hex: "667eea"))
+                        Text("Ready to Meet")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "667eea"))
+                        Spacer()
+                    }
+                    .padding()
+                    .background(Color(hex: "f0f4ff"))
+                    .cornerRadius(8)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            } else if let pendingLoc = pendingLocationProposal {
+                VStack(alignment: .center, spacing: 12) {
+                    if pendingLoc.isFromMe {
+                        Text("⏳ Waiting for Location Approval")
                             .font(.headline)
-                            .foregroundColor(Color(hex: "2d3748"))
+                            .foregroundColor(Color(hex: "f59e0b"))
+                        
+                        Text("You proposed a meeting location. Waiting for the other trader to accept or counter.")
+                            .font(.subheadline)
+                            .foregroundColor(Color(hex: "4a5568"))
                         
                         HStack(spacing: 12) {
-                            Button(action: {
-                                acceptExchange()
-                            }) {
+                            Button(action: { /* View details */ }) {
                                 HStack {
-                                    Image(systemName: "checkmark.circle.fill")
+                                    Image(systemName: "info.circle.fill")
                                         .font(.system(size: 14))
-                                    Text("Accept")
+                                    Text("View Details")
                                         .fontWeight(.semibold)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .foregroundColor(.white)
-                                .background(Color(hex: "38a169"))
+                                .background(Color(hex: "667eea"))
                                 .cornerRadius(8)
                             }
                             
-                            Button(action: {
-                                counterExchange()
-                            }) {
+                            Button(action: { counterLocationProposal(proposalId: pendingLoc.proposalId) }) {
                                 HStack {
                                     Image(systemName: "arrow.left.arrow.right")
                                         .font(.system(size: 14))
@@ -385,134 +524,32 @@ struct MeetingDetailView: View {
                                 .cornerRadius(8)
                             }
                         }
-                        
-                        Button(action: {
-                            rejectExchange()
-                        }) {
-                            HStack {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                Text("Reject")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(Color(hex: "dc2626"))
-                            .cornerRadius(8)
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "f0f9ff"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                }
-            }
-            
-            // Button Set 2a: Show when there's a PENDING location proposal (waiting for response)
-            // Only show if time IS accepted (otherwise show Accept/Counter/Reject buttons instead)
-            let locationProposals = meetingProposals.filter { $0.proposedLocation != "" }
-            if (timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)),
-               let pendingLocationProposal = locationProposals.first(where: { $0.status == "pending" }) {
-                
-                if pendingLocationProposal.isFromMe {
-                    // I proposed the location, waiting for them to respond
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("🕒 " + localizationManager.localize("AWAITING_LOCATION_RESPONSE"))
-                                .font(.headline)
-                                .foregroundColor(Color(hex: "f59e0b"))
-                            Spacer()
-                        }
-                        
-                        Text("Waiting for the other trader to respond to your location proposal.")
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "4a5568"))
-                        
-                        // Show proposed location details
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
-                            if let meeting = currentMeeting {
-                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                            }
-                        }
-                        .padding(12)
-                        .background(Color(hex: "fffbeb"))
-                        .cornerRadius(8)
-                        
-                        Button(action: {
-                            cancelLocationProposal(proposalId: pendingLocationProposal.proposalId)
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                Text("Cancel Proposal")
-                                    .fontWeight(.semibold)
-                                Spacer()
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .foregroundColor(.white)
-                            .background(Color(hex: "ef4444"))
-                            .cornerRadius(8)
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "fef3c7"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                } else {
-                    // They proposed the location, I need to respond (Accept or Counter)
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("📍 Location Proposal")
-                                .font(.headline)
-                                .foregroundColor(Color(hex: "059669"))
-                            Spacer()
-                        }
-                        
-                        Text("\(pendingLocationProposal.proposer.firstName) proposed a location.")
-                            .font(.subheadline)
-                            .foregroundColor(Color(hex: "4a5568"))
-                        
-                        // Show proposed location details
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: "Location:", value: pendingLocationProposal.proposedLocation)
-                            if let meeting = currentMeeting {
-                                detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                            }
-                        }
-                        .padding(12)
-                        .background(Color(hex: "f0fdf4"))
-                        .cornerRadius(8)
+                    } else {
+                        Text("Accept location?")
+                            .font(.headline)
+                            .foregroundColor(Color(hex: "2d3748"))
                         
                         HStack(spacing: 12) {
-                            Button(action: {
-                                respondToLocationProposal(proposalId: pendingLocationProposal.proposalId, response: "accepted")
-                            }) {
-                                HStack(spacing: 8) {
+                            Button(action: { acceptLocationProposal(proposalId: pendingLoc.proposalId) }) {
+                                HStack {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 14))
                                     Text("Accept")
                                         .fontWeight(.semibold)
-                                    Spacer()
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .foregroundColor(.white)
-                                .background(Color(hex: "10b981"))
+                                .background(Color(hex: "38a169"))
                                 .cornerRadius(8)
                             }
                             
-                            Button(action: {
-                                activeTab = .location
-                            }) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "pencil.circle.fill")
+                            Button(action: { counterLocationProposal(proposalId: pendingLoc.proposalId) }) {
+                                HStack {
+                                    Image(systemName: "arrow.left.arrow.right")
                                         .font(.system(size: 14))
-                                    Text("Change")
+                                    Text("Counter")
                                         .fontWeight(.semibold)
-                                    Spacer()
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -522,43 +559,24 @@ struct MeetingDetailView: View {
                             }
                         }
                     }
-                    .padding()
-                    .background(Color(hex: "ecfdf5"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                 }
-            }
-            // Button Set 2b: Show when time is accepted but no location proposal exists
-            else if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("⚠️ " + localizationManager.localize("MEETING_LOCATION_REQUIRED"))
-                            .font(.headline)
-                            .foregroundColor(Color(hex: "dc2626"))
-                        Spacer()
-                    }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+            } else {
+                // No pending or accepted location proposal - show button to propose one
+                VStack(alignment: .center, spacing: 12) {
+                    Text("Ready to propose a meeting location?")
+                        .font(.headline)
+                        .foregroundColor(Color(hex: "2d3748"))
                     
-                    Text("You need to agree on a meeting location and time before completing this exchange.")
-                        .font(.subheadline)
-                        .foregroundColor(Color(hex: "4a5568"))
-                    
-                    if let meeting = currentMeeting {
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                        }
-                    }
-                    
-                    Button(action: {
-                        activeTab = .location
-                    }) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "location.fill")
+                    Button(action: { proposeLocation() }) {
+                        HStack {
+                            Image(systemName: "location.circle.fill")
                                 .font(.system(size: 14))
-                            Text("PROPOSE MEETING LOCATION")
+                            Text("Propose Location")
                                 .fontWeight(.semibold)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -568,100 +586,68 @@ struct MeetingDetailView: View {
                     }
                 }
                 .padding()
-                .background(Color(hex: "fee2e2"))
+                .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
+        }
+    }
+    
+    @ViewBuilder
+    private var paymentTrackingSection: some View {
+        // Show payment section if time is accepted but location is not yet accepted AND both haven't paid yet
+        if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) {
+            // Check if both users have paid
+            let userHasPaid = userPaidAt != nil && !(userPaidAt?.isEmpty ?? true)
+            let otherUserHasPaid = otherUserPaidAt != nil && !(otherUserPaidAt?.isEmpty ?? true)
+            let bothPaid = userHasPaid && otherUserHasPaid
             
-            // Show meeting details when both time and location are accepted
-            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
-                if let meeting = currentMeeting {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("✅ " + localizationManager.localize("MEETING_AGREED"))
-                                .font(.headline)
-                                .foregroundColor(Color(hex: "38a169"))
-                            Spacer()
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            detailRow(label: localizationManager.localize("LOCATION") + ":", value: meeting.location ?? "Not set")
-                            detailRow(label: localizationManager.localize("TIME") + ":", value: formatDateTime(meeting.time))
-                            if let message = meeting.message, !message.isEmpty {
-                                detailRow(label: localizationManager.localize("NOTE") + ":", value: message)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(Color(hex: "f0fff4"))
-                    .cornerRadius(16)
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                }
-            }
-            
-            // Button Set 3: Mark Exchange Complete - show when both accepted_at values are NOT null
-            if timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true) && locationAcceptedAt != nil && !(locationAcceptedAt?.isEmpty ?? true) {
-                Button(action: completeExchange) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 16))
-                        Text("MARK EXCHANGE COMPLETE")
-                            .font(.system(size: 14, weight: .semibold))
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .foregroundColor(.white)
-                    .background(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color(hex: "10b981"), Color(hex: "059669")]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(12)
-                }
-                .padding()
-            }
-            
-            // Rating Section
-            if showRatingView && !hasSubmittedRating {
+            if !bothPaid && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(localizationManager.localize("RATE_EXCHANGE"))
+                    Text("Payment Required")
                         .font(.headline)
                         .foregroundColor(Color(hex: "2d3748"))
                     
-                    VStack(spacing: 16) {
-                        // Star Rating
-                        VStack(spacing: 8) {
-                            Text("How was your experience?")
-                                .font(.subheadline)
+                    Text("Both users need to pay $2.00 before proceeding to location negotiation.")
+                        .font(.subheadline)
+                        .foregroundColor(Color(hex: "4a5568"))
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Your Payment:")
+                                .font(.caption)
                                 .foregroundColor(Color(hex: "718096"))
-                            
-                            HStack(spacing: 12) {
-                                ForEach(1...5, id: \.self) { star in
-                                    Button(action: { userRating = star }) {
-                                        Image(systemName: star <= userRating ? "star.fill" : "star")
-                                            .font(.system(size: 28))
-                                            .foregroundColor(star <= userRating ? Color(hex: "fbbf24") : Color(hex: "cbd5e0"))
-                                    }
-                                }
-                                Spacer()
-                            }
+                            Spacer()
+                            Text(userHasPaid ? "✅ Paid" : "⏳ Pending")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(userHasPaid ? Color(hex: "38a169") : Color(hex: "f59e0b"))
                         }
+                        .padding(12)
+                        .background(Color(hex: "f7fafc"))
+                        .cornerRadius(8)
                         
-                        // Rating Message
-                        TextField("Optional: Share feedback about this exchange", text: $ratingMessage)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .lineLimit(3)
-                        
-                        // Submit Button
-                        Button(action: submitRating) {
+                        HStack {
+                            Text("Other User's Payment:")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "718096"))
+                            Spacer()
+                            Text(otherUserHasPaid ? "✅ Paid" : "⏳ Pending")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(otherUserHasPaid ? Color(hex: "38a169") : Color(hex: "f59e0b"))
+                        }
+                        .padding(12)
+                        .background(Color(hex: "f7fafc"))
+                        .cornerRadius(8)
+                    }
+                    
+                    if !userHasPaid {
+                        Button(action: { processPayment() }) {
                             HStack {
-                                Image(systemName: "paperplane.fill")
-                                Text("SUBMIT RATING")
+                                Image(systemName: "creditcard.fill")
+                                    .font(.system(size: 14))
+                                Text("Confirm Payment ($2.00)")
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -670,53 +656,61 @@ struct MeetingDetailView: View {
                             .background(Color(hex: "667eea"))
                             .cornerRadius(8)
                         }
+                    } else if !otherUserHasPaid {
+                        HStack {
+                            Image(systemName: "hourglass.end")
+                                .foregroundColor(Color(hex: "f59e0b"))
+                            Text("Awaiting other user's payment...")
+                                .font(.subheadline)
+                                .foregroundColor(Color(hex: "f59e0b"))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(hex: "fffbeb"))
+                        .cornerRadius(8)
+                    } else {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(Color(hex: "38a169"))
+                            Text("Both payments complete!")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: "38a169"))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color(hex: "ecfdf5"))
+                        .cornerRadius(8)
                     }
-                    .padding()
-                    .background(Color(hex: "f7fafc"))
-                    .cornerRadius(12)
                 }
                 .padding()
-            } else if hasSubmittedRating {
-                VStack(spacing: 12) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color(hex: "10b981"))
-                            .font(.system(size: 20))
-                        Text("Rating submitted!")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: "10b981"))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .background(Color(hex: "ecfdf5"))
-                    .cornerRadius(8)
-                }
-                .padding()
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             }
-        }
-        .padding()
-    }
-    
-    private func detailRow(label: String, value: String) -> some View {
-        VStack(spacing: 4) {
-            HStack {
-                Text(label)
-                    .font(.subheadline)
-                    .foregroundColor(Color(hex: "718096"))
-                Spacer()
-                Text(value)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(Color(hex: "2d3748"))
-            }
-            Divider()
         }
     }
     
-    // MARK: - API Functions
+    @ViewBuilder
+    private var ratingSection: some View {
+        EmptyView()
+    }
+    
+
     
     // MARK: - Helper Functions
+    
+    private func detailRow(label: String, value: String) -> some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(.caption)
+                .foregroundColor(Color(hex: "718096"))
+            Spacer()
+            Text(value)
+                .font(.caption)
+                .foregroundColor(Color(hex: "2d3748"))
+        }
+    }
     
     private func formatDateTime(_ dateString: String) -> String {
         return DateFormatters.formatCompact(dateString)
@@ -972,8 +966,10 @@ struct MeetingDetailView: View {
                             let agreedAt = (meetingData["agreed_at"] as? String) ?? ""
                             let timeAcceptedAt: String? = meetingData["timeAcceptedAt"] as? String
                             let locationAcceptedAt: String? = meetingData["locationAcceptedAt"] as? String
+                            let userPaidAt: String? = meetingData["userPaidAt"] as? String
+                            let otherUserPaidAt: String? = meetingData["otherUserPaidAt"] as? String
                             
-                            print("🟠 [MDV-LOAD] Current meeting - time=\(time), location=\(location ?? "nil"), timeAcceptedAt=\(timeAcceptedAt ?? "nil"), locationAcceptedAt=\(locationAcceptedAt ?? "nil")")
+                            print("🟠 [MDV-LOAD] Current meeting - time=\(time), location=\(location ?? "nil"), timeAcceptedAt=\(timeAcceptedAt ?? "nil"), locationAcceptedAt=\(locationAcceptedAt ?? "nil"), userPaid=\(userPaidAt ?? "nil"), otherUserPaid=\(otherUserPaidAt ?? "nil")")
                             
                             self.currentMeeting = CurrentMeeting(
                                 location: location,
@@ -987,11 +983,24 @@ struct MeetingDetailView: View {
                             )
                             self.timeAcceptedAt = timeAcceptedAt
                             self.locationAcceptedAt = locationAcceptedAt
+                            self.userPaidAt = userPaidAt
+                            self.otherUserPaidAt = otherUserPaidAt
                             print("✅ [MDV-LOAD] Set self.timeAcceptedAt to: \(self.timeAcceptedAt ?? "nil")")
                             print("✅ [MDV-LOAD] Set self.locationAcceptedAt to: \(self.locationAcceptedAt ?? "nil")")
+                            print("✅ [MDV-LOAD] Set self.userPaidAt to: \(self.userPaidAt ?? "nil")")
+                            print("✅ [MDV-LOAD] Set self.otherUserPaidAt to: \(self.otherUserPaidAt ?? "nil")")
                         }
                     } else {
-                        print("🟠 [MDV-LOAD] No current_meeting in response")
+                        print("🟠 [MDV-LOAD] No current_meeting in response - checking for top-level payment info...")
+                        // If current_meeting is null, try to get payment info from top level
+                        let userPaidAt: String? = json["userPaidAt"] as? String
+                        let otherUserPaidAt: String? = json["otherUserPaidAt"] as? String
+                        print("🟠 [MDV-LOAD] Top-level userPaidAt: \(userPaidAt ?? "nil"), otherUserPaidAt: \(otherUserPaidAt ?? "nil")")
+                        
+                        self.userPaidAt = userPaidAt
+                        self.otherUserPaidAt = otherUserPaidAt
+                        print("✅ [MDV-LOAD] Set self.userPaidAt to: \(self.userPaidAt ?? "nil")")
+                        print("✅ [MDV-LOAD] Set self.otherUserPaidAt to: \(self.otherUserPaidAt ?? "nil")")
                     }
                 } else {
                     print("🔴 [MDV-LOAD] ERROR: Response indicates failure")
@@ -1083,6 +1092,65 @@ struct MeetingDetailView: View {
         errorMessage = "Please propose a new meeting time"
     }
     
+    private func processPayment() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[MDV-PAY] No session ID available")
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Payments/ProcessPayment")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
+        ]
+        
+        guard let url = components.url else {
+            print("[MDV-PAY] Failed to construct payment URL")
+            return
+        }
+        
+        isLoading = true
+        print("[MDV-PAY] Processing payment - calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                print("[MDV-PAY] Payment response received")
+                
+                if let error = error {
+                    print("[MDV-PAY] Payment error: \(error.localizedDescription)")
+                    self.errorMessage = "Payment failed: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[MDV-PAY] Payment HTTP status: \(httpResponse.statusCode)")
+                }
+                
+                if let data = data {
+                    print("[MDV-PAY] Response data: \(String(data: data, encoding: .utf8) ?? "no data")")
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        if let success = json["success"] as? Bool, success {
+                            print("[MDV-PAY] Payment successful")
+                            // Reload proposals to get updated payment status from server
+                            print("[MDV-PAY] Reloading proposals to get updated payment status...")
+                            self.loadMeetingProposals()
+                        } else {
+                            let errorMsg = json["error"] as? String ?? "Payment processing failed"
+                            self.errorMessage = errorMsg
+                            print("[MDV-PAY] Payment failed: \(errorMsg)")
+                        }
+                    } else {
+                        print("[MDV-PAY] Failed to parse response")
+                        self.errorMessage = "Invalid response format"
+                    }
+                }
+            }
+        }.resume()
+    }
+    
     private func rejectExchange() {
         guard let sessionId = SessionManager.shared.sessionId else {
             errorMessage = "No active session"
@@ -1129,6 +1197,76 @@ struct MeetingDetailView: View {
                 }
             }
         }.resume()
+    }
+    
+    private func proposeLocation() {
+        print("[MDV-ACTION] Propose location action triggered")
+        activeTab = .location
+    }
+    
+    private func acceptLocationProposal(proposalId: String) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            print("[MDV-ACTION] ERROR: No session ID available")
+            return
+        }
+        
+        print("[MDV-ACTION] Accept location proposal: \(proposalId)")
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "proposalId", value: proposalId),
+            URLQueryItem(name: "response", value: "accepted")
+        ]
+        
+        guard let url = components.url else {
+            print("[MDV-ACTION] ERROR: Failed to construct URL")
+            return
+        }
+        
+        print("[MDV-ACTION] Calling: \(url.absoluteString)")
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                print("[MDV-ACTION] Response received")
+                
+                if let error = error {
+                    print("[MDV-ACTION] ERROR: \(error.localizedDescription)")
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("[MDV-ACTION] HTTP Status: \(httpResponse.statusCode)")
+                }
+                
+                if let data = data {
+                    let responseStr = String(data: data, encoding: .utf8) ?? "no data"
+                    print("[MDV-ACTION] Response: \(responseStr)")
+                    
+                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        if let success = json["success"] as? Bool, success {
+                            print("✅ [MDV-ACTION] Location accepted successfully!")
+                            // Reload proposals to show updated state
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                self.loadMeetingProposals()
+                            }
+                        } else {
+                            let errorMsg = json["error"] as? String ?? "Unknown error"
+                            print("[MDV-ACTION] ERROR: \(errorMsg)")
+                            self.errorMessage = errorMsg
+                        }
+                    }
+                }
+            }
+        }.resume()
+    }
+    
+    private func counterLocationProposal(proposalId: String) {
+        print("[MDV-ACTION] Counter location proposal: \(proposalId)")
+        // TODO: Navigate to MeetingLocationView for counter proposal
     }
     
                     private func cancelLocationProposal(proposalId: String) {

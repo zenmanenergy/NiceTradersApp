@@ -31,6 +31,17 @@ struct DashboardView: View {
     @State private var navigateToNegotiation = false
     @State private var selectedExchangeId: String?
     
+    var uniqueActiveExchanges: [ActiveExchange] {
+        var seenIds = Set<String>()
+        return allActiveExchanges.filter { exchange in
+            if seenIds.contains(exchange.id) {
+                return false
+            }
+            seenIds.insert(exchange.id)
+            return true
+        }
+    }
+    
     var body: some View {
         return ZStack {
             if isLoading {
@@ -46,7 +57,7 @@ struct DashboardView: View {
                 MainDashboardView(
                     user: user,
                     myListings: myListings,
-                    allActiveExchanges: allActiveExchanges,
+                    allActiveExchanges: uniqueActiveExchanges,
                     purchasedContactsData: purchasedContactsData,
                     pendingNegotiations: pendingNegotiations,
                     selectedContactData: $selectedContactData,
@@ -198,6 +209,9 @@ struct DashboardView: View {
         // Clear existing data to prevent duplicates
         allActiveExchanges = []
         purchasedContactsData = []
+        
+        // Global set to track seen listing IDs across all sources
+        var globalSeenIds = Set<String>()
         pendingNegotiations = []
         
         // Get dashboard summary
@@ -417,7 +431,16 @@ struct DashboardView: View {
                     }
                     
                     print("[DashboardView] Successfully parsed \(dashboardExchanges.count) exchanges")
-                    self.allActiveExchanges.append(contentsOf: dashboardExchanges)
+                    // Filter out duplicates using global seen IDs
+                    let uniqueDashboardExchanges = dashboardExchanges.filter { exchange in
+                        if globalSeenIds.contains(exchange.id) {
+                            print("[DashboardView] Skipping duplicate exchange: \(exchange.id)")
+                            return false
+                        }
+                        globalSeenIds.insert(exchange.id)
+                        return true
+                    }
+                    self.allActiveExchanges.append(contentsOf: uniqueDashboardExchanges)
                     
                     // Also fetch proposals for active exchanges (buyer's perspective)
                     print("[DEBUG] Fetching proposals for \(dashboardExchanges.count) active exchanges")
@@ -608,12 +631,12 @@ struct DashboardView: View {
             
             
             // Deduplicate purchased exchanges by listing ID before adding
-            var seenIds = Set<String>()
             let uniquePurchasedExchanges = purchasedExchanges.filter { exchange in
-                if seenIds.contains(exchange.id) {
+                if globalSeenIds.contains(exchange.id) {
+                    print("[DashboardView] Skipping duplicate purchased exchange: \(exchange.id)")
                     return false
                 }
-                seenIds.insert(exchange.id)
+                globalSeenIds.insert(exchange.id)
                 return true
             }
             
