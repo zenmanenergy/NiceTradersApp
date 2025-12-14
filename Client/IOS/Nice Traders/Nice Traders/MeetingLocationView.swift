@@ -9,7 +9,7 @@ import CoreLocation
 
 struct MeetingLocationView: View {
     let contactData: ContactData
-    let displayStatus: String?
+    let initialDisplayStatus: String?
     @ObservedObject var localizationManager = LocalizationManager.shared
     @ObservedObject var locationManager = LocationManager()
     
@@ -17,6 +17,7 @@ struct MeetingLocationView: View {
     @Binding var meetingProposals: [MeetingProposal]
     var onBackTapped: (() -> Void)?
     
+    @State private var displayStatus: String?
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var searchText: String = ""
     @State private var searchResults: [MapSearchResult] = []
@@ -303,9 +304,17 @@ struct MeetingLocationView: View {
         }
         .onAppear {
             print("[DEBUG MLV] MeetingLocationView appeared")
+            // Initialize displayStatus with initial value
+            if displayStatus == nil {
+                displayStatus = initialDisplayStatus
+            }
+            print("[DEBUG MLV] displayStatus: \(displayStatus ?? "nil")")
             print("[DEBUG MLV] Listing: \(contactData.listing.latitude), \(contactData.listing.longitude)")
             print("[DEBUG MLV] Radius: \(contactData.listing.radius)")
             print("[DEBUG MLV] Meeting proposals count: \(meetingProposals.count)")
+            
+            // Refresh displayStatus from server
+            refreshDisplayStatus()
             
             for (i, proposal) in meetingProposals.enumerated() {
                 print("[DEBUG MLV] Proposal \(i): id=\(proposal.proposalId), location='\(proposal.proposedLocation)', status=\(proposal.status), type=location?\(!proposal.proposedLocation.isEmpty)")
@@ -315,6 +324,49 @@ struct MeetingLocationView: View {
                 print("[DEBUG MLV] WARNING: Listing coordinates are 0,0!")
             }
         }
+    }
+    
+    private func refreshDisplayStatus() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("[DEBUG MLV refreshDisplayStatus] ERROR: No session ID available")
+            return
+        }
+        
+        print("[DEBUG MLV refreshDisplayStatus] Starting refresh...")
+        
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Meeting/GetMeetingProposals")!
+        components.queryItems = [
+            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
+        ]
+        
+        guard let url = components.url else {
+            print("[DEBUG MLV refreshDisplayStatus] ERROR: Failed to construct URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                guard let data = data, error == nil else {
+                    print("[DEBUG MLV refreshDisplayStatus] ERROR: Network error - \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success {
+                    
+                    if let newDisplayStatus = json["displayStatus"] as? String {
+                        print("[DEBUG MLV refreshDisplayStatus] Updated displayStatus: \(newDisplayStatus)")
+                        self.displayStatus = newDisplayStatus
+                    } else {
+                        print("[DEBUG MLV refreshDisplayStatus] WARNING: displayStatus not in response")
+                    }
+                } else {
+                    print("[DEBUG MLV refreshDisplayStatus] ERROR: Failed to parse response")
+                }
+            }
+        }.resume()
     }
     
     private func centerMapOnListing() {
@@ -821,6 +873,7 @@ struct SearchResultRow: View {
     @ObservedObject var localizationManager = LocalizationManager.shared
     
     var body: some View {
+        let _ = print("[DEBUG SRR] Row render - result: \(result.name), isSelected: \(isSelected), displayStatus: \(displayStatus ?? "nil"), shouldShowButton: \(isSelected && (displayStatus?.contains("Action: Propose Location") ?? false))")
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {

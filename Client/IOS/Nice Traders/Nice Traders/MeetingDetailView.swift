@@ -10,7 +10,7 @@ import SwiftUI
 
 struct MeetingDetailView: View {
     let contactData: ContactData
-    let displayStatus: String?
+    let initialDisplayStatus: String?
     @Environment(\.dismiss) var dismiss
     @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToContact: Bool
@@ -28,6 +28,7 @@ struct MeetingDetailView: View {
     // Meeting state - shared with child views
     @State private var currentMeeting: CurrentMeeting?
     @State private var meetingProposals: [MeetingProposal] = []
+    @State private var displayStatus: String?
     @State private var timeAcceptedAt: String? = nil
     @State private var locationAcceptedAt: String? = nil
     
@@ -121,7 +122,7 @@ struct MeetingDetailView: View {
                             case .location:
                                 MeetingLocationView(
                                     contactData: contactData,
-                                    displayStatus: displayStatus,
+                                    initialDisplayStatus: displayStatus,
                                     currentMeeting: $currentMeeting,
                                     meetingProposals: $meetingProposals,
                                     onBackTapped: {
@@ -209,6 +210,10 @@ struct MeetingDetailView: View {
         .navigationBarHidden(true)
         .onAppear {
             print("VIEW: MeetingDetailView")
+            // Initialize displayStatus with initial value
+            if displayStatus == nil {
+                displayStatus = initialDisplayStatus
+            }
             loadMeetingProposals()
         }
     }
@@ -915,6 +920,12 @@ struct MeetingDetailView: View {
                    let success = json["success"] as? Bool, success {
                     
                     print("✅ [MDV-LOAD] Response successful")
+                    
+                    // Update displayStatus from server
+                    if let newDisplayStatus = json["displayStatus"] as? String {
+                        print("🟠 [MDV-LOAD] Updated displayStatus: \(newDisplayStatus)")
+                        self.displayStatus = newDisplayStatus
+                    }
                     
                     // Parse proposals
                     if let proposalsData = json["proposals"] as? [[String: Any]] {

@@ -1,4 +1,5 @@
 from _Lib import Database
+from Dashboard.GetUserDashboard import calculate_negotiation_status
 import json
 
 def get_meeting_proposals(session_id, listing_id):
@@ -56,10 +57,34 @@ def get_meeting_proposals(session_id, listing_id):
             connection.close()
             return json.dumps({'success': False, 'error': 'Access denied'})
         
+        # Get exchange data for displayStatus calculation
+        cursor.execute("""
+            SELECT 
+                l.listing_id, lmt.buyer_id, l.user_id as seller_id,
+                lmt.proposed_by, lmt.meeting_time, lmt.accepted_at, lmt.rejected_at,
+                lp.buyer_paid_at, lp.seller_paid_at,
+                CASE WHEN lml.location_negotiation_id IS NOT NULL THEN 1 ELSE 0 END as has_location_proposal,
+                lml.proposed_by as location_proposed_by,
+                lml.accepted_at as location_accepted_at
+            FROM listings l
+            JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+            LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
+            LEFT JOIN listing_meeting_location lml ON l.listing_id = lml.listing_id
+            WHERE l.listing_id = %s
+            LIMIT 1
+        """, (listing_id,))
+        exchange_data = cursor.fetchone()
+        
+        display_status = None
+        if exchange_data:
+            display_status = calculate_negotiation_status(exchange_data, user_id)
+            print(f"🟠 [GetMeetingProposals] Calculated displayStatus: {display_status}")
+        
         response = {
             'success': True,
             'proposals': [],
-            'current_meeting': None
+            'current_meeting': None,
+            'displayStatus': display_status
         }
         
         # Get time proposals

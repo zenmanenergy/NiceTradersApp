@@ -22,7 +22,7 @@ struct DashboardView: View {
                     viewModel.loadDashboardData()
                 }
             } else if navigateToContact && selectedContactData != nil {
-                MeetingDetailView(contactData: selectedContactData!, displayStatus: selectedDisplayStatus, navigateToContact: $navigateToContact)
+                MeetingDetailView(contactData: selectedContactData!, initialDisplayStatus: selectedDisplayStatus, navigateToContact: $navigateToContact)
             } else {
                 MainDashboardView(
                     viewModel: viewModel,
