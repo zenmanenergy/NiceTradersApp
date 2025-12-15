@@ -20,18 +20,6 @@ struct UserProfile: Codable {
     var bio: String
 }
 
-struct ExchangeHistoryItem: Identifiable, Codable {
-    let id: String
-    let date: String
-    let currency: String
-    let amount: Int
-    let partner: String
-    let rating: Int
-    let type: String
-    let status: String
-}
-
-
 
 struct ProfileView: View {
     @Environment(\.dismiss) var dismiss
@@ -49,13 +37,10 @@ struct ProfileView: View {
         bio: ""
     )
     
-    @State private var exchangeHistory: [ExchangeHistoryItem] = []
-    
     @State private var isEditing = false
     @State private var editedUser: UserProfile?
     @State private var isLoading = true
 
-    @State private var navigateToExchangeHistory = false
     @State private var navigateToLanguagePicker = false
     @State private var profileRefreshId = UUID()
     
@@ -82,17 +67,11 @@ struct ProfileView: View {
                         // Stats Section
                         statsSection
                         
-                        // Exchange History Button
-                        exchangeHistoryButton
-                        
                         // Contact Info
                         contactSection
                         
                         // Settings
                         settingsSection
-                        
-                        // Recent Exchanges
-                        recentExchangesSection
                         
                         // Account Actions
                         accountActionsSection
@@ -108,9 +87,6 @@ struct ProfileView: View {
         }
         .background(Color(hex: "f8fafc"))
         .navigationBarHidden(true)
-        .navigationDestination(isPresented: $navigateToExchangeHistory) {
-            ExchangeHistoryView(showExchangeHistory: $navigateToExchangeHistory)
-        }
         .navigationDestination(isPresented: $navigateToLanguagePicker) {
             LanguagePickerView()
         }
@@ -118,8 +94,6 @@ struct ProfileView: View {
             print("VIEW: ProfileView")
             let savedInDefaults = UserDefaults.standard.string(forKey: "AppLanguage")
             loadProfileData()
-        }
-        .onChange(of: navigateToExchangeHistory) { newValue in
         }
         .onChange(of: localizationManager.languageVersion) { newVersion in
             profileRefreshId = UUID()
@@ -393,39 +367,7 @@ struct ProfileView: View {
         }
     }
     
-    // MARK: - Exchange History Button
-    var exchangeHistoryButton: some View {
-        Button(action: {
-            navigateToExchangeHistory = true
-        }) {
-            HStack(spacing: 16) {
-                Text("📊")
-                    .font(.system(size: 24))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(localizationManager.localize("VIEW_EXCHANGE_HISTORY"))
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color(hex: "2d3748"))
-                    
-                    Text(localizationManager.localize("SEE_ALL_PAST_EXCHANGES"))
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "718096"))
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundColor(Color(hex: "cbd5e0"))
-            }
-            .padding(16)
-            .background(Color.white)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-            )
-        }
-    }
+    // Exchange history button removed - view deprecated
     
     // MARK: - Contact Section
     var contactSection: some View {
@@ -558,89 +500,6 @@ struct ProfileView: View {
     }
     
     // MARK: - Recent Exchanges Section
-    var recentExchangesSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(localizationManager.localize("RECENT_EXCHANGES"))
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                Spacer()
-                
-                Button(action: {
-                    navigateToExchangeHistory = true
-                }) {
-                    Text(localizationManager.localize("VIEW_ALL"))
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(hex: "667eea"))
-                }
-            }
-            
-            VStack(spacing: 12) {
-                ForEach(exchangeHistory.prefix(3)) { exchange in
-                    exchangeHistoryItem(exchange)
-                }
-            }
-        }
-    }
-    
-    func exchangeHistoryItem(_ exchange: ExchangeHistoryItem) -> some View {
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    Text(exchange.currency)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color(hex: "667eea"))
-                        .cornerRadius(20)
-                    
-                    Text(exchange.type.capitalized)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(exchange.type == "sold" ? Color(hex: "c53030") : Color(hex: "22543d"))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(exchange.type == "sold" ? Color(hex: "fed7d7") : Color(hex: "c6f6d5"))
-                        .cornerRadius(20)
-                }
-                
-                Text("$\(exchange.amount)")
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                HStack {
-                    Text(exchange.partner)
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "718096"))
-                    
-                    Spacer()
-                    
-                    Text(formatDate(exchange.date))
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "718096"))
-                }
-                
-                HStack(spacing: 2) {
-                    ForEach(0..<5) { index in
-                        Text("⭐")
-                            .font(.system(size: 13))
-                            .opacity(index < exchange.rating ? 1.0 : 0.3)
-                    }
-                }
-            }
-            
-            Image(systemName: "chevron.right")
-                .foregroundColor(Color(hex: "a0aec0"))
-        }
-        .padding(16)
-        .background(Color.white)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(hex: "e2e8f0"), lineWidth: 2)
-        )
-    }
     
     // MARK: - Account Actions Section
     var accountActionsSection: some View {
@@ -791,41 +650,6 @@ struct ProfileView: View {
                     user.completedExchanges = profile["completedExchanges"] as? Int ?? user.completedExchanges
                     user.verificationStatus = profile["verificationStatus"] as? String ?? user.verificationStatus
                     user.joinDate = profile["joinDate"] as? String ?? user.joinDate
-                }
-            }
-        }.resume()
-        
-        // Load exchange history
-        let historyURL = URL(string: "\(Settings.shared.baseURL)/Profile/GetExchangeHistory?SessionId=\(sessionId)")!
-        URLSession.shared.dataTask(with: historyURL) { data, response, error in
-            DispatchQueue.main.async {
-                if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let exchanges = json["exchanges"] as? [[String: Any]] {
-                    
-                    exchangeHistory = exchanges.compactMap { dict -> ExchangeHistoryItem? in
-                        guard let id = dict["id"] as? String,
-                              let date = dict["date"] as? String,
-                              let currency = dict["currency"] as? String,
-                              let amount = dict["amount"] as? Int,
-                              let partner = dict["partner"] as? String,
-                              let rating = dict["rating"] as? Int,
-                              let type = dict["type"] as? String,
-                              let status = dict["status"] as? String else {
-                            return nil
-                        }
-                        
-                        return ExchangeHistoryItem(
-                            id: id,
-                            date: date,
-                            currency: currency,
-                            amount: amount,
-                            partner: partner,
-                            rating: rating,
-                            type: type,
-                            status: status
-                        )
-                    }
                 }
                 isLoading = false
             }

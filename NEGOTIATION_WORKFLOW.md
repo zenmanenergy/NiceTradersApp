@@ -413,16 +413,7 @@ If Countered at Any Stage (repeats until accepted):
 2. Fetch listing, time negotiation, location negotiation, and payment records
 3. Validate all prerequisites are met
 4. Determine user role (buyer or seller) and identify partner
-5. Create exchange_history record with:
-   - ExchangeId (UUID)
-   - user_id (person marking complete)
-   - ExchangeDate (current timestamp)
-   - Currency (from listing)
-   - Amount (from listing)
-   - PartnerName (opposite party's name)
-   - Rating (starts at 0, updated when user rates)
-   - Notes (completion notes or auto-generated message)
-   - TransactionType ('buy' if user is buyer, 'sell' if user is seller)
+5. Mark listing as completed
 6. Return success response with `partner_id` for rating step
 
 **Response:**
@@ -465,8 +456,7 @@ If Countered at Any Stage (repeats until accepted):
 - **Backend:** Creates user_ratings record and updates user's overall rating
 
 **Database Records Created:**
-1. **exchange_history**: Documents the completed transaction
-2. **user_ratings**: Records the rating given by current user to partner
+1. **user_ratings**: Records the rating given by current user to partner
 
 ---
 

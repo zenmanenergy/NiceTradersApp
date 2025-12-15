@@ -4,7 +4,7 @@ Removes the accepted time but keeps the proposal history
 """
 
 import pymysql
-from _Lib.Database import Database
+from _Lib.Database import ConnectToDatabase
 
 def cancel_meeting_time(session_id, listing_id):
     """

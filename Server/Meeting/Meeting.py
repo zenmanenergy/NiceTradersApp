@@ -112,8 +112,8 @@ def UpdateLocation():
         longitude = float(request_data.get('longitude'))
         
         # Verify session and get user ID
-        from _Lib.Database import Database
-        cursor, connection = Database.ConnectToDatabase()
+        from _Lib.Database import ConnectToDatabase
+        cursor, connection = ConnectToDatabase()
         
         session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))
@@ -147,8 +147,8 @@ def GetOtherUserLocation():
         proposal_id = request_data.get('proposalId')
         
         # Verify session and get user ID
-        from _Lib.Database import Database
-        cursor, connection = Database.ConnectToDatabase()
+        from _Lib.Database import ConnectToDatabase
+        cursor, connection = ConnectToDatabase()
         
         session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))
@@ -180,8 +180,8 @@ def GetTrackingStatus():
         proposal_id = request_data.get('proposalId')
         
         # Verify session and get user ID
-        from _Lib.Database import Database
-        cursor, connection = Database.ConnectToDatabase()
+        from _Lib.Database import ConnectToDatabase
+        cursor, connection = ConnectToDatabase()
         
         session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
         cursor.execute(session_query, (session_id,))

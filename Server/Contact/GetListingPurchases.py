@@ -75,6 +75,7 @@ def get_listing_purchases(session_id):
             JOIN listings l ON ca.listing_id = l.listing_id
             JOIN users u ON ca.user_id = u.user_id
             WHERE l.user_id = %s 
+            AND l.status != 'completed'
             AND ca.rn = 1
             ORDER BY ca.purchased_at DESC
         """
@@ -124,6 +125,7 @@ def get_listing_purchases(session_id):
             JOIN listings l ON ca.listing_id = l.listing_id
             JOIN users u ON ca.user_id = u.user_id
             WHERE l.user_id = %s 
+            AND l.status != 'completed'
             AND ca.rn = 1
             AND ca.user_id != l.user_id
             ORDER BY ca.purchased_at DESC

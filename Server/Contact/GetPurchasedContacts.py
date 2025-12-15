@@ -79,6 +79,7 @@ def get_purchased_contacts(session_id):
                 JOIN listings l ON ca.listing_id = l.listing_id
                 JOIN users u ON l.user_id = u.user_id
                 WHERE ca.rn = 1
+                AND l.status != 'completed'
                 ORDER BY ca.purchased_at DESC
             """
         else:
@@ -132,6 +133,7 @@ def get_purchased_contacts(session_id):
                 JOIN listings l ON ca.listing_id = l.listing_id AND ca.user_id != l.user_id
                 JOIN users u ON l.user_id = u.user_id
                 WHERE ca.rn = 1
+                AND l.status != 'completed'
                 ORDER BY ca.purchased_at DESC
             """
         

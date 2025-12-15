@@ -4,7 +4,7 @@ Removes the accepted location proposal but keeps history
 """
 
 import pymysql
-from _Lib.Database import Database
+from _Lib.Database import ConnectToDatabase
 
 def cancel_location(session_id, listing_id):
     """

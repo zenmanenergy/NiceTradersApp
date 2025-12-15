@@ -61,31 +61,7 @@ def setup_situation_7():
             UPDATE listings SET status = 'completed' WHERE listing_id = %s
         """, (LISTING_ID,))
         
-        # Step 7: Create exchange history records for both users
-        exchange_id = str(__import__('uuid').uuid4())
-        cursor.execute("""
-            INSERT INTO exchange_history (
-                ExchangeId, user_id, ExchangeDate, Currency, Amount,
-                PartnerName, Rating, Notes, TransactionType
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (exchange_id, BUYER_ID, now, 'USD', 100.00,
-              f'{SELLER_FIRST_NAME} {SELLER_LAST_NAME}', 5,
-              'Great exchange!', 'buy'))
-        
-        # Seller's exchange history
-        seller_exchange_id = str(__import__('uuid').uuid4())
-        cursor.execute("""
-            INSERT INTO exchange_history (
-                ExchangeId, user_id, ExchangeDate, Currency, Amount,
-                PartnerName, Rating, Notes, TransactionType
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, (seller_exchange_id, SELLER_ID, now, 'USD', 100.00,
-              f'{BUYER_FIRST_NAME} {BUYER_LAST_NAME}', 5,
-              'Excellent buyer!', 'sell'))
-        
-        # Step 8: Create rating records
+        # Step 7: Create rating records
         cursor.execute("""
             INSERT INTO user_ratings (
                 rating_id, user_id, rater_id, rating, review

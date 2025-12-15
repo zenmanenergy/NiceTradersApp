@@ -648,8 +648,6 @@ class LocalizationManager: NSObject, ObservableObject {
     // Dashboard strings
     var dashboard: String { localize("DASHBOARD") }
     var purchasedContacts: String { localize("PURCHASED_CONTACTS") }
-    var recentExchanges: String { localize("RECENT_EXCHANGES") }
-    var exchangeHistory: String { localize("EXCHANGE_HISTORY") }
     
     // Search strings
     var searchListings: String { localize("SEARCH_LISTINGS") }

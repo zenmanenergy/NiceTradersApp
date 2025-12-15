@@ -240,7 +240,6 @@ CREATE TABLE user_ratings (
     rating_id CHAR(39) PRIMARY KEY,
     user_id CHAR(39) NOT NULL, -- user being rated
     rater_id CHAR(39) NOT NULL, -- user giving the rating
-    transaction_id CHAR(39) NULL, -- related transaction
     rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
     review TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -250,8 +249,7 @@ CREATE TABLE user_ratings (
     INDEX idx_created_at (created_at),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (rater_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (transaction_id) REFERENCES transactions(transaction_id) ON DELETE SET NULL,
-    UNIQUE KEY unique_rating (rater_id, transaction_id) -- Prevent multiple ratings for same transaction
+    UNIQUE KEY unique_rating (rater_id, user_id) -- Prevent multiple ratings from same rater to same user
 );
 
 -- Re-enable foreign key checks
@@ -319,23 +317,6 @@ CREATE TABLE exchange_rate_logs (
     error_message TEXT,
     INDEX idx_timestamp (download_timestamp),
     INDEX idx_success (success)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create exchange history table for user exchange records
-CREATE TABLE exchange_history (
-    ExchangeId CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    ExchangeDate DATETIME NOT NULL,
-    Currency VARCHAR(10) NOT NULL,
-    Amount DECIMAL(15,2) NOT NULL,
-    PartnerName VARCHAR(200),
-    Rating TINYINT CHECK (Rating >= 1 AND Rating <= 5),
-    Notes TEXT,
-    TransactionType ENUM('buy', 'sell') DEFAULT 'sell',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_exchange_date (ExchangeDate),
-    INDEX idx_currency (Currency)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Create translations table for managing translations
@@ -475,7 +456,6 @@ SELECT 'Complete NiceTradersApp database schema created successfully!' as status
 SELECT 'All ID columns are CHAR(39) for consistent sizing' as note;
 SELECT 'Includes Contact module tables: contact_access, messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
 SELECT 'Includes Exchange Rates tables: exchange_rates, exchange_rate_logs' as exchange_rate_tables;
-SELECT 'Includes exchange_history table for user transaction records' as exchange_history_table;
 SELECT 'Includes password_reset_tokens for forgot password functionality' as password_reset_table;
 SELECT 'Includes geocoding_cache for reverse geocoding optimization' as geocoding_table;
 SELECT 'Ready for use with Flask application and all functionality' as ready;

@@ -35,7 +35,7 @@ struct ActiveExchangesSection: View {
                     .foregroundColor(.white.opacity(0.7))
                     .padding()
             } else {
-                ForEach(exchanges) { exchange in
+                ForEach(exchanges, id: \.id) { exchange in
                     ActiveExchangeCard(exchange: exchange)
                         .onTapGesture {
                             navigateToExchange(exchange)

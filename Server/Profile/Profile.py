@@ -4,7 +4,6 @@ from flask import Blueprint, request
 from flask_cors import CORS, cross_origin
 from .GetProfile import get_profile
 from .UpdateProfile import update_profile
-from .GetExchangeHistory import get_exchange_history
 from .UpdateSettings import update_settings
 from .DeleteAccount import delete_account
 from .UpdateDeviceToken import update_device_token
@@ -47,19 +46,7 @@ def UpdateProfile():
 	except Exception as e:
 		return Debugger(e)
 
-@blueprint.route("/Profile/GetExchangeHistory", methods=['GET'])
-@cross_origin()
-def GetExchangeHistory():
-	try:
-		HistoryData = request.args.to_dict()
-		SessionId = HistoryData.get('SessionId', None)
-		
-		result = get_exchange_history(SessionId)
-		return result
-	except Exception as e:
-		return Debugger(e)
-
-@blueprint.route("/Profile/UpdateSettings", methods=['GET'])
+@blueprint.route("/Profile/UpdateSettings", methods=['GET', 'POST'])
 @cross_origin()
 def UpdateSettings():
 	try:

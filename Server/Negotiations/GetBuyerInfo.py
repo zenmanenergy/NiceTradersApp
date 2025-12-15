@@ -46,31 +46,6 @@ def get_buyer_info(buyer_id, session_id):
                 'error': 'Buyer not found'
             })
         
-        # Get buyer's recent transaction history (completed exchanges)
-        cursor.execute("""
-            SELECT 
-                ExchangeDate,
-                Currency,
-                Amount,
-                Rating
-            FROM exchange_history
-            WHERE user_id = %s
-            ORDER BY ExchangeDate DESC
-            LIMIT 10
-        """, (buyer_id,))
-        
-        transaction_history = cursor.fetchall()
-        
-        # Format transaction history
-        history_list = []
-        for txn in transaction_history:
-            history_list.append({
-                'date': txn['ExchangeDate'].isoformat() if txn['ExchangeDate'] else None,
-                'currency': txn['Currency'],
-                'amount': float(txn['Amount']) if txn['Amount'] else 0,
-                'rating': txn['Rating']
-            })
-        
         # Get buyer's ratings received
         cursor.execute("""
             SELECT 
@@ -110,7 +85,6 @@ def get_buyer_info(buyer_id, session_id):
                 'rating': avg_rating,
                 'totalExchanges': total_exchanges,
                 'memberSince': member_since,
-                'transactionHistory': history_list,
                 'recentRatings': ratings_list
             }
         }

@@ -45,7 +45,6 @@ The "Mark Exchange Complete" button in the iOS app was not working, and the rati
    - Verifies session
    - Gets listing & participant info
    - Checks both parties paid, time agreed, location agreed
-   - Creates exchange_history record
    - Returns: { success: true, partner_id: "USER_ID_TO_RATE", ... }
    ↓
 4. iOS receives response, shows rating view

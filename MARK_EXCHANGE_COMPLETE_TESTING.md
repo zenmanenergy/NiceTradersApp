@@ -34,7 +34,7 @@ The "mark exchange complete" feature now works end-to-end, properly triggering t
      - ✅ Verify session
      - ✅ Validate both time and location are agreed
      - ✅ Validate both parties have paid
-     - ✅ Create exchange_history record
+     - ✅ Mark listing as completed
      - ✅ Return partner_id
 
 3. **Rating view should appear**
@@ -63,12 +63,6 @@ The "mark exchange complete" feature now works end-to-end, properly triggering t
 After completing an exchange, you can verify the data was saved:
 
 ```sql
--- Check exchange history
-SELECT * FROM exchange_history 
-WHERE user_id = 'USER_ID' 
-ORDER BY ExchangeDate DESC 
-LIMIT 1;
-
 -- Check rating was saved
 SELECT * FROM user_ratings 
 WHERE rater_id = 'RATER_ID' 

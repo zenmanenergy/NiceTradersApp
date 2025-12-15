@@ -148,29 +148,13 @@ def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
         
         print(f"[CompleteExchange] Partner name: {partner_name}")
         
-        # Determine transaction type
-        transaction_type = 'buy' if is_buyer else 'sell'
-        
-        # Create exchange history record
-        exchange_id = str(uuid.uuid4())
-        
-        print(f"[CompleteExchange] Creating exchange history record: exchange_id={exchange_id}, type={transaction_type}")
-        
-        history_insert_query = """
-            INSERT INTO exchange_history 
-            (ExchangeId, user_id, ExchangeDate, Currency, Amount, PartnerName, Rating, Notes, TransactionType, created_at)
-            VALUES (%s, %s, NOW(), %s, %s, %s, %s, %s, %s, NOW())
-        """
-        cursor.execute(history_insert_query, (
-            exchange_id,
-            user_id,
-            listing['currency'],
-            float(listing['amount']),
-            partner_name,
-            0,
-            CompletionNotes or f"Exchange completed for {listing['currency']} {listing['amount']}",
-            transaction_type
-        ))
+        # Mark listing as completed
+        print(f"[CompleteExchange] Marking listing as completed: {listing_id}")
+        cursor.execute("""
+            UPDATE listings
+            SET status = 'completed'
+            WHERE listing_id = %s
+        """, (listing_id,))
         
         connection.commit()
         print(f"[CompleteExchange] Committed to database")

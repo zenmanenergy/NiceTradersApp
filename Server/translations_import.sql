@@ -137,7 +137,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'en', 'Exchange Stats') ON DUPLICATE KEY UPDATE translation_value = 'Exchange Stats';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'en', 'Member since:') ON DUPLICATE KEY UPDATE translation_value = 'Member since:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'en', 'Save Changes') ON DUPLICATE KEY UPDATE translation_value = 'Save Changes';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'en', 'View Exchange History') ON DUPLICATE KEY UPDATE translation_value = 'View Exchange History';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'en', 'See all your past exchanges') ON DUPLICATE KEY UPDATE translation_value = 'See all your past exchanges';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'en', 'Contact Information') ON DUPLICATE KEY UPDATE translation_value = 'Contact Information';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'en', 'Notifications') ON DUPLICATE KEY UPDATE translation_value = 'Notifications';
@@ -146,7 +145,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'en', 'Dashboard') ON DUPLICATE KEY UPDATE translation_value = 'Dashboard';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'en', 'Purchased Contacts') ON DUPLICATE KEY UPDATE translation_value = 'Purchased Contacts';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'en', 'Recent Exchanges') ON DUPLICATE KEY UPDATE translation_value = 'Recent Exchanges';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'en', 'Exchange History') ON DUPLICATE KEY UPDATE translation_value = 'Exchange History';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'en', 'Loading your dashboard...') ON DUPLICATE KEY UPDATE translation_value = 'Loading your dashboard...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'en', 'Error Loading Dashboard') ON DUPLICATE KEY UPDATE translation_value = 'Error Loading Dashboard';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'en', 'Retry') ON DUPLICATE KEY UPDATE translation_value = 'Retry';
@@ -313,7 +311,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'es', 'Estadísticas de intercambio') ON DUPLICATE KEY UPDATE translation_value = 'Estadísticas de intercambio';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'es', 'Miembro desde:') ON DUPLICATE KEY UPDATE translation_value = 'Miembro desde:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'es', 'Guardar cambios') ON DUPLICATE KEY UPDATE translation_value = 'Guardar cambios';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'es', 'Ver historial de intercambios') ON DUPLICATE KEY UPDATE translation_value = 'Ver historial de intercambios';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'es', 'Ver todos tus intercambios pasados') ON DUPLICATE KEY UPDATE translation_value = 'Ver todos tus intercambios pasados';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'es', 'Información de contacto') ON DUPLICATE KEY UPDATE translation_value = 'Información de contacto';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'es', 'Notificaciones') ON DUPLICATE KEY UPDATE translation_value = 'Notificaciones';
@@ -322,7 +319,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'es', 'Panel') ON DUPLICATE KEY UPDATE translation_value = 'Panel';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'es', 'Contactos comprados') ON DUPLICATE KEY UPDATE translation_value = 'Contactos comprados';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'es', 'Intercambios recientes') ON DUPLICATE KEY UPDATE translation_value = 'Intercambios recientes';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'es', 'Historial de intercambios') ON DUPLICATE KEY UPDATE translation_value = 'Historial de intercambios';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'es', 'Cargando tu panel...') ON DUPLICATE KEY UPDATE translation_value = 'Cargando tu panel...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'es', 'Error al cargar el panel') ON DUPLICATE KEY UPDATE translation_value = 'Error al cargar el panel';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'es', 'Reintentar') ON DUPLICATE KEY UPDATE translation_value = 'Reintentar';
@@ -489,7 +485,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'fr', 'Statistiques d''échange') ON DUPLICATE KEY UPDATE translation_value = 'Statistiques d''échange';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'fr', 'Membre depuis:') ON DUPLICATE KEY UPDATE translation_value = 'Membre depuis:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'fr', 'Enregistrer les modifications') ON DUPLICATE KEY UPDATE translation_value = 'Enregistrer les modifications';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'fr', 'Afficher l''historique des échanges') ON DUPLICATE KEY UPDATE translation_value = 'Afficher l''historique des échanges';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'fr', 'Voir tous vos échanges passés') ON DUPLICATE KEY UPDATE translation_value = 'Voir tous vos échanges passés';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'fr', 'Coordonnées') ON DUPLICATE KEY UPDATE translation_value = 'Coordonnées';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'fr', 'Notifications') ON DUPLICATE KEY UPDATE translation_value = 'Notifications';
@@ -498,7 +493,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'fr', 'Tableau de bord') ON DUPLICATE KEY UPDATE translation_value = 'Tableau de bord';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'fr', 'Contacts achetés') ON DUPLICATE KEY UPDATE translation_value = 'Contacts achetés';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'fr', 'Échanges récents') ON DUPLICATE KEY UPDATE translation_value = 'Échanges récents';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'fr', 'Historique des échanges') ON DUPLICATE KEY UPDATE translation_value = 'Historique des échanges';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'fr', 'Chargement de votre tableau de bord...') ON DUPLICATE KEY UPDATE translation_value = 'Chargement de votre tableau de bord...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'fr', 'Erreur lors du chargement du tableau de bord') ON DUPLICATE KEY UPDATE translation_value = 'Erreur lors du chargement du tableau de bord';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'fr', 'Réessayer') ON DUPLICATE KEY UPDATE translation_value = 'Réessayer';
@@ -665,7 +659,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'de', 'Börsenstatistiken') ON DUPLICATE KEY UPDATE translation_value = 'Börsenstatistiken';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'de', 'Mitglied seit:') ON DUPLICATE KEY UPDATE translation_value = 'Mitglied seit:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'de', 'Änderungen speichern') ON DUPLICATE KEY UPDATE translation_value = 'Änderungen speichern';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'de', 'Exchange-Verlauf anzeigen') ON DUPLICATE KEY UPDATE translation_value = 'Exchange-Verlauf anzeigen';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'de', 'Sehen Sie sich alle Ihre vergangenen Austausche an') ON DUPLICATE KEY UPDATE translation_value = 'Sehen Sie sich alle Ihre vergangenen Austausche an';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'de', 'Kontaktinformationen') ON DUPLICATE KEY UPDATE translation_value = 'Kontaktinformationen';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'de', 'Benachrichtigungen') ON DUPLICATE KEY UPDATE translation_value = 'Benachrichtigungen';
@@ -674,7 +667,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'de', 'Armaturenbrett') ON DUPLICATE KEY UPDATE translation_value = 'Armaturenbrett';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'de', 'Gekaufte Kontakte') ON DUPLICATE KEY UPDATE translation_value = 'Gekaufte Kontakte';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'de', 'Aktuelle Börsen') ON DUPLICATE KEY UPDATE translation_value = 'Aktuelle Börsen';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'de', 'Börsenverlauf') ON DUPLICATE KEY UPDATE translation_value = 'Börsenverlauf';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'de', 'Ihr Dashboard wird geladen...') ON DUPLICATE KEY UPDATE translation_value = 'Ihr Dashboard wird geladen...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'de', 'Fehler beim Laden des Dashboards') ON DUPLICATE KEY UPDATE translation_value = 'Fehler beim Laden des Dashboards';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'de', 'Wiederholen') ON DUPLICATE KEY UPDATE translation_value = 'Wiederholen';
@@ -841,7 +833,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'pt', 'Estatísticas de câmbio') ON DUPLICATE KEY UPDATE translation_value = 'Estatísticas de câmbio';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'pt', 'Membro desde:') ON DUPLICATE KEY UPDATE translation_value = 'Membro desde:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'pt', 'Salvar alterações') ON DUPLICATE KEY UPDATE translation_value = 'Salvar alterações';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'pt', 'Ver histórico de troca') ON DUPLICATE KEY UPDATE translation_value = 'Ver histórico de troca';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'pt', 'Veja todas as suas trocas anteriores') ON DUPLICATE KEY UPDATE translation_value = 'Veja todas as suas trocas anteriores';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'pt', 'Informações de contato') ON DUPLICATE KEY UPDATE translation_value = 'Informações de contato';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'pt', 'Notificações') ON DUPLICATE KEY UPDATE translation_value = 'Notificações';
@@ -850,7 +841,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'pt', 'Painel') ON DUPLICATE KEY UPDATE translation_value = 'Painel';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'pt', 'Contatos adquiridos') ON DUPLICATE KEY UPDATE translation_value = 'Contatos adquiridos';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'pt', 'Trocas recentes') ON DUPLICATE KEY UPDATE translation_value = 'Trocas recentes';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'pt', 'Histórico de troca') ON DUPLICATE KEY UPDATE translation_value = 'Histórico de troca';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'pt', 'Carregando seu painel...') ON DUPLICATE KEY UPDATE translation_value = 'Carregando seu painel...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'pt', 'Erro ao carregar o painel') ON DUPLICATE KEY UPDATE translation_value = 'Erro ao carregar o painel';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'pt', 'Tentar novamente') ON DUPLICATE KEY UPDATE translation_value = 'Tentar novamente';
@@ -1017,7 +1007,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'ja', '交換統計') ON DUPLICATE KEY UPDATE translation_value = '交換統計';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'ja', 'メンバー登録:') ON DUPLICATE KEY UPDATE translation_value = 'メンバー登録:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'ja', '変更を保存') ON DUPLICATE KEY UPDATE translation_value = '変更を保存';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'ja', '交換履歴の表示') ON DUPLICATE KEY UPDATE translation_value = '交換履歴の表示';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'ja', '過去のやり取りをすべて表示') ON DUPLICATE KEY UPDATE translation_value = '過去のやり取りをすべて表示';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'ja', '連絡先') ON DUPLICATE KEY UPDATE translation_value = '連絡先';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'ja', '通知') ON DUPLICATE KEY UPDATE translation_value = '通知';
@@ -1026,7 +1015,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'ja', 'ダッシュボード') ON DUPLICATE KEY UPDATE translation_value = 'ダッシュボード';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'ja', '購入した連絡先') ON DUPLICATE KEY UPDATE translation_value = '購入した連絡先';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'ja', '最近のやりとり') ON DUPLICATE KEY UPDATE translation_value = '最近のやりとり';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'ja', '交換履歴') ON DUPLICATE KEY UPDATE translation_value = '交換履歴';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'ja', 'ダッシュボードを読み込んでいます...') ON DUPLICATE KEY UPDATE translation_value = 'ダッシュボードを読み込んでいます...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'ja', 'ダッシュボードの読み込みエラー') ON DUPLICATE KEY UPDATE translation_value = 'ダッシュボードの読み込みエラー';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'ja', 'リトライ') ON DUPLICATE KEY UPDATE translation_value = 'リトライ';
@@ -1193,7 +1181,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'zh', '交易统计') ON DUPLICATE KEY UPDATE translation_value = '交易统计';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'zh', '成员时间:') ON DUPLICATE KEY UPDATE translation_value = '成员时间:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'zh', '保存更改') ON DUPLICATE KEY UPDATE translation_value = '保存更改';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'zh', '查看兑换记录') ON DUPLICATE KEY UPDATE translation_value = '查看兑换记录';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'zh', '查看您过去的所有交流') ON DUPLICATE KEY UPDATE translation_value = '查看您过去的所有交流';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'zh', '联系信息') ON DUPLICATE KEY UPDATE translation_value = '联系信息';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'zh', '通知') ON DUPLICATE KEY UPDATE translation_value = '通知';
@@ -1202,7 +1189,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'zh', '仪表板') ON DUPLICATE KEY UPDATE translation_value = '仪表板';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'zh', '购买的联系人') ON DUPLICATE KEY UPDATE translation_value = '购买的联系人';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'zh', '最近的交流') ON DUPLICATE KEY UPDATE translation_value = '最近的交流';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'zh', '交流历史') ON DUPLICATE KEY UPDATE translation_value = '交流历史';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'zh', '正在加载您的仪表板...') ON DUPLICATE KEY UPDATE translation_value = '正在加载您的仪表板...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'zh', '加载仪表板时出错') ON DUPLICATE KEY UPDATE translation_value = '加载仪表板时出错';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'zh', '重试') ON DUPLICATE KEY UPDATE translation_value = '重试';
@@ -1369,7 +1355,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'ru', 'Статистика обмена') ON DUPLICATE KEY UPDATE translation_value = 'Статистика обмена';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'ru', 'Участник с:') ON DUPLICATE KEY UPDATE translation_value = 'Участник с:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'ru', 'Сохранить изменения') ON DUPLICATE KEY UPDATE translation_value = 'Сохранить изменения';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'ru', 'Просмотр истории обмена') ON DUPLICATE KEY UPDATE translation_value = 'Просмотр истории обмена';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'ru', 'Просмотреть все ваши прошлые обмены') ON DUPLICATE KEY UPDATE translation_value = 'Просмотреть все ваши прошлые обмены';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'ru', 'Контактная информация') ON DUPLICATE KEY UPDATE translation_value = 'Контактная информация';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'ru', 'Уведомления') ON DUPLICATE KEY UPDATE translation_value = 'Уведомления';
@@ -1378,7 +1363,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'ru', 'Панель управления') ON DUPLICATE KEY UPDATE translation_value = 'Панель управления';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'ru', 'Купленные контакты') ON DUPLICATE KEY UPDATE translation_value = 'Купленные контакты';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'ru', 'Недавние обмены') ON DUPLICATE KEY UPDATE translation_value = 'Недавние обмены';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'ru', 'История обмена') ON DUPLICATE KEY UPDATE translation_value = 'История обмена';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'ru', 'Загрузка панели управления...') ON DUPLICATE KEY UPDATE translation_value = 'Загрузка панели управления...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'ru', 'Ошибка загрузки панели управления.') ON DUPLICATE KEY UPDATE translation_value = 'Ошибка загрузки панели управления.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'ru', 'Повторить попытку') ON DUPLICATE KEY UPDATE translation_value = 'Повторить попытку';
@@ -1545,7 +1529,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'ar', 'إحصائيات الصرف') ON DUPLICATE KEY UPDATE translation_value = 'إحصائيات الصرف';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'ar', 'عضو منذ:') ON DUPLICATE KEY UPDATE translation_value = 'عضو منذ:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'ar', 'حفظ التغييرات') ON DUPLICATE KEY UPDATE translation_value = 'حفظ التغييرات';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'ar', 'عرض تاريخ الصرف') ON DUPLICATE KEY UPDATE translation_value = 'عرض تاريخ الصرف';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'ar', 'رؤية جميع التبادلات الماضية الخاصة بك') ON DUPLICATE KEY UPDATE translation_value = 'رؤية جميع التبادلات الماضية الخاصة بك';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'ar', 'معلومات الاتصال') ON DUPLICATE KEY UPDATE translation_value = 'معلومات الاتصال';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'ar', 'إشعارات') ON DUPLICATE KEY UPDATE translation_value = 'إشعارات';
@@ -1554,7 +1537,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'ar', 'لوحة القيادة') ON DUPLICATE KEY UPDATE translation_value = 'لوحة القيادة';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'ar', 'جهات الاتصال المشتراة') ON DUPLICATE KEY UPDATE translation_value = 'جهات الاتصال المشتراة';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'ar', 'التبادلات الأخيرة') ON DUPLICATE KEY UPDATE translation_value = 'التبادلات الأخيرة';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'ar', 'تاريخ الصرف') ON DUPLICATE KEY UPDATE translation_value = 'تاريخ الصرف';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'ar', 'جارٍ تحميل لوحة البيانات...') ON DUPLICATE KEY UPDATE translation_value = 'جارٍ تحميل لوحة البيانات...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'ar', 'حدث خطأ أثناء تحميل لوحة المعلومات') ON DUPLICATE KEY UPDATE translation_value = 'حدث خطأ أثناء تحميل لوحة المعلومات';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'ar', 'أعد المحاولة') ON DUPLICATE KEY UPDATE translation_value = 'أعد المحاولة';
@@ -1721,7 +1703,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'hi', 'विनिमय आँकड़े') ON DUPLICATE KEY UPDATE translation_value = 'विनिमय आँकड़े';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'hi', 'सदस्य बनाया:') ON DUPLICATE KEY UPDATE translation_value = 'सदस्य बनाया:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'hi', 'परिवर्तनों को सुरक्षित करें') ON DUPLICATE KEY UPDATE translation_value = 'परिवर्तनों को सुरक्षित करें';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'hi', 'विनिमय इतिहास देखें') ON DUPLICATE KEY UPDATE translation_value = 'विनिमय इतिहास देखें';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'hi', 'अपने सभी पिछले आदान-प्रदान देखें') ON DUPLICATE KEY UPDATE translation_value = 'अपने सभी पिछले आदान-प्रदान देखें';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'hi', 'संपर्क जानकारी') ON DUPLICATE KEY UPDATE translation_value = 'संपर्क जानकारी';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'hi', 'सूचनाएं') ON DUPLICATE KEY UPDATE translation_value = 'सूचनाएं';
@@ -1730,7 +1711,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'hi', 'डैशबोर्ड') ON DUPLICATE KEY UPDATE translation_value = 'डैशबोर्ड';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'hi', 'खरीदे गए संपर्क') ON DUPLICATE KEY UPDATE translation_value = 'खरीदे गए संपर्क';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'hi', 'हाल के आदान-प्रदान') ON DUPLICATE KEY UPDATE translation_value = 'हाल के आदान-प्रदान';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'hi', 'विनिमय इतिहास') ON DUPLICATE KEY UPDATE translation_value = 'विनिमय इतिहास';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'hi', 'आपका डैशबोर्ड लोड हो रहा है...') ON DUPLICATE KEY UPDATE translation_value = 'आपका डैशबोर्ड लोड हो रहा है...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'hi', 'डैशबोर्ड लोड करने में त्रुटि') ON DUPLICATE KEY UPDATE translation_value = 'डैशबोर्ड लोड करने में त्रुटि';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'hi', 'पुन: प्रयास करें') ON DUPLICATE KEY UPDATE translation_value = 'पुन: प्रयास करें';
@@ -1897,7 +1877,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_STATS', 'sk', 'Výmenné štatistiky') ON DUPLICATE KEY UPDATE translation_value = 'Výmenné štatistiky';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('MEMBER_SINCE', 'sk', 'Člen od:') ON DUPLICATE KEY UPDATE translation_value = 'Člen od:';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SAVE_CHANGES', 'sk', 'Uložiť zmeny') ON DUPLICATE KEY UPDATE translation_value = 'Uložiť zmeny';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('VIEW_EXCHANGE_HISTORY', 'sk', 'Zobraziť históriu výmeny') ON DUPLICATE KEY UPDATE translation_value = 'Zobraziť históriu výmeny';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('SEE_ALL_PAST_EXCHANGES', 'sk', 'Pozrite si všetky svoje minulé výmeny') ON DUPLICATE KEY UPDATE translation_value = 'Pozrite si všetky svoje minulé výmeny';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('CONTACT_INFORMATION', 'sk', 'Kontaktné informácie') ON DUPLICATE KEY UPDATE translation_value = 'Kontaktné informácie';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NOTIFICATIONS', 'sk', 'Upozornenia') ON DUPLICATE KEY UPDATE translation_value = 'Upozornenia';
@@ -1906,7 +1885,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('DASHBOARD', 'sk', 'Dashboard') ON DUPLICATE KEY UPDATE translation_value = 'Dashboard';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('PURCHASED_CONTACTS', 'sk', 'Zakúpené kontakty') ON DUPLICATE KEY UPDATE translation_value = 'Zakúpené kontakty';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RECENT_EXCHANGES', 'sk', 'Nedávne výmeny') ON DUPLICATE KEY UPDATE translation_value = 'Nedávne výmeny';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGE_HISTORY', 'sk', 'História výmeny') ON DUPLICATE KEY UPDATE translation_value = 'História výmeny';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_DASHBOARD', 'sk', 'Načítava sa váš informačný panel...') ON DUPLICATE KEY UPDATE translation_value = 'Načítava sa váš informačný panel...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('ERROR_LOADING_DASHBOARD', 'sk', 'Chyba pri načítavaní informačného panela') ON DUPLICATE KEY UPDATE translation_value = 'Chyba pri načítavaní informačného panela';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('RETRY', 'sk', 'Skúste to znova') ON DUPLICATE KEY UPDATE translation_value = 'Skúste to znova';
@@ -3092,7 +3070,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'en', 'Last 90 Days') ON DUPLICATE KEY UPDATE translation_value = 'Last 90 Days';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'en', 'Last Year') ON DUPLICATE KEY UPDATE translation_value = 'Last Year';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'en', 'Exchanges') ON DUPLICATE KEY UPDATE translation_value = 'Exchanges';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'en', 'Loading exchange history...') ON DUPLICATE KEY UPDATE translation_value = 'Loading exchange history...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'en', 'No exchanges found') ON DUPLICATE KEY UPDATE translation_value = 'No exchanges found';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'en', 'You haven''t completed any exchanges yet.') ON DUPLICATE KEY UPDATE translation_value = 'You haven''t completed any exchanges yet.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'en', 'No exchanges match your current filters.') ON DUPLICATE KEY UPDATE translation_value = 'No exchanges match your current filters.';
@@ -3119,7 +3096,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'es', 'Últimos 90 Días') ON DUPLICATE KEY UPDATE translation_value = 'Últimos 90 Días';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'es', 'Último Año') ON DUPLICATE KEY UPDATE translation_value = 'Último Año';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'es', 'Cambios') ON DUPLICATE KEY UPDATE translation_value = 'Cambios';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'es', 'Cargando historial de cambios...') ON DUPLICATE KEY UPDATE translation_value = 'Cargando historial de cambios...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'es', 'No se encontraron cambios') ON DUPLICATE KEY UPDATE translation_value = 'No se encontraron cambios';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'es', 'Aún no has completado ningún cambio.') ON DUPLICATE KEY UPDATE translation_value = 'Aún no has completado ningún cambio.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'es', 'No hay cambios que coincidan con tus filtros actuales.') ON DUPLICATE KEY UPDATE translation_value = 'No hay cambios que coincidan con tus filtros actuales.';
@@ -3146,7 +3122,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'fr', '90 Derniers Jours') ON DUPLICATE KEY UPDATE translation_value = '90 Derniers Jours';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'fr', 'Dernière Année') ON DUPLICATE KEY UPDATE translation_value = 'Dernière Année';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'fr', 'Échanges') ON DUPLICATE KEY UPDATE translation_value = 'Échanges';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'fr', 'Chargement de l''historique des échanges...') ON DUPLICATE KEY UPDATE translation_value = 'Chargement de l''historique des échanges...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'fr', 'Aucun échange trouvé') ON DUPLICATE KEY UPDATE translation_value = 'Aucun échange trouvé';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'fr', 'Vous n''avez pas encore complété d''échanges.') ON DUPLICATE KEY UPDATE translation_value = 'Vous n''avez pas encore complété d''échanges.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'fr', 'Aucun échange ne correspond à vos filtres actuels.') ON DUPLICATE KEY UPDATE translation_value = 'Aucun échange ne correspond à vos filtres actuels.';
@@ -3173,7 +3148,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'de', 'Letzte 90 Tage') ON DUPLICATE KEY UPDATE translation_value = 'Letzte 90 Tage';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'de', 'Letztes Jahr') ON DUPLICATE KEY UPDATE translation_value = 'Letztes Jahr';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'de', 'Austausche') ON DUPLICATE KEY UPDATE translation_value = 'Austausche';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'de', 'Austauschverlauf wird geladen...') ON DUPLICATE KEY UPDATE translation_value = 'Austauschverlauf wird geladen...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'de', 'Keine Austausche gefunden') ON DUPLICATE KEY UPDATE translation_value = 'Keine Austausche gefunden';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'de', 'Sie haben noch keine Austausche abgeschlossen.') ON DUPLICATE KEY UPDATE translation_value = 'Sie haben noch keine Austausche abgeschlossen.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'de', 'Keine Austausche entsprechen Ihren aktuellen Filtern.') ON DUPLICATE KEY UPDATE translation_value = 'Keine Austausche entsprechen Ihren aktuellen Filtern.';
@@ -3200,7 +3174,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'pt', 'Últimos 90 Dias') ON DUPLICATE KEY UPDATE translation_value = 'Últimos 90 Dias';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'pt', 'Último Ano') ON DUPLICATE KEY UPDATE translation_value = 'Último Ano';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'pt', 'Trocas') ON DUPLICATE KEY UPDATE translation_value = 'Trocas';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'pt', 'Carregando histórico de trocas...') ON DUPLICATE KEY UPDATE translation_value = 'Carregando histórico de trocas...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'pt', 'Nenhuma troca encontrada') ON DUPLICATE KEY UPDATE translation_value = 'Nenhuma troca encontrada';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'pt', 'Você ainda não concluiu nenhuma troca.') ON DUPLICATE KEY UPDATE translation_value = 'Você ainda não concluiu nenhuma troca.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'pt', 'Nenhuma troca corresponde aos seus filtros atuais.') ON DUPLICATE KEY UPDATE translation_value = 'Nenhuma troca corresponde aos seus filtros atuais.';
@@ -3227,7 +3200,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'ja', '過去90日間') ON DUPLICATE KEY UPDATE translation_value = '過去90日間';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'ja', '過去1年間') ON DUPLICATE KEY UPDATE translation_value = '過去1年間';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'ja', '交換') ON DUPLICATE KEY UPDATE translation_value = '交換';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'ja', '交換履歴を読み込み中...') ON DUPLICATE KEY UPDATE translation_value = '交換履歴を読み込み中...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'ja', '交換が見つかりません') ON DUPLICATE KEY UPDATE translation_value = '交換が見つかりません';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'ja', 'まだ交換を完了していません。') ON DUPLICATE KEY UPDATE translation_value = 'まだ交換を完了していません。';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'ja', '現在のフィルターに一致する交換がありません。') ON DUPLICATE KEY UPDATE translation_value = '現在のフィルターに一致する交換がありません。';
@@ -3254,7 +3226,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'zh', '过去90天') ON DUPLICATE KEY UPDATE translation_value = '过去90天';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'zh', '过去一年') ON DUPLICATE KEY UPDATE translation_value = '过去一年';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'zh', '兑换') ON DUPLICATE KEY UPDATE translation_value = '兑换';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'zh', '正在加载兑换历史...') ON DUPLICATE KEY UPDATE translation_value = '正在加载兑换历史...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'zh', '未找到兑换记录') ON DUPLICATE KEY UPDATE translation_value = '未找到兑换记录';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'zh', '您还没有完成任何兑换。') ON DUPLICATE KEY UPDATE translation_value = '您还没有完成任何兑换。';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'zh', '没有兑换与您当前的筛选条件匹配。') ON DUPLICATE KEY UPDATE translation_value = '没有兑换与您当前的筛选条件匹配。';
@@ -3281,7 +3252,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'ru', 'Последние 90 Дней') ON DUPLICATE KEY UPDATE translation_value = 'Последние 90 Дней';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'ru', 'Последний Год') ON DUPLICATE KEY UPDATE translation_value = 'Последний Год';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'ru', 'Обмены') ON DUPLICATE KEY UPDATE translation_value = 'Обмены';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'ru', 'Загрузка истории обмена...') ON DUPLICATE KEY UPDATE translation_value = 'Загрузка истории обмена...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'ru', 'Обмены не найдены') ON DUPLICATE KEY UPDATE translation_value = 'Обмены не найдены';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'ru', 'Вы еще не завершили ни одного обмена.') ON DUPLICATE KEY UPDATE translation_value = 'Вы еще не завершили ни одного обмена.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'ru', 'Нет обменов, соответствующих вашим текущим фильтрам.') ON DUPLICATE KEY UPDATE translation_value = 'Нет обменов, соответствующих вашим текущим фильтрам.';
@@ -3308,7 +3278,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'ar', 'آخر 90 يومًا') ON DUPLICATE KEY UPDATE translation_value = 'آخر 90 يومًا';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'ar', 'السنة الماضية') ON DUPLICATE KEY UPDATE translation_value = 'السنة الماضية';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'ar', 'الصرفات') ON DUPLICATE KEY UPDATE translation_value = 'الصرفات';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'ar', 'جاري تحميل سجل الصرف...') ON DUPLICATE KEY UPDATE translation_value = 'جاري تحميل سجل الصرف...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'ar', 'لم يتم العثور على صرفات') ON DUPLICATE KEY UPDATE translation_value = 'لم يتم العثور على صرفات';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'ar', 'لم تكمل أي صرفات بعد.') ON DUPLICATE KEY UPDATE translation_value = 'لم تكمل أي صرفات بعد.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'ar', 'لا توجد صرفات تطابق عوامل التصفية الحالية.') ON DUPLICATE KEY UPDATE translation_value = 'لا توجد صرفات تطابق عوامل التصفية الحالية.';
@@ -3335,7 +3304,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'hi', 'पिछले 90 दिन') ON DUPLICATE KEY UPDATE translation_value = 'पिछले 90 दिन';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'hi', 'पिछला वर्ष') ON DUPLICATE KEY UPDATE translation_value = 'पिछला वर्ष';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'hi', 'विनिमय') ON DUPLICATE KEY UPDATE translation_value = 'विनिमय';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'hi', 'विनिमय इतिहास लोड हो रहा है...') ON DUPLICATE KEY UPDATE translation_value = 'विनिमय इतिहास लोड हो रहा है...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'hi', 'कोई विनिमय नहीं मिला') ON DUPLICATE KEY UPDATE translation_value = 'कोई विनिमय नहीं मिला';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'hi', 'आपने अभी तक कोई विनिमय पूर्ण नहीं किया है।') ON DUPLICATE KEY UPDATE translation_value = 'आपने अभी तक कोई विनिमय पूर्ण नहीं किया है।';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'hi', 'कोई विनिमय आपकी वर्तमान फ़िल्टर से मेल नहीं खाते।') ON DUPLICATE KEY UPDATE translation_value = 'कोई विनिमय आपकी वर्तमान फ़िल्टर से मेल नहीं खाते।';
@@ -3362,7 +3330,6 @@ INSERT INTO translations (translation_key, language_code, translation_value) VAL
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_90_DAYS', 'sk', 'Posledných 90 Dní') ON DUPLICATE KEY UPDATE translation_value = 'Posledných 90 Dní';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LAST_YEAR', 'sk', 'Posledný Rok') ON DUPLICATE KEY UPDATE translation_value = 'Posledný Rok';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('EXCHANGES_COUNT', 'sk', 'Výmeny') ON DUPLICATE KEY UPDATE translation_value = 'Výmeny';
-INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('LOADING_EXCHANGE_HISTORY', 'sk', 'Načítavanie histórie výmen...') ON DUPLICATE KEY UPDATE translation_value = 'Načítavanie histórie výmen...';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_FOUND', 'sk', 'Žiadne výmeny neboli nájdené') ON DUPLICATE KEY UPDATE translation_value = 'Žiadne výmeny neboli nájdené';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_EXCHANGES_YET', 'sk', 'Ešte ste nedokončili žiadne výmeny.') ON DUPLICATE KEY UPDATE translation_value = 'Ešte ste nedokončili žiadne výmeny.';
 INSERT INTO translations (translation_key, language_code, translation_value) VALUES ('NO_MATCHING_EXCHANGES', 'sk', 'Žiadne výmeny nezodpovedajú vašim aktuálnym filtrom.') ON DUPLICATE KEY UPDATE translation_value = 'Žiadne výmeny nezodpovedajú vašim aktuálnym filtrom.';

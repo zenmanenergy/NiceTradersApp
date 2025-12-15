@@ -56,18 +56,6 @@ class TestProfileEndpoints:
         data = json.loads(response.data)
         assert data['success'] is False
     
-    def test_get_exchange_history(self, client, test_user):
-        """Test getting exchange history"""
-        response = client.get('/Profile/GetExchangeHistory', query_string={
-            'SessionId': test_user['session_id']
-        })
-        
-        assert response.status_code == 200
-        data = json.loads(response.data)
-        assert data['success'] is True
-        assert 'exchanges' in data
-        assert isinstance(data['exchanges'], list)
-    
     def test_update_settings_success(self, client, test_user):
         """Test updating user settings"""
         settings = json.dumps({'preferredCurrency': 'USD', 'notifications': True})

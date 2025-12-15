@@ -30,9 +30,6 @@ def delete_account(SessionId):
 		# Delete user settings
 		cursor.execute("DELETE FROM user_settings WHERE user_id = %s", (user_id,))
 		
-		# Delete exchange history
-		cursor.execute("DELETE FROM exchange_history WHERE user_id = %s", (user_id,))
-		
 		# Delete user listings (if any) - listings table uses lowercase user_id
 		cursor.execute("DELETE FROM listings WHERE user_id = %s", (user_id,))
 		

@@ -36,7 +36,6 @@ def cleanup_test_data(db):
         # Start with most dependent tables first
         # NOTE: We do NOT delete users - they should be preserved
         cursor.execute("DELETE FROM user_ratings WHERE user_id IN (%s, %s) OR rater_id IN (%s, %s)", (SELLER_ID, BUYER_ID, SELLER_ID, BUYER_ID))
-        cursor.execute("DELETE FROM exchange_history WHERE user_id IN (%s, %s)", (SELLER_ID, BUYER_ID))
         cursor.execute("DELETE FROM transactions WHERE listing_id = %s", (LISTING_ID,))
         cursor.execute("DELETE FROM listing_payments WHERE listing_id = %s", (LISTING_ID,))
         cursor.execute("DELETE FROM listing_meeting_location WHERE listing_id = %s", (LISTING_ID,))
