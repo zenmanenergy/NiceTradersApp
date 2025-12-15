@@ -7,6 +7,8 @@ from Meeting.RespondToMeeting import respond_to_meeting
 from Meeting.GetMeetingProposals import get_meeting_proposals
 from Meeting.GetExactLocation import get_exact_location
 from Meeting.LocationTrackingService import LocationTrackingService
+from Meeting.CancelMeetingTime import cancel_meeting_time
+from Meeting.CancelLocation import cancel_location
 
 blueprint = Blueprint('meeting', __name__)
 
@@ -193,6 +195,40 @@ def GetTrackingStatus():
         
         # Get tracking status
         result = LocationTrackingService.get_tracking_status(proposal_id, user_id)
+        return result
+    except Exception as e:
+        return Debugger(e)
+
+@blueprint.route("/Meeting/CancelMeetingTime", methods=['GET', 'POST'])
+@cross_origin()
+def CancelMeetingTime():
+    try:
+        if request.method == 'POST':
+            request_data = request.get_json()
+        else:
+            request_data = request.args.to_dict()
+        
+        session_id = request_data.get('sessionId')
+        listing_id = request_data.get('listingId')
+        
+        result = cancel_meeting_time(session_id, listing_id)
+        return result
+    except Exception as e:
+        return Debugger(e)
+
+@blueprint.route("/Meeting/CancelLocation", methods=['GET', 'POST'])
+@cross_origin()
+def CancelLocation():
+    try:
+        if request.method == 'POST':
+            request_data = request.get_json()
+        else:
+            request_data = request.args.to_dict()
+        
+        session_id = request_data.get('sessionId')
+        listing_id = request_data.get('listingId')
+        
+        result = cancel_location(session_id, listing_id)
         return result
     except Exception as e:
         return Debugger(e)

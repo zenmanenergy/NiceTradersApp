@@ -30,6 +30,8 @@ struct MeetingLocationView: View {
     @State private var currentMeetingTime: String?
     @State private var showSuccessMessage: Bool = false
     @State private var successMessageText: String = ""
+    @State private var countdownText: String = ""
+    @State private var countdownTimer: Timer? = nil
     
     var body: some View {
         ZStack {
@@ -37,33 +39,23 @@ struct MeetingLocationView: View {
                 // Map at the top
                 ZStack {
                     if mapIsReady {
+                        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                        let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" }
+                        
                         Map(position: $cameraPosition) {
                             
 
-                            // Listing location circle
-                            MapCircle(
-                                center: CLLocationCoordinate2D(
-                                    latitude: contactData.listing.latitude,
-                                    longitude: contactData.listing.longitude
-                                ),
-                                radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
-                            )
-                            .foregroundStyle(Color.blue.opacity(0.2))
-                            .stroke(Color.blue.opacity(0.5), lineWidth: 2)
-                            
-                            // Listing pin
-                            Annotation("", coordinate: CLLocationCoordinate2D(
-                                latitude: contactData.listing.latitude,
-                                longitude: contactData.listing.longitude
-                            )) {
-                                VStack {
-                                    Image(systemName: "location.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.red)
-                                    Text("Listing")
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
-                                }
+                            // Listing location circle - only show if location not yet confirmed
+                            if !hasConfirmedLocation {
+                                MapCircle(
+                                    center: CLLocationCoordinate2D(
+                                        latitude: contactData.listing.latitude,
+                                        longitude: contactData.listing.longitude
+                                    ),
+                                    radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
+                                )
+                                .foregroundStyle(Color.blue.opacity(0.2))
+                                .stroke(Color.blue.opacity(0.5), lineWidth: 2)
                             }
                             
                             // User location pin
@@ -158,8 +150,40 @@ struct MeetingLocationView: View {
                     }
                 }
                 
+                // Directions button - show under map if location accepted
+                let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                let acceptedProposal = locationProposals.first { $0.status == "accepted" }
+                if let accepted = acceptedProposal,
+                   let lat = accepted.latitude,
+                   let lng = accepted.longitude {
+                    Button(action: {
+                        openAppleDirections(latitude: lat, longitude: lng, name: accepted.proposedLocation)
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 14))
+                            Text("Get Directions")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            Spacer()
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 12))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(12)
+                        .foregroundColor(.white)
+                        .background(Color(hex: "667eea"))
+                        .cornerRadius(8)
+                    }
+                    .padding(16)
+                }
+                
                 // Search section
                 VStack(alignment: .leading, spacing: 12) {
+                // Search box and results - hide if location accepted
+                let hasAcceptedLocation = locationProposals.contains { $0.status == "accepted" }
+                
+                if !hasAcceptedLocation {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundColor(.gray)
@@ -189,7 +213,7 @@ struct MeetingLocationView: View {
                     .cornerRadius(8)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(hex: "cbd5e0"), lineWidth: 1))
                     
-                    // Search results
+                    // Search results - only show if searching
                     if isSearching {
                         HStack {
                             ProgressView()
@@ -229,6 +253,7 @@ struct MeetingLocationView: View {
                         }
                     }
                 }
+                }
                 .padding(16)
                 .background(Color(hex: "f0f9ff"))
                 
@@ -236,6 +261,26 @@ struct MeetingLocationView: View {
                 ScrollView {
                     VStack(spacing: 12) {
                         let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                        
+                        // Countdown timer
+                        if !countdownText.isEmpty {
+                            HStack(spacing: 8) {
+                                Image(systemName: "hourglass.tophalf.fill")
+                                    .foregroundColor(Color(hex: "f97316"))
+                                    .font(.system(size: 14))
+                                
+                                Text(countdownText)
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "f97316"))
+                                
+                                Spacer()
+                            }
+                            .padding()
+                            .background(Color(hex: "fff7ed"))
+                            .cornerRadius(8)
+                        }
+                        
                         if !locationProposals.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(localizationManager.localize("MEETING_PROPOSALS"))
@@ -246,6 +291,7 @@ struct MeetingLocationView: View {
                                     LocationProposalCard(
                                         proposal: proposal,
                                         displayStatus: displayStatus,
+                                        meetingTime: currentMeeting?.time,
                                         onAccept: {
                                             respondToProposal(proposalId: proposal.proposalId, response: "accepted")
                                         },
@@ -316,6 +362,14 @@ struct MeetingLocationView: View {
             // Refresh displayStatus from server
             refreshDisplayStatus()
             
+            // Start countdown timer
+            if let meetingTime = currentMeeting?.time {
+                startCountdownTimer(meetingTime: meetingTime)
+            }
+            
+            // Zoom map to show user and meeting location
+            zoomToShowUserAndMeeting()
+            
             for (i, proposal) in meetingProposals.enumerated() {
                 print("[DEBUG MLV] Proposal \(i): id=\(proposal.proposalId), location='\(proposal.proposedLocation)', status=\(proposal.status), type=location?\(!proposal.proposedLocation.isEmpty)")
             }
@@ -324,7 +378,79 @@ struct MeetingLocationView: View {
                 print("[DEBUG MLV] WARNING: Listing coordinates are 0,0!")
             }
         }
+        .onDisappear {
+            countdownTimer?.invalidate()
+        }
     }
+    
+    private func startCountdownTimer(meetingTime: String?) {
+        guard let meetingTime = meetingTime else { return }
+        
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        guard let meetingDate = isoFormatter.date(from: meetingTime) else { return }
+        
+        countdownTimer?.invalidate()
+        
+        updateCountdown(meetingDate: meetingDate)
+        
+        // Update every 60 seconds (1 minute)
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+            updateCountdown(meetingDate: meetingDate)
+        }
+    }
+    
+    private func updateCountdown(meetingDate: Date) {
+        let now = Date()
+        let timeInterval = meetingDate.timeIntervalSince(now)
+        
+        if timeInterval <= 0 {
+            countdownText = "Meeting time is now!"
+            countdownTimer?.invalidate()
+            return
+        }
+        
+        let hours = Int(timeInterval) / 3600
+        let minutes = (Int(timeInterval) % 3600) / 60
+        
+        let hourText = hours == 1 ? "hour" : "hours"
+        let minuteText = minutes == 1 ? "minute" : "minutes"
+        
+        if hours > 0 && minutes > 0 {
+            countdownText = "\(hours) \(hourText) \(minutes) \(minuteText) until meeting"
+        } else if hours > 0 {
+            countdownText = "\(hours) \(hourText) until meeting"
+        } else if minutes > 0 {
+            countdownText = "\(minutes) \(minuteText) until meeting"
+        } else {
+            countdownText = "Less than a minute until meeting"
+        }
+    }
+    
+    private func zoomToShowUserAndMeeting() {
+        guard let userCoord = locationManager.location?.coordinate else { return }
+        
+        // Center on user's current location with a good zoom level
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: userCoord,
+                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            )
+        )
+    }
+    
+    private func openAppleDirections(latitude: Double, longitude: Double, name: String) {
+        let destinationCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let mapItem = MKMapItem(
+            placemark: MKPlacemark(coordinate: destinationCoordinate)
+        )
+        mapItem.name = name
+        
+        let launchOptions = [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving]
+        mapItem.openInMaps(launchOptions: launchOptions)
+    }
+
     
     private func refreshDisplayStatus() {
         guard let sessionId = SessionManager.shared.sessionId else {

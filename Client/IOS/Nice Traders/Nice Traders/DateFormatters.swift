@@ -102,4 +102,40 @@ struct DateFormatters {
     static func toISO8601(_ date: Date) -> String {
         return ISO8601DateFormatter().string(from: date)
     }
+    
+    /// Parse a date string to Date object
+    static func parseISO8601(_ dateString: String) -> Date? {
+        // Try ISO8601 with timezone and fractional seconds
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let isoDate = isoFormatter.date(from: dateString) {
+            return isoDate
+        }
+        
+        // Try ISO8601 with timezone, no fractional seconds
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        if let isoDate = isoFormatter.date(from: dateString) {
+            return isoDate
+        }
+        
+        // Try common formats without timezone
+        let fallbackFormatter = DateFormatter()
+        fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+        
+        let formats = [
+            "yyyy-MM-dd'T'HH:mm:ss",      // 2025-11-28T20:13:25
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",  // with milliseconds
+            "yyyy-MM-dd HH:mm:ss",         // space instead of T
+            "yyyy-MM-dd"                   // date only
+        ]
+        
+        for format in formats {
+            fallbackFormatter.dateFormat = format
+            if let fallbackDate = fallbackFormatter.date(from: dateString) {
+                return fallbackDate
+            }
+        }
+        
+        return nil
+    }
 }

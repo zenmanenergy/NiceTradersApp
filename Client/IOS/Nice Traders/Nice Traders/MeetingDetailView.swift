@@ -36,6 +36,10 @@ struct MeetingDetailView: View {
     @State private var userPaidAt: String? = nil
     @State private var otherUserPaidAt: String? = nil
     
+    // Countdown timer
+    @State private var countdownText: String = ""
+    @State private var countdownTimer: Timer? = nil
+    
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     
@@ -228,6 +232,7 @@ struct MeetingDetailView: View {
             paymentTrackingSection
             locationProposalSection
             ratingSection
+            actionButtonsSection
         }
     }
     
@@ -268,18 +273,25 @@ struct MeetingDetailView: View {
                 .cornerRadius(8)
             }
             
-            detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
+            // Check if location is accepted
+            let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+            let hasAcceptedLocation = locationProposals.contains { $0.status == "accepted" }
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text(localizationManager.localize("GENERAL_AREA"))
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "718096"))
-                HStack(spacing: 8) {
-                    Image(systemName: "location.fill")
-                        .foregroundColor(Color(hex: "667eea"))
-                    Text(contactData.listing.location)
-                        .foregroundColor(Color(hex: "2d3748"))
-                    Spacer()
+            // Only show these sections if location is NOT accepted
+            if !hasAcceptedLocation {
+                detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(localizationManager.localize("GENERAL_AREA"))
+                        .font(.caption)
+                        .foregroundColor(Color(hex: "718096"))
+                    HStack(spacing: 8) {
+                        Image(systemName: "location.fill")
+                            .foregroundColor(Color(hex: "667eea"))
+                        Text(contactData.listing.location)
+                            .foregroundColor(Color(hex: "2d3748"))
+                        Spacer()
+                    }
                 }
             }
         }
@@ -474,6 +486,56 @@ struct MeetingDetailView: View {
                     .background(Color(hex: "ecfdf5"))
                     .cornerRadius(8)
                     
+                    // Meeting time and countdown
+                    if let meetingTime = currentMeeting?.time {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack(spacing: 12) {
+                                // Meeting Time
+                                HStack(spacing: 8) {
+                                    Image(systemName: "clock.fill")
+                                        .foregroundColor(Color(hex: "667eea"))
+                                        .font(.system(size: 14))
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Meeting Time")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(DateFormatters.formatCompact(meetingTime))
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(Color(hex: "2d3748"))
+                                    }
+                                    
+                                    Spacer()
+                                }
+                                
+                                // Countdown Timer
+                                HStack(spacing: 8) {
+                                    Image(systemName: "hourglass.bottomhalf.fill")
+                                        .foregroundColor(Color(hex: "f97316"))
+                                        .font(.system(size: 14))
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Time Until")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(countdownText.isEmpty ? "Calculating..." : countdownText)
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(Color(hex: "f97316"))
+                                    }
+                                    
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(hex: "fafafa"))
+                        .cornerRadius(8)
+                    }
+                    
                     HStack {
                         Image(systemName: "map.fill")
                             .foregroundColor(Color(hex: "667eea"))
@@ -482,12 +544,31 @@ struct MeetingDetailView: View {
                             .fontWeight(.semibold)
                             .foregroundColor(Color(hex: "667eea"))
                         Spacer()
+                        
+                        HStack(spacing: 4) {
+                            Text("Directions")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundColor(Color(hex: "667eea"))
                     }
                     .padding()
                     .background(Color(hex: "f0f4ff"))
                     .cornerRadius(8)
+                    .onTapGesture {
+                        activeTab = .location
+                    }
+                    .contentShape(Rectangle())
                 }
                 .padding()
+                .onAppear {
+                    startCountdownTimer(meetingTime: currentMeeting?.time)
+                }
+                .onDisappear {
+                    countdownTimer?.invalidate()
+                }
                 .background(Color.white)
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
@@ -703,6 +784,70 @@ struct MeetingDetailView: View {
         EmptyView()
     }
     
+    @ViewBuilder
+    private var actionButtonsSection: some View {
+        VStack(alignment: .center, spacing: 12) {
+            // Mark Trade as Complete button
+            Button(action: completeExchange) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 14))
+                    Text("Mark Trade as Complete")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(12)
+                .foregroundColor(.white)
+                .background(Color(hex: "10b981"))
+                .cornerRadius(8)
+            }
+            
+            // Extra spacing to prevent accidental clicks
+            Spacer()
+                .frame(height: 24)
+            
+            // Cancel buttons section
+            VStack(spacing: 8) {
+                // Cancel Meeting Time button
+                Button(action: cancelMeetingTime) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock.badge.xmark.fill")
+                            .font(.system(size: 14))
+                        Text("Cancel Meeting Time")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(10)
+                    .foregroundColor(.white)
+                    .background(Color(hex: "ef4444"))
+                    .cornerRadius(8)
+                }
+                
+                // Cancel Location button
+                Button(action: cancelLocation) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "location.badge.minus.fill")
+                            .font(.system(size: 14))
+                        Text("Cancel Location")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(10)
+                    .foregroundColor(.white)
+                    .background(Color(hex: "ef4444"))
+                    .cornerRadius(8)
+                }
+            }
+        }
+        .padding()
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+    }
+
 
     
     // MARK: - Helper Functions
@@ -875,6 +1020,114 @@ struct MeetingDetailView: View {
                         self.errorMessage = "Failed to submit rating"
                     }
                 }
+            }
+        }.resume()
+    }
+    
+    // MARK: - Cancel Operations
+    
+    private func cancelMeetingTime() {
+        let alert = UIAlertController(
+            title: "Cancel Meeting Time",
+            message: "Are you sure you want to cancel the meeting time? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+            self.submitCancelMeetingTime()
+        })
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            return
+        }
+        
+        rootVC.present(alert, animated: true)
+    }
+    
+    private func submitCancelMeetingTime() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        let listingId = contactData.listing.listingId
+        let urlString = "\(baseURL)/Meeting/CancelMeetingTime?SessionId=\(sessionId)&ListingId=\(listingId)"
+        
+        guard let url = URL(string: urlString) else {
+            errorMessage = "Invalid URL"
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Error: \(error.localizedDescription)"
+                    return
+                }
+                
+                // Reload proposals after cancellation
+                self.timeAcceptedAt = nil
+                self.loadMeetingProposals()
+            }
+        }.resume()
+    }
+    
+    private func cancelLocation() {
+        let alert = UIAlertController(
+            title: "Cancel Location",
+            message: "Are you sure you want to cancel the meeting location? This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+            self.submitCancelLocation()
+        })
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            return
+        }
+        
+        rootVC.present(alert, animated: true)
+    }
+    
+    private func submitCancelLocation() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            errorMessage = "No active session"
+            return
+        }
+        
+        let baseURL = Settings.shared.baseURL
+        let listingId = contactData.listing.listingId
+        let urlString = "\(baseURL)/Meeting/CancelLocation?SessionId=\(sessionId)&ListingId=\(listingId)"
+        
+        guard let url = URL(string: urlString) else {
+            errorMessage = "Invalid URL"
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.errorMessage = "Error: \(error.localizedDescription)"
+                    return
+                }
+                
+                // Reload proposals after cancellation
+                self.locationAcceptedAt = nil
+                self.loadMeetingProposals()
             }
         }.resume()
     }
@@ -1384,6 +1637,48 @@ struct MeetingDetailView: View {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: Date())
+    }
+    
+    private func startCountdownTimer(meetingTime: String?) {
+        guard let meetingTime = meetingTime else { return }
+        
+        guard let meetingDate = DateFormatters.parseISO8601(meetingTime) else { return }
+        
+        countdownTimer?.invalidate()
+        
+        updateCountdown(meetingDate: meetingDate)
+        
+        // Update every 60 seconds (1 minute)
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+            updateCountdown(meetingDate: meetingDate)
+        }
+    }
+    
+    private func updateCountdown(meetingDate: Date) {
+        let now = Date()
+        let timeInterval = meetingDate.timeIntervalSince(now)
+        
+        if timeInterval <= 0 {
+            countdownText = "Meeting time is now!"
+            countdownTimer?.invalidate()
+            return
+        }
+        
+        let hours = Int(timeInterval) / 3600
+        let minutes = (Int(timeInterval) % 3600) / 60
+        
+        let hourText = hours == 1 ? "hour" : "hours"
+        let minuteText = minutes == 1 ? "minute" : "minutes"
+        
+        if hours > 0 && minutes > 0 {
+            countdownText = "\(hours) \(hourText) \(minutes) \(minuteText) until meeting"
+        } else if hours > 0 {
+            countdownText = "\(hours) \(hourText) until meeting"
+        } else if minutes > 0 {
+            countdownText = "\(minutes) \(minuteText) until meeting"
+        } else {
+            countdownText = "Less than a minute until meeting"
+        }
     }
     
     private func formatExchangeAmount(_ amount: Double, shouldRound: Bool) -> String {

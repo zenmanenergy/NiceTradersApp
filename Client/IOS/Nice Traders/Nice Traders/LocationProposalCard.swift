@@ -3,11 +3,14 @@ import SwiftUI
 struct LocationProposalCard: View {
     let proposal: MeetingProposal
     let displayStatus: String?
+    let meetingTime: String?
     var onAccept: () -> Void
     var onReject: () -> Void
     var onCounterPropose: () -> Void
     
     @ObservedObject var localizationManager = LocalizationManager.shared
+    @State private var countdownText: String = ""
+    @State private var countdownTimer: Timer?
     
     var statusColor: Color {
         switch proposal.status {
@@ -62,25 +65,57 @@ struct LocationProposalCard: View {
             Divider()
             
             VStack(alignment: .leading, spacing: 8) {
-                // Time
-                HStack(spacing: 8) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 12))
-                        .foregroundColor(.gray)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("MEETING_TIME")
-                            .font(.caption)
+                // Time and Countdown
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 12))
                             .foregroundColor(.gray)
-                            .textCase(.uppercase)
                         
-                        Text(proposal.proposedTime)
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: "2d3748"))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(localizationManager.localize("MEETING_TIME"))
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .textCase(.uppercase)
+                            
+                            if let time = meetingTime {
+                                Text(DateFormatters.formatCompact(time))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "2d3748"))
+                            } else {
+                                Text(DateFormatters.formatCompact(proposal.proposedTime))
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "2d3748"))
+                            }
+                        }
+                        
+                        Spacer()
                     }
                     
-                    Spacer()
+                    // Countdown Timer
+                    if !countdownText.isEmpty && proposal.status == "accepted" {
+                        HStack(spacing: 8) {
+                            Image(systemName: "hourglass.bottomhalf.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(hex: "f97316"))
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("TIME_UNTIL_MEETING")
+                                    .font(.caption)
+                                    .foregroundColor(Color(hex: "f97316"))
+                                    .textCase(.uppercase)
+                                
+                                Text(countdownText)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(Color(hex: "f97316"))
+                            }
+                            
+                            Spacer()
+                        }
+                    }
                 }
                     
                     // Proposer
@@ -184,6 +219,49 @@ struct LocationProposalCard: View {
             )
         )
         .cornerRadius(8)
+        .onAppear {
+            startCountdownTimer()
+        }
+        .onDisappear {
+            countdownTimer?.invalidate()
+            countdownTimer = nil
+        }
+    }
+    
+    private func startCountdownTimer() {
+        let timeString = meetingTime ?? proposal.proposedTime
+        guard let meetingDate = DateFormatters.parseISO8601(timeString) else {
+            return
+        }
+        
+        updateCountdown(meetingDate: meetingDate)
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { _ in
+            updateCountdown(meetingDate: meetingDate)
+        }
+    }
+    
+    private func updateCountdown(meetingDate: Date) {
+        let now = Date()
+        let timeInterval = meetingDate.timeIntervalSince(now)
+        
+        if timeInterval <= 0 {
+            countdownText = "Meeting time has arrived"
+            return
+        }
+        
+        let totalSeconds = Int(timeInterval)
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        
+        let hourText = hours == 1 ? "hour" : "hours"
+        let minuteText = minutes == 1 ? "minute" : "minutes"
+        
+        if hours > 0 {
+            countdownText = "\(hours) \(hourText) \(minutes) \(minuteText) until meeting"
+        } else {
+            countdownText = "\(minutes) \(minuteText) until meeting"
+        }
     }
 }
 
@@ -201,6 +279,7 @@ struct LocationProposalCard: View {
             longitude: -73.9654
         ),
         displayStatus: "🎯 Action: Acceptance",
+        meetingTime: "Dec 14, 2025 at 10:00 AM",
         onAccept: {},
         onReject: {},
         onCounterPropose: {}
