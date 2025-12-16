@@ -56,34 +56,6 @@ def calculate_and_lock_exchange_rate(listing_id, user_id):
         usd_rate_from = from_usd_response['rate'] if from_usd_response['success'] else None
         usd_rate_to = to_usd_response['rate'] if to_usd_response['success'] else None
         
-        # Update contact_access record with locked exchange rate
-        today = datetime.now().strftime('%Y-%m-%d')
-        
-        cursor.execute("""
-            UPDATE contact_access 
-            SET exchange_rate = %s, 
-                locked_amount = %s, 
-                rate_calculation_date = %s,
-                from_currency = %s,
-                to_currency = %s,
-                usd_rate_from = %s,
-                usd_rate_to = %s
-            WHERE user_id = %s AND listing_id = %s AND status = 'active'
-        """, (
-            exchange_rate, locked_amount, today, 
-            from_currency, to_currency, 
-            usd_rate_from, usd_rate_to,
-            user_id, listing_id
-        ))
-        
-        if cursor.rowcount == 0:
-            cursor.close()
-            connection.close()
-            return {
-                'success': False,
-                'error': 'No active contact access found to update'
-            }
-        
         connection.commit()
         cursor.close()
         connection.close()
@@ -112,20 +84,18 @@ def calculate_and_lock_exchange_rate(listing_id, user_id):
         }
 
 def get_locked_exchange_rate(user_id, listing_id):
-    """Get the locked exchange rate for a specific contact access"""
+    """Get the exchange rate for a negotiation"""
     try:
-        print(f"[GetLockedRate] Getting locked rate for user {user_id}, listing {listing_id}")
+        print(f"[GetLockedRate] Getting rate for user {user_id}, listing {listing_id}")
         
         cursor, connection = Database.ConnectToDatabase()
         
+        # Get listing info
         cursor.execute("""
-            SELECT ca.exchange_rate, ca.locked_amount, ca.rate_calculation_date,
-                   ca.from_currency, ca.to_currency, ca.usd_rate_from, ca.usd_rate_to,
-                   l.amount as listing_amount, l.currency, l.accept_currency
-            FROM contact_access ca
-            JOIN listings l ON ca.listing_id = l.listing_id
-            WHERE ca.user_id = %s AND ca.listing_id = %s AND ca.status = 'active'
-        """, (user_id, listing_id))
+            SELECT l.amount as listing_amount, l.currency, l.accept_currency
+            FROM listings l
+            WHERE l.listing_id = %s
+        """, (listing_id,))
         
         result = cursor.fetchone()
         cursor.close()
@@ -134,10 +104,18 @@ def get_locked_exchange_rate(user_id, listing_id):
         if not result:
             return {
                 'success': False,
-                'error': 'No active contact access found'
+                'error': 'Listing not found'
             }
         
-        if not result['exchange_rate']:
+        # Calculate rate dynamically instead of storing it
+        from Listings.GetExchangeRate import get_exchange_rate
+        
+        rate_result = get_exchange_rate(
+            result['currency'],
+            result['accept_currency']
+        )
+        
+        if not rate_result or not rate_result.get('success'):
             return {
                 'success': False,
                 'error': 'Exchange rate not calculated yet'
@@ -145,13 +123,11 @@ def get_locked_exchange_rate(user_id, listing_id):
         
         return {
             'success': True,
-            'exchange_rate': float(result['exchange_rate']),
-            'locked_amount': float(result['locked_amount']),
-            'from_currency': result['from_currency'],
-            'to_currency': result['to_currency'],
+            'exchange_rate': float(rate_result.get('exchange_rate', 0)),
+            'from_currency': result['currency'],
+            'to_currency': result['accept_currency'],
             'listing_amount': float(result['listing_amount']),
-            'rate_calculation_date': result['rate_calculation_date'].strftime('%Y-%m-%d') if result['rate_calculation_date'] else None,
-            'calculation': f"{result['listing_amount']} {result['from_currency']} × {result['exchange_rate']} = {result['locked_amount']} {result['to_currency']}"
+            'calculation': f"{result['listing_amount']} {result['currency']} → {result['accept_currency']}"
         }
         
     except Exception as e:

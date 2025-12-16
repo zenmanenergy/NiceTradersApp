@@ -372,58 +372,6 @@ class RigorousNegotiationTests:
             self.log_result("PayNegotiationFee (Buyer)", False, str(e))
             return False
     
-    def test_both_pay_creates_contact_access(self):
-        """Test 7: When both parties pay, contact_access records are created and TotalExchanges incremented"""
-        print("\n[TEST 7] PayNegotiationFee (Seller) - verifies contact_access creation")
-        
-        try:
-            result = json.loads(pay_negotiation_fee(self.test_listing_id, self.seller_session_id))
-            self.assert_equal(result.get('success'), True, "Seller payment should succeed")
-            
-            # Query and verify BOTH payments set
-            cursor, connection = Database.ConnectToDatabase()
-            try:
-                cursor.execute("""
-                    SELECT buyer_paid_at, seller_paid_at FROM listing_payments WHERE listing_id = %s
-                """, (self.test_listing_id,))
-                payment = cursor.fetchone()
-                self.assert_not_none(payment['buyer_paid_at'], "buyer_paid_at should be set")
-                self.assert_not_none(payment['seller_paid_at'], "seller_paid_at should now be set")
-                
-                # Verify contact_access records created (2 total: one for buyer, one for seller)
-                cursor.execute("""
-                    SELECT COUNT(*) as count FROM contact_access WHERE listing_id = %s
-                """, (self.test_listing_id,))
-                count_result = cursor.fetchone()
-                self.assert_equal(count_result['count'], 2, f"Should have 2 contact_access records, got {count_result['count']}")
-                
-                # Verify both buyer and seller have access records
-                cursor.execute("""
-                    SELECT user_id FROM contact_access WHERE listing_id = %s ORDER BY user_id
-                """, (self.test_listing_id,))
-                accesses = cursor.fetchall()
-                access_users = {acc['user_id'] for acc in accesses}
-                self.assert_equal(access_users, {self.buyer_id, self.seller_id}, "Contact access should be for both buyer and seller")
-                
-                # Verify TotalExchanges incremented for BOTH users
-                cursor.execute("""
-                    SELECT TotalExchanges FROM users WHERE user_id IN (%s, %s) ORDER BY user_id
-                """, (self.buyer_id, self.seller_id))
-                users = cursor.fetchall()
-                for user in users:
-                    self.assert_equal(user['TotalExchanges'], 1, f"TotalExchanges should be 1, got {user['TotalExchanges']}")
-                
-                self.log_result("PayNegotiationFee (Seller)", True, "Contact access created, TotalExchanges incremented")
-                return True
-                
-            finally:
-                cursor.close()
-                connection.close()
-                
-        except Exception as e:
-            self.log_result("PayNegotiationFee (Seller)", False, str(e))
-            return False
-    
     def test_get_negotiation_returns_all_data(self):
         """Test 8: GetNegotiation returns all stored data correctly"""
         print("\n[TEST 8] GetNegotiation - verifies all fields match DB")
@@ -513,7 +461,6 @@ class RigorousNegotiationTests:
         cursor, connection = Database.ConnectToDatabase()
         
         try:
-            cursor.execute("DELETE FROM contact_access WHERE listing_id = %s", (self.test_listing_id,))
             cursor.execute("DELETE FROM listing_payments WHERE listing_id = %s", (self.test_listing_id,))
             cursor.execute("DELETE FROM listing_meeting_location WHERE listing_id = %s", (self.test_listing_id,))
             cursor.execute("DELETE FROM listing_meeting_time WHERE listing_id = %s", (self.test_listing_id,))
@@ -549,7 +496,6 @@ class RigorousNegotiationTests:
         self.test_propose_location_stores_coordinates()
         self.test_accept_location_sets_timestamp()
         self.test_pay_creates_payment_record()
-        self.test_both_pay_creates_contact_access()
         self.test_get_negotiation_returns_all_data()
         self.test_get_my_negotiations_returns_user_list()
         

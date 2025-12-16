@@ -3,8 +3,6 @@ from flask import Blueprint, request
 from flask_cors import cross_origin
 import json
 from .GetContactDetails import get_contact_details
-from .CheckContactAccess import check_contact_access
-from .PurchaseContactAccess import purchase_contact_access
 from .SendInterestMessage import send_interest_message
 from .ReportListing import report_listing
 from .GetPurchasedContacts import get_purchased_contacts
@@ -54,54 +52,7 @@ def GetContactDetails():
             'error': 'Failed to get contact details'
         })
 
-@contact_bp.route('/Contact/CheckContactAccess', methods=['GET'])
-@cross_origin()
-def CheckContactAccess():
-    """Check if user already has paid contact access to a specific listing"""
-    try:
-        # Get query parameters
-        listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
-        
-        if not listing_id or not session_id:
-            return json.dumps({
-                'success': False,
-                'error': 'Listing ID and Session ID are required'
-            })
-        
-        # Call the function to check access
-        result = check_contact_access(listing_id=listing_id, session_id=session_id)
-        return result
-        
-    except Exception as e:
-        return Debugger(e)
 
-@contact_bp.route('/Contact/PurchaseContactAccess', methods=['GET'])
-@cross_origin()
-def PurchaseContactAccess():
-    """Process payment for contact access to a listing"""
-    try:
-        # Get query parameters
-        listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
-        payment_method = request.args.get('paymentMethod', 'default')
-        
-        if not listing_id or not session_id:
-            return json.dumps({
-                'success': False,
-                'error': 'Listing ID and Session ID are required'
-            })
-        
-        # Call the function to process payment
-        result = purchase_contact_access(
-            listing_id=listing_id, 
-            session_id=session_id, 
-            payment_method=payment_method
-        )
-        return result
-        
-    except Exception as e:
-        return Debugger(e)
 
 @contact_bp.route('/Contact/SendInterestMessage', methods=['GET'])
 @cross_origin()

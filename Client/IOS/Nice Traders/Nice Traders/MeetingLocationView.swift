@@ -40,12 +40,12 @@ struct MeetingLocationView: View {
                 ZStack {
                     if mapIsReady {
                         let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
-                        let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" }
+                        let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" && !$0.proposedLocation.isEmpty }
                         
                         Map(position: $cameraPosition) {
                             
 
-                            // Listing location circle - only show if location not yet confirmed
+                            // Listing location circle - only show if location not yet confirmed AND location string is empty
                             if !hasConfirmedLocation {
                                 MapCircle(
                                     center: CLLocationCoordinate2D(

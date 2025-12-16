@@ -31,6 +31,8 @@ struct Listing: Identifiable, Hashable {
     let willRoundToNearestDollar: Bool
     var pendingLocationProposals: Int = 0
     var acceptedLocationProposals: Int = 0
+    let hasBuyer: Bool
+    let isPaid: Bool
 }
 
 struct ActiveExchange: Identifiable {
@@ -56,6 +58,10 @@ struct ActiveExchange: Identifiable {
     
     enum ExchangeType {
         case buyer, seller
+    }
+    
+    var amountWithCurrency: String {
+        "\(String(format: "%.2f", amount)) \(currencyFrom) → \(String(format: "%.2f", convertedAmount ?? 0)) \(currencyTo)"
     }
 }
 

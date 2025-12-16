@@ -724,16 +724,27 @@ extension MeetingDetailView {
                     return
                 }
                 
+                // Debug: Print raw response data
                 if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let success = json["success"] as? Bool, success {
-                    print("[DEBUG] Cancel location successful")
-                    // Reload proposals to reflect the deletion
-                    self.loadMeetingProposals()
+                   let rawString = String(data: data, encoding: .utf8) {
+                    print("[DEBUG] Cancel location raw response: \(rawString)")
+                }
+                
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    print("[DEBUG] Cancel location parsed JSON: \(json)")
+                    if let success = json["success"] as? Bool, success {
+                        print("[DEBUG] Cancel location successful")
+                        // Reload proposals to reflect the deletion
+                        self.loadMeetingProposals()
+                    } else {
+                        let message = json["message"] as? String ?? json["error"] as? String ?? "Failed to cancel location"
+                        self.errorMessage = message
+                        print("[DEBUG] Cancel location failed: \(self.errorMessage)")
+                    }
                 } else {
-                    let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
-                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to cancel location"
-                    print("[DEBUG] Cancel location failed: \(self.errorMessage)")
+                    print("[DEBUG] Cancel location: Failed to parse JSON response")
+                    self.errorMessage = "Failed to parse response"
                 }
             }
         }.resume()

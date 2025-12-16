@@ -216,7 +216,7 @@
     - [x] View/Edit Listings table (status updates, delete)
     - [x] View/Edit Messages table (read conversations)
     - [x] View/Edit Contact Access records (payments, refunds)
-    - [x] View/Edit Exchange Transactions table
+    - [x] View/Edit Payment Records table
     - [x] View/Edit User Settings table
     - [x] View/Edit Notifications table
     - [x] View/Edit User Ratings table
@@ -224,7 +224,7 @@
   - [ ] **Analytics Dashboard** (partial)
     - [x] Total users (active/inactive)
     - [x] Total listings (by status)
-    - [x] Total transactions (revenue tracking)
+    - [x] Total payments (revenue tracking)
     - [ ] Popular currencies
     - [ ] Geographic distribution
     - [ ] User growth charts

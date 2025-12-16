@@ -52,18 +52,18 @@ def send_interest_message(listing_id, session_id, message='', availability=[]):
                 'error': 'Cannot send interest message to your own listing'
             })
         
-        # Check if user has contact access (required to send messages)
+        # Check if user has active negotiation (listing_meeting_time entry)
+        # This means they've proposed or accepted a meeting time
         cursor.execute("""
-            SELECT access_id FROM contact_access 
-            WHERE user_id = %s AND listing_id = %s AND status = 'active'
-            AND (expires_at IS NULL OR expires_at > NOW())
+            SELECT listing_id FROM listing_meeting_time 
+            WHERE buyer_id = %s AND listing_id = %s AND rejected_at IS NULL
         """, (user_id, listing_id))
         
-        access_result = cursor.fetchone()
-        if not access_result:
+        negotiation_result = cursor.fetchone()
+        if not negotiation_result:
             return json.dumps({
                 'success': False,
-                'error': 'You must purchase contact access before sending messages'
+                'error': 'You must have an active negotiation to send messages'
             })
         
         # Create the interest message

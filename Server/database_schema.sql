@@ -12,7 +12,6 @@ DROP TABLE IF EXISTS admin_notifications;
 DROP TABLE IF EXISTS listing_reports;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS messages;
-DROP TABLE IF EXISTS contact_access;
 -- Original tables
 DROP TABLE IF EXISTS listings;
 DROP TABLE IF EXISTS history;
@@ -98,35 +97,6 @@ CREATE TABLE listings (
     INDEX idx_user_id (user_id),
     INDEX idx_created_at (created_at),
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-
--- Create contact_access table for tracking paid contact access
-CREATE TABLE contact_access (
-    access_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    listing_id CHAR(39) NOT NULL,
-    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NULL, -- NULL means never expires
-    status ENUM('active', 'expired', 'revoked') DEFAULT 'active',
-    payment_method VARCHAR(50) DEFAULT 'default',
-    amount_paid DECIMAL(10,2) NOT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
-    transaction_id VARCHAR(255) NULL, -- PayPal or payment gateway transaction ID
-    -- Exchange rate fields (locked in at time of purchase)
-    exchange_rate DECIMAL(15,8) NULL, -- Rate from listing currency to accept currency
-    locked_amount DECIMAL(15,2) NULL, -- Calculated amount buyer will pay (in accept_currency)
-    rate_calculation_date DATE NULL, -- Date rates were retrieved
-    from_currency VARCHAR(10) NULL, -- Listing currency (what seller has)
-    to_currency VARCHAR(10) NULL, -- Accept currency (what buyer will pay)
-    usd_rate_from DECIMAL(15,8) NULL, -- USD rate for listing currency (at time of purchase)
-    usd_rate_to DECIMAL(15,8) NULL, -- USD rate for accept currency (at time of purchase)
-    INDEX idx_user_listing (user_id, listing_id),
-    INDEX idx_status (status),
-    INDEX idx_purchased_at (purchased_at),
-    INDEX idx_rate_calculation_date (rate_calculation_date),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_active_access (user_id, listing_id, status)
 );
 
 -- Create listing_meeting_time table for time proposal/acceptance lifecycle
@@ -512,7 +482,7 @@ CREATE TABLE IF NOT EXISTS geocoding_cache (
 -- Show table creation status
 SELECT 'Complete NiceTradersApp database schema created successfully!' as status;
 SELECT 'All ID columns are CHAR(39) for consistent sizing' as note;
-SELECT 'Includes Contact module tables: contact_access, messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
+SELECT 'Includes Contact module tables: messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
 SELECT 'Includes Exchange Rates tables: exchange_rates, exchange_rate_logs' as exchange_rate_tables;
 SELECT 'Includes password_reset_tokens for forgot password functionality' as password_reset_table;
 SELECT 'Includes geocoding_cache for reverse geocoding optimization' as geocoding_table;

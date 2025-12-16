@@ -22,21 +22,20 @@ def get_contact_messages(session_id, listing_id):
         
         user_id = session_result['user_id']
         
-        # Verify user has access to this conversation (either listing owner or has purchased access)
+        # Verify user has access to this conversation (either listing owner or buyer with active negotiation)
         access_query = """
             SELECT 
                 l.user_id as listing_owner_id,
-                ca.user_id as purchaser_id,
+                lmt.buyer_id as buyer_id,
                 l.currency,
                 l.amount,
                 l.accept_currency,
                 l.location
             FROM listings l
-            LEFT JOIN contact_access ca ON l.listing_id = ca.listing_id 
-                AND ca.status = 'active' 
-                AND (ca.expires_at IS NULL OR ca.expires_at > NOW())
+            LEFT JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id 
+                AND lmt.rejected_at IS NULL
             WHERE l.listing_id = %s
-            AND (l.user_id = %s OR ca.user_id = %s)
+            AND (l.user_id = %s OR lmt.buyer_id = %s)
         """
         
         cursor.execute(access_query, (listing_id, user_id, user_id))
@@ -45,15 +44,15 @@ def get_contact_messages(session_id, listing_id):
         if not access_result:
             return json.dumps({
                 'success': False,
-                'error': 'Access denied - you must purchase contact access or own this listing'
+                'error': 'Access denied - you must have an active negotiation or own this listing'
             })
         
         listing_owner_id = access_result['listing_owner_id']
-        purchaser_id = access_result['purchaser_id']
+        buyer_id = access_result['buyer_id']
         
         # Determine the other participant in the conversation
         if user_id == listing_owner_id:
-            other_user_id = purchaser_id
+            other_user_id = buyer_id
             user_role = 'seller'
         else:
             other_user_id = listing_owner_id  

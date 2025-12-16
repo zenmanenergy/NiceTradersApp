@@ -125,11 +125,30 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
             if existing:
                 # Update existing time negotiation
                 print(f"🟠 [ProposeMeeting] Updating existing time negotiation: {existing['time_negotiation_id']}")
+                # Only clear accepted_at if the time has actually changed
                 cursor.execute("""
-                    UPDATE listing_meeting_time 
-                    SET meeting_time = %s, proposed_by = %s, accepted_at = NULL, rejected_at = NULL, updated_at = NOW()
+                    SELECT meeting_time, accepted_at FROM listing_meeting_time
                     WHERE listing_id = %s
-                """, (proposed_datetime, proposer_id, listing_id))
+                """, (listing_id,))
+                current = cursor.fetchone()
+                
+                # Check if time changed
+                time_changed = current and current['meeting_time'] != proposed_datetime
+                
+                if time_changed:
+                    # Time changed, so reset acceptance
+                    cursor.execute("""
+                        UPDATE listing_meeting_time 
+                        SET meeting_time = %s, proposed_by = %s, accepted_at = NULL, rejected_at = NULL, updated_at = NOW()
+                        WHERE listing_id = %s
+                    """, (proposed_datetime, proposer_id, listing_id))
+                else:
+                    # Time is the same, keep acceptance
+                    cursor.execute("""
+                        UPDATE listing_meeting_time 
+                        SET meeting_time = %s, proposed_by = %s, rejected_at = NULL, updated_at = NOW()
+                        WHERE listing_id = %s
+                    """, (proposed_datetime, proposer_id, listing_id))
                 results['proposal_ids']['time'] = existing['time_negotiation_id']
             else:
                 # Create new time negotiation
@@ -179,17 +198,41 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
             if existing:
                 # Update existing location negotiation
                 print(f"🟠 [ProposeMeeting] Updating existing location negotiation: {existing['location_negotiation_id']}")
+                # Only clear accepted_at if the location has actually changed
                 cursor.execute("""
-                    UPDATE listing_meeting_location 
-                    SET meeting_location_lat = %s, 
-                        meeting_location_lng = %s,
-                        meeting_location_name = %s,
-                        proposed_by = %s,
-                        accepted_at = NULL,
-                        rejected_at = NULL,
-                        updated_at = NOW()
+                    SELECT meeting_location_lat, meeting_location_lng, accepted_at FROM listing_meeting_location
                     WHERE listing_id = %s
-                """, (lat, lng, proposed_location, proposer_id, listing_id))
+                """, (listing_id,))
+                current = cursor.fetchone()
+                
+                # Check if location changed (compare coordinates)
+                location_changed = current and (current['meeting_location_lat'] != lat or current['meeting_location_lng'] != lng)
+                
+                if location_changed:
+                    # Location changed, so reset acceptance
+                    cursor.execute("""
+                        UPDATE listing_meeting_location 
+                        SET meeting_location_lat = %s, 
+                            meeting_location_lng = %s,
+                            meeting_location_name = %s,
+                            proposed_by = %s,
+                            accepted_at = NULL,
+                            rejected_at = NULL,
+                            updated_at = NOW()
+                        WHERE listing_id = %s
+                    """, (lat, lng, proposed_location, proposer_id, listing_id))
+                else:
+                    # Location is the same, keep acceptance
+                    cursor.execute("""
+                        UPDATE listing_meeting_location 
+                        SET meeting_location_lat = %s, 
+                            meeting_location_lng = %s,
+                            meeting_location_name = %s,
+                            proposed_by = %s,
+                            rejected_at = NULL,
+                            updated_at = NOW()
+                        WHERE listing_id = %s
+                    """, (lat, lng, proposed_location, proposer_id, listing_id))
                 results['proposal_ids']['location'] = existing['location_negotiation_id']
             else:
                 # Create new location negotiation

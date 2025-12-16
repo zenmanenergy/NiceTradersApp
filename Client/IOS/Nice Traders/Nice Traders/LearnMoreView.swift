@@ -137,12 +137,6 @@ struct LearnMoreView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             PricingRow(label: localizationManager.localize("CREATING_LISTINGS"), price: localizationManager.localize("FREE"))
                             PricingRow(label: localizationManager.localize("SEARCHING_LISTINGS"), price: localizationManager.localize("FREE"))
-                            PricingRow(label: localizationManager.localize("CONTACT_ACCESS_FEE"), price: localizationManager.localize("CONTACT_FEE_PRICE"), description: localizationManager.localize("CONTACT_FEE_DESCRIPTION"))
-                            
-                            Text(localizationManager.localize("CONTACT_FEE_EXPLANATION"))
-                                .font(.system(size: 14))
-                                .foregroundColor(Color(hex: "718096"))
-                                .padding(.top, 8)
                         }
                         .padding(16)
                         .background(Color(hex: "f7fafc"))

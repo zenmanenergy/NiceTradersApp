@@ -133,8 +133,10 @@ def get_user_dashboard(SessionId):
         # Get user's active listings (last 10 listings created by user as seller)
         user_listings_query = """
             SELECT l.listing_id, l.currency, l.amount, l.accept_currency, l.location, 
-                   l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar
+                   l.status, l.created_at, l.available_until, l.will_round_to_nearest_dollar, l.buyer_id,
+                   CASE WHEN lp.buyer_paid_at IS NOT NULL OR lp.seller_paid_at IS NOT NULL THEN 1 ELSE 0 END as has_payment
             FROM listings l
+            LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
             WHERE l.user_id = %s 
             AND l.status = 'active'
             AND l.available_until > NOW()
@@ -179,8 +181,6 @@ def get_user_dashboard(SessionId):
         cursor.execute(active_exchanges_query, (user_id, user_id))
         active_exchanges = cursor.fetchall()
         print(f"[GetUserDashboard] Found {len(active_exchanges)} active exchanges")
-        for exchange in active_exchanges:
-            print(f"[GetUserDashboard]   - Exchange: {exchange['listing_id']}, buyer: {exchange['buyer_id']}, seller: {exchange['seller_id']}")
         
         # Placeholder for pending offers (exchange_offers table is not being used)
         pending_offers = []
@@ -215,7 +215,9 @@ def get_user_dashboard(SessionId):
                     'status': listing['status'],
                     'createdAt': listing['created_at'].isoformat() if listing['created_at'] else None,
                     'availableUntil': listing['available_until'].isoformat() if listing['available_until'] else None,
-                    'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False
+                    'willRoundToNearestDollar': bool(listing['will_round_to_nearest_dollar']) if listing['will_round_to_nearest_dollar'] is not None else False,
+                    'hasBuyer': listing['buyer_id'] is not None,
+                    'isPaid': bool(listing['has_payment'])
                 }
                 for listing in user_listings
             ],

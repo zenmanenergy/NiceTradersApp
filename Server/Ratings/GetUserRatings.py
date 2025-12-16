@@ -31,13 +31,9 @@ def get_user_ratings(user_id, Limit=10, Offset=0):
                 ur.created_at,
                 u.user_id as rater_id,
                 u.FirstName as rater_first_name,
-                u.LastName as rater_last_name,
-                t.transaction_id,
-                t.amount,
-                t.currency
+                u.LastName as rater_last_name
             FROM user_ratings ur
             JOIN users u ON ur.rater_id = u.user_id
-            LEFT JOIN transactions t ON ur.transaction_id = t.transaction_id
             WHERE ur.user_id = %s
             ORDER BY ur.created_at DESC
             LIMIT %s OFFSET %s

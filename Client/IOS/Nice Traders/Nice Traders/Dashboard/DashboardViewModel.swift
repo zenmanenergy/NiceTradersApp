@@ -28,6 +28,7 @@ class DashboardViewModel: ObservableObject {
         
         allActiveExchanges = []
         purchasedContactsData = []
+        globalSeenIds = []
         pendingNegotiations = []
         globalSeenIds = []
         
@@ -55,6 +56,18 @@ class DashboardViewModel: ObservableObject {
                       let userData = dashboardData["user"] as? [String: Any] else {
                     self?.isLoading = false
                     return
+                }
+                
+                // Debug: Print raw activeExchanges from server
+                if let activeExchanges = dashboardData["activeExchanges"] as? [[String: Any]] {
+                    print("[DashboardViewModel] RAW SERVER RESPONSE - GetUserDashboard activeExchanges:")
+                    print("[DashboardViewModel] Count: \(activeExchanges.count)")
+                    for (index, exchange) in activeExchanges.enumerated() {
+                        let listingId = exchange["listing_id"] as? String ?? "unknown"
+                        let amount = exchange["amount"] as? Double ?? 0
+                        let currency = exchange["currency"] as? String ?? "unknown"
+                        print("[DashboardViewModel]   [\(index)]: listing_id=\(listingId), amount=\(amount) \(currency)")
+                    }
                 }
                 
                 self?.processDashboardSummary(dashboardData, userData: userData, sessionId: sessionId, thisRequestToken: thisRequestToken)
@@ -103,13 +116,23 @@ class DashboardViewModel: ObservableObject {
         // Process active exchanges
         if let activeExchangesData = dashboardData["activeExchanges"] as? [[String: Any]] {
             let dashboardExchanges = activeExchangesData.compactMap { parseActiveExchange($0) }
+            print("[DashboardViewModel] ===== DASHBOARD API RESPONSE =====")
+            print("[DashboardViewModel] Loaded \(dashboardExchanges.count) exchanges from dashboard data")
+            for exchange in dashboardExchanges {
+                print("[DashboardViewModel]   - \(exchange.id): \(exchange.amountWithCurrency)")
+            }
             
             let uniqueDashboardExchanges = dashboardExchanges.filter { exchange in
-                if globalSeenIds.contains(exchange.id) { return false }
+                if globalSeenIds.contains(exchange.id) {
+                    print("[DashboardViewModel] Filtering out duplicate: \(exchange.id)")
+                    return false
+                }
                 globalSeenIds.insert(exchange.id)
                 return true
             }
+            print("[DashboardViewModel] After dedup: \(uniqueDashboardExchanges.count) unique exchanges")
             allActiveExchanges.append(contentsOf: uniqueDashboardExchanges)
+            print("[DashboardViewModel] ===== END DASHBOARD RESPONSE =====")
             
             for exchange in uniqueDashboardExchanges {
                 dispatchGroup.enter()
@@ -124,6 +147,23 @@ class DashboardViewModel: ObservableObject {
         }
         
         dispatchGroup.notify(queue: .main) {
+            // Final deduplication pass
+            var seenIds = Set<String>()
+            self.allActiveExchanges = self.allActiveExchanges.filter { exchange in
+                if seenIds.contains(exchange.id) {
+                    print("[DashboardViewModel] Final dedup: Removing duplicate \(exchange.id)")
+                    return false
+                }
+                seenIds.insert(exchange.id)
+                return true
+            }
+            
+            print("[DashboardViewModel] ===== FINAL ACTIVE EXCHANGES =====")
+            print("[DashboardViewModel] Total: \(self.allActiveExchanges.count)")
+            for exchange in self.allActiveExchanges {
+                print("[DashboardViewModel]   - \(exchange.id): \(exchange.amountWithCurrency)")
+            }
+            print("[DashboardViewModel] ===== END ACTIVE EXCHANGES =====")
             self.updateExchangesWithMeetingData(proposalCounts: proposalCounts, hasLocationProposalMap: hasLocationProposalMap, meetingDataMap: meetingDataMap)
             self.isLoading = false
         }
@@ -144,16 +184,35 @@ class DashboardViewModel: ObservableObject {
                     return
                 }
                 
+                // Debug: Print raw purchased_contacts from server
+                print("[DashboardViewModel] RAW SERVER RESPONSE - GetPurchasedContacts:")
+                print("[DashboardViewModel] Count: \(contacts.count)")
+                for (index, contact) in contacts.enumerated() {
+                    let listingId = contact["listing_id"] as? String ?? "unknown"
+                    let amount = contact["amount"] as? Double ?? 0
+                    let currency = contact["currency"] as? String ?? "unknown"
+                    print("[DashboardViewModel]   [\(index)]: listing_id=\(listingId), amount=\(amount) \(currency)")
+                }
+                
                 self?.purchasedContactsData = contacts
                 let purchasedExchanges = contacts.compactMap { self?.parsePurchasedContact($0) ?? nil }.compactMap { $0 }
+                print("[DashboardViewModel] ===== PURCHASED CONTACTS API RESPONSE =====")
+                print("[DashboardViewModel] Loaded \(purchasedExchanges.count) purchased exchanges")
+                for exchange in purchasedExchanges {
+                    print("[DashboardViewModel]   - \(exchange.id): \(exchange.amountWithCurrency)")
+                }
                 
                 let uniquePurchasedExchanges = purchasedExchanges.filter { exchange in
-                    if self?.globalSeenIds.contains(exchange.id) ?? false { return false }
+                    if self?.globalSeenIds.contains(exchange.id) ?? false {
+                        print("[DashboardViewModel] Filtering out duplicate purchased: \(exchange.id)")
+                        return false
+                    }
                     self?.globalSeenIds.insert(exchange.id)
                     return true
                 }
-                
+                print("[DashboardViewModel] After dedup: \(uniquePurchasedExchanges.count) unique purchased exchanges")
                 self?.allActiveExchanges.append(contentsOf: uniquePurchasedExchanges)
+                print("[DashboardViewModel] ===== END PURCHASED CONTACTS RESPONSE =====")
             }
         }.resume()
     }
@@ -173,11 +232,33 @@ class DashboardViewModel: ObservableObject {
                     return
                 }
                 
-                let sellerExchanges = purchases.compactMap { self?.parseListingPurchase($0) ?? nil }.compactMap { $0 }
-                let existingIds = Set(self?.allActiveExchanges.map { $0.id } ?? [])
-                let uniqueSellerExchanges = sellerExchanges.filter { !existingIds.contains($0.id) }
+                // Debug: Print raw listing_purchases from server
+                print("[DashboardViewModel] RAW SERVER RESPONSE - GetListingPurchases:")
+                print("[DashboardViewModel] Count: \(purchases.count)")
+                for (index, purchase) in purchases.enumerated() {
+                    let listingId = purchase["listing_id"] as? String ?? "unknown"
+                    let amount = purchase["amount"] as? Double ?? 0
+                    let currency = purchase["currency"] as? String ?? "unknown"
+                    print("[DashboardViewModel]   [\(index)]: listing_id=\(listingId), amount=\(amount) \(currency)")
+                }
                 
+                let sellerExchanges = purchases.compactMap { self?.parseListingPurchase($0) ?? nil }.compactMap { $0 }
+                print("[DashboardViewModel] ===== LISTING PURCHASES API RESPONSE =====")
+                print("[DashboardViewModel] Loaded \(sellerExchanges.count) seller exchanges")
+                for exchange in sellerExchanges {
+                    print("[DashboardViewModel]   - \(exchange.id): \(exchange.amountWithCurrency)")
+                }
+                let existingIds = Set(self?.allActiveExchanges.map { $0.id } ?? [])
+                let uniqueSellerExchanges = sellerExchanges.filter {
+                    if existingIds.contains($0.id) {
+                        print("[DashboardViewModel] Filtering out duplicate seller: \($0.id)")
+                        return false
+                    }
+                    return true
+                }
+                print("[DashboardViewModel] After dedup: \(uniqueSellerExchanges.count) unique seller exchanges")
                 self?.allActiveExchanges.append(contentsOf: uniqueSellerExchanges)
+                print("[DashboardViewModel] ===== END LISTING PURCHASES RESPONSE =====")
             }
         }.resume()
     }
@@ -259,7 +340,9 @@ class DashboardViewModel: ObservableObject {
             expiresDate: dict["availableUntil"] as? String ?? "",
             viewCount: 0,
             contactCount: 0,
-            willRoundToNearestDollar: dict["willRoundToNearestDollar"] as? Bool ?? false
+            willRoundToNearestDollar: dict["willRoundToNearestDollar"] as? Bool ?? false,
+            hasBuyer: dict["hasBuyer"] as? Bool ?? false,
+            isPaid: dict["isPaid"] as? Bool ?? false
         )
     }
     
@@ -353,6 +436,13 @@ class DashboardViewModel: ObservableObject {
         let longitude = (listing["longitude"] as? Double) ?? 0.0
         let radius = (listing["radius"] as? Int) ?? 0
         
+        // Parse meeting time
+        let acceptedAt = contact["accepted_at"] as? String
+        let timeAccepted = acceptedAt != nil && acceptedAt?.isEmpty == false
+        
+        // Get displayStatus from server
+        let displayStatus = contact["displayStatus"] as? String
+        
         return ActiveExchange(
             id: listingId,
             currencyFrom: currency,
@@ -366,13 +456,13 @@ class DashboardViewModel: ObservableObject {
             radius: radius,
             type: .buyer,
             willRoundToNearestDollar: (listing["will_round_to_nearest_dollar"] as? Bool) ?? false,
-            meetingTime: nil,
+            meetingTime: contact["meeting_time"] as? String,
             status: "proposed",
             hasLocationProposal: false,
             isLocationProposalFromMe: false,
-            timeAccepted: false,
+            timeAccepted: timeAccepted,
             locationAccepted: false,
-            displayStatus: nil
+            displayStatus: displayStatus
         )
     }
     
@@ -400,6 +490,7 @@ class DashboardViewModel: ObservableObject {
         let latitude = (listing["latitude"] as? Double) ?? 0.0
         let longitude = (listing["longitude"] as? Double) ?? 0.0
         let radius = (listing["radius"] as? Int) ?? 0
+        let displayStatusValue = purchase["displayStatus"] as? String
         
         return ActiveExchange(
             id: listingId,
@@ -420,7 +511,7 @@ class DashboardViewModel: ObservableObject {
             isLocationProposalFromMe: false,
             timeAccepted: false,
             locationAccepted: false,
-            displayStatus: nil
+            displayStatus: displayStatusValue
         )
     }
     
@@ -482,6 +573,10 @@ class DashboardViewModel: ObservableObject {
         
         allActiveExchanges = allActiveExchanges.map { exchange in
             let meetingData = meetingDataMap[exchange.id] ?? [:]
+            
+            // Use displayStatus from server if available, otherwise keep existing
+            let displayStatus = (meetingData["displayStatus"] as? String) ?? exchange.displayStatus
+            
             return ActiveExchange(
                 id: exchange.id,
                 currencyFrom: exchange.currencyFrom,
@@ -501,36 +596,51 @@ class DashboardViewModel: ObservableObject {
                 isLocationProposalFromMe: (meetingData["isLocationProposalFromMe"] as? Bool) ?? false,
                 timeAccepted: (meetingData["timeAccepted"] as? Bool) ?? exchange.timeAccepted,
                 locationAccepted: (meetingData["locationAccepted"] as? Bool) ?? false,
-                displayStatus: exchange.displayStatus
+                displayStatus: displayStatus
             )
         }
     }
     
     private func extractMeetingData(from result: [String: Any]?) -> [String: Any?] {
-        guard let proposals = result?["proposals"] as? [[String: Any]] else {
-            return ["meetingTime": nil, "timeAccepted": false, "locationAccepted": false, "isLocationProposalFromMe": false]
+        guard let result = result else {
+            return [:]
         }
         
-        var meetingTime: String? = nil
-        var timeAccepted: Bool = false
-        var locationAccepted: Bool = false
-        var isLocationProposalFromMe: Bool = false
+        var data: [String: Any?] = [:]
         
-        for proposal in proposals {
-            if let type = proposal["type"] as? String {
-                if type == "time" && (proposal["status"] as? String) == "accepted" {
-                    meetingTime = proposal["proposed_time"] as? String
-                    timeAccepted = true
-                } else if type == "location" && (proposal["status"] as? String) != "rejected" {
-                    isLocationProposalFromMe = (proposal["is_from_me"] as? Bool) ?? false
-                    if (proposal["status"] as? String) == "accepted" {
-                        locationAccepted = true
+        // Always include displayStatus if present
+        if let displayStatus = result["displayStatus"] as? String {
+            data["displayStatus"] = displayStatus
+        }
+        
+        // Extract other meeting data if proposals exist
+        if let proposals = result["proposals"] as? [[String: Any]] {
+            var meetingTime: String? = nil
+            var timeAccepted: Bool = false
+            var locationAccepted: Bool = false
+            var isLocationProposalFromMe: Bool = false
+            
+            for proposal in proposals {
+                if let type = proposal["type"] as? String {
+                    if type == "time" && (proposal["status"] as? String) == "accepted" {
+                        meetingTime = proposal["proposed_time"] as? String
+                        timeAccepted = true
+                    } else if type == "location" && (proposal["status"] as? String) != "rejected" {
+                        isLocationProposalFromMe = (proposal["is_from_me"] as? Bool) ?? false
+                        if (proposal["status"] as? String) == "accepted" {
+                            locationAccepted = true
+                        }
                     }
                 }
             }
+            
+            data["meetingTime"] = meetingTime
+            data["timeAccepted"] = timeAccepted
+            data["locationAccepted"] = locationAccepted
+            data["isLocationProposalFromMe"] = isLocationProposalFromMe
         }
         
-        return ["meetingTime": meetingTime, "timeAccepted": timeAccepted, "locationAccepted": locationAccepted, "isLocationProposalFromMe": isLocationProposalFromMe]
+        return data
     }
     
     private func formatJoinDate(_ dateString: String) -> String {

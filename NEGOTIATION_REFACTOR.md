@@ -56,7 +56,7 @@ created_at (timestamp, default CURRENT_TIMESTAMP)
 #### Payment Endpoints (ListingPayment.py)
 | Endpoint | Method | Purpose | Current Behavior |
 |----------|--------|---------|------------------|
-| `/ListingPayment/Pay` | GET | **PAY $2 negotiation fee** | Creates `buyer_paid`/`seller_paid` actions, creates contact_access, increments TotalExchanges |
+| `/ListingPayment/Pay` | GET | **PAY $2 negotiation fee** | Creates `buyer_paid`/`seller_paid` actions, increments TotalExchanges |
 
 #### Information Endpoints (MeetingTime.py)
 | Endpoint | Method | Purpose | Current Behavior |
@@ -79,7 +79,7 @@ created_at (timestamp, default CURRENT_TIMESTAMP)
 4. **Time accepted, now location phase** → Either party proposes location via `/MeetingLocation/Propose`
 5. **Location negotiation** → `/MeetingLocation/Counter` or `/MeetingLocation/Accept` (partial iOS implementation, needs testing)
 6. **Both time & location accepted, now payment** → Either party pays via `/ListingPayment/Pay`
-7. **Both paid** → Negotiation complete, contact_access created
+7. **Both paid** → Negotiation complete
 
 ### Known Issues with Current Design
 - **Location negotiation incomplete** - iOS partially implements location endpoints but needs testing/completion
@@ -326,7 +326,7 @@ def action_required_for_user(user_id, time_neg):
 - [x] CounterMeetingLocation.py - NEW: Updates location proposals
 - [x] AcceptMeetingLocation.py - NEW: Accepts location proposals
 - [x] RejectMeetingLocation.py - NEW: Rejects location proposals
-- [x] PayNegotiationFee.py - Uses listing_payments table, creates contact_access when both paid
+- [x] PayNegotiationFee.py - Uses listing_payments table, increments TotalExchanges when both paid
 - [x] GetNegotiation.py - Queries new tables, uses NegotiationStatus functions
 - [x] GetMyNegotiations.py - Queries new tables, uses NegotiationStatus functions
 - [x] All routes in Negotiations.py updated to call refactored functions
@@ -472,7 +472,7 @@ def reject_meeting_location(listing_id, session_id):
 ### 3.9 PayNegotiationFee.py → `/ListingPayment/Pay` (MAJOR REFACTOR)
 **Current behavior**: 
 - Tracks buyer_paid_at and seller_paid_at in payments table
-- Creates contact_access + increments TotalExchanges
+- Increments TotalExchanges
 
 **New behavior**:
 ```python
@@ -484,32 +484,11 @@ def pay_negotiation_fee(listing_id, session_id):
     # 5. Determine if user is buyer or seller
     # 6. Check if user already paid (if paid_at is not NULL, return error)
     # 7. Update listing_payments SET buyer_paid_at = NOW() OR seller_paid_at = NOW()
-    # 8. Create transaction record in transactions table
-    # 9. Check if both paid (both buyer_paid_at and seller_paid_at are NOT NULL):
+    # 8. Check if both paid (both buyer_paid_at and seller_paid_at are NOT NULL):
     #    - If both paid:
-    #      a. Create contact_access record for buyer:
-    #         - access_id = new UUID with CAC- prefix (39 chars)
-    #         - user_id = buyer_id
-    #         - listing_id = listing_id
-    #         - purchased_at = NOW()
-    #         - status = 'active'
-    #         - amount_paid = 2.00
-    #         - currency = 'USD'
-    #      b. Create contact_access record for seller: (same structure but seller_id from listing.seller_user_id)
-    #      c. Increment TotalExchanges for both buyer and seller: UPDATE users SET TotalExchanges = TotalExchanges + 1
-    # 10. Call get_payment_status() to determine new status ('paid_partial' or 'paid_complete')
-    # 11. Return { success: true, status, amountCharged: 2.00, bothPaid: bool, message: "..." }
-```
-
-**contact_access schema for reference**:
-```
-access_id (char(39), PK)
-user_id (char(39), FK to users)
-listing_id (char(39), FK to listings)
-purchased_at (timestamp, default NOW())
-status (varchar(20), e.g. 'active')
-amount_paid (decimal(10,2))
-currency (varchar(3), e.g. 'USD')
+    #      a. Increment TotalExchanges for both buyer and seller: UPDATE users SET TotalExchanges = TotalExchanges + 1
+    # 9. Call get_payment_status() to determine new status ('paid_partial' or 'paid_complete')
+    # 10. Return { success: true, status, amountCharged: 2.00, bothPaid: bool, message: "..." }
 ```
 
 **iOS Impact**: Response format stays same
@@ -822,7 +801,6 @@ def get_my_negotiations(session_id):
   - ✓ One party pays → status='paid_partial'
   - ✓ Both pay → status='paid_complete'
   - ✓ TotalExchanges incremented for both users
-  - ✓ contact_access records created for both parties
   
 - [x] **Test GetMyNegotiations**
   - ✓ Returns all user's negotiations (as buyer or seller)

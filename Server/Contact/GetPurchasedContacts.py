@@ -1,9 +1,12 @@
 from _Lib import Database
 import json
 from datetime import datetime
+import sys
+sys.path.insert(0, '/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server')
+from Dashboard.GetUserDashboard import calculate_negotiation_status
 
 def get_purchased_contacts(session_id):
-    """Get all listings that the user has purchased contact access to"""
+    """Get all listings that the user has active negotiations for (as buyer)"""
     try:
         print(f"[GetPurchasedContacts] Getting purchased contacts for session {session_id}")
         
@@ -22,137 +25,74 @@ def get_purchased_contacts(session_id):
         
         user_id = session_result['user_id']
         
-        # First check if exchange rate columns exist
-        cursor.execute("DESCRIBE contact_access")
-        columns = [row['Field'] for row in cursor.fetchall()]
-        has_exchange_columns = 'exchange_rate' in columns
-        
-        # Get all purchased contacts with listing and seller details
-        # Use ROW_NUMBER to get only the most recent access per listing
-        if has_exchange_columns:
-            query = """
-                SELECT 
-                    ca.access_id,
-                    ca.listing_id,
-                    ca.purchased_at,
-                    ca.expires_at,
-                    ca.transaction_id,
-                    ca.exchange_rate,
-                    ca.locked_amount,
-                    ca.from_currency,
-                    ca.to_currency,
-                    ca.rate_calculation_date,
-                    l.currency,
-                    l.amount,
-                    l.accept_currency,
-                    l.location,
-                    l.latitude,
-                    l.longitude,
-                    l.location_radius,
-                    l.meeting_preference,
-                    l.available_until,
-                    l.will_round_to_nearest_dollar,
-                    u.FirstName as seller_first_name,
-                    u.LastName as seller_last_name,
-                    u.Email as seller_email,
-                    l.user_id as seller_user_id,
-                    -- Get latest message info
-                    (SELECT COUNT(*) FROM messages m WHERE m.listing_id = l.listing_id 
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))) as message_count,
-                    (SELECT m.message_text FROM messages m WHERE m.listing_id = l.listing_id
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))
-                     ORDER BY m.sent_at DESC LIMIT 1) as last_message,
-                    (SELECT m.sent_at FROM messages m WHERE m.listing_id = l.listing_id
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))
-                     ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
-                FROM (
-                    SELECT *,
-                        ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
-                    FROM contact_access
-                    WHERE user_id = %s 
-                    AND status = 'active'
-                    AND (expires_at IS NULL OR expires_at > NOW())
-                ) ca
-                JOIN listings l ON ca.listing_id = l.listing_id
-                JOIN users u ON l.user_id = u.user_id
-                WHERE ca.rn = 1
-                AND l.status != 'completed'
-                ORDER BY ca.purchased_at DESC
-            """
-        else:
-            # Fallback query without exchange rate columns
-            query = """
-                SELECT 
-                    ca.access_id,
-                    ca.listing_id,
-                    ca.purchased_at,
-                    ca.expires_at,
-                    ca.transaction_id,
-                    NULL as exchange_rate,
-                    NULL as locked_amount,
-                    NULL as from_currency,
-                    NULL as to_currency,
-                    NULL as rate_calculation_date,
-                    l.currency,
-                    l.amount,
-                    l.accept_currency,
-                    l.location,
-                    l.latitude,
-                    l.longitude,
-                    l.location_radius,
-                    l.meeting_preference,
-                    l.available_until,
-                    l.will_round_to_nearest_dollar,
-                    u.FirstName as seller_first_name,
-                    u.LastName as seller_last_name,
-                    u.Email as seller_email,
-                    l.user_id as seller_user_id,
-                    -- Get latest message info
-                    (SELECT COUNT(*) FROM messages m WHERE m.listing_id = l.listing_id 
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))) as message_count,
-                    (SELECT m.message_text FROM messages m WHERE m.listing_id = l.listing_id
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))
-                     ORDER BY m.sent_at DESC LIMIT 1) as last_message,
-                    (SELECT m.sent_at FROM messages m WHERE m.listing_id = l.listing_id
-                     AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
-                          OR (m.sender_id = l.user_id AND m.recipient_id = %s))
-                     ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
-                FROM (
-                    SELECT *,
-                        ROW_NUMBER() OVER (PARTITION BY listing_id ORDER BY purchased_at DESC) as rn
-                    FROM contact_access
-                    WHERE user_id = %s 
-                    AND status = 'active'
-                    AND (expires_at IS NULL OR expires_at > NOW())
-                ) ca
-                JOIN listings l ON ca.listing_id = l.listing_id AND ca.user_id != l.user_id
-                JOIN users u ON l.user_id = u.user_id
-                WHERE ca.rn = 1
-                AND l.status != 'completed'
-                ORDER BY ca.purchased_at DESC
-            """
+        # Get all active negotiations where current user is the buyer
+        # Based on listing_meeting_time where buyer_id matches current user
+        query = """
+            SELECT 
+                lmt.listing_id,
+                lmt.buyer_id,
+                lmt.proposed_by,
+                l.currency,
+                l.amount,
+                l.accept_currency,
+                l.location,
+                l.latitude,
+                l.longitude,
+                l.location_radius,
+                l.meeting_preference,
+                l.available_until,
+                l.will_round_to_nearest_dollar,
+                lmt.meeting_time,
+                lmt.accepted_at,
+                lmt.rejected_at,
+                lp.buyer_paid_at,
+                lp.seller_paid_at,
+                CASE WHEN lml.location_negotiation_id IS NOT NULL THEN 1 ELSE 0 END as has_location_proposal,
+                lml.proposed_by as location_proposed_by,
+                lml.accepted_at as location_accepted_at,
+                u.FirstName as seller_first_name,
+                u.LastName as seller_last_name,
+                u.Email as seller_email,
+                l.user_id as seller_user_id,
+                -- Get latest message info
+                (SELECT COUNT(*) FROM messages m WHERE m.listing_id = l.listing_id 
+                 AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
+                      OR (m.sender_id = l.user_id AND m.recipient_id = %s))) as message_count,
+                (SELECT m.message_text FROM messages m WHERE m.listing_id = l.listing_id
+                 AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
+                      OR (m.sender_id = l.user_id AND m.recipient_id = %s))
+                 ORDER BY m.sent_at DESC LIMIT 1) as last_message,
+                (SELECT m.sent_at FROM messages m WHERE m.listing_id = l.listing_id
+                 AND ((m.sender_id = %s AND m.recipient_id = l.user_id) 
+                      OR (m.sender_id = l.user_id AND m.recipient_id = %s))
+                 ORDER BY m.sent_at DESC LIMIT 1) as last_message_time
+            FROM listing_meeting_time lmt
+            JOIN listings l ON lmt.listing_id = l.listing_id
+            JOIN users u ON l.user_id = u.user_id
+            LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
+            LEFT JOIN listing_meeting_location lml ON l.listing_id = lml.listing_id
+            WHERE lmt.buyer_id = %s
+            AND lmt.rejected_at IS NULL
+            AND l.status != 'completed'
+            ORDER BY lmt.updated_at DESC
+        """
         
         cursor.execute(query, (user_id, user_id, user_id, user_id, user_id, user_id, user_id))
         results = cursor.fetchall()
         
         purchased_contacts = []
         for row in results:
+            # Calculate displayStatus for the exchange
+            display_status = calculate_negotiation_status(row, user_id)
+            
             contact = {
-                'access_id': row['access_id'],
                 'listing_id': row['listing_id'],
-                'purchased_at': row['purchased_at'].isoformat() if row['purchased_at'] else None,
-                'expires_at': row['expires_at'].isoformat() if row['expires_at'] else None,
-                'transaction_id': row['transaction_id'],
-                'exchange_rate': float(row['exchange_rate']) if row['exchange_rate'] else None,
-                'locked_amount': float(row['locked_amount']) if row['locked_amount'] else None,
-                'from_currency': row['from_currency'],
-                'to_currency': row['to_currency'],
-                'rate_calculation_date': row['rate_calculation_date'].isoformat() if row['rate_calculation_date'] else None,
+                'meeting_time': row['meeting_time'].isoformat() if row['meeting_time'] else None,
+                'accepted_at': row['accepted_at'].isoformat() if row['accepted_at'] else None,
+                'rejected_at': row['rejected_at'].isoformat() if row['rejected_at'] else None,
+                'buyer_paid_at': row['buyer_paid_at'].isoformat() if row['buyer_paid_at'] else None,
+                'seller_paid_at': row['seller_paid_at'].isoformat() if row['seller_paid_at'] else None,
+                'displayStatus': display_status,
                 'listing': {
                     'currency': row['currency'],
                     'amount': float(row['amount']) if row['amount'] else 0,

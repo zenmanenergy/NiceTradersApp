@@ -131,15 +131,6 @@ def pay_negotiation_fee(listing_id, session_id):
                 WHERE listing_id = %s
             """, (transaction_id, listing_id))
         
-        # Create transaction record
-        cursor.execute("""
-            INSERT INTO transactions (
-                transaction_id, user_id, listing_id,
-                amount, currency, transaction_type, status,
-                payment_method, description, completed_at
-            ) VALUES (%s, %s, %s, %s, 'USD', 'contact_fee', 'completed', 'default', 'Negotiation fee payment', NOW())
-        """, (transaction_id, user_id, listing_id, amount_to_charge))
-        
         # Check if both parties have now paid
         cursor.execute("""
             SELECT buyer_paid_at, seller_paid_at
@@ -151,26 +142,6 @@ def pay_negotiation_fee(listing_id, session_id):
         both_paid = (payment_check['buyer_paid_at'] is not None and payment_check['seller_paid_at'] is not None)
         
         if both_paid:
-            # Create contact_access entries for both buyer and seller
-            buyer_access_id = f"CAC-{str(uuid.uuid4())[:-1]}"
-            seller_access_id = f"CAC-{str(uuid.uuid4())[:-1]}"
-            
-            # Buyer gets access
-            cursor.execute("""
-                INSERT INTO contact_access (
-                    access_id, user_id, listing_id, purchased_at, 
-                    status, amount_paid, currency
-                ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
-            """, (buyer_access_id, buyer_id, listing_id, amount_to_charge))
-            
-            # Seller gets access
-            cursor.execute("""
-                INSERT INTO contact_access (
-                    access_id, user_id, listing_id, purchased_at,
-                    status, amount_paid, currency
-                ) VALUES (%s, %s, %s, NOW(), 'active', %s, 'USD')
-            """, (seller_access_id, seller_id, listing_id, amount_to_charge))
-            
             # Increment total exchanges for both
             cursor.execute("""
                 UPDATE users

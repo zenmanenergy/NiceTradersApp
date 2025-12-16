@@ -80,23 +80,9 @@ def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
                 'error': 'User not found'
             })
         
-        # Check if a transaction is provided and verify it exists
-        if TransactionId:
-            transaction_query = """
-                SELECT transaction_id FROM transactions 
-                WHERE transaction_id = %s
-            """
-            cursor.execute(transaction_query, (TransactionId,))
-            transaction_result = cursor.fetchone()
-            
-            if not transaction_result:
-                connection.close()
-                return json.dumps({
-                    'success': False,
-                    'error': 'Transaction not found'
-                })
-        else:
-            TransactionId = None
+        # TransactionId parameter is optional (kept for backward compatibility)
+        # but not used since we removed the transactions table
+        TransactionId = None
         
         # Check if this rating already exists
         existing_query = """

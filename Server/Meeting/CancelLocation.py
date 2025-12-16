@@ -18,32 +18,35 @@ def cancel_location(session_id, listing_id):
         Dictionary with success status and message
     """
     
+    db = None
+    cursor = None
+    
     try:
         # Verify user has access to this listing
-        db = ConnectToDatabase()
-        cursor = db.cursor()
+        cursor, db = ConnectToDatabase()
         
         # Get the user ID from session
         cursor.execute(
-            "SELECT user_id FROM usersessions WHERE session_id = %s",
+            "SELECT user_id FROM usersessions WHERE SessionId = %s",
             (session_id,)
         )
         result = cursor.fetchone()
         if not result:
             return {"success": False, "message": "Invalid session"}
         
-        user_id = result[0]
+        user_id = result['user_id']
         
         # Verify user owns this listing or is the other party
         cursor.execute(
-            """SELECT seller_id, buyer_id FROM listings WHERE listing_id = %s""",
+            """SELECT user_id, buyer_id FROM listings WHERE listing_id = %s""",
             (listing_id,)
         )
         result = cursor.fetchone()
         if not result:
             return {"success": False, "message": "Listing not found"}
         
-        seller_id, buyer_id = result
+        seller_id = result['user_id']
+        buyer_id = result['buyer_id']
         if user_id not in (seller_id, buyer_id):
             return {"success": False, "message": "Unauthorized"}
         

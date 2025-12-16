@@ -110,16 +110,30 @@ def search_transactions():
         
         if search_term:
             query = """
-                SELECT * FROM contact_access 
-                WHERE payment_method LIKE %s 
-                   OR transaction_id LIKE %s
-                ORDER BY purchased_at DESC
+                SELECT lp.*, l.currency, l.amount, u1.FirstName as buyer_name, u2.FirstName as seller_name
+                FROM listing_payments lp
+                JOIN listings l ON lp.listing_id = l.listing_id
+                JOIN users u1 ON lp.buyer_id = u1.user_id
+                JOIN users u2 ON l.user_id = u2.user_id
+                WHERE l.currency LIKE %s 
+                   OR lp.transaction_id LIKE %s
+                   OR u1.FirstName LIKE %s
+                   OR u2.FirstName LIKE %s
+                ORDER BY lp.created_at DESC
                 LIMIT 100
             """
             search = f'%{search_term}%'
-            cursor.execute(query, (search, search))
+            cursor.execute(query, (search, search, search, search))
         else:
-            query = "SELECT * FROM contact_access ORDER BY purchased_at DESC LIMIT 100"
+            query = """
+                SELECT lp.*, l.currency, l.amount, u1.FirstName as buyer_name, u2.FirstName as seller_name
+                FROM listing_payments lp
+                JOIN listings l ON lp.listing_id = l.listing_id
+                JOIN users u1 ON lp.buyer_id = u1.user_id
+                JOIN users u2 ON l.user_id = u2.user_id
+                ORDER BY lp.created_at DESC
+                LIMIT 100
+            """
             cursor.execute(query)
         
         transactions = cursor.fetchall()
@@ -223,14 +237,22 @@ def get_user_listings():
 @blueprint.route('/Admin/GetUserPurchases', methods=['GET', 'POST'])
 @cross_origin()
 def get_user_purchases():
-    """Get all purchases by a user"""
+    """Get all negotiations where user is the buyer"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
         user_id = params.get('user_id')
         
         cursor, connection = ConnectToDatabase()
         
-        query = "SELECT * FROM contact_access WHERE user_id = %s ORDER BY purchased_at DESC"
+        query = """
+            SELECT lmt.listing_id, l.currency, l.amount, lmt.meeting_time, 
+                   lp.buyer_paid_at, lp.seller_paid_at
+            FROM listing_meeting_time lmt
+            JOIN listings l ON lmt.listing_id = l.listing_id
+            LEFT JOIN listing_payments lp ON l.listing_id = lp.listing_id
+            WHERE lmt.buyer_id = %s
+            ORDER BY lmt.created_at DESC
+        """
         cursor.execute(query, (user_id,))
         purchases = cursor.fetchall()
         
@@ -353,14 +375,22 @@ def get_listing_by_id():
 @blueprint.route('/Admin/GetListingPurchases', methods=['GET', 'POST'])
 @cross_origin()
 def get_listing_purchases():
-    """Get all purchases for a listing"""
+    """Get all negotiations for a listing (where user is seller)"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
         listing_id = params.get('listingId')
         
         cursor, connection = ConnectToDatabase()
         
-        query = "SELECT * FROM contact_access WHERE listing_id = %s ORDER BY purchased_at DESC"
+        query = """
+            SELECT lmt.buyer_id, u.FirstName, u.LastName, lmt.meeting_time,
+                   lp.buyer_paid_at, lp.seller_paid_at
+            FROM listing_meeting_time lmt
+            JOIN users u ON lmt.buyer_id = u.user_id
+            LEFT JOIN listing_payments lp ON lmt.listing_id = lp.listing_id
+            WHERE lmt.listing_id = %s
+            ORDER BY lmt.created_at DESC
+        """
         cursor.execute(query, (listing_id,))
         purchases = cursor.fetchall()
         
@@ -397,14 +427,14 @@ def get_listing_messages():
 @blueprint.route('/Admin/GetTransactionById', methods=['GET', 'POST'])
 @cross_origin()
 def get_transaction_by_id():
-    """Get transaction details by ID"""
+    """Get payment transaction details by ID"""
     try:
         params = request.args.to_dict() if request.method == 'GET' else request.get_json()
         transaction_id = params.get('transactionId')
         
         cursor, connection = ConnectToDatabase()
         
-        query = "SELECT * FROM contact_access WHERE access_id = %s"
+        query = "SELECT * FROM listing_payments WHERE payment_id = %s"
         cursor.execute(query, (transaction_id,))
         transaction = cursor.fetchone()
         

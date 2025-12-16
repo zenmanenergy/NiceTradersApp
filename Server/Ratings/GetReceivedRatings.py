@@ -49,13 +49,9 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
                 u.user_id as rater_user_id,
                 u.FirstName as rater_first_name,
                 u.LastName as rater_last_name,
-                u.Rating as rater_average_rating,
-                t.transaction_id,
-                t.amount,
-                t.currency
+                u.Rating as rater_average_rating
             FROM user_ratings ur
             JOIN users u ON ur.rater_id = u.user_id
-            LEFT JOIN transactions t ON ur.transaction_id = t.transaction_id
             WHERE ur.user_id = %s
             ORDER BY ur.created_at DESC
             LIMIT %s OFFSET %s

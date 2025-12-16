@@ -55,13 +55,12 @@ class TestMeetingEndpoints:
         """, (listing_id, recipient_id, 'USD', 1000.00, 'EUR',
               'Test Location', 10, 'public', available_until, 'active'))
         
-        # Create contact access
-        access_id = generate_uuid('CAC')
+        # Create listing_meeting_time entry for negotiation
         cursor.execute("""
-            INSERT INTO contact_access (
-                access_id, user_id, listing_id, purchased_at, status, amount_paid, currency
-            ) VALUES (%s, %s, %s, NOW(), 'active', 5.00, 'USD')
-        """, (access_id, proposer_id, listing_id))
+            INSERT INTO listing_meeting_time (
+                listing_id, buyer_id, meeting_time, created_at
+            ) VALUES (%s, %s, NOW(), NOW())
+        """, (listing_id, proposer_id))
         connection.commit()
         
         # Test propose meeting
@@ -84,7 +83,8 @@ class TestMeetingEndpoints:
         
         # Cleanup
         cursor.execute("DELETE FROM meeting_proposals WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM contact_access WHERE listing_id = %s", (listing_id,))
+        cursor.execute("DELETE FROM listing_meeting_time WHERE listing_id = %s", (listing_id,))
+        cursor.execute("DELETE FROM listing_payments WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
         cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))

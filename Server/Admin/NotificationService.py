@@ -31,8 +31,7 @@ class NotificationService:
         
         title = get_translation(seller_lang, 'PAYMENT_RECEIVED')
         currency_str = format_currency(amount, currency)
-        contact_access_text = get_translation(seller_lang, 'listing_contact_access')
-        body = f"{buyer_name} {contact_access_text} ({currency_str})"
+        body = f"{buyer_name} {get_translation(seller_lang, 'has_paid_negotiation_fee')} ({currency_str})"
         
         result = self.apn_service.send_notification(
             user_id=seller_id,

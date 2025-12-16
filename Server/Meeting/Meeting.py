@@ -228,7 +228,17 @@ def CancelLocation():
         session_id = request_data.get('sessionId')
         listing_id = request_data.get('listingId')
         
+        print(f"[CancelLocation] Received request - sessionId={session_id}, listingId={listing_id}")
+        
         result = cancel_location(session_id, listing_id)
-        return result
+        print(f"[CancelLocation] Result from cancel_location: {result}")
+        
+        if result.get('success'):
+            print(f"[CancelLocation] Returning 200 success response")
+            return result, 200
+        else:
+            print(f"[CancelLocation] Returning 400 error response: {result}")
+            return result, 400
     except Exception as e:
+        print(f"[CancelLocation] Exception: {str(e)}")
         return Debugger(e)

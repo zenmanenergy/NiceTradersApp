@@ -160,12 +160,11 @@ def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
         print(f"[CompleteExchange] Committed to database")
         connection.close()
         
-        print(f"[CompleteExchange] Successfully completed exchange for listing {listing_id}, exchange_id={exchange_id}")
+        print(f"[CompleteExchange] Successfully completed exchange for listing {listing_id}")
         
         return json.dumps({
             'success': True,
             'message': 'Exchange marked as completed',
-            'exchange_id': exchange_id,
             'listing_id': listing_id,
             'partner_id': partner_id
         })

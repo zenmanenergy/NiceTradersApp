@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Reset a negotiation to 'proposed' status for testing.
-Clears payment flags, deletes contact_access entries and transaction records.
+Clears payment flags, deletes payment records and transaction records.
 
 Usage:
     python3 reset_negotiation.py [negotiation_id]
@@ -24,89 +24,67 @@ def reset_negotiation(negotiation_id=None):
     
     try:
         if negotiation_id:
-            # Get the specified negotiation
+            # Get the specified negotiation (if using negotiation_history)
+            # Otherwise find by listing_id
             cursor.execute('''
-                SELECT DISTINCT negotiation_id, listing_id
-                FROM negotiation_history 
-                WHERE negotiation_id = %s
-                LIMIT 1
+                SELECT DISTINCT listing_id FROM listing_meeting_time 
+                WHERE listing_id = %s LIMIT 1
             ''', (negotiation_id,))
         else:
-            # Get the most recent paid negotiation
+            # Get the most recent negotiation with payment
             cursor.execute('''
-                SELECT DISTINCT nh.negotiation_id, nh.listing_id
-                FROM negotiation_history nh
-                WHERE nh.action IN ('buyer_paid', 'seller_paid')
-                ORDER BY nh.created_at DESC 
+                SELECT lmt.listing_id
+                FROM listing_meeting_time lmt
+                JOIN listing_payments lp ON lmt.listing_id = lp.listing_id
+                WHERE lp.buyer_paid_at IS NOT NULL OR lp.seller_paid_at IS NOT NULL
+                ORDER BY lp.updated_at DESC 
                 LIMIT 1
             ''')
         
-        neg = cursor.fetchone()
+        result = cursor.fetchone()
         
-        if not neg:
+        if not result:
             if negotiation_id:
                 print(f'❌ Negotiation {negotiation_id} not found')
             else:
                 print('❌ No paid negotiations found')
             return
         
-        neg_id = neg['negotiation_id']
-        listing_id = neg['listing_id']
-        old_status = 'paid'
+        listing_id = result['listing_id']
         
-        print(f'Resetting negotiation: {neg_id}')
-        print(f'Current status: {old_status}')
+        print(f'Resetting negotiation for listing: {listing_id}')
         print()
         
-        # Get buyer and seller from listing
+        # Get buyer and seller info
         cursor.execute('''
-            SELECT created_by FROM listings WHERE ListingId = %s
-        ''', (listing_id,))
-        listing = cursor.fetchone()
-        seller_id = listing['created_by'] if listing else None
-        
-        # Get buyer from first proposal
-        cursor.execute('''
-            SELECT proposed_by FROM negotiation_history 
-            WHERE negotiation_id = %s AND action = 'time_proposal'
+            SELECT lmt.buyer_id, l.user_id as seller_id
+            FROM listing_meeting_time lmt
+            JOIN listings l ON lmt.listing_id = l.listing_id
+            WHERE lmt.listing_id = %s
             LIMIT 1
-        ''', (neg_id,))
-        first_proposal = cursor.fetchone()
-        buyer_id = first_proposal['proposed_by'] if first_proposal else None
+        ''', (listing_id,))
+        result = cursor.fetchone()
+        buyer_id = result['buyer_id'] if result else None
+        seller_id = result['seller_id'] if result else None
         
-        # Delete any transactions related to this negotiation
+        # Clear payment records from listing_payments
         cursor.execute('''
-            DELETE FROM transactions
-            WHERE negotiation_id = %s
-        ''', (neg_id,))
-        txn_deleted = cursor.rowcount
-        
-        # Delete the contact_access entries
-        if buyer_id and seller_id:
-            cursor.execute('''
-                DELETE FROM contact_access
-                WHERE user_id IN (%s, %s) AND listing_id = %s
-            ''', (buyer_id, seller_id, listing_id))
-            access_deleted = cursor.rowcount
-        else:
-            access_deleted = 0
-        
-        # Delete payment records from negotiation_history
-        cursor.execute('''
-            DELETE FROM negotiation_history
-            WHERE negotiation_id = %s AND action IN ('buyer_paid', 'seller_paid', 'completed')
-        ''', (neg_id,))
+            UPDATE listing_payments
+            SET buyer_paid_at = NULL, seller_paid_at = NULL, updated_at = NOW()
+            WHERE listing_id = %s
+        ''', (listing_id,))
+        payments_cleared = cursor.rowcount
         
         db.commit()
         
         print(f'✓ Negotiation reset to proposed status')
-        print(f'✓ Deleted {access_deleted} contact_access entries')
+        print(f'✓ Cleared {payments_cleared} payment records')
         print(f'✓ Deleted {txn_deleted} transaction records')
         print()
         print('Next steps:')
         print('1. Go to the negotiation in the app')
         print('2. Accept the proposed meeting time (status → agreed)')
-        print('3. Both parties pay the $2 fee')
+        print('3. Both parties pay the fee')
         print('4. Test that it appears in Active Exchanges')
         
     except Exception as e:

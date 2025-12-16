@@ -290,7 +290,7 @@ Once User A and User B have agreed on a meeting time:
   - Query `listings` table for `listing_id`
   - Get `user_id` (listing owner)
 - [ ] **Permission Check**: Determine recipient and verify User A can propose
-  - If User A is listing owner: Verify buyer exists from `exchange_negotiations` or `contact_access`
+  - If User A is listing owner: Verify buyer exists from `exchange_negotiations`
   - If User A is buyer: Verify User A is in `exchange_negotiations` for this listing as buyer
   - Set `recipient_id` to the other party
 - [ ] **Negotiation Status Check**: Verify time has been agreed (status = 'time_agreed')
@@ -554,10 +554,6 @@ Once a location is finally accepted by both parties, the exchange is fully confi
 ### `usersessions`
 - Session management
 - Used to validate user authentication
-
-### `contact_access`
-- Tracks who can contact whom (was used for previous listing model)
-- May be used for buyer/seller relationship
 
 ### `users`
 - User information

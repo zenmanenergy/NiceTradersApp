@@ -104,11 +104,6 @@ struct MessagesView: View {
                     Text(localizationManager.localize("NO_CONVERSATIONS_YET"))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(Color(hex: "2d3748"))
-                    Text(localizationManager.localize("PURCHASE_CONTACT_ACCESS"))
-                        .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "718096"))
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
                 }
                 Spacer()
             } else {

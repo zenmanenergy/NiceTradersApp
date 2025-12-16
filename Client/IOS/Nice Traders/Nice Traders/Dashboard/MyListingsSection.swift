@@ -168,6 +168,8 @@ struct ListingCard: View {
                 .font(.system(size: 14, weight: .semibold))
                 .cornerRadius(8)
             }
+            .opacity(listing.isPaid || listing.hasBuyer ? 0.5 : 1.0)
+            .disabled(listing.isPaid || listing.hasBuyer)
         }
         .padding(16)
         .background(Color.white)

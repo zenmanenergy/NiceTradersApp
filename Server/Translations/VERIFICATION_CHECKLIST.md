@@ -159,7 +159,7 @@
 - [x] SELECT all translations for language works
 - [x] GROUP BY language for timestamps works
 - [x] INSERT with ON DUPLICATE KEY UPDATE works
-- [x] DELETE transactions work
+- [x] DELETE database records work
 - [x] Index usage optimized
 
 ### API Response Format ✅
