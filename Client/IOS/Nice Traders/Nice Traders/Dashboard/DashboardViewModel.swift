@@ -111,7 +111,7 @@ class DashboardViewModel: ObservableObject {
             }
             allActiveExchanges.append(contentsOf: uniqueDashboardExchanges)
             
-            for exchange in dashboardExchanges {
+            for exchange in uniqueDashboardExchanges {
                 dispatchGroup.enter()
                 fetchMeetingProposals(sessionId: sessionId, listingId: exchange.id) { result in
                     hasLocationProposalMap[exchange.id] = (result?["proposals"] as? [[String: Any]])?.contains { prop in
@@ -266,14 +266,6 @@ class DashboardViewModel: ObservableObject {
     private func parseActiveExchange(_ dict: [String: Any]) -> ActiveExchange? {
         guard let listingId = dict["listingId"] as? String else { return nil }
         
-        print("[DEBUG-parseActiveExchange] === PARSING EXCHANGE ===")
-        print("[DEBUG-parseActiveExchange] listingId: \(listingId)")
-        print("[DEBUG-parseActiveExchange] Full dict keys: \(dict.keys.joined(separator: ", "))")
-        print("[DEBUG-parseActiveExchange] acceptedAt raw value: \(dict["acceptedAt"] ?? "NIL")")
-        print("[DEBUG-parseActiveExchange] displayStatus raw value: \(dict["displayStatus"] ?? "NIL")")
-        print("[DEBUG-parseActiveExchange] negotiationStatus raw value: \(dict["negotiationStatus"] ?? "NIL")")
-        print("[DEBUG-parseActiveExchange] userRole raw value: \(dict["userRole"] ?? "NIL")")
-        
         let listingData: [String: Any] = (dict["listing"] as? [String: Any]) ?? dict
         
         guard let currency = listingData["currency"] as? String,
@@ -311,12 +303,6 @@ class DashboardViewModel: ObservableObject {
         // Parse display status from backend
         let displayStatusValue = dict["displayStatus"] as? String
         
-        print("[DEBUG-parseActiveExchange] acceptedAtValue: \(acceptedAtValue ?? "NIL")")
-        print("[DEBUG-parseActiveExchange] timeAccepted CALCULATED: \(timeAccepted)")
-        print("[DEBUG-parseActiveExchange] meetingTimeString: \(meetingTimeString ?? "NIL")")
-        print("[DEBUG-parseActiveExchange] userRole: \(userRole)")
-        print("[DEBUG-parseActiveExchange] displayStatus: \(displayStatusValue ?? "NIL")")
-        
         let exchange = ActiveExchange(
             id: listingId,
             currencyFrom: currency,
@@ -339,7 +325,6 @@ class DashboardViewModel: ObservableObject {
             displayStatus: displayStatusValue
         )
         
-        print("[DEBUG-parseActiveExchange] CREATED EXCHANGE: timeAccepted=\(exchange.timeAccepted), status=\(exchange.status), meetingTime=\(exchange.meetingTime ?? "nil")")
         return exchange
     }
     

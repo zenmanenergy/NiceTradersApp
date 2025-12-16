@@ -436,8 +436,7 @@ struct CreateListingView: View {
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 HStack {
-                    TextField("0", text: $amount)
-                        .keyboardType(.numberPad)
+                    NoHapticTextField(placeholder: "0", text: $amount, keyboardType: .numberPad)
                         .font(.system(size: 16))
                         .padding(14)
                         .background(Color.white)
@@ -446,8 +445,6 @@ struct CreateListingView: View {
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(fieldErrors["amount"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                         )
-                        .onTapGesture { }
-                        .simultaneousGesture(TapGesture().onEnded { })
                     
                     Text(selectedCurrency?.code ?? "Currency")
                         .font(.system(size: 16, weight: .medium))
@@ -698,8 +695,6 @@ struct CreateListingView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(fieldErrors["availableUntil"] != nil ? Color(hex: "e53e3e") : Color(hex: "e2e8f0"), lineWidth: 2)
                     )
-                    .onTapGesture { }
-                    .simultaneousGesture(TapGesture().onEnded { })
                 
                 if let error = fieldErrors["availableUntil"] {
                     Text(error)
@@ -940,8 +935,6 @@ struct CreateListingView: View {
                 .font(.system(size: 16))
                 .padding(.vertical, 14)
                 .padding(.trailing, 16)
-                .onTapGesture { }
-                .simultaneousGesture(TapGesture().onEnded { })
         }
         .background(Color.white)
         .cornerRadius(12)
@@ -1312,8 +1305,6 @@ struct CreateListingView: View {
         }.resume()
     }
 }
-// LocationManager is defined in ContactPurchaseView.swift
-// Color extension is in SharedModels.swift
 
 // MARK: - Helper Extension for Flag Images
 extension CreateListingView {

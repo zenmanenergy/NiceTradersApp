@@ -126,7 +126,7 @@ struct LocationProposalCard: View {
                                 .foregroundColor(.gray)
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("PROPOSED_BY")
+                                Text(localizationManager.localize("PROPOSED_BY"))
                                     .font(.caption)
                                     .foregroundColor(.gray)
                                     .textCase(.uppercase)
@@ -159,53 +159,56 @@ struct LocationProposalCard: View {
                         .cornerRadius(6)
                     }
                     
-                    // Action buttons (only if pending and displayStatus indicates we should accept/reject)
-                    if proposal.status == "pending" && !proposal.isFromMe && (displayStatus?.contains("Action: Acceptance") ?? false) {
-                        HStack(spacing: 8) {
-                            Button(action: onReject) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "xmark.circle")
-                                        .font(.system(size: 12))
-                                    Text(localizationManager.localize("REJECT_LOCATION"))
-                                        .font(.caption)
-                                        .fontWeight(.semibold)
+                    // Action buttons (only if pending)
+                    if proposal.status == "pending" {
+                        if !proposal.isFromMe && (displayStatus?.contains("Action: Acceptance") ?? false) {
+                            // Other user proposed - show accept/reject/counter buttons
+                            HStack(spacing: 8) {
+                                Button(action: onReject) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "xmark.circle")
+                                            .font(.system(size: 12))
+                                        Text(localizationManager.localize("REJECT_LOCATION"))
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(8)
+                                    .foregroundColor(.white)
+                                    .background(Color(hex: "ef4444"))
+                                    .cornerRadius(6)
                                 }
-                                .frame(maxWidth: .infinity)
-                                .padding(8)
-                                .foregroundColor(.white)
-                                .background(Color(hex: "ef4444"))
-                                .cornerRadius(6)
+                                
+                                Button(action: onAccept) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "checkmark.circle")
+                                            .font(.system(size: 12))
+                                        Text(localizationManager.localize("ACCEPT_LOCATION"))
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(8)
+                                    .foregroundColor(.white)
+                                    .background(Color(hex: "10b981"))
+                                    .cornerRadius(6)
+                                }
                             }
                             
-                            Button(action: onAccept) {
+                            Button(action: onCounterPropose) {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "checkmark.circle")
+                                    Image(systemName: "arrow.2.squarepath")
                                         .font(.system(size: 12))
-                                    Text(localizationManager.localize("ACCEPT_LOCATION"))
+                                    Text(localizationManager.localize("COUNTER_PROPOSE_LOCATION"))
                                         .font(.caption)
                                         .fontWeight(.semibold)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(8)
-                                .foregroundColor(.white)
-                                .background(Color(hex: "10b981"))
+                                .foregroundColor(Color(hex: "667eea"))
+                                .background(Color(hex: "f0f4ff"))
                                 .cornerRadius(6)
                             }
-                        }
-                        
-                        Button(action: onCounterPropose) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.2.squarepath")
-                                    .font(.system(size: 12))
-                                Text(localizationManager.localize("COUNTER_PROPOSE_LOCATION"))
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(8)
-                            .foregroundColor(Color(hex: "667eea"))
-                            .background(Color(hex: "f0f4ff"))
-                            .cornerRadius(6)
                         }
                     }
                 }

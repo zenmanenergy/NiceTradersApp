@@ -349,12 +349,8 @@ struct FormField: View {
             ZStack {
                 if isSecure {
                     NoHapticSecureField(placeholder: placeholder, text: $text)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled(true)
                 } else {
                     NoHapticTextField(placeholder: placeholder, text: $text, keyboardType: keyboardType)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled(true)
                 }
             }
             .padding(.vertical, 14)
@@ -372,89 +368,6 @@ struct FormField: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color(red: 0.9, green: 0.24, blue: 0.24))
             }
-        }
-    }
-}
-
-struct NoHapticTextField: UIViewRepresentable {
-    let placeholder: String
-    @Binding var text: String
-    var keyboardType: UIKeyboardType
-    
-    func makeUIView(context: Context) -> UITextField {
-        let textField = UITextField()
-        textField.placeholder = placeholder
-        textField.keyboardType = keyboardType
-        textField.autocapitalizationType = .none
-        textField.autocorrectionType = .no
-        textField.delegate = context.coordinator
-        textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
-        textField.font = UIFont.systemFont(ofSize: 16)
-        return textField
-    }
-    
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        uiView.text = text
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
-    }
-    
-    class Coordinator: NSObject, UITextFieldDelegate {
-        @Binding var text: String
-        
-        init(text: Binding<String>) {
-            _text = text
-        }
-        
-        @objc func textChanged(_ textField: UITextField) {
-            text = textField.text ?? ""
-        }
-        
-        func textFieldDidBeginEditing(_ textField: UITextField) {
-            // Override to prevent default behavior
-        }
-    }
-}
-
-struct NoHapticSecureField: UIViewRepresentable {
-    let placeholder: String
-    @Binding var text: String
-    
-    func makeUIView(context: Context) -> UITextField {
-        let textField = UITextField()
-        textField.placeholder = placeholder
-        textField.isSecureTextEntry = true
-        textField.autocapitalizationType = .none
-        textField.autocorrectionType = .no
-        textField.delegate = context.coordinator
-        textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
-        textField.font = UIFont.systemFont(ofSize: 16)
-        return textField
-    }
-    
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        uiView.text = text
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(text: $text)
-    }
-    
-    class Coordinator: NSObject, UITextFieldDelegate {
-        @Binding var text: String
-        
-        init(text: Binding<String>) {
-            _text = text
-        }
-        
-        @objc func textChanged(_ textField: UITextField) {
-            text = textField.text ?? ""
-        }
-        
-        func textFieldDidBeginEditing(_ textField: UITextField) {
-            // Override to prevent default behavior
         }
     }
 }

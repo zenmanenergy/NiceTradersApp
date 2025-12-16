@@ -685,10 +685,11 @@ extension MeetingDetailView {
     
     func counterLocationProposal(proposalId: String) {
         print("[MDV-ACTION] Counter location proposal: \(proposalId)")
-        // TODO: Navigate to MeetingLocationView for counter proposal
+        // The view will switch to location tab and allow user to propose a new location
+        // The location tab (MeetingLocationView) handles the counter-proposal workflow
     }
     
-    private func cancelLocationProposal(proposalId: String) {
+    func cancelPendingLocationProposal() {
         guard let sessionId = SessionManager.shared.sessionId else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available for cancel location")
@@ -696,11 +697,11 @@ extension MeetingDetailView {
         }
         
         let baseURL = Settings.shared.baseURL
-        var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
+        let listingId = contactData.listing.listingId
+        var components = URLComponents(string: "\(baseURL)/Meeting/CancelLocation")!
         components.queryItems = [
             URLQueryItem(name: "sessionId", value: sessionId),
-            URLQueryItem(name: "proposalId", value: proposalId),
-            URLQueryItem(name: "response", value: "rejected")
+            URLQueryItem(name: "listingId", value: listingId)
         ]
         
         guard let url = components.url else {
@@ -727,10 +728,11 @@ extension MeetingDetailView {
                    let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let success = json["success"] as? Bool, success {
                     print("[DEBUG] Cancel location successful")
+                    // Reload proposals to reflect the deletion
                     self.loadMeetingProposals()
                 } else {
                     let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
-                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to cancel proposal"
+                    self.errorMessage = errorMsg?["error"] as? String ?? "Failed to cancel location"
                     print("[DEBUG] Cancel location failed: \(self.errorMessage)")
                 }
             }

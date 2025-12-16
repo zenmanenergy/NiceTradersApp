@@ -73,7 +73,6 @@ struct DashboardView: View {
             }
         }
         .onAppear {
-            print("VIEW: DashboardView - Displaying dashboard")
             verifySessionAndLoadData()
             setupNavigationListeners(
                 onSearch: { navigateToSearch = true },
@@ -84,7 +83,6 @@ struct DashboardView: View {
         .onChange(of: navigateToContact) { oldValue, newValue in
             // When returning from MeetingDetailView (navigateToContact becomes false), refresh dashboard
             if !newValue && oldValue {
-                print("VIEW: DashboardView - Returned from MeetingDetailView, refreshing data")
                 viewModel.loadDashboardData()
             }
         }
@@ -187,9 +185,6 @@ struct MainDashboardView: View {
                     if !viewModel.pendingNegotiations.isEmpty {
                         PendingNegotiationsSection(negotiations: viewModel.pendingNegotiations)
                             .padding(.horizontal)
-                            .onAppear {
-                                print("[DEBUG-VIEW] Rendering PendingNegotiationsSection with \(viewModel.pendingNegotiations.count) negotiations")
-                            }
                     }
                     
                     ActiveExchangesSection(
@@ -202,9 +197,6 @@ struct MainDashboardView: View {
                         selectedExchangeId: $selectedExchangeId
                     )
                     .padding(.horizontal)
-                    .onAppear {
-                        print("[DEBUG-VIEW] Rendering ActiveExchangesSection with \(filteredActiveExchanges.count) exchanges")
-                    }
                     
                     MyListingsSection(
                         listings: viewModel.myListings,

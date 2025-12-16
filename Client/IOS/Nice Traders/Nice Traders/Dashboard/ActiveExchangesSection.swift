@@ -160,11 +160,6 @@ struct ActiveExchangeCard: View {
     
     @ViewBuilder
     private func getStatusView() -> some View {
-        // Debug output
-        let _ = {
-            print("[DEBUG-getStatusView] Using displayStatus from API: \(exchange.displayStatus ?? "NIL")")
-        }()
-        
         if let displayStatus = exchange.displayStatus, !displayStatus.isEmpty {
             // Parse meeting time if available
             if let meetingTime = exchange.meetingTime {

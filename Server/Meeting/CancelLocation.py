@@ -1,6 +1,6 @@
 """
-CancelLocation.py - Delete the meeting location acceptance
-Removes the accepted location proposal but keeps history
+CancelLocation.py - Delete the meeting location proposal
+Completely removes the location proposal from the database
 """
 
 import pymysql
@@ -8,7 +8,7 @@ from _Lib.Database import ConnectToDatabase
 
 def cancel_location(session_id, listing_id):
     """
-    Cancel the accepted meeting location by clearing the acceptance
+    Cancel and delete the meeting location proposal
     
     Args:
         session_id: Session ID for authorization
@@ -20,7 +20,7 @@ def cancel_location(session_id, listing_id):
     
     try:
         # Verify user has access to this listing
-        db = Database.get_connection()
+        db = ConnectToDatabase()
         cursor = db.cursor()
         
         # Get the user ID from session
@@ -47,17 +47,16 @@ def cancel_location(session_id, listing_id):
         if user_id not in (seller_id, buyer_id):
             return {"success": False, "message": "Unauthorized"}
         
-        # Clear the accepted_at timestamp for the meeting location
+        # Delete the meeting location proposal entirely
         cursor.execute(
-            """UPDATE listing_meeting_location 
-               SET accepted_at = NULL
+            """DELETE FROM listing_meeting_location 
                WHERE listing_id = %s""",
             (listing_id,)
         )
         
         db.commit()
         
-        print(f"[CancelLocation] Successfully cleared meeting location for listing {listing_id}")
+        print(f"[CancelLocation] Successfully deleted meeting location for listing {listing_id}")
         
         return {
             "success": True,

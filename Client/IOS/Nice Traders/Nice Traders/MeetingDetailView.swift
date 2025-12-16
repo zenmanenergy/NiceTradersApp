@@ -147,6 +147,11 @@ struct MeetingDetailView: View {
             VStack {
                 Spacer()
                 HStack {
+                    // Check payment status
+                    let userHasPaid = userPaidAt != nil && !(userPaidAt?.isEmpty ?? true)
+                    let otherUserHasPaid = otherUserPaidAt != nil && !(otherUserPaidAt?.isEmpty ?? true)
+                    let bothPaid = userHasPaid && otherUserHasPaid
+                    
                     Button(action: { navigateToContact = false }) {
                         VStack(spacing: 4) {
                             Image(systemName: "house.fill")
@@ -172,7 +177,7 @@ struct MeetingDetailView: View {
                         .cornerRadius(8)
                     }
                     
-                    Button(action: { activeTab = .location }) {
+                    Button(action: { if bothPaid { activeTab = .location } }) {
                         VStack(spacing: 4) {
                             Text("📍")
                                 .font(.system(size: 20))
@@ -182,11 +187,13 @@ struct MeetingDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(activeTab == .location ? Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.15) : Color.clear)
-                        .foregroundColor(activeTab == .location ? Color(red: 0.4, green: 0.49, blue: 0.92) : Color.gray)
+                        .foregroundColor(activeTab == .location && bothPaid ? Color(red: 0.4, green: 0.49, blue: 0.92) : (bothPaid ? Color.gray : Color.gray.opacity(0.5)))
                         .cornerRadius(8)
+                        .opacity(bothPaid ? 1.0 : 0.6)
                     }
+                    .disabled(!bothPaid)
                     
-                    Button(action: { activeTab = .messages }) {
+                    Button(action: { if bothPaid { activeTab = .messages } }) {
                         VStack(spacing: 4) {
                             Text("💬")
                                 .font(.system(size: 20))
@@ -196,9 +203,11 @@ struct MeetingDetailView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(activeTab == .messages ? Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.15) : Color.clear)
-                        .foregroundColor(activeTab == .messages ? Color(red: 0.4, green: 0.49, blue: 0.92) : Color.gray)
+                        .foregroundColor(activeTab == .messages && bothPaid ? Color(red: 0.4, green: 0.49, blue: 0.92) : (bothPaid ? Color.gray : Color.gray.opacity(0.5)))
                         .cornerRadius(8)
+                        .opacity(bothPaid ? 1.0 : 0.6)
                     }
+                    .disabled(!bothPaid)
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 12)

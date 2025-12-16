@@ -74,13 +74,9 @@ struct SearchView: View {
             headerView
             
             if showMapView {
-                // Map View
-                ListingMapView(
-                    listings: searchResults,
-                    userLocation: locationManager.location,
-                    showUserLocation: true,
-                    selectedListing: $selectedListing
-                )
+                // Map View - showing empty view since ListingMapView was removed
+                // Map view should use MeetingLocationView instead
+                EmptyView()
             } else {
                 // List View
                 ScrollView {
@@ -187,7 +183,7 @@ struct SearchView: View {
                         Text(currency).tag(currency)
                     }
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.automatic)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.white)
@@ -210,7 +206,7 @@ struct SearchView: View {
                         Text(currency).tag(currency)
                     }
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.automatic)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.white)
@@ -235,7 +231,7 @@ struct SearchView: View {
                     Text(localizationManager.localize("FIFTY_MILES")).tag("50")
                     Text(localizationManager.localize("ONE_HUNDRED_MILES")).tag("100")
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.automatic)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.white)
