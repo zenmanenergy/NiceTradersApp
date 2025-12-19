@@ -18,39 +18,44 @@ def cancel_meeting_time(session_id, listing_id):
         Dictionary with success status and message
     """
     
+    db = None
+    cursor = None
+    
     try:
         # Verify user has access to this listing
-        db = Database.get_connection()
-        cursor = db.cursor()
+        cursor, db = ConnectToDatabase()
         
         # Get the user ID from session
         cursor.execute(
-            "SELECT user_id FROM usersessions WHERE session_id = %s",
+            "SELECT user_id FROM usersessions WHERE SessionId = %s",
             (session_id,)
         )
         result = cursor.fetchone()
         if not result:
             return {"success": False, "message": "Invalid session"}
         
-        user_id = result[0]
+        user_id = result['user_id']
         
-        # Verify user owns this listing or is the other party
+        # Verify user owns this listing or is involved in negotiation
         cursor.execute(
-            """SELECT seller_id, buyer_id FROM listings WHERE listing_id = %s""",
+            """SELECT l.user_id, lmt.buyer_id FROM listings l
+               LEFT JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+               WHERE l.listing_id = %s""",
             (listing_id,)
         )
         result = cursor.fetchone()
         if not result:
             return {"success": False, "message": "Listing not found"}
         
-        seller_id, buyer_id = result
+        seller_id = result['user_id']
+        buyer_id = result['buyer_id']
         if user_id not in (seller_id, buyer_id):
             return {"success": False, "message": "Unauthorized"}
         
         # Clear the accepted_at timestamp for the meeting time
         cursor.execute(
             """UPDATE listing_meeting_time 
-               SET accepted_at = NULL
+               SET accepted_at = NULL, updated_at = NOW()
                WHERE listing_id = %s""",
             (listing_id,)
         )
@@ -66,6 +71,8 @@ def cancel_meeting_time(session_id, listing_id):
         
     except Exception as e:
         print(f"[CancelMeetingTime] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "message": f"Error: {str(e)}"}
     finally:
         if cursor:

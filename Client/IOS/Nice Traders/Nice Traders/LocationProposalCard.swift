@@ -15,7 +15,7 @@ struct LocationProposalCard: View {
     var statusColor: Color {
         switch proposal.status {
         case "pending":
-            return Color(hex: "fbbf24")
+            return Color(hex: "f97316")
         case "accepted":
             return Color(hex: "10b981")
         case "rejected":
@@ -102,7 +102,7 @@ struct LocationProposalCard: View {
                                 .foregroundColor(Color(hex: "f97316"))
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("TIME_UNTIL_MEETING")
+                                Text(localizationManager.localize("TIME_UNTIL_MEETING"))
                                     .font(.caption)
                                     .foregroundColor(Color(hex: "f97316"))
                                     .textCase(.uppercase)

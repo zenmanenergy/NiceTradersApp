@@ -8,7 +8,7 @@ import MapKit
 import CoreLocation
 
 struct MeetingLocationView: View {
-    let contactData: ContactData
+    let initialContactData: ContactData
     let initialDisplayStatus: String?
     @ObservedObject var localizationManager = LocalizationManager.shared
     @ObservedObject var locationManager = LocationManager()
@@ -17,6 +17,7 @@ struct MeetingLocationView: View {
     @Binding var meetingProposals: [MeetingProposal]
     var onBackTapped: (() -> Void)?
     
+    @State private var contactData: ContactData
     @State private var displayStatus: String?
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var searchText: String = ""
@@ -32,6 +33,17 @@ struct MeetingLocationView: View {
     @State private var successMessageText: String = ""
     @State private var countdownText: String = ""
     @State private var countdownTimer: Timer? = nil
+    @State private var zoomRetryCount: Int = 0
+    @State private var zoomRetryTimer: Timer? = nil
+    
+    init(contactData: ContactData, initialDisplayStatus: String?, currentMeeting: Binding<CurrentMeeting?>, meetingProposals: Binding<[MeetingProposal]>, onBackTapped: (() -> Void)? = nil) {
+        self.initialContactData = contactData
+        self.initialDisplayStatus = initialDisplayStatus
+        self._contactData = State(initialValue: contactData)
+        self._currentMeeting = currentMeeting
+        self._meetingProposals = meetingProposals
+        self.onBackTapped = onBackTapped
+    }
     
     var body: some View {
         ZStack {
@@ -106,9 +118,7 @@ struct MeetingLocationView: View {
                         .mapStyle(.standard)
                         .frame(height: 300)
                         .onAppear {
-                            print("[DEBUG MLV] Map appeared - centering on listing")
-                            print("[DEBUG MLV] Listing lat: \(contactData.listing.latitude), lng: \(contactData.listing.longitude)")
-                            centerMapOnListing()
+                            print("[DEBUG MLV] Map appeared")
                         }
                     } else {
                         Color(hex: "e2e8f0")
@@ -359,6 +369,9 @@ struct MeetingLocationView: View {
             print("[DEBUG MLV] Radius: \(contactData.listing.radius)")
             print("[DEBUG MLV] Meeting proposals count: \(meetingProposals.count)")
             
+            // Refresh listing data from server to get latest radius/coordinates
+            refreshListingData()
+            
             // Refresh displayStatus from server
             refreshDisplayStatus()
             
@@ -380,6 +393,13 @@ struct MeetingLocationView: View {
         }
         .onDisappear {
             countdownTimer?.invalidate()
+            zoomRetryTimer?.invalidate()
+        }
+        .onChange(of: meetingProposals.count) {
+            print("[DEBUG MLV] meetingProposals count changed - re-zooming map")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                zoomToShowUserAndMeeting()
+            }
         }
     }
     
@@ -429,15 +449,79 @@ struct MeetingLocationView: View {
     }
     
     private func zoomToShowUserAndMeeting() {
-        guard let userCoord = locationManager.location?.coordinate else { return }
+        guard let userCoord = locationManager.location?.coordinate else {
+            print("[DEBUG MLV] zoomToShowUserAndMeeting: No user location available - will retry")
+            print("[DEBUG MLV] locationManager.location: \(String(describing: locationManager.location))")
+            print("[DEBUG MLV] Retry count: \(zoomRetryCount)")
+            
+            // Retry up to 5 times with 1 second delay
+            if zoomRetryCount < 5 {
+                zoomRetryCount += 1
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    print("[DEBUG MLV] Retrying zoom (attempt \(self.zoomRetryCount))...")
+                    self.zoomToShowUserAndMeeting()
+                }
+            } else {
+                print("[DEBUG MLV] FAILED: Could not get user location after 5 retries")
+            }
+            return
+        }
         
-        // Center on user's current location with a good zoom level
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: userCoord,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+        print("[DEBUG MLV] zoomToShowUserAndMeeting: SUCCESS - Got user location: \(userCoord.latitude), \(userCoord.longitude)")
+        print("[DEBUG MLV] zoomToShowUserAndMeeting: Total meetingProposals: \(meetingProposals.count)")
+        zoomRetryCount = 0  // Reset retry count on success
+        
+        // Get proposed location if it exists
+        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+        print("[DEBUG MLV] zoomToShowUserAndMeeting: Location proposals with proposedLocation: \(locationProposals.count)")
+        
+        if let proposedLocation = locationProposals.first,
+           let proposedLat = proposedLocation.latitude,
+           let proposedLng = proposedLocation.longitude {
+            
+            print("[DEBUG MLV] zoomToShowUserAndMeeting: Found proposed location: \(proposedLat), \(proposedLng)")
+            
+            // Calculate region that fits both user location and proposed location
+            let proposedCoord = CLLocationCoordinate2D(latitude: proposedLat, longitude: proposedLng)
+            
+            // Calculate center point between the two locations
+            let centerLat = (userCoord.latitude + proposedCoord.latitude) / 2
+            let centerLng = (userCoord.longitude + proposedCoord.longitude) / 2
+            let center = CLLocationCoordinate2D(latitude: centerLat, longitude: centerLng)
+            
+            // Calculate the span to fit both points with some padding
+            let latDelta = abs(userCoord.latitude - proposedCoord.latitude) * 1.2
+            let lngDelta = abs(userCoord.longitude - proposedCoord.longitude) * 1.2
+            
+            print("[DEBUG MLV] Calculated latDelta: \(latDelta), lngDelta: \(lngDelta)")
+            
+            // Maximum zoom level (minimum span) for close distances
+            let maxZoomSpan = 0.004
+            let span = MKCoordinateSpan(
+                latitudeDelta: max(maxZoomSpan, latDelta),
+                longitudeDelta: max(maxZoomSpan, lngDelta)
             )
-        )
+            
+            print("[DEBUG MLV] Final span: latitudeDelta=\(span.latitudeDelta), longitudeDelta=\(span.longitudeDelta)")
+            print("[DEBUG MLV] Setting camera to center=(\(center.latitude), \(center.longitude))")
+            
+            let region = MKCoordinateRegion(center: center, span: span)
+            print("[DEBUG MLV] Camera position region: \(region)")
+            
+            cameraPosition = .region(region)
+            print("[DEBUG MLV] ✅ Camera position set successfully")
+        } else {
+            print("[DEBUG MLV] zoomToShowUserAndMeeting: No proposed location found, centering on user")
+            print("[DEBUG MLV] Default zoom span: 0.01 x 0.01")
+            // No proposed location yet, center on user with more zoom
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: userCoord,
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )
+            )
+            print("[DEBUG MLV] ✅ Camera position set to user location")
+        }
     }
     
     private func openAppleDirections(latitude: Double, longitude: Double, name: String) {
@@ -490,6 +574,80 @@ struct MeetingLocationView: View {
                     }
                 } else {
                     print("[DEBUG MLV refreshDisplayStatus] ERROR: Failed to parse response")
+                }
+            }
+        }.resume()
+    }
+    
+    private func refreshListingData() {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            print("[DEBUG MLV refreshListingData] ERROR: No session ID available")
+            return
+        }
+        
+        print("[DEBUG MLV refreshListingData] Starting refresh of listing data...")
+        
+        let baseURL = Settings.shared.baseURL
+        let urlString = "\(baseURL)/Dashboard/GetUserDashboard?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        guard let url = URL(string: urlString) else {
+            print("[DEBUG MLV refreshListingData] ERROR: Failed to construct URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                guard let data = data, error == nil else {
+                    print("[DEBUG MLV refreshListingData] ERROR: Network error - \(error?.localizedDescription ?? "unknown")")
+                    return
+                }
+                
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let success = json["success"] as? Bool, success,
+                   let dashboardData = json["data"] as? [String: Any],
+                   let activeExchanges = dashboardData["activeExchanges"] as? [[String: Any]] {
+                    
+                    // Find the exchange matching our listing ID
+                    if let matchingExchange = activeExchanges.first(where: { ($0["listingId"] as? String) == self.contactData.listing.listingId }) {
+                        if let listingData = matchingExchange["listing"] as? [String: Any] {
+                            // Update contactData with fresh listing data
+                            let radius = (listingData["radius"] as? Int) ?? self.contactData.listing.radius
+                            let latitude = (listingData["latitude"] as? Double) ?? self.contactData.listing.latitude
+                            let longitude = (listingData["longitude"] as? Double) ?? self.contactData.listing.longitude
+                            
+                            print("[DEBUG MLV refreshListingData] Updated listing data - radius: \(radius), lat: \(latitude), lng: \(longitude)")
+                            
+                            // Create updated ContactListing with fresh data
+                            let updatedListing = ContactListing(
+                                listingId: self.contactData.listing.listingId,
+                                currency: self.contactData.listing.currency,
+                                amount: self.contactData.listing.amount,
+                                acceptCurrency: self.contactData.listing.acceptCurrency,
+                                preferredCurrency: self.contactData.listing.preferredCurrency,
+                                meetingPreference: self.contactData.listing.meetingPreference,
+                                location: self.contactData.listing.location,
+                                latitude: latitude,
+                                longitude: longitude,
+                                radius: radius,
+                                willRoundToNearestDollar: self.contactData.listing.willRoundToNearestDollar
+                            )
+                            
+                            // Update the contactData state
+                            self.contactData = ContactData(
+                                listing: updatedListing,
+                                otherUser: self.contactData.otherUser,
+                                lockedAmount: self.contactData.lockedAmount,
+                                exchangeRate: self.contactData.exchangeRate,
+                                fromCurrency: self.contactData.fromCurrency,
+                                toCurrency: self.contactData.toCurrency,
+                                purchasedAt: self.contactData.purchasedAt
+                            )
+                        }
+                    } else {
+                        print("[DEBUG MLV refreshListingData] WARNING: Could not find matching exchange for listing \(self.contactData.listing.listingId)")
+                    }
+                } else {
+                    print("[DEBUG MLV refreshListingData] ERROR: Failed to parse response or invalid data")
                 }
             }
         }.resume()

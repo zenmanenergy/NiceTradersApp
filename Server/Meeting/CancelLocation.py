@@ -36,9 +36,11 @@ def cancel_location(session_id, listing_id):
         
         user_id = result['user_id']
         
-        # Verify user owns this listing or is the other party
+        # Verify user owns this listing or is involved in negotiation
         cursor.execute(
-            """SELECT user_id, buyer_id FROM listings WHERE listing_id = %s""",
+            """SELECT l.user_id, lmt.buyer_id FROM listings l
+               LEFT JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+               WHERE l.listing_id = %s""",
             (listing_id,)
         )
         result = cursor.fetchone()
@@ -68,6 +70,8 @@ def cancel_location(session_id, listing_id):
         
     except Exception as e:
         print(f"[CancelLocation] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "message": f"Error: {str(e)}"}
     finally:
         if cursor:

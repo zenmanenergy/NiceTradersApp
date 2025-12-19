@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""
+Test State 2: Seller accepts the time
+Sets listing_meeting_time.accepted_at to current timestamp
+"""
+
+import pymysql
+import pymysql.cursors
+from datetime import datetime
+
+# Test values
+listing_id = '1ed56571-d1db-4c68-b487-a05b8ac84b54'
+
+# Connect to database
+db = pymysql.connect(
+    host='localhost',
+    user='stevenelson',
+    password='mwitcitw711',
+    database='nicetraders',
+    cursorclass=pymysql.cursors.DictCursor
+)
+cursor = db.cursor()
+
+try:
+    # Get current time negotiation
+    cursor.execute("""
+        SELECT time_negotiation_id, meeting_time FROM listing_meeting_time
+        WHERE listing_id = %s
+    """, (listing_id,))
+    
+    time_neg = cursor.fetchone()
+    
+    if not time_neg:
+        print("❌ No time negotiation found for this listing")
+        exit(1)
+    
+    # Accept the time
+    cursor.execute("""
+        UPDATE listing_meeting_time
+        SET accepted_at = NOW(), updated_at = NOW()
+        WHERE listing_id = %s
+    """, (listing_id,))
+    
+    db.commit()
+    
+    print("✅ Test State 2: Seller accepts the time")
+    print(f"   time_negotiation_id: {time_neg['time_negotiation_id']}")
+    print(f"   listing_id: {listing_id}")
+    print(f"   meeting_time: {time_neg['meeting_time']}")
+    print(f"   accepted_at: NOW()")
+    
+except Exception as e:
+    print(f"❌ Error: {str(e)}")
+    import traceback
+    traceback.print_exc()
+finally:
+    cursor.close()
+    db.close()

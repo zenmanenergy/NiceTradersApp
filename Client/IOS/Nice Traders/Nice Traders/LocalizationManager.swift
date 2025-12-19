@@ -124,6 +124,7 @@ class LocalizationManager: NSObject, ObservableObject {
             "AWAITING_LOCATION_RESPONSE": "Awaiting Location Response",
             "WAITING_FOR_LOCATION_ACCEPTANCE": "Waiting for location acceptance",
             "LOCATION_ACCEPTED": "Location Accepted",
+            "TIME_UNTIL_MEETING": "Time Until Meeting",
             "PROPOSED_BY": "Proposed by",
             "MESSAGE": "Message",
         ]

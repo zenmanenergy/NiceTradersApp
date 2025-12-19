@@ -53,7 +53,6 @@ struct SearchView: View {
     @State private var showFilters = false
     @State private var currencySearchQuery = ""
     @State private var showCurrencyDropdown = false
-    @State private var showMapView = false
     @State private var selectedListing: SearchListing?
     @State private var navigateToCreateListing = false
     @State private var navigateToMessages = false
@@ -73,23 +72,19 @@ struct SearchView: View {
             // Header
             headerView
             
-            if showMapView {
-                // Map View - showing empty view since ListingMapView was removed
-                // Map view should use MeetingLocationView instead
-                EmptyView()
-            } else {
-                // List View
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Quick Search
-                        quickSearchSection
-                        
-                        // Results Section
+            // List View
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Quick Search
+                    quickSearchSection
+                    
+                    // Results Section - only show if a search has been performed
+                    if hasSearched {
                         resultsSection
                     }
                 }
-                .background(Color(hex: "f8fafc"))
             }
+            .background(Color(hex: "f8fafc"))
             
             // Bottom Navigation
             BottomNavigation(activeTab: "search", isContactView: false, contactActiveTab: .constant(nil))
@@ -139,19 +134,6 @@ struct SearchView: View {
                 .foregroundColor(.white)
             
             Spacer()
-            
-            Button(action: {
-                withAnimation {
-                    showMapView.toggle()
-                }
-            }) {
-                Image(systemName: showMapView ? "list.bullet" : "map")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(8)
-            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 10)

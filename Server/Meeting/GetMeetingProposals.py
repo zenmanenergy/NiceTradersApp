@@ -188,31 +188,19 @@ def get_meeting_proposals(session_id, listing_id):
                     }
                     print(f"  ✅ Location accepted at: {proposal['accepted_at']} (no time accepted yet)")
         
-        # Get payment information if time is accepted
-        if response['current_meeting']:
-            print(f"🟠 [GetMeetingProposals] Fetching payment information...")
-            
-            # Get listing details to know who is buyer and seller
-            cursor.execute("""
-                SELECT user_id, buyer_id FROM listings WHERE listing_id = %s
-            """, (listing_id,))
-            listing_info = cursor.fetchone()
-            seller_id = listing_info['user_id']
-            buyer_id = listing_info['buyer_id']
-            is_current_user_buyer = (user_id == buyer_id)
-            
-            print(f"🟠 [GetMeetingProposals] User roles - seller: {seller_id}, buyer: {buyer_id}, current user is buyer: {is_current_user_buyer}")
-            
-        
         # Get payment information (regardless of whether time/location is accepted)
         print(f"🟠 [GetMeetingProposals] Fetching payment information...")
         
-        # Get listing details to know who is buyer and seller
+        # Get listing and buyer info - buyer_id comes from listing_meeting_time, seller from listings.user_id
         cursor.execute("""
-            SELECT user_id, buyer_id FROM listings WHERE listing_id = %s
+            SELECT l.user_id as seller_id, lmt.buyer_id 
+            FROM listings l
+            LEFT JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+            WHERE l.listing_id = %s
+            LIMIT 1
         """, (listing_id,))
         listing_info = cursor.fetchone()
-        seller_id = listing_info['user_id']
+        seller_id = listing_info['seller_id']
         buyer_id = listing_info['buyer_id']
         is_current_user_buyer = (user_id == buyer_id)
         
