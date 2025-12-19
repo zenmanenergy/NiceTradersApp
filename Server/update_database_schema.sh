@@ -26,7 +26,7 @@ fi
 echo "✅ Backup created successfully"
 
 echo "🔄 Applying schema updates..."
-mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema_ordered.sql
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema_safe.sql
 
 if [ $? -eq 0 ]; then
     echo "✅ Database schema updated successfully!"
