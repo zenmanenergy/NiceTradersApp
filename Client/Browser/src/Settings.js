@@ -6,3 +6,7 @@ export const baseURL = (() => {
 	}
 	return 'https://api.nicetraders.net'; // Default for static builds
 })();
+
+export const Settings = {
+	baseURL
+};
