@@ -26,7 +26,17 @@ fi
 echo "✅ Backup created successfully"
 
 echo "🔄 Applying schema updates..."
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME << EOF
+SET FOREIGN_KEY_CHECKS=0;
+SET UNIQUE_CHECKS=0;
+EOF
+
 mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema_safe.sql
+
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME << EOF
+SET FOREIGN_KEY_CHECKS=1;
+SET UNIQUE_CHECKS=1;
+EOF
 
 if [ $? -eq 0 ]; then
     echo "✅ Database schema updated successfully!"
