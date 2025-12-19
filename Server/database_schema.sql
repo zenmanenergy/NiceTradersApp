@@ -1,489 +1,399 @@
--- Complete Database Schema for NiceTradersApp
--- This schema includes all tables with CHAR(39) ID columns
+-- Database Schema Export
+-- Exported: 2025-12-19 09:13:26
 
--- Disable foreign key checks temporarily during schema creation
-SET FOREIGN_KEY_CHECKS = 0;
+CREATE TABLE `admin_notifications` (
+  `notification_id` char(39) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `priority` enum('low','medium','high','urgent') DEFAULT 'medium',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `related_id` char(39) DEFAULT NULL,
+  `status` enum('unread','read','dismissed') DEFAULT 'unread',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`notification_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_priority` (`priority`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Drop existing tables if they exist to recreate with proper structure
--- Contact module tables (must be dropped first due to foreign key dependencies)
-DROP TABLE IF EXISTS user_ratings;
-DROP TABLE IF EXISTS transactions;
-DROP TABLE IF EXISTS admin_notifications;
-DROP TABLE IF EXISTS listing_reports;
-DROP TABLE IF EXISTS notifications;
-DROP TABLE IF EXISTS messages;
--- Original tables
-DROP TABLE IF EXISTS listings;
-DROP TABLE IF EXISTS history;
-DROP TABLE IF EXISTS usersessions;
-DROP TABLE IF EXISTS user_settings;
-DROP TABLE IF EXISTS users;
+CREATE TABLE `apn_logs` (
+  `log_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` char(39) DEFAULT NULL,
+  `notification_title` varchar(255) DEFAULT NULL,
+  `notification_body` text,
+  `device_count` int DEFAULT '0',
+  `failed_count` int DEFAULT '0',
+  `metadata` json DEFAULT NULL,
+  `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_sent_at` (`sent_at`),
+  CONSTRAINT `apn_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create users table (matching existing structure exactly)
-CREATE TABLE users (
-    user_id CHAR(39) PRIMARY KEY,
-    FirstName VARCHAR(100),
-    LastName VARCHAR(100),
-    Email VARCHAR(255) UNIQUE NOT NULL,
-    Phone VARCHAR(20),
-    Password VARCHAR(255) NOT NULL,
-    UserType VARCHAR(50) DEFAULT 'standard',
-    DateCreated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    IsActive TINYINT DEFAULT 1,
-    Location TEXT,
-    Bio TEXT,
-    PreferredLanguage VARCHAR(10) DEFAULT 'en',
-    Rating DECIMAL(3,2) DEFAULT 0.00,
-    TotalExchanges INT DEFAULT 0,
-    INDEX idx_email (Email),
-    INDEX idx_is_active (IsActive),
-    INDEX idx_preferred_language (PreferredLanguage),
-    INDEX idx_rating (Rating)
-);
+CREATE TABLE `exchange_rate_logs` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `download_timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `success` tinyint(1) NOT NULL,
+  `rates_downloaded` int DEFAULT '0',
+  `error_message` text,
+  PRIMARY KEY (`id`),
+  KEY `idx_timestamp` (`download_timestamp`),
+  KEY `idx_success` (`success`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create user_settings table (matching existing structure from UpdateSettings.py)
-CREATE TABLE user_settings (
-    user_id CHAR(39) PRIMARY KEY,
-    SettingsJson TEXT,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `exchange_rates` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `currency_code` varchar(3) NOT NULL,
+  `rate_to_usd` decimal(15,8) NOT NULL,
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `date_retrieved` date NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_currency_date` (`currency_code`,`date_retrieved`),
+  KEY `idx_currency` (`currency_code`),
+  KEY `idx_date` (`date_retrieved`)
+) ENGINE=InnoDB AUTO_INCREMENT=997 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create usersessions table (matching existing structure exactly)
-CREATE TABLE usersessions (
-    SessionId CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    DateAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `geocoding_cache` (
+  `cache_id` char(39) NOT NULL,
+  `latitude` decimal(10,8) NOT NULL,
+  `longitude` decimal(11,8) NOT NULL,
+  `geocoded_location` varchar(255) NOT NULL COMMENT 'City, State or similar human-readable location',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `accessed_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `access_count` int DEFAULT '1' COMMENT 'Track how often this cache is used for optimization',
+  PRIMARY KEY (`cache_id`),
+  UNIQUE KEY `unique_coordinates` (`latitude`,`longitude`),
+  KEY `idx_coordinates` (`latitude`,`longitude`),
+  KEY `idx_accessed_at` (`accessed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Centralized cache for reverse geocoding results to avoid repeated API calls';
 
--- Create history table (used by History.py for audit logging)
-CREATE TABLE history (
-    historyId CHAR(39) PRIMARY KEY,
-    TableName VARCHAR(100) NOT NULL,
-    KeyName VARCHAR(100) NOT NULL,
-    KeyValue VARCHAR(255),
-    user_id CHAR(39) NOT NULL,
-    Data TEXT,
-    DateAdded TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_table_key (TableName, KeyName),
-    INDEX idx_user_id (user_id),
-    INDEX idx_date_added (DateAdded),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `history` (
+  `historyId` char(39) NOT NULL,
+  `TableName` varchar(100) NOT NULL,
+  `KeyName` varchar(100) NOT NULL,
+  `KeyValue` varchar(255) DEFAULT NULL,
+  `user_id` char(39) DEFAULT NULL,
+  `Data` text,
+  `DateAdded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`historyId`),
+  KEY `idx_table_key` (`TableName`,`KeyName`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_date_added` (`DateAdded`),
+  CONSTRAINT `history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create listings table for currency exchange listings
-CREATE TABLE listings (
-    listing_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    accept_currency VARCHAR(10) NOT NULL,
-    location TEXT NOT NULL,
-    latitude DECIMAL(10,8),
-    longitude DECIMAL(11,8),
-    location_radius INT DEFAULT 5,
-    meeting_preference ENUM('public', 'private', 'online', 'flexible') DEFAULT 'public',
-    available_until DATETIME NOT NULL,
-    status ENUM('active', 'inactive', 'completed', 'expired') DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_currency (currency),
-    INDEX idx_accept_currency (accept_currency),
-    INDEX idx_location (location(255)),
-    INDEX idx_coordinates (latitude, longitude),
-    INDEX idx_status (status),
-    INDEX idx_available_until (available_until),
-    INDEX idx_user_id (user_id),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `listing_meeting_location` (
+  `location_negotiation_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `buyer_id` char(39) NOT NULL,
+  `proposed_by` char(39) NOT NULL,
+  `meeting_location_lat` decimal(10,8) NOT NULL,
+  `meeting_location_lng` decimal(11,8) NOT NULL,
+  `meeting_location_name` varchar(255) DEFAULT NULL,
+  `accepted_at` timestamp NULL DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`location_negotiation_id`),
+  UNIQUE KEY `listing_id` (`listing_id`),
+  KEY `idx_listing` (`listing_id`),
+  KEY `idx_buyer` (`buyer_id`),
+  KEY `idx_status` (`accepted_at`,`rejected_at`),
+  KEY `listing_meeting_location_ibfk_3` (`proposed_by`),
+  CONSTRAINT `listing_meeting_location_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
+  CONSTRAINT `listing_meeting_location_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `listing_meeting_location_ibfk_3` FOREIGN KEY (`proposed_by`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create listing_meeting_time table for time proposal/acceptance lifecycle
-CREATE TABLE listing_meeting_time (
-    time_negotiation_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL UNIQUE,
-    buyer_id CHAR(39) NOT NULL,
-    proposed_by CHAR(39) NOT NULL,
-    meeting_time DATETIME NOT NULL,
-    accepted_at TIMESTAMP NULL,
-    rejected_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX idx_listing (listing_id),
-    INDEX idx_buyer (buyer_id),
-    INDEX idx_status (accepted_at, rejected_at)
-);
+CREATE TABLE `listing_meeting_time` (
+  `time_negotiation_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `buyer_id` char(39) NOT NULL,
+  `proposed_by` char(39) NOT NULL,
+  `meeting_time` datetime NOT NULL,
+  `accepted_at` timestamp NULL DEFAULT NULL,
+  `rejected_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`time_negotiation_id`),
+  UNIQUE KEY `listing_id` (`listing_id`),
+  KEY `idx_listing` (`listing_id`),
+  KEY `idx_buyer` (`buyer_id`),
+  KEY `idx_status` (`accepted_at`,`rejected_at`),
+  KEY `listing_meeting_time_ibfk_3` (`proposed_by`),
+  CONSTRAINT `listing_meeting_time_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
+  CONSTRAINT `listing_meeting_time_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `listing_meeting_time_ibfk_3` FOREIGN KEY (`proposed_by`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create listing_meeting_location table for location proposal/acceptance lifecycle
-CREATE TABLE listing_meeting_location (
-    location_negotiation_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL UNIQUE,
-    buyer_id CHAR(39) NOT NULL,
-    proposed_by CHAR(39) NOT NULL,
-    meeting_location_lat DECIMAL(10, 8) NOT NULL,
-    meeting_location_lng DECIMAL(11, 8) NOT NULL,
-    meeting_location_name VARCHAR(255),
-    accepted_at TIMESTAMP NULL,
-    rejected_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX idx_listing (listing_id),
-    INDEX idx_buyer (buyer_id),
-    INDEX idx_status (accepted_at, rejected_at)
-);
+CREATE TABLE `listing_payments` (
+  `payment_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `buyer_id` char(39) NOT NULL,
+  `buyer_paid_at` timestamp NULL DEFAULT NULL,
+  `seller_paid_at` timestamp NULL DEFAULT NULL,
+  `buyer_transaction_id` char(39) DEFAULT NULL,
+  `seller_transaction_id` char(39) DEFAULT NULL,
+  `payment_method` varchar(50) DEFAULT 'paypal',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`payment_id`),
+  UNIQUE KEY `listing_id` (`listing_id`),
+  KEY `idx_listing` (`listing_id`),
+  KEY `idx_buyer` (`buyer_id`),
+  KEY `idx_payment_status` (`buyer_paid_at`,`seller_paid_at`),
+  KEY `idx_payment_method` (`payment_method`),
+  CONSTRAINT `listing_payments_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
+  CONSTRAINT `listing_payments_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create listing_payments table for payment status tracking
-CREATE TABLE listing_payments (
-    payment_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL UNIQUE,
-    buyer_id CHAR(39) NOT NULL,
-    buyer_paid_at TIMESTAMP NULL,
-    seller_paid_at TIMESTAMP NULL,
-    buyer_transaction_id CHAR(39),
-    seller_transaction_id CHAR(39),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (buyer_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX idx_listing (listing_id),
-    INDEX idx_buyer (buyer_id),
-    INDEX idx_payment_status (buyer_paid_at, seller_paid_at)
-);
+CREATE TABLE `listing_reports` (
+  `report_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `reporter_id` char(39) NOT NULL,
+  `reported_user_id` char(39) NOT NULL,
+  `reason` enum('spam','fraud','inappropriate_content','fake_listing','abusive_behavior','misleading_information','other') NOT NULL,
+  `description` text,
+  `status` enum('pending','reviewing','resolved','dismissed') DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `reviewed_at` timestamp NULL DEFAULT NULL,
+  `reviewed_by` char(39) DEFAULT NULL,
+  `resolution` text,
+  PRIMARY KEY (`report_id`),
+  KEY `idx_listing_id` (`listing_id`),
+  KEY `idx_reporter_id` (`reporter_id`),
+  KEY `idx_reported_user_id` (`reported_user_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `listing_reports_ibfk_4` (`reviewed_by`),
+  CONSTRAINT `listing_reports_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`) ON DELETE CASCADE,
+  CONSTRAINT `listing_reports_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `listing_reports_ibfk_3` FOREIGN KEY (`reported_user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `listing_reports_ibfk_4` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create messages table for interest messages and communication
-CREATE TABLE messages (
-    message_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    sender_id CHAR(39) NOT NULL,
-    recipient_id CHAR(39) NOT NULL,
-    message_type ENUM('interest', 'reply', 'system') DEFAULT 'interest',
-    message_text TEXT NULL,
-    availability_preferences JSON NULL,
-    status ENUM('sent', 'read', 'replied') DEFAULT 'sent',
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP NULL,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_sender_id (sender_id),
-    INDEX idx_recipient_id (recipient_id),
-    INDEX idx_status (status),
-    INDEX idx_sent_at (sent_at),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `listings` (
+  `listing_id` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `currency` varchar(10) NOT NULL,
+  `amount` decimal(15,2) NOT NULL,
+  `accept_currency` varchar(10) NOT NULL,
+  `location` text NOT NULL,
+  `latitude` decimal(10,8) DEFAULT NULL,
+  `longitude` decimal(11,8) DEFAULT NULL,
+  `location_radius` int DEFAULT '5',
+  `meeting_preference` enum('public','private','online','flexible') DEFAULT 'public',
+  `will_round_to_nearest_dollar` tinyint(1) DEFAULT '0',
+  `available_until` datetime NOT NULL,
+  `status` enum('active','inactive','completed','expired') DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `geocoded_location` varchar(255) DEFAULT NULL,
+  `geocoding_updated_at` timestamp NULL DEFAULT NULL,
+  `buyer_id` char(39) DEFAULT NULL,
+  PRIMARY KEY (`listing_id`),
+  KEY `idx_currency` (`currency`),
+  KEY `idx_accept_currency` (`accept_currency`),
+  KEY `idx_location` (`location`(255)),
+  KEY `idx_coordinates` (`latitude`,`longitude`),
+  KEY `idx_status` (`status`),
+  KEY `idx_available_until` (`available_until`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_will_round_to_nearest_dollar` (`will_round_to_nearest_dollar`),
+  KEY `idx_buyer` (`buyer_id`),
+  CONSTRAINT `listings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `listings_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create notifications table for user notifications
-CREATE TABLE notifications (
-    notification_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    type VARCHAR(50) NOT NULL, -- 'new_interest', 'new_message', etc.
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    related_id CHAR(39) NULL, -- listing_id, message_id, etc.
-    status ENUM('unread', 'read', 'dismissed') DEFAULT 'unread',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_type (type),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+CREATE TABLE `messages` (
+  `message_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `sender_id` char(39) NOT NULL,
+  `recipient_id` char(39) NOT NULL,
+  `message_type` enum('interest','reply','system') DEFAULT 'interest',
+  `message_text` text,
+  `availability_preferences` json DEFAULT NULL,
+  `status` enum('sent','read','replied') DEFAULT 'sent',
+  `sent_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`message_id`),
+  KEY `idx_listing_id` (`listing_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_recipient_id` (`recipient_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sent_at` (`sent_at`),
+  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`) ON DELETE CASCADE,
+  CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create listing_reports table for reporting inappropriate listings
-CREATE TABLE listing_reports (
-    report_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    reporter_id CHAR(39) NOT NULL,
-    reported_user_id CHAR(39) NOT NULL,
-    reason ENUM('spam', 'fraud', 'inappropriate_content', 'fake_listing', 'abusive_behavior', 'misleading_information', 'other') NOT NULL,
-    description TEXT NULL,
-    status ENUM('pending', 'reviewing', 'resolved', 'dismissed') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at TIMESTAMP NULL,
-    reviewed_by CHAR(39) NULL,
-    resolution TEXT NULL,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_reporter_id (reporter_id),
-    INDEX idx_reported_user_id (reported_user_id),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (reporter_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (reported_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (reviewed_by) REFERENCES users(user_id) ON DELETE SET NULL
-);
+CREATE TABLE `notifications` (
+  `notification_id` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `related_id` char(39) DEFAULT NULL,
+  `status` enum('unread','read','dismissed') DEFAULT 'unread',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`notification_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create admin_notifications table for admin alerts
-CREATE TABLE admin_notifications (
-    notification_id CHAR(39) PRIMARY KEY,
-    type VARCHAR(50) NOT NULL, -- 'listing_report', 'user_suspension', etc.
-    priority ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    related_id CHAR(39) NULL, -- listing_id, user_id, etc.
-    status ENUM('unread', 'read', 'dismissed') DEFAULT 'unread',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP NULL,
-    INDEX idx_type (type),
-    INDEX idx_priority (priority),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at)
-);
+CREATE TABLE `password_reset_tokens` (
+  `TokenId` char(39) NOT NULL DEFAULT (uuid()),
+  `user_id` char(39) NOT NULL,
+  `ResetToken` varchar(255) NOT NULL,
+  `TokenExpires` datetime NOT NULL,
+  `CreatedAt` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`TokenId`),
+  UNIQUE KEY `ResetToken` (`ResetToken`),
+  KEY `idx_reset_token` (`ResetToken`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_expires` (`TokenExpires`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create transactions table for payment tracking
-CREATE TABLE transactions (
-    transaction_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    listing_id CHAR(39) NULL,
-    negotiation_id CHAR(39) NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    transaction_type ENUM('contact_fee', 'listing_fee', 'withdrawal', 'refund') NOT NULL,
-    status ENUM('pending', 'completed', 'failed', 'cancelled', 'refunded') DEFAULT 'pending',
-    payment_method VARCHAR(50) NULL,
-    gateway_transaction_id VARCHAR(255) NULL,
-    description TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP NULL,
-    INDEX idx_user_id (user_id),
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_negotiation_id (negotiation_id),
-    INDEX idx_type (transaction_type),
-    INDEX idx_status (status),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE SET NULL
-);
+CREATE TABLE `paypal_orders` (
+  `order_id` varchar(255) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `listing_id` char(39) NOT NULL,
+  `transaction_id` varchar(255) DEFAULT NULL,
+  `status` enum('CREATED','APPROVED','VOIDED','COMPLETED','FAILED','CANCELLED') DEFAULT 'CREATED',
+  `payer_email` varchar(255) DEFAULT NULL,
+  `payer_name` varchar(255) DEFAULT NULL,
+  `amount` decimal(15,2) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT 'USD',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`order_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_listing_id` (`listing_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `paypal_orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `paypal_orders_ibfk_2` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create user_ratings table for trader ratings
-CREATE TABLE user_ratings (
-    rating_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL, -- user being rated
-    rater_id CHAR(39) NOT NULL, -- user giving the rating
-    rating TINYINT NOT NULL CHECK (rating >= 1 AND rating <= 5),
-    review TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_rater_id (rater_id),
-    INDEX idx_rating (rating),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (rater_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_rating (rater_id, user_id) -- Prevent multiple ratings from same rater to same user
-);
+CREATE TABLE `translations` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `translation_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `language_code` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `translation_value` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_key_language` (`translation_key`,`language_code`),
+  KEY `idx_language_code` (`language_code`),
+  KEY `idx_updated_at` (`updated_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=6112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Re-enable foreign key checks
-SET FOREIGN_KEY_CHECKS = 1;
+CREATE TABLE `user_credits` (
+  `credit_id` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `currency` varchar(10) DEFAULT 'USD',
+  `reason` enum('partner_no_payment','system_refund','promotion','other') DEFAULT 'partner_no_payment',
+  `negotiation_id` char(39) DEFAULT NULL,
+  `transaction_id` char(39) DEFAULT NULL,
+  `status` enum('available','applied','expired','cancelled') DEFAULT 'available',
+  `applied_to_negotiation_id` char(39) DEFAULT NULL,
+  `applied_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`credit_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_negotiation_id` (`negotiation_id`),
+  KEY `idx_applied_to` (`applied_to_negotiation_id`),
+  KEY `idx_expires_at` (`expires_at`),
+  KEY `idx_created_at` (`created_at`),
+  CONSTRAINT `user_credits_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Insert sample data for testing (optional)
--- You can uncomment these lines to populate with test data
+CREATE TABLE `user_devices` (
+  `device_id` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `device_type` enum('ios','android','web') NOT NULL,
+  `device_token` varchar(500) DEFAULT NULL,
+  `device_name` varchar(255) DEFAULT NULL,
+  `app_version` varchar(50) DEFAULT NULL,
+  `os_version` varchar(50) DEFAULT NULL,
+  `is_active` tinyint DEFAULT '1',
+  `registered_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`device_id`),
+  UNIQUE KEY `device_token` (`device_token`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_device_type` (`device_type`),
+  KEY `idx_is_active` (`is_active`),
+  KEY `idx_registered_at` (`registered_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- INSERT INTO users (user_id, FirstName, LastName, Email, Phone, Password, UserType, DateCreated, IsActive) VALUES
--- ('USR-test-user-1', 'John', 'Doe', 'test1@example.com', '555-0001', '$2b$12$hash1', 'standard', NOW(), 1),
--- ('USR-test-user-2', 'Jane', 'Smith', 'test2@example.com', '555-0002', '$2b$12$hash2', 'standard', NOW(), 1),
--- ('USR-test-user-3', 'Bob', 'Johnson', 'test3@example.com', '555-0003', '$2b$12$hash3', 'standard', NOW(), 1);
+CREATE TABLE `user_ratings` (
+  `rating_id` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `rater_id` char(39) NOT NULL,
+  `transaction_id` char(39) DEFAULT NULL,
+  `rating` tinyint NOT NULL,
+  `review` text,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`rating_id`),
+  UNIQUE KEY `unique_rating` (`rater_id`,`transaction_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_rater_id` (`rater_id`),
+  KEY `idx_rating` (`rating`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `transaction_id` (`transaction_id`),
+  CONSTRAINT `user_ratings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `user_ratings_ibfk_2` FOREIGN KEY (`rater_id`) REFERENCES `users` (`user_id`),
+  CONSTRAINT `user_ratings_chk_1` CHECK (((`rating` >= 1) and (`rating` <= 5)))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- INSERT INTO user_settings (user_id, SettingsJson) VALUES
--- ('USR-test-user-1', '{"preferredCurrency": "USD", "defaultLocationRadius": 10}'),
--- ('USR-test-user-2', '{"preferredCurrency": "EUR", "defaultLocationRadius": 15}'),
--- ('USR-test-user-3', '{"preferredCurrency": "GBP", "defaultLocationRadius": 5}');
+CREATE TABLE `user_settings` (
+  `user_id` char(39) NOT NULL,
+  `SettingsJson` text,
+  PRIMARY KEY (`user_id`),
+  CONSTRAINT `user_settings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- INSERT INTO listings (listing_id, user_id, currency, amount, accept_currency, location, available_until) VALUES
--- ('LST-sample-1', 'USR-test-user-1', 'USD', 1000.00, 'EUR', 'San Francisco, CA', '2025-12-15 23:59:59'),
--- ('LST-sample-2', 'USR-test-user-2', 'GBP', 500.00, 'USD', 'London, UK', '2025-12-20 23:59:59'),
--- ('LST-sample-3', 'USR-test-user-3', 'EUR', 750.00, 'JPY', 'Paris, France', '2025-12-25 23:59:59');
+CREATE TABLE `users` (
+  `user_id` char(39) NOT NULL,
+  `FirstName` varchar(100) DEFAULT NULL,
+  `LastName` varchar(100) DEFAULT NULL,
+  `Email` varchar(255) NOT NULL,
+  `Phone` varchar(20) DEFAULT NULL,
+  `Password` varchar(255) NOT NULL,
+  `UserType` varchar(50) DEFAULT 'standard',
+  `DateCreated` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `IsActive` tinyint DEFAULT '1',
+  `Location` text,
+  `Bio` text,
+  `PreferredLanguage` varchar(10) DEFAULT 'en',
+  `Rating` decimal(3,2) DEFAULT '0.00',
+  `TotalExchanges` int DEFAULT '0',
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `Email` (`Email`),
+  KEY `idx_email` (`Email`),
+  KEY `idx_is_active` (`IsActive`),
+  KEY `idx_preferred_language` (`PreferredLanguage`),
+  KEY `idx_rating` (`Rating`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create exchange rates table for currency conversion
-CREATE TABLE exchange_rates (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    currency_code VARCHAR(3) NOT NULL,
-    rate_to_usd DECIMAL(15,8) NOT NULL,
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    date_retrieved DATE NOT NULL,
-    UNIQUE KEY unique_currency_date (currency_code, date_retrieved),
-    INDEX idx_currency (currency_code),
-    INDEX idx_date (date_retrieved)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `usersessions` (
+  `SessionId` char(39) NOT NULL,
+  `user_id` char(39) NOT NULL,
+  `DateAdded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`SessionId`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Create meeting proposals table for scheduling meetings
-CREATE TABLE meeting_proposals (
-    proposal_id CHAR(39) PRIMARY KEY,
-    listing_id CHAR(39) NOT NULL,
-    proposer_id CHAR(39) NOT NULL,
-    recipient_id CHAR(39) NOT NULL,
-    proposed_location TEXT NOT NULL,
-    proposed_time DATETIME NOT NULL,
-    message TEXT NULL,
-    status ENUM('pending', 'accepted', 'rejected', 'expired') DEFAULT 'pending',
-    proposed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    responded_at TIMESTAMP NULL,
-    expires_at TIMESTAMP NULL,
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_proposer_id (proposer_id),
-    INDEX idx_recipient_id (recipient_id),
-    INDEX idx_status (status),
-    INDEX idx_proposed_time (proposed_time),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposer_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
-
--- Create exchange rate download logs table
-CREATE TABLE exchange_rate_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    download_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    success BOOLEAN NOT NULL,
-    rates_downloaded INT DEFAULT 0,
-    error_message TEXT,
-    INDEX idx_timestamp (download_timestamp),
-    INDEX idx_success (success)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create translations table for managing translations
-CREATE TABLE translations (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    translation_key VARCHAR(255) NOT NULL,
-    language_code VARCHAR(10) NOT NULL,
-    translation_value LONGTEXT NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_translation_key (translation_key),
-    INDEX idx_language_code (language_code),
-    UNIQUE KEY unique_translation (translation_key, language_code)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create user_devices table for storing iOS/Android device tokens
-CREATE TABLE IF NOT EXISTS user_devices (
-    device_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    device_type ENUM('ios', 'android', 'web') NOT NULL,
-    device_token VARCHAR(500) UNIQUE,
-    device_name VARCHAR(255),
-    app_version VARCHAR(50),
-    os_version VARCHAR(50),
-    is_active TINYINT DEFAULT 1,
-    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_used_at TIMESTAMP NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_user_id (user_id),
-    INDEX idx_device_type (device_type),
-    INDEX idx_is_active (is_active),
-    INDEX idx_registered_at (registered_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create APN logs table for tracking push notifications sent
-CREATE TABLE IF NOT EXISTS apn_logs (
-    log_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    notification_title VARCHAR(255),
-    notification_body TEXT,
-    device_count INT DEFAULT 0,
-    failed_count INT DEFAULT 0,
-    metadata JSON,
-    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    INDEX idx_user_id (user_id),
-    INDEX idx_sent_at (sent_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-
-
--- Create negotiation_history table for tracking all negotiation actions
-CREATE TABLE IF NOT EXISTS negotiation_history (
-    history_id CHAR(39) PRIMARY KEY,
-    negotiation_id CHAR(39) NOT NULL,
-    listing_id CHAR(39) NOT NULL,
-    action ENUM('time_proposal', 'location_proposal', 'counter_proposal', 'accepted_time', 'accepted_location', 'rejected', 'buyer_paid', 'seller_paid', 'completed') NOT NULL,
-    proposed_time DATETIME NULL,
-    proposed_location VARCHAR(255) NULL,
-    proposed_latitude DECIMAL(10,8) NULL,
-    proposed_longitude DECIMAL(11,8) NULL,
-    accepted_time DATETIME NULL,
-    accepted_location VARCHAR(255) NULL,
-    accepted_latitude DECIMAL(10,8) NULL,
-    accepted_longitude DECIMAL(11,8) NULL,
-    proposed_by CHAR(39) NULL,
-    paid_by CHAR(39) NULL,
-    notes TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_negotiation_id (negotiation_id),
-    INDEX idx_listing_id (listing_id),
-    INDEX idx_action (action),
-    INDEX idx_proposed_by (proposed_by),
-    INDEX idx_paid_by (paid_by),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (listing_id) REFERENCES listings(listing_id) ON DELETE CASCADE,
-    FOREIGN KEY (proposed_by) REFERENCES users(user_id) ON DELETE SET NULL,
-    FOREIGN KEY (paid_by) REFERENCES users(user_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create user_credits table for managing user credits/refunds
-CREATE TABLE IF NOT EXISTS user_credits (
-    credit_id CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
-    reason ENUM('partner_no_payment', 'system_refund', 'promotion', 'other') DEFAULT 'partner_no_payment',
-    negotiation_id CHAR(39) NULL,
-    transaction_id CHAR(39) NULL,
-    status ENUM('available', 'applied', 'expired', 'cancelled') DEFAULT 'available',
-    applied_to_negotiation_id CHAR(39) NULL,
-    applied_at TIMESTAMP NULL,
-    expires_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status),
-    INDEX idx_negotiation_id (negotiation_id),
-    INDEX idx_applied_to (applied_to_negotiation_id),
-    INDEX idx_expires_at (expires_at),
-    INDEX idx_created_at (created_at),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (applied_to_negotiation_id) REFERENCES exchange_negotiations(negotiation_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- Create password_reset_tokens table for forgot password functionality
-CREATE TABLE IF NOT EXISTS password_reset_tokens (
-    TokenId CHAR(39) PRIMARY KEY,
-    user_id CHAR(39) NOT NULL,
-    ResetToken VARCHAR(255) NOT NULL UNIQUE,
-    TokenExpires DATETIME NOT NULL,
-    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    INDEX idx_reset_token (ResetToken),
-    INDEX idx_user_id (user_id),
-    INDEX idx_expires (TokenExpires)
-);
-
--- Create geocoding_cache table for reverse geocoding results
-CREATE TABLE IF NOT EXISTS geocoding_cache (
-    cache_id CHAR(39) PRIMARY KEY,
-    latitude DECIMAL(10,8) NOT NULL,
-    longitude DECIMAL(11,8) NOT NULL,
-    geocoded_location VARCHAR(255) NOT NULL COMMENT 'City, State or similar human-readable location',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    access_count INT DEFAULT 1 COMMENT 'Track how often this cache is used for optimization',
-    INDEX idx_coordinates (latitude, longitude),
-    INDEX idx_accessed_at (accessed_at),
-    UNIQUE KEY unique_coordinates (latitude, longitude)
-) COMMENT 'Centralized cache for reverse geocoding results to avoid repeated API calls';
-
--- Show table creation status
-SELECT 'Complete NiceTradersApp database schema created successfully!' as status;
-SELECT 'All ID columns are CHAR(39) for consistent sizing' as note;
-SELECT 'Includes Contact module tables: messages, notifications, listing_reports, admin_notifications, transactions, user_ratings' as contact_tables;
-SELECT 'Includes Exchange Rates tables: exchange_rates, exchange_rate_logs' as exchange_rate_tables;
-SELECT 'Includes password_reset_tokens for forgot password functionality' as password_reset_table;
-SELECT 'Includes geocoding_cache for reverse geocoding optimization' as geocoding_table;
-SELECT 'Ready for use with Flask application and all functionality' as ready;
