@@ -55,7 +55,7 @@ SET FOREIGN_KEY_CHECKS=1;
 EOF
 
 echo "🔄 Applying new schema..."
-mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema.sql
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema_ordered.sql
 
 if [ $? -eq 0 ]; then
     echo "✅ Database schema updated successfully!"
