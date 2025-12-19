@@ -25,7 +25,35 @@ fi
 
 echo "✅ Backup created successfully"
 
-# Update schema
+# Update schema - first drop all tables then recreate
+echo "🔄 Dropping existing tables..."
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME << EOF
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS admin_notifications;
+DROP TABLE IF EXISTS apn_logs;
+DROP TABLE IF EXISTS exchange_rate_logs;
+DROP TABLE IF EXISTS exchange_rates;
+DROP TABLE IF EXISTS geocoding_cache;
+DROP TABLE IF EXISTS history;
+DROP TABLE IF EXISTS listing_meeting_location;
+DROP TABLE IF EXISTS listing_meeting_time;
+DROP TABLE IF EXISTS listing_payments;
+DROP TABLE IF EXISTS listing_reports;
+DROP TABLE IF EXISTS listings;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS password_reset_tokens;
+DROP TABLE IF EXISTS paypal_orders;
+DROP TABLE IF EXISTS translations;
+DROP TABLE IF EXISTS user_credits;
+DROP TABLE IF EXISTS user_devices;
+DROP TABLE IF EXISTS user_ratings;
+DROP TABLE IF EXISTS user_settings;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS usersessions;
+SET FOREIGN_KEY_CHECKS=1;
+EOF
+
 echo "🔄 Applying new schema..."
 mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema.sql
 
