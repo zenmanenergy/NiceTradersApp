@@ -1,33 +1,40 @@
 #!/bin/bash
 
-# NiceTradersApp Database Schema Update Script
-# This script updates the MySQL database schema on Ubuntu servers
-# Run this on your Ubuntu server to apply all database migrations
+echo "🗄️ Starting database schema update..."
 
-set -e  # Exit on any error
+# Navigate to project directory
+cd /opt/NiceTradersApp/Server
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-# Configuration
+# Get database credentials from environment or use defaults
 DB_HOST=${DB_HOST:-localhost}
 DB_USER=${DB_USER:-stevenelson}
 DB_PASSWORD=${DB_PASSWORD:-mwitcitw711}
 DB_NAME=${DB_NAME:-nicetraders}
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MIGRATIONS_DIR="${SCRIPT_DIR}/migrations"
 
-echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}NiceTradersApp Database Schema Update${NC}"
-echo -e "${GREEN}========================================${NC}"
-echo ""
+# Backup current database
+BACKUP_FILE="/opt/NiceTradersApp/Server/backups/nicetraders_$(date +%Y%m%d_%H%M%S).sql"
+mkdir -p /opt/NiceTradersApp/Server/backups
 
-# Check if migrations directory exists
-if [ ! -d "$MIGRATIONS_DIR" ]; then
-    echo -e "${RED}Error: Migrations directory not found at $MIGRATIONS_DIR${NC}"
+echo "📦 Creating database backup at $BACKUP_FILE..."
+mysqldump -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME > "$BACKUP_FILE"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Backup failed!"
+    exit 1
+fi
+
+echo "✅ Backup created successfully"
+
+# Update schema
+echo "🔄 Applying new schema..."
+mysql -h $DB_HOST -u $DB_USER -p$DB_PASSWORD $DB_NAME < database_schema.sql
+
+if [ $? -eq 0 ]; then
+    echo "✅ Database schema updated successfully!"
+    echo "💾 Backup saved at: $BACKUP_FILE"
+else
+    echo "❌ Schema update failed!"
+    echo "💡 Your database has been backed up at: $BACKUP_FILE"
     exit 1
 fi
 
