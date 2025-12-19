@@ -12,14 +12,17 @@ def read_schema(filepath):
 
 def extract_tables(schema):
     """Extract individual CREATE TABLE statements"""
-    pattern = r'CREATE TABLE `(\w+)`\s*\((.*?)\)\s*ENGINE'
+    pattern = r'(CREATE TABLE `\w+`\s*\(.*?\)\s*ENGINE=[^;]+;)'
     matches = re.finditer(pattern, schema, re.DOTALL)
     
     tables = {}
     for match in matches:
-        table_name = match.group(1)
-        table_def = match.group(0)
-        tables[table_name] = table_def
+        table_def = match.group(1)
+        # Extract table name
+        name_match = re.search(r'CREATE TABLE `(\w+)`', table_def)
+        if name_match:
+            table_name = name_match.group(1)
+            tables[table_name] = table_def
     
     return tables
 
@@ -70,7 +73,7 @@ def main():
     # Write reordered schema
     output = "-- Database Schema (Reordered for FK Dependencies)\n\n"
     for table_name in sorted_table_names:
-        output += tables[table_name] + ";\n\n"
+        output += tables[table_name] + "\n\n"
     
     with open('/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/database_schema_ordered.sql', 'w') as f:
         f.write(output)

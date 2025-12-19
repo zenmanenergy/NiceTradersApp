@@ -15,7 +15,7 @@ CREATE TABLE `admin_notifications` (
   KEY `idx_priority` (`priority`),
   KEY `idx_status` (`status`),
   KEY `idx_created_at` (`created_at`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `users` (
   `user_id` char(39) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `users` (
   KEY `idx_is_active` (`IsActive`),
   KEY `idx_preferred_language` (`PreferredLanguage`),
   KEY `idx_rating` (`Rating`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `apn_logs` (
   `log_id` int NOT NULL AUTO_INCREMENT,
@@ -53,7 +53,7 @@ CREATE TABLE `apn_logs` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_sent_at` (`sent_at`),
   CONSTRAINT `apn_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `exchange_rate_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -64,7 +64,7 @@ CREATE TABLE `exchange_rate_logs` (
   PRIMARY KEY (`id`),
   KEY `idx_timestamp` (`download_timestamp`),
   KEY `idx_success` (`success`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `exchange_rates` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -76,7 +76,7 @@ CREATE TABLE `exchange_rates` (
   UNIQUE KEY `unique_currency_date` (`currency_code`,`date_retrieved`),
   KEY `idx_currency` (`currency_code`),
   KEY `idx_date` (`date_retrieved`)
-) ENGINE;
+) ENGINE=InnoDB AUTO_INCREMENT=997 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `geocoding_cache` (
   `cache_id` char(39) NOT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE `geocoding_cache` (
   UNIQUE KEY `unique_coordinates` (`latitude`,`longitude`),
   KEY `idx_coordinates` (`latitude`,`longitude`),
   KEY `idx_accessed_at` (`accessed_at`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Centralized cache for reverse geocoding results to avoid repeated API calls';
 
 CREATE TABLE `history` (
   `historyId` char(39) NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE `history` (
   KEY `idx_user_id` (`user_id`),
   KEY `idx_date_added` (`DateAdded`),
   CONSTRAINT `history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `listings` (
   `listing_id` char(39) NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE `listings` (
   KEY `idx_buyer` (`buyer_id`),
   CONSTRAINT `listings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `listings_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `listing_meeting_location` (
   `location_negotiation_id` char(39) NOT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE `listing_meeting_location` (
   CONSTRAINT `listing_meeting_location_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
   CONSTRAINT `listing_meeting_location_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `listing_meeting_location_ibfk_3` FOREIGN KEY (`proposed_by`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `listing_meeting_time` (
   `time_negotiation_id` char(39) NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE `listing_meeting_time` (
   CONSTRAINT `listing_meeting_time_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
   CONSTRAINT `listing_meeting_time_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `listing_meeting_time_ibfk_3` FOREIGN KEY (`proposed_by`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `listing_payments` (
   `payment_id` char(39) NOT NULL,
@@ -204,7 +204,7 @@ CREATE TABLE `listing_payments` (
   KEY `idx_payment_method` (`payment_method`),
   CONSTRAINT `listing_payments_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`),
   CONSTRAINT `listing_payments_ibfk_2` FOREIGN KEY (`buyer_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `listing_reports` (
   `report_id` char(39) NOT NULL,
@@ -229,7 +229,7 @@ CREATE TABLE `listing_reports` (
   CONSTRAINT `listing_reports_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `listing_reports_ibfk_3` FOREIGN KEY (`reported_user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `listing_reports_ibfk_4` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `messages` (
   `message_id` char(39) NOT NULL,
@@ -251,7 +251,7 @@ CREATE TABLE `messages` (
   CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`) ON DELETE CASCADE,
   CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `messages_ibfk_3` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `notifications` (
   `notification_id` char(39) NOT NULL,
@@ -269,7 +269,7 @@ CREATE TABLE `notifications` (
   KEY `idx_status` (`status`),
   KEY `idx_created_at` (`created_at`),
   CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `password_reset_tokens` (
   `TokenId` char(39) NOT NULL DEFAULT (uuid()),
@@ -282,7 +282,7 @@ CREATE TABLE `password_reset_tokens` (
   KEY `idx_reset_token` (`ResetToken`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_expires` (`TokenExpires`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `paypal_orders` (
   `order_id` varchar(255) NOT NULL,
@@ -303,7 +303,7 @@ CREATE TABLE `paypal_orders` (
   KEY `idx_created_at` (`created_at`),
   CONSTRAINT `paypal_orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `paypal_orders_ibfk_2` FOREIGN KEY (`listing_id`) REFERENCES `listings` (`listing_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `translations` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -316,7 +316,7 @@ CREATE TABLE `translations` (
   UNIQUE KEY `unique_key_language` (`translation_key`,`language_code`),
   KEY `idx_language_code` (`language_code`),
   KEY `idx_updated_at` (`updated_at`)
-) ENGINE;
+) ENGINE=InnoDB AUTO_INCREMENT=6112 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `user_credits` (
   `credit_id` char(39) NOT NULL,
@@ -339,7 +339,7 @@ CREATE TABLE `user_credits` (
   KEY `idx_expires_at` (`expires_at`),
   KEY `idx_created_at` (`created_at`),
   CONSTRAINT `user_credits_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `user_devices` (
   `device_id` char(39) NOT NULL,
@@ -359,7 +359,7 @@ CREATE TABLE `user_devices` (
   KEY `idx_device_type` (`device_type`),
   KEY `idx_is_active` (`is_active`),
   KEY `idx_registered_at` (`registered_at`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `user_ratings` (
   `rating_id` char(39) NOT NULL,
@@ -379,14 +379,14 @@ CREATE TABLE `user_ratings` (
   CONSTRAINT `user_ratings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `user_ratings_ibfk_2` FOREIGN KEY (`rater_id`) REFERENCES `users` (`user_id`),
   CONSTRAINT `user_ratings_chk_1` CHECK (((`rating` >= 1) and (`rating` <= 5)))
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `user_settings` (
   `user_id` char(39) NOT NULL,
   `SettingsJson` text,
   PRIMARY KEY (`user_id`),
   CONSTRAINT `user_settings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `usersessions` (
   `SessionId` char(39) NOT NULL,
@@ -394,5 +394,5 @@ CREATE TABLE `usersessions` (
   `DateAdded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`SessionId`),
   KEY `idx_user_id` (`user_id`)
-) ENGINE;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
