@@ -11,18 +11,30 @@ def read_schema(filepath):
         return f.read()
 
 def extract_tables(schema):
-    """Extract individual CREATE TABLE statements"""
-    pattern = r'(CREATE TABLE `\w+`\s*\(.*?\)\s*ENGINE=[^;]+;)'
-    matches = re.finditer(pattern, schema, re.DOTALL)
-    
+    """Extract individual CREATE TABLE statements by splitting on semicolons"""
     tables = {}
-    for match in matches:
-        table_def = match.group(1)
-        # Extract table name
-        name_match = re.search(r'CREATE TABLE `(\w+)`', table_def)
-        if name_match:
-            table_name = name_match.group(1)
-            tables[table_name] = table_def
+    
+    # Split by lines to find CREATE TABLE statements
+    lines = schema.split('\n')
+    current_table = []
+    current_name = None
+    
+    for line in lines:
+        if line.startswith('CREATE TABLE'):
+            current_table = [line]
+            # Extract table name
+            match = re.search(r'CREATE TABLE `(\w+)`', line)
+            if match:
+                current_name = match.group(1)
+        elif current_table:
+            current_table.append(line)
+            if line.rstrip().endswith(';'):
+                # End of table definition
+                table_def = '\n'.join(current_table)
+                if current_name:
+                    tables[current_name] = table_def
+                current_table = []
+                current_name = None
     
     return tables
 
