@@ -13,7 +13,7 @@ import sys
 
 # Read translations.json
 try:
-    with open('../translations.json', 'r', encoding='utf-8') as f:
+    with open('./translations.json', 'r', encoding='utf-8') as f:
         translations = json.load(f)
     print(f"Loaded {len(translations)} translation entries from translations.json")
 except Exception as e:
