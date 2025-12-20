@@ -140,7 +140,6 @@ class LocalizationManager: NSObject, ObservableObject {
             "CONFIRM_PASSWORD": "Confirm Password",
             "CONFIRM_PASSWORD_PLACEHOLDER": "Confirm your password",
             "CREATING_ACCOUNT": "Creating account...",
-            "ALREADY_HAVE_ACCOUNT": "Already have an account?",
         ]
     ]
     
