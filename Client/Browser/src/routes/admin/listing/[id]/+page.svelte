@@ -1,7 +1,7 @@
 <script>
 	import AdminLayout from '../../AdminLayout.svelte';
 	import ListingView from '../../ListingView.svelte';
-	import { listingDetailState } from '../../../lib/adminStore.js';
+	import { listingDetailState } from '../../../../lib/adminStore.js';
 
 	export let data;
 
