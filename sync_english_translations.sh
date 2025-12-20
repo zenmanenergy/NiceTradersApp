@@ -83,10 +83,11 @@ try:
     for key, lang, value in translations:
         try:
             sql = """
-                INSERT INTO translations (translation_key, language_code, translation_value)
-                VALUES (%s, %s, %s)
+                INSERT INTO translations (translation_key, language_code, translation_value, updated_at)
+                VALUES (%s, %s, %s, NOW())
                 ON DUPLICATE KEY UPDATE
-                translation_value = VALUES(translation_value)
+                translation_value = VALUES(translation_value),
+                updated_at = NOW()
             """
             cursor.execute(sql, (key, lang, value))
             count += 1
