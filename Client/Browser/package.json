@@ -17,6 +17,8 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
-		"@sveltejs/adapter-static": "^3.0.10"
+		"@sveltejs/adapter-static": "^3.0.10",
+		"leaflet": "^1.9.4",
+		"leaflet.markercluster": "^1.5.1"
 	}
 }

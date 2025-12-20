@@ -101,3 +101,106 @@ def DeleteListing():
 		return result
 	except Exception as e:
 		return Debugger(e)
+
+@blueprint.route("/Listings/GetListingsForMap", methods=['GET'])
+@cross_origin()
+def GetListingsForMap():
+	"""Get listings with geographic data for map display"""
+	try:
+		from _Lib.Database import ConnectToDatabase
+		import json
+		from decimal import Decimal
+		
+		# Get query parameters
+		currency = request.args.get('currency', None)
+		location = request.args.get('location', None)
+		accept_currency = request.args.get('acceptCurrency', None)
+		limit = int(request.args.get('limit', 500))  # Max 500 for map performance
+		
+		cursor, connection = ConnectToDatabase()
+		
+		# Build query for listings with coordinates
+		query = """
+			SELECT 
+				listing_id,
+				user_id,
+				currency,
+				amount,
+				accept_currency,
+				location,
+				latitude,
+				longitude,
+				location_radius,
+				meeting_preference,
+				will_round_to_nearest_dollar,
+				available_until,
+				status,
+				geocoded_location,
+				created_at,
+				updated_at
+			FROM listings
+			WHERE status = 'active'
+			AND latitude IS NOT NULL
+			AND longitude IS NOT NULL
+		"""
+		
+		params = []
+		
+		if currency:
+			query += " AND currency = %s"
+			params.append(currency)
+		
+		if accept_currency:
+			query += " AND accept_currency = %s"
+			params.append(accept_currency)
+		
+		if location:
+			query += " AND (location LIKE %s OR geocoded_location LIKE %s)"
+			location_search = f'%{location}%'
+			params.extend([location_search, location_search])
+		
+		query += f" ORDER BY created_at DESC LIMIT {limit}"
+		
+		cursor.execute(query, params)
+		listings = cursor.fetchall()
+		
+		cursor.close()
+		connection.close()
+		
+		# Convert to list format and handle Decimal types
+		listing_list = []
+		for row in (listings or []):
+			listing_dict = dict(row)
+			
+			# Convert Decimal to float
+			if listing_dict.get('latitude'):
+				listing_dict['latitude'] = float(listing_dict['latitude'])
+			if listing_dict.get('longitude'):
+				listing_dict['longitude'] = float(listing_dict['longitude'])
+			if listing_dict.get('amount'):
+				listing_dict['amount'] = float(listing_dict['amount'])
+			
+			# Convert datetime objects to strings for JSON
+			if listing_dict.get('available_until'):
+				listing_dict['available_until'] = listing_dict['available_until'].isoformat()
+			if listing_dict.get('created_at'):
+				listing_dict['created_at'] = listing_dict['created_at'].isoformat()
+			if listing_dict.get('updated_at'):
+				listing_dict['updated_at'] = listing_dict['updated_at'].isoformat()
+			
+			listing_list.append(listing_dict)
+		
+		return json.dumps({
+			'success': True,
+			'listings': listing_list,
+			'count': len(listing_list)
+		})
+	except Exception as e:
+		import json
+		return json.dumps({
+			'success': False,
+			'error': str(e)
+		})
+		return result
+	except Exception as e:
+		return Debugger(e)

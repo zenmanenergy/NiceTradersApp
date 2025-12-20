@@ -1,11 +1,9 @@
 <script>
+	import { goto } from '$app/navigation';
 	import { viewState } from '../../lib/adminStore.js';
 	
 	function resetToSearch() {
-		$viewState = {
-			currentView: 'search',
-			breadcrumbs: []
-		};
+		goto('/admin/search');
 	}
 	
 	function goToLogs() {
@@ -21,19 +19,23 @@
 			breadcrumbs: []
 		};
 	}
+
+	function goToMap() {
+		window.location.href = '/map';
+	}
 	
 	function goBack() {
 		if ($viewState.breadcrumbs.length > 0) {
 			$viewState.breadcrumbs.pop();
 			if ($viewState.breadcrumbs.length === 0) {
-				$viewState.currentView = 'search';
+				goto('/admin/search');
 			} else {
 				const last = $viewState.breadcrumbs[$viewState.breadcrumbs.length - 1];
 				// Navigate will be handled by parent
 			}
 			$viewState = $viewState;
 		} else {
-			$viewState.currentView = 'search';
+			goto('/admin/search');
 			$viewState = $viewState;
 		}
 	}
@@ -47,6 +49,7 @@
 				<p>Nice Traders Admin</p>
 			</div>
 			<div class="header-buttons">
+				<button class="logs-btn" on:click={goToMap}>🗺️ Map View</button>
 				<button class="logs-btn" on:click={goToPaymentReports}>💳 Payment Reports</button>
 				<button class="logs-btn" on:click={goToLogs}>📋 View Logs</button>
 			</div>

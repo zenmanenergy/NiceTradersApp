@@ -1,10 +1,13 @@
 <script>
+	import { goto } from '$app/navigation';
 	import SuperFetch from '../../SuperFetch.js';
 	import { searchState, viewState, userDetailState } from '../../lib/adminStore.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
 	
 	export let viewUser;
-	export let viewListing;
+	export let viewListing = async (listingId) => {
+		goto(`/admin/listing/${listingId}`);
+	};
 	export let viewTransaction;
 	
 	async function search() {
@@ -118,7 +121,7 @@
 							<div class="result-arrow">→</div>
 						</div>
 					{:else if $searchState.searchType === 'listings'}
-						<div class="result-card" on:click={() => viewListing(result.listing_id, `${result.currency} → ${result.accept_currency}`)}>
+						<div class="result-card" on:click={() => viewListing(result.listing_id)}>
 							<div class="result-icon">💱</div>
 							<div class="result-info">
 								<h4>{result.currency} → {result.accept_currency}</h4>

@@ -54,14 +54,14 @@
 			{:else}
 				<div class="list-grid">
 					{#each $listingDetailState.listingPurchases as purchase}
-						<div class="list-card" on:click={() => viewTransaction(purchase.access_id, `Purchase ${purchase.access_id.substring(0, 8)}`)}>
+						<div class="list-card" on:click={() => viewTransaction(purchase.payment_id, `Payment ${purchase.payment_id.substring(0, 8)}`)}>
 							<div class="list-header">
-								<strong>{formatCurrency(purchase.amount_paid, purchase.currency)}</strong>
+								<strong>{formatCurrency(purchase.amount, purchase.currency)}</strong>
 								<span class="status-badge {purchase.status}">{purchase.status}</span>
 							</div>
-							<div>Buyer ID: {purchase.user_id.substring(0, 12)}...</div>
+							<div>Buyer: {purchase.buyer_first_name} {purchase.buyer_last_name}</div>
 							<div>Payment: {purchase.payment_method}</div>
-							<div class="list-footer">{formatDate(purchase.purchased_at)}</div>
+							<div class="list-footer">{formatDate(purchase.buyer_paid_at)}</div>
 						</div>
 					{/each}
 				</div>
@@ -77,7 +77,7 @@
 					{#each $listingDetailState.listingMessages as message}
 						<div class="message-card">
 							<div class="message-header">
-								<span>From: {message.sender_id.substring(0, 12)}...</span>
+								<span>From: {message.sender_id ? message.sender_id.substring(0, 12) : 'Unknown'}...</span>
 								<span>{formatDate(message.sent_at)}</span>
 							</div>
 							<div class="message-text">{message.message_text || '-'}</div>

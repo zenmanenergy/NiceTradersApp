@@ -832,3 +832,495 @@ def clear_logs():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@blueprint.route('/Admin/UpdateListing', methods=['GET', 'POST'])
+@cross_origin()
+def update_listing():
+    """Update a listing as admin"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        
+        if not listing_id:
+            return jsonify({'success': False, 'error': 'listing_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Build update query dynamically
+        allowed_fields = ['currency', 'amount', 'accept_currency', 'location', 'latitude', 
+                         'longitude', 'location_radius', 'meeting_preference', 
+                         'available_until', 'status', 'will_round_to_nearest_dollar',
+                         'geocoded_location']
+        
+        updates = {}
+        for field in allowed_fields:
+            if field in params and params[field] is not None:
+                value = params[field]
+                
+                # Type conversions
+                if field in ['latitude', 'longitude']:
+                    try:
+                        value = float(value)
+                    except (ValueError, TypeError):
+                        continue
+                elif field == 'amount':
+                    try:
+                        value = float(value)
+                    except (ValueError, TypeError):
+                        continue
+                elif field == 'location_radius':
+                    try:
+                        value = int(value)
+                    except (ValueError, TypeError):
+                        continue
+                elif field == 'will_round_to_nearest_dollar':
+                    value = 1 if str(value).lower() in ['1', 'true', 'yes'] else 0
+                
+                updates[field] = value
+        
+        if not updates:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'No fields to update'})
+        
+        # Add updated_at timestamp
+        set_clause = ', '.join(f"`{field}` = %s" for field in updates.keys())
+        set_clause += ', updated_at = NOW()'
+        values = list(updates.values())
+        
+        query = f"UPDATE listings SET {set_clause} WHERE listing_id = %s"
+        values.append(listing_id)
+        
+        cursor.execute(query, values)
+        connection.commit()
+        
+        affected_rows = cursor.rowcount
+        cursor.close()
+        connection.close()
+        
+        if affected_rows > 0:
+            return jsonify({'success': True, 'message': 'Listing updated successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Listing not found'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/DeleteListing', methods=['GET', 'POST'])
+@cross_origin()
+def delete_listing():
+    """Delete or deactivate a listing as admin"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        permanent = params.get('permanent', 'false').lower() in ['true', '1', 'yes']
+        
+        if not listing_id:
+            return jsonify({'success': False, 'error': 'listing_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        if permanent:
+            # Permanently delete the listing
+            query = "DELETE FROM listings WHERE listing_id = %s"
+            cursor.execute(query, (listing_id,))
+        else:
+            # Just deactivate the listing
+            query = "UPDATE listings SET status = 'inactive', updated_at = NOW() WHERE listing_id = %s"
+            cursor.execute(query, (listing_id,))
+        
+        connection.commit()
+        affected_rows = cursor.rowcount
+        cursor.close()
+        connection.close()
+        
+        if affected_rows > 0:
+            action = 'deleted' if permanent else 'deactivated'
+            return jsonify({'success': True, 'message': f'Listing {action} successfully'})
+        else:
+            return jsonify({'success': False, 'error': 'Listing not found'})
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/BulkUpdateListings', methods=['POST'])
+@cross_origin()
+def bulk_update_listings():
+    """Bulk update listings status or other fields"""
+    try:
+        params = request.get_json()
+        listing_ids = params.get('listing_ids', [])
+        updates = params.get('updates', {})
+        
+        if not listing_ids:
+            return jsonify({'success': False, 'error': 'listing_ids is required'})
+        
+        if not updates:
+            return jsonify({'success': False, 'error': 'updates is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Build update query
+        allowed_fields = ['status', 'currency', 'amount', 'accept_currency', 'location',
+                         'latitude', 'longitude', 'location_radius', 'meeting_preference',
+                         'available_until', 'will_round_to_nearest_dollar', 'geocoded_location']
+        
+        valid_updates = {}
+        for field in allowed_fields:
+            if field in updates:
+                valid_updates[field] = updates[field]
+        
+        if not valid_updates:
+            cursor.close()
+            connection.close()
+            return jsonify({'success': False, 'error': 'No valid fields to update'})
+        
+        # Build placeholders for listing IDs
+        id_placeholders = ','.join(['%s'] * len(listing_ids))
+        set_clause = ', '.join(f"`{field}` = %s" for field in valid_updates.keys())
+        set_clause += ', updated_at = NOW()'
+        
+        query = f"UPDATE listings SET {set_clause} WHERE listing_id IN ({id_placeholders})"
+        values = list(valid_updates.values()) + listing_ids
+        
+        cursor.execute(query, values)
+        connection.commit()
+        
+        affected_rows = cursor.rowcount
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{affected_rows} listings updated successfully',
+            'affected_rows': affected_rows
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/GetListingMeetingTimes', methods=['GET', 'POST'])
+@cross_origin()
+def get_listing_meeting_times():
+    """Get all meeting times (negotiations) for a listing"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        
+        if not listing_id:
+            return jsonify({'success': False, 'error': 'listing_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Get meeting time data from listing_meeting_location table
+        query = """
+            SELECT 
+                lml.location_negotiation_id,
+                lml.listing_id,
+                lml.buyer_id,
+                u.FirstName as buyer_first_name,
+                u.LastName as buyer_last_name,
+                lml.proposed_by,
+                u2.FirstName as proposed_by_first_name,
+                u2.LastName as proposed_by_last_name,
+                lml.meeting_location_lat,
+                lml.meeting_location_lng,
+                lml.meeting_location_name,
+                lml.accepted_at,
+                lml.rejected_at,
+                lml.created_at,
+                lml.updated_at
+            FROM listing_meeting_location lml
+            JOIN users u ON lml.buyer_id = u.user_id
+            JOIN users u2 ON lml.proposed_by = u2.user_id
+            WHERE lml.listing_id = %s
+            ORDER BY lml.created_at DESC
+        """
+        cursor.execute(query, (listing_id,))
+        meetings = cursor.fetchall()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'listing_id': listing_id,
+            'meetings': meetings,
+            'count': len(meetings) if meetings else 0
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/GetListingLocations', methods=['GET', 'POST'])
+@cross_origin()
+def get_listing_locations():
+    """Get all proposed meeting locations for a listing"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        
+        if not listing_id:
+            return jsonify({'success': False, 'error': 'listing_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Get location negotiation data
+        query = """
+            SELECT 
+                lml.location_negotiation_id,
+                lml.listing_id,
+                lml.buyer_id,
+                u.FirstName as buyer_first_name,
+                u.LastName as buyer_last_name,
+                u.Email as buyer_email,
+                lml.proposed_by,
+                u2.FirstName as proposed_by_first_name,
+                u2.LastName as proposed_by_last_name,
+                lml.meeting_location_lat,
+                lml.meeting_location_lng,
+                lml.meeting_location_name,
+                CASE 
+                    WHEN lml.accepted_at IS NOT NULL THEN 'accepted'
+                    WHEN lml.rejected_at IS NOT NULL THEN 'rejected'
+                    ELSE 'pending'
+                END as status,
+                lml.accepted_at,
+                lml.rejected_at,
+                lml.created_at,
+                lml.updated_at
+            FROM listing_meeting_location lml
+            JOIN users u ON lml.buyer_id = u.user_id
+            JOIN users u2 ON lml.proposed_by = u2.user_id
+            WHERE lml.listing_id = %s
+            ORDER BY lml.created_at DESC
+        """
+        cursor.execute(query, (listing_id,))
+        locations = cursor.fetchall()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'listing_id': listing_id,
+            'locations': locations,
+            'count': len(locations) if locations else 0
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/GetListingPayments', methods=['GET', 'POST'])
+@cross_origin()
+def get_listing_payments():
+    """Get payment details for a listing"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        
+        if not listing_id:
+            return jsonify({'success': False, 'error': 'listing_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Get listing payment data
+        query = """
+            SELECT 
+                lp.payment_id,
+                lp.listing_id,
+                lp.buyer_id,
+                u.FirstName as buyer_first_name,
+                u.LastName as buyer_last_name,
+                u.Email as buyer_email,
+                l.user_id as seller_id,
+                u2.FirstName as seller_first_name,
+                u2.LastName as seller_last_name,
+                u2.Email as seller_email,
+                l.currency,
+                l.amount,
+                l.accept_currency,
+                lp.buyer_paid_at,
+                lp.seller_paid_at,
+                lp.buyer_transaction_id,
+                lp.seller_transaction_id,
+                lp.payment_method,
+                CASE 
+                    WHEN lp.buyer_paid_at IS NOT NULL AND lp.seller_paid_at IS NOT NULL THEN 'completed'
+                    WHEN lp.buyer_paid_at IS NOT NULL THEN 'buyer_paid'
+                    WHEN lp.seller_paid_at IS NOT NULL THEN 'seller_paid'
+                    ELSE 'pending'
+                END as status,
+                lp.created_at,
+                lp.updated_at
+            FROM listing_payments lp
+            JOIN listings l ON lp.listing_id = l.listing_id
+            JOIN users u ON lp.buyer_id = u.user_id
+            JOIN users u2 ON l.user_id = u2.user_id
+            WHERE lp.listing_id = %s
+        """
+        cursor.execute(query, (listing_id,))
+        payments = cursor.fetchall()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'listing_id': listing_id,
+            'payments': payments,
+            'count': len(payments) if payments else 0
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/GetPayPalTransactions', methods=['GET', 'POST'])
+@cross_origin()
+def get_paypal_transactions():
+    """Get PayPal transactions, optionally filtered by listing or user"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        listing_id = params.get('listing_id')
+        user_id = params.get('user_id')
+        status = params.get('status')  # e.g., 'COMPLETED', 'PENDING', 'FAILED'
+        limit = int(params.get('limit', 100))
+        offset = int(params.get('offset', 0))
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Build query
+        query = """
+            SELECT 
+                po.order_id,
+                po.user_id,
+                u.FirstName as user_first_name,
+                u.LastName as user_last_name,
+                u.Email as user_email,
+                po.listing_id,
+                l.currency,
+                l.amount,
+                po.transaction_id,
+                po.status,
+                po.payer_email,
+                po.payer_name,
+                po.amount as paypal_amount,
+                po.currency as paypal_currency,
+                po.created_at,
+                po.updated_at
+            FROM paypal_orders po
+            JOIN users u ON po.user_id = u.user_id
+            LEFT JOIN listings l ON po.listing_id = l.listing_id
+            WHERE 1=1
+        """
+        
+        query_params = []
+        
+        if listing_id:
+            query += " AND po.listing_id = %s"
+            query_params.append(listing_id)
+        
+        if user_id:
+            query += " AND po.user_id = %s"
+            query_params.append(user_id)
+        
+        if status:
+            query += " AND po.status = %s"
+            query_params.append(status)
+        
+        query += f" ORDER BY po.created_at DESC LIMIT {limit} OFFSET {offset}"
+        
+        cursor.execute(query, query_params)
+        transactions = cursor.fetchall()
+        
+        # Get total count for pagination
+        count_query = """
+            SELECT COUNT(*) as total FROM paypal_orders po
+            WHERE 1=1
+        """
+        count_params = []
+        if listing_id:
+            count_query += " AND po.listing_id = %s"
+            count_params.append(listing_id)
+        if user_id:
+            count_query += " AND po.user_id = %s"
+            count_params.append(user_id)
+        if status:
+            count_query += " AND po.status = %s"
+            count_params.append(status)
+        
+        cursor.execute(count_query, count_params)
+        count_result = cursor.fetchone()
+        total_count = count_result['total'] if count_result else 0
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'transactions': transactions,
+            'count': len(transactions) if transactions else 0,
+            'total_count': total_count,
+            'limit': limit,
+            'offset': offset
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+@blueprint.route('/Admin/GetPayPalTransactionById', methods=['GET', 'POST'])
+@cross_origin()
+def get_paypal_transaction_by_id():
+    """Get detailed PayPal transaction info"""
+    try:
+        params = request.args.to_dict() if request.method == 'GET' else request.get_json()
+        order_id = params.get('order_id')
+        
+        if not order_id:
+            return jsonify({'success': False, 'error': 'order_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        query = """
+            SELECT 
+                po.order_id,
+                po.user_id,
+                u.FirstName as user_first_name,
+                u.LastName as user_last_name,
+                u.Email as user_email,
+                po.listing_id,
+                l.currency,
+                l.amount as listing_amount,
+                l.location,
+                po.transaction_id,
+                po.status,
+                po.payer_email,
+                po.payer_name,
+                po.amount as paypal_amount,
+                po.currency as paypal_currency,
+                po.created_at,
+                po.updated_at
+            FROM paypal_orders po
+            JOIN users u ON po.user_id = u.user_id
+            LEFT JOIN listings l ON po.listing_id = l.listing_id
+            WHERE po.order_id = %s
+        """
+        cursor.execute(query, (order_id,))
+        transaction = cursor.fetchone()
+        
+        cursor.close()
+        connection.close()
+        
+        if transaction:
+            return jsonify({
+                'success': True,
+                'transaction': transaction
+            })
+        else:
+            return jsonify({'success': False, 'error': 'Transaction not found'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
