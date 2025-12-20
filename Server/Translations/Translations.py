@@ -30,7 +30,7 @@ def get_translations():
         connection.close()
         
         if not results:
-            return json.dumps({
+            return jsonify({
                 'success': False,
                 'message': f'No translations found for language: {language}'
             }), 404
@@ -45,16 +45,16 @@ def get_translations():
             if latest_updated is None or row['updated_at'] > latest_updated:
                 latest_updated = row['updated_at']
         
-        return json.dumps({
+        return jsonify({
             'success': True,
             'language': language,
             'translations': translations,
             'last_updated': latest_updated.isoformat() if latest_updated else None,
             'count': len(translations)
-        }), 200
+        })
         
     except Exception as e:
-        return json.dumps({
+        return jsonify({
             'success': False,
             'message': f'Error fetching translations: {str(e)}'
         }), 500
@@ -82,13 +82,13 @@ def get_last_updated():
         for row in results:
             last_updated_map[row['language_code']] = row['last_updated'].isoformat() if row['last_updated'] else None
         
-        return json.dumps({
+        return jsonify({
             'success': True,
             'last_updated': last_updated_map
-        }), 200
+        })
         
     except Exception as e:
-        return json.dumps({
+        return jsonify({
             'success': False,
             'message': f'Error fetching last updated: {str(e)}'
         }), 500
@@ -128,15 +128,15 @@ def get_all_translations():
             
             translations_by_language[lang][key] = value
         
-        return json.dumps({
+        return jsonify({
             'success': True,
             'translations': translations_by_language,
             'last_updated': last_updated,
             'total_count': len(results)
-        }), 200
+        })
         
     except Exception as e:
-        return json.dumps({
+        return jsonify({
             'success': False,
             'message': f'Error fetching all translations: {str(e)}'
         }), 500

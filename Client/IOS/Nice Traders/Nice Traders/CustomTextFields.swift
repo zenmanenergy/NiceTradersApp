@@ -29,6 +29,7 @@ struct NoHapticTextField: UIViewRepresentable {
         textField.delegate = context.coordinator
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
         textField.font = UIFont.systemFont(ofSize: 16)
+        textField.textColor = UIColor.black
         return textField
     }
     
@@ -77,6 +78,7 @@ struct NoHapticSecureField: UIViewRepresentable {
         textField.delegate = context.coordinator
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textChanged), for: .editingChanged)
         textField.font = UIFont.systemFont(ofSize: 16)
+        textField.textColor = UIColor.black
         return textField
     }
     

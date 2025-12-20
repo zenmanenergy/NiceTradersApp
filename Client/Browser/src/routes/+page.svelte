@@ -12,34 +12,20 @@
 	
 	async function viewUser(user_id, userName = 'User') {
 		try {
-			// Get user details
 			const userResponse = await SuperFetch('/Admin/GetUserById', { user_id });
 			if (!userResponse.success) throw new Error('Failed to load user');
-			
 			const currentUser = userResponse.user;
-			
-			// Get user's listings
 			const listingsResponse = await SuperFetch('/Admin/GetUserListings', { user_id });
 			const userListings = listingsResponse.success ? listingsResponse.listings : [];
-			
-			// Get user's purchases
 			const purchasesResponse = await SuperFetch('/Admin/GetUserPurchases', { user_id });
 			const userPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
-			
-			// Get user's messages
 			const messagesResponse = await SuperFetch('/Admin/GetUserMessages', { user_id });
 			const userMessages = messagesResponse.success ? messagesResponse.messages : [];
-			
-			// Get user's ratings
 			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { user_id });
 			const userRatings = ratingsResponse.success ? ratingsResponse.ratings : [];
-			
-			// Get user's devices
 			const devicesResponse = await SuperFetch('/Admin/GetUserDevices', { user_id });
 			const userDevices = devicesResponse.success ? devicesResponse.devices : [];
-			
 			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings, userDevices });
-			
 			viewState.update(state => ({
 				currentView: 'user',
 				breadcrumbs: [...state.breadcrumbs, { type: 'user', id: user_id, label: userName }]
@@ -51,25 +37,16 @@
 	
 	async function viewListing(listingId, listingName = 'Listing') {
 		try {
-			// Get listing details
 			const listingResponse = await SuperFetch('/Admin/GetListingById', { listingId });
 			if (!listingResponse.success) throw new Error('Failed to load listing');
 			const currentListing = listingResponse.listing;
-			
-			// Get listing owner
 			const ownerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentListing.user_id });
 			const listingOwner = ownerResponse.success ? ownerResponse.user : null;
-			
-			// Get who purchased this listing
 			const purchasesResponse = await SuperFetch('/Admin/GetListingPurchases', { listingId });
 			const listingPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
-			
-			// Get messages for this listing
 			const messagesResponse = await SuperFetch('/Admin/GetListingMessages', { listingId });
 			const listingMessages = messagesResponse.success ? messagesResponse.messages : [];
-			
 			listingDetailState.set({ currentListing, listingPurchases, listingMessages, listingOwner });
-			
 			viewState.update(state => ({
 				currentView: 'listing',
 				breadcrumbs: [...state.breadcrumbs, { type: 'listing', id: listingId, label: listingName }]
@@ -81,16 +58,11 @@
 	
 	async function viewTransaction(transactionId, transactionName = 'Transaction') {
 		try {
-			// Get transaction details
 			const txResponse = await SuperFetch('/Admin/GetTransactionById', { transactionId });
 			if (!txResponse.success) throw new Error('Failed to load transaction');
 			const currentTransaction = txResponse.transaction;
-			
-			// Get buyer details
 			const buyerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentTransaction.user_id });
 			const transactionBuyer = buyerResponse.success ? buyerResponse.user : null;
-			
-			// Get seller details (listing owner)
 			const listingResponse = await SuperFetch('/Admin/GetListingById', { listingId: currentTransaction.listing_id });
 			let transactionSeller = null;
 			let transactionListing = null;
@@ -99,9 +71,7 @@
 				const sellerResponse = await SuperFetch('/Admin/GetUserById', { user_id: listingResponse.listing.user_id });
 				transactionSeller = sellerResponse.success ? sellerResponse.user : null;
 			}
-			
 			transactionDetailState.set({ currentTransaction, transactionBuyer, transactionSeller, transactionListing });
-			
 			viewState.update(state => ({
 				currentView: 'transaction',
 				breadcrumbs: [...state.breadcrumbs, { type: 'transaction', id: transactionId, label: transactionName }]

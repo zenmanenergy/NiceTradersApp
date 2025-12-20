@@ -127,6 +127,20 @@ class LocalizationManager: NSObject, ObservableObject {
             "TIME_UNTIL_MEETING": "Time Until Meeting",
             "PROPOSED_BY": "Proposed by",
             "MESSAGE": "Message",
+            // SignupView
+            "JOIN_NICE_TRADERS": "Join Nice Traders",
+            "START_EXCHANGING_WITH_NEIGHBORS": "Start exchanging with neighbors",
+            "FIRST_NAME": "First Name",
+            "ENTER_FIRST_NAME": "Enter first name",
+            "LAST_NAME": "Last Name",
+            "ENTER_LAST_NAME": "Enter last name",
+            "PHONE_NUMBER": "Phone Number",
+            "ENTER_PHONE": "Enter phone number",
+            "CREATE_PASSWORD": "Create a password",
+            "CONFIRM_PASSWORD": "Confirm Password",
+            "CONFIRM_PASSWORD_PLACEHOLDER": "Confirm your password",
+            "CREATING_ACCOUNT": "Creating account...",
+            "ALREADY_HAVE_ACCOUNT": "Already have an account?",
         ]
     ]
     
