@@ -198,8 +198,7 @@ class APNService:
                             'aps': {
                                 'alert': alert,
                                 'badge': badge,
-                                'sound': sound,
-                                'content-available': 1
+                                'sound': sound
                             },
                             **custom_data
                         },

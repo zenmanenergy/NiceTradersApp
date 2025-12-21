@@ -6,8 +6,10 @@
 //
 
 import UIKit
+import UserNotifications
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+
     
     func application(
         _ application: UIApplication,
@@ -20,6 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Initialize device token manager and request notification permissions
         _ = DeviceTokenManager.shared
+        UNUserNotificationCenter.current().delegate = self
         return true
     }
     
@@ -118,5 +121,28 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                 )
             }
         }
+    }
+    // Called when a notification is received while app is in foreground
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show banner, sound, and badge even when app is in foreground
+        completionHandler([.banner, .sound, .badge])
+    }
+    
+    // Called when user taps on a notification
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        // Handle notification tap with auto-login and deep linking
+        handleNotificationTap(userInfo: userInfo)
+        
+        completionHandler()
     }
 }
