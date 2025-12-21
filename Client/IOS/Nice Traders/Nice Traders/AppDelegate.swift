@@ -172,10 +172,18 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print("🔔 [AppDelegate] Notification title: \(notification.request.content.title)")
         print("🔔 [AppDelegate] Notification body: \(notification.request.content.body)")
         print("🔔 [AppDelegate] User info: \(notification.request.content.userInfo)")
-        print("🔔 [AppDelegate] Showing banner with sound and badge")
         
-        // Post notification for in-app handling
+        // Navigate to notifications view and show the message there
         DispatchQueue.main.async {
+            print("📱 [AppDelegate] Posting NavigateToNotifications and InAppNotificationReceived")
+            
+            // Tell the app to navigate to notifications view
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToNotifications"),
+                object: nil
+            )
+            
+            // Post the notification data for the notifications view to display
             NotificationCenter.default.post(
                 name: NSNotification.Name("InAppNotificationReceived"),
                 object: nil,
@@ -187,8 +195,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             )
         }
         
-        // Show banner, sound, and badge even when app is in foreground
-        completionHandler([.banner, .sound, .badge])
+        // Don't show banner - handle it in-app instead
+        print("🔔 [AppDelegate] Not showing banner - navigating to notifications view instead")
+        completionHandler([])
     }
     
     // Called when user taps on a notification
