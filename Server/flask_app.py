@@ -1,11 +1,24 @@
 
 from flask import Flask, request
 from flask_cors import CORS, cross_origin
+import logging
+import sys
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.debug = True
+
+# Enable logging to stdout/stderr
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
+
+# Force print to flush immediately
+import functools
+print = functools.partial(print, flush=True)
 
 from Login import Login
 from Signup import Signup
