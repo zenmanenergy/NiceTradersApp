@@ -46,27 +46,37 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
+        print("[AppDelegate] didReceiveRemoteNotification called")
+        print("[AppDelegate] userInfo: \(userInfo)")
         
         // Handle the notification payload
         var notificationTitle = "Notification"
         var notificationBody = ""
         
         if let aps = userInfo["aps"] as? [String: Any] {
+            print("[AppDelegate] Found APS payload: \(aps)")
             if let alert = aps["alert"] as? [String: Any] {
                 if let title = alert["title"] as? String {
                     notificationTitle = title
+                    print("[AppDelegate] Title: \(title)")
                 }
                 if let body = alert["body"] as? String {
                     notificationBody = body
+                    print("[AppDelegate] Body: \(body)")
                 }
             } else if let alert = aps["alert"] as? String {
                 notificationBody = alert
+                print("[AppDelegate] Alert string: \(alert)")
             }
+        } else {
+            print("[AppDelegate] No APS payload found")
         }
         
         // If app is in foreground, show an in-app notification banner
         DispatchQueue.main.async {
+            print("[AppDelegate] Application state: \(application.applicationState.rawValue)")
             if application.applicationState == .active {
+                print("[AppDelegate] App is active, posting InAppNotificationReceived")
                 // Show in-app banner notification
                 NotificationCenter.default.post(
                     name: NSNotification.Name("InAppNotificationReceived"),
@@ -77,6 +87,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                         "fullPayload": userInfo
                     ]
                 )
+            } else {
+                print("[AppDelegate] App is not active (state: \(application.applicationState.rawValue))")
             }
         }
         

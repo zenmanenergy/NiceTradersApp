@@ -69,16 +69,22 @@ struct InAppNotificationBanner: View {
             Spacer()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("InAppNotificationReceived"))) { notification in
+            print("[InAppNotificationBanner] Received InAppNotificationReceived notification")
             if let userInfo = notification.userInfo {
                 let title = userInfo["title"] as? String ?? "Notification"
                 let body = userInfo["body"] as? String ?? ""
+                
+                print("[InAppNotificationBanner] Title: \(title), Body: \(body)")
                 
                 notificationTitle = title
                 notificationBody = body
                 
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isShowing = true
+                    print("[InAppNotificationBanner] Showing banner")
                 }
+            } else {
+                print("[InAppNotificationBanner] No userInfo in notification")
             }
         }
         .ignoresSafeArea(.all, edges: .top)

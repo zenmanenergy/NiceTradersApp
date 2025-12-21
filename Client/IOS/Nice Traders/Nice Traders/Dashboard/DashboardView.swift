@@ -15,6 +15,13 @@ struct DashboardView: View {
     
     var body: some View {
         ZStack {
+            // In-app notification banner (appears on top when notifications arrive while app is open)
+            VStack {
+                InAppNotificationBanner()
+                    .zIndex(1000)
+                Spacer()
+            }
+            
             if viewModel.isLoading {
                 LoadingView()
             } else if let error = viewModel.error {
