@@ -212,10 +212,7 @@ class APNService:
                     failed_tokens.append({'token': token, 'error': str(e)})
             
             # Log the notification
-            notification_log = {
-                'user_id': user_id,
-                'title': title,
-                'body': body,
+            notification_metadata = {
                 'tokens_sent': len(tokens) - len(failed_tokens),
                 'failed_tokens': len(failed_tokens),
                 'timestamp': datetime.now().isoformat(),
@@ -225,8 +222,10 @@ class APNService:
             
             try:
                 cursor.execute(
-                    "INSERT INTO apn_logs (user_id, Data, DateSent) VALUES (%s, %s, NOW())",
-                    (user_id, json.dumps(notification_log))
+                    """INSERT INTO apn_logs 
+                    (user_id, notification_title, notification_body, device_count, failed_count, metadata) 
+                    VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (user_id, title, body, len(tokens), len(failed_tokens), json.dumps(notification_metadata))
                 )
                 connection.commit()
             except Exception as log_err:
