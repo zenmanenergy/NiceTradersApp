@@ -9,6 +9,11 @@ cd /opt/NiceTradersApp
 echo "📥 Pulling latest code from Git..."
 git pull
 
+# Clear Python cache
+echo "🧹 Clearing Python cache..."
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null
+find . -type f -name "*.pyc" -delete
+
 # Deploy Flask API
 echo "🔄 Restarting Flask service..."
 sudo systemctl restart nicetraders
