@@ -9,8 +9,8 @@
 		goto('/search');
 	}
 
-	function goToLogs() {
-		goto('/logs');
+	function goToTerminal() {
+		goto('/terminal');
 	}
 	
 	function goToPaymentReports() {
@@ -27,7 +27,7 @@
 			</div>
 			<div class="header-buttons">
 				<button class="header-btn" on:click={goToPaymentReports}>💳 Payment Reports</button>
-				<button class="header-btn" on:click={goToLogs}>📋 View Logs</button>
+				<button class="header-btn" on:click={goToTerminal}>📋 Terminal</button>
 				<button class="header-btn" on:click={goToSearch}>🔍 Search</button>
 			</div>
 		</div>
