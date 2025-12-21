@@ -6,10 +6,14 @@ from _Lib import Database
 import json
 import logging
 from datetime import datetime
+import os
 
-# Configure logging
+# Configure logging to server-appropriate location
+log_dir = os.path.dirname(os.path.abspath(__file__))
+log_file = os.path.join(log_dir, '..', 'device_token_debug.log')
+
 logging.basicConfig(
-	filename='/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/device_token_debug.log',
+	filename=log_file,
 	level=logging.INFO,
 	format='%(asctime)s - %(message)s'
 )
