@@ -3,20 +3,90 @@
 	import { page } from '$app/stores';
 	import { formatDate, formatCurrency } from '$lib/adminUtils.js';
 	import AdminLayout from '$lib/AdminLayout.svelte';
+	import { onMount } from 'svelte';
 
-	export let data;
+	let searchTerm = '';
+	let searchType = 'listings';
+	let results = [];
+	let count = 0;
+	let error = null;
+	let loading = false;
 	
-	let searchTerm = data.searchTerm || '';
-	let searchType = data.searchType || 'listings';
+	onMount(() => {
+		// Get initial search params from URL
+		const searchParams = new URLSearchParams(window.location.search);
+		searchTerm = searchParams.get('q') || '';
+		searchType = searchParams.get('type') || 'listings';
+		
+		// If we have a search term, perform the search
+		if (searchTerm.trim()) {
+			performSearch();
+		}
+	});
+	
+	async function performSearch() {
+		if (!searchTerm.trim()) {
+			results = [];
+			count = 0;
+			return;
+		}
+		
+		loading = true;
+		error = null;
+		
+		try {
+			const API_URL = 'https://api.nicetraders.net';
+			const endpoint = `${API_URL}/Admin/Search${searchType.charAt(0).toUpperCase() + searchType.slice(1)}?search=${encodeURIComponent(searchTerm)}`;
+			console.log(`[Search] Calling endpoint: ${endpoint}`);
+			
+			const response = await fetch(endpoint, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			
+			const contentType = response.headers.get('content-type');
+			console.log(`[Search] Response status: ${response.status}, content-type: ${contentType}`);
+			
+			if (!response.ok) {
+				const text = await response.text();
+				console.error(`[Search] API error ${response.status}:`, text.substring(0, 500));
+				throw new Error(`API error: ${response.status}`);
+			}
+			
+			const data = await response.json();
+			console.log(`[Search] Got ${(data.data || []).length} results`);
+			
+			results = data.data || [];
+			count = results.length;
+		} catch (err) {
+			console.error('[Search Error]:', err.message);
+			error = err.message;
+			results = [];
+			count = 0;
+		} finally {
+			loading = false;
+		}
+	}
 	
 	async function handleSearch() {
 		if (!searchTerm.trim()) return;
 		goto(`/search?q=${encodeURIComponent(searchTerm)}&type=${searchType}`);
+		await performSearch();
 	}
 	
 	async function handleKeydown(e) {
 		if (e.key === 'Enter') {
 			handleSearch();
+		}
+	}
+	
+	function handleTabChange(newType) {
+		searchType = newType;
+		if (searchTerm.trim()) {
+			goto(`/search?q=${encodeURIComponent(searchTerm)}&type=${newType}`);
+			performSearch();
 		}
 	}
 </script>
@@ -57,19 +127,25 @@
 					on:keydown={handleKeydown}
 					class="search-input"
 				/>
-				<button on:click={handleSearch} class="search-btn">Search</button>
+				<button on:click={handleSearch} class="search-btn" disabled={loading}>
+					{loading ? 'Searching...' : 'Search'}
+				</button>
 			</div>
 		</div>
 		
-		{#if data.error}
-			<div class="error">{data.error}</div>
+		{#if error}
+			<div class="error">{error}</div>
 		{/if}
 		
-		{#if data.results.length > 0}
+		{#if loading}
+			<div class="loading">Searching...</div>
+		{/if}
+		
+		{#if results.length > 0}
 			<div class="results">
-				<h3>Results ({data.count})</h3>
+				<h3>Results ({count})</h3>
 				<div class="results-list">
-					{#each data.results as result}
+					{#each results as result}
 						{#if searchType === 'users'}
 							<div class="result-card" on:click={() => goto(`/user/${result.user_id}`)}>
 								<div class="result-icon">👤</div>
@@ -184,6 +260,19 @@
 	
 	.search-btn:hover {
 		background: #5568d3;
+	}
+	
+	.search-btn:disabled {
+		background: #999;
+		cursor: not-allowed;
+		opacity: 0.7;
+	}
+	
+	.loading {
+		padding: 20px;
+		text-align: center;
+		color: #667eea;
+		font-weight: 600;
 	}
 	
 	.results {
