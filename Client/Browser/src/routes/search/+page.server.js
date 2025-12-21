@@ -1,18 +1,19 @@
 import { error } from '@sveltejs/kit';
 
 function getApiUrl() {
-	return typeof window !== 'undefined' && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
-		? 'http://127.0.0.1:9000'
-		: 'https://api.nicetraders.net';
+	// On server side, always use the production API URL
+	console.log('[getApiUrl] Using API URL: https://api.nicetraders.net');
+	return 'https://api.nicetraders.net';
 }
 
-export async function load({ url }) {
+export async function load({ url, fetch }) {
 	const searchTerm = url.searchParams.get('q') || '';
 	const searchType = url.searchParams.get('type') || 'listings';
 	
 	console.log(`[Search Page Load] searchTerm="${searchTerm}", searchType="${searchType}"`);
 	
 	if (!searchTerm) {
+		console.log('[Search] No search term, returning empty results');
 		return { searchTerm, searchType, results: [], count: 0 };
 	}
 
@@ -25,16 +26,17 @@ export async function load({ url }) {
 			method: 'GET'
 		});
 
-		console.log(`[Search] Response status: ${response.status}, content-type: ${response.headers.get('content-type')}`);
+		const contentType = response.headers.get('content-type');
+		console.log(`[Search] Response status: ${response.status}, content-type: ${contentType}`);
 		
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(`[Search] API error ${response.status}:`, text.substring(0, 200));
+			console.error(`[Search] API error ${response.status}, first 500 chars:`, text.substring(0, 500));
 			throw new Error(`API error: ${response.status}`);
 		}
 
 		const data = await response.json();
-		console.log(`[Search] Got ${(data.data || []).length} results`);
+		console.log(`[Search] Got ${(data.data || []).length} results`, data);
 		
 		return {
 			searchTerm,
@@ -43,7 +45,7 @@ export async function load({ url }) {
 			count: data.data ? data.data.length : 0
 		};
 	} catch (err) {
-		console.error('[Search Error]:', err.message);
+		console.error('[Search Error]:', err.message, err.stack);
 		return {
 			searchTerm,
 			searchType,
