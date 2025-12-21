@@ -1,5 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
+	
+	console.log('[Home Page] Loaded');
 </script>
 
 <div class="admin-home">
@@ -11,7 +13,10 @@
 	<div class="quick-actions">
 		<h2>Quick Actions</h2>
 		<div class="action-grid">
-			<button class="action-card" on:click={() => goto('/search')}>
+			<button class="action-card" on:click={() => {
+				console.log('[Home] Navigating to search');
+				goto('/search');
+			}}>
 				<div class="card-icon">🔍</div>
 				<div class="card-title">Search</div>
 				<div class="card-description">Search users, listings, and transactions</div>

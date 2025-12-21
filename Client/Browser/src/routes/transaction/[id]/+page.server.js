@@ -1,11 +1,18 @@
 import { error } from '@sveltejs/kit';
 
+function getApiUrl() {
+	return typeof window !== 'undefined' && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+		? 'http://127.0.0.1:9000'
+		: 'https://api.nicetraders.net';
+}
+
 export async function load({ params, fetch }) {
 	const transactionId = params.id;
+	const API_URL = getApiUrl();
 	
 	try {
 		// Fetch transaction data
-		const txRes = await fetch('http://localhost:9000/Admin/GetTransactionById', {
+		const txRes = await fetch(`${API_URL}/Admin/GetTransactionById`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ transactionId })
@@ -23,7 +30,7 @@ export async function load({ params, fetch }) {
 		
 		// Fetch buyer
 		if (transaction.user_id) {
-			const buyerRes = await fetch('http://localhost:9000/Admin/GetUserById', {
+			const buyerRes = await fetch(`${API_URL}/Admin/GetUserById`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ user_id: transaction.user_id })
@@ -36,7 +43,7 @@ export async function load({ params, fetch }) {
 		
 		// Fetch listing and seller
 		if (transaction.listing_id) {
-			const listingRes = await fetch('http://localhost:9000/Admin/GetListingById', {
+			const listingRes = await fetch(`${API_URL}/Admin/GetListingById`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ listingId: transaction.listing_id })
@@ -48,7 +55,7 @@ export async function load({ params, fetch }) {
 				
 				// Fetch seller
 				if (listingData.listing.user_id) {
-					const sellerRes = await fetch('http://localhost:9000/Admin/GetUserById', {
+					const sellerRes = await fetch(`${API_URL}/Admin/GetUserById`, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ user_id: listingData.listing.user_id })

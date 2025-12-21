@@ -69,6 +69,12 @@
 		}
 	});
 	
+	function getApiUrl() {
+		return typeof window !== 'undefined' && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+			? 'http://127.0.0.1:9000'
+			: 'https://api.nicetraders.net';
+	}
+	
 	async function loadListings() {
 		try {
 			isLoading = true;
@@ -78,7 +84,8 @@
 			if (searchQuery) params.append('location', searchQuery);
 			if (filterCurrency) params.append('currency', filterCurrency);
 			
-			const response = await fetch(`http://localhost:9000/Listings/GetListingsForMap?${params.toString()}`);
+			const API_URL = getApiUrl();
+			const response = await fetch(`${API_URL}/Listings/GetListingsForMap?${params.toString()}`);
 			const data = await response.json();
 			
 			if (data.success && data.listings) {

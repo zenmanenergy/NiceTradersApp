@@ -1,5 +1,11 @@
 import { error } from '@sveltejs/kit';
 
+function getApiUrl() {
+	return typeof window !== 'undefined' && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+		? 'http://127.0.0.1:9000'
+		: 'https://api.nicetraders.net';
+}
+
 export async function load({ url }) {
 	const searchTerm = url.searchParams.get('q') || '';
 	const searchType = url.searchParams.get('type') || 'listings';
@@ -11,7 +17,8 @@ export async function load({ url }) {
 	}
 
 	try {
-		const endpoint = `/Admin/Search${searchType.charAt(0).toUpperCase() + searchType.slice(1)}?search=${encodeURIComponent(searchTerm)}`;
+		const API_URL = getApiUrl();
+		const endpoint = `${API_URL}/Admin/Search${searchType.charAt(0).toUpperCase() + searchType.slice(1)}?search=${encodeURIComponent(searchTerm)}`;
 		console.log(`[Search] Calling endpoint: ${endpoint}`);
 		
 		const response = await fetch(endpoint, {
