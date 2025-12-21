@@ -4,6 +4,15 @@ This is called asynchronously after the initial login/signup
 """
 from _Lib import Database
 import json
+import logging
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+	filename='/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/device_token_debug.log',
+	level=logging.INFO,
+	format='%(asctime)s - %(message)s'
+)
 
 
 def update_device_token(user_id, device_type, device_token, app_version=None, os_version=None):
@@ -21,22 +30,30 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 	Returns:
 		JSON string with success status
 	"""
+	logging.info(f"📱 [UpdateDeviceToken] Called with user_id={user_id}, device_type={device_type}")
+	logging.info(f"📱 [UpdateDeviceToken] Token preview: {device_token[:20] if device_token else 'None'}...")
+	logging.info(f"📱 [UpdateDeviceToken] App version: {app_version}, OS version: {os_version}")
+	
 	if not user_id or not device_token:
+		logging.error(f"❌ [UpdateDeviceToken] Missing required parameters")
 		return '{"success": false, "error": "user_id and device_token are required"}'
 	
 	if device_type not in ['ios', 'android', 'web']:
+		logging.error(f"❌ [UpdateDeviceToken] Invalid device_type: {device_type}")
 		return '{"success": false, "error": "Invalid device_type"}'
 	
 	# Connect to the database
 	cursor, connection = Database.ConnectToDatabase()
 	
 	try:
+		logging.info(f"🔍 [UpdateDeviceToken] Checking if token already exists for this user...")
 		# Check if this exact token already exists for this user
 		query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_token = %s"
 		cursor.execute(query, (user_id, device_token))
 		existing = cursor.fetchone()
 		
 		if existing:
+			logging.info(f"✅ [UpdateDeviceToken] Token already registered, updating timestamp")
 			# Token already registered for this user, just update timestamp and version info
 			update_query = """
 				UPDATE user_devices 
@@ -60,24 +77,29 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 			cursor.execute(update_query, tuple(update_params))
 			connection.commit()
 			connection.close()
+			logging.info(f"✅ [UpdateDeviceToken] Successfully updated existing token")
 			return '{"success": true, "message": "Device token already registered"}'
 		
+		logging.info(f"🔍 [UpdateDeviceToken] Checking if token belongs to another user...")
 		# Check if token exists for another user
 		check_query = "SELECT user_id FROM user_devices WHERE device_token = %s"
 		cursor.execute(check_query, (device_token,))
 		other_user = cursor.fetchone()
 		
 		if other_user and other_user['user_id'] != user_id:
+			logging.info(f"⚠️  [UpdateDeviceToken] Token belongs to another user, reassigning...")
 			# Token is being reassigned to a different user - remove from old user
 			delete_query = "DELETE FROM user_devices WHERE device_token = %s"
 			cursor.execute(delete_query, (device_token,))
 		
+		logging.info(f"🔍 [UpdateDeviceToken] Looking for pending device entry...")
 		# Find the pending device entry for this user with same device type
 		pending_query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_type = %s AND device_token IS NULL"
 		cursor.execute(pending_query, (user_id, device_type))
 		pending_device = cursor.fetchone()
 		
 		if pending_device:
+			logging.info(f"✅ [UpdateDeviceToken] Found pending device {pending_device['device_id']}, updating...")
 			# Update the pending device with the new token and version info
 			update_query = """
 				UPDATE user_devices 
@@ -100,6 +122,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 			
 			cursor.execute(update_query, tuple(update_params))
 		else:
+			logging.info(f"🔍 [UpdateDeviceToken] No pending device, looking for existing device...")
 			# No pending device found, this is an update to an existing device
 			# Try to find any device of the same type for this user
 			existing_query = "SELECT device_id FROM user_devices WHERE user_id = %s AND device_type = %s LIMIT 1"
@@ -107,6 +130,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 			existing_device = cursor.fetchone()
 			
 			if existing_device:
+				logging.info(f"✅ [UpdateDeviceToken] Found existing device {existing_device['device_id']}, updating...")
 				# Update existing device with token and version info
 				update_query = """
 					UPDATE user_devices 
@@ -129,6 +153,7 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 				
 				cursor.execute(update_query, tuple(update_params))
 			else:
+				logging.info(f"⚠️  [UpdateDeviceToken] No device entry exists, creating generic update...")
 				# This shouldn't happen - no device entry exists, but handle it anyway
 				# This means user logged in without device info, just update generic entry
 				update_query = "UPDATE user_devices SET device_token = %s WHERE user_id = %s AND device_type = %s"
@@ -137,8 +162,10 @@ def update_device_token(user_id, device_type, device_token, app_version=None, os
 		connection.commit()
 		connection.close()
 		
+		logging.info(f"✅ [UpdateDeviceToken] Device token updated successfully!")
 		return '{"success": true, "message": "Device token updated successfully"}'
 		
 	except Exception as e:
 		connection.close()
+		logging.error(f"❌ [UpdateDeviceToken] Database error: {str(e)}")
 		return f'{{"success": false, "error": "Database error: {str(e)}"}}'

@@ -188,6 +188,15 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         let userInfo = response.notification.request.content.userInfo
         print("👆 [AppDelegate] Notification user info: \(userInfo)")
         
+        // Navigate to notifications view
+        DispatchQueue.main.async {
+            print("📱 [AppDelegate] Posting NavigateToNotifications")
+            NotificationCenter.default.post(
+                name: NSNotification.Name("NavigateToNotifications"),
+                object: nil
+            )
+        }
+        
         // Handle notification tap with auto-login and deep linking
         handleNotificationTap(userInfo: userInfo)
         
