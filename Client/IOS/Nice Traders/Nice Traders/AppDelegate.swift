@@ -20,48 +20,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         
         // Initialize device token manager and request notification permissions
         _ = DeviceTokenManager.shared
-        
-        // Handle notification if app was launched by tapping a notification (app was closed)
-        if let notificationPayload = launchOptions?[UIApplication.LaunchOptionsKey.remoteNotification] as? [AnyHashable: Any] {
-            print("[AppDelegate] App launched from notification: \(notificationPayload)")
-            processRemoteNotification(notificationPayload)
-        }
-        
         return true
-    }
-    
-    // Process remote notification (called from both didReceiveRemoteNotification and launchOptions)
-    private func processRemoteNotification(_ userInfo: [AnyHashable: Any]) {
-        print("[AppDelegate] processRemoteNotification called with: \(userInfo)")
-        
-        var notificationTitle = "Notification"
-        var notificationBody = ""
-        
-        if let aps = userInfo["aps"] as? [String: Any] {
-            if let alert = aps["alert"] as? [String: Any] {
-                if let title = alert["title"] as? String {
-                    notificationTitle = title
-                }
-                if let body = alert["body"] as? String {
-                    notificationBody = body
-                }
-            } else if let alert = aps["alert"] as? String {
-                notificationBody = alert
-            }
-        }
-        
-        // Save to NotificationsManager
-        DispatchQueue.main.async {
-            let notification = AppNotification(
-                title: notificationTitle,
-                body: notificationBody
-            )
-            NotificationsManager.shared.addNotification(notification)
-            print("[AppDelegate] Added notification to NotificationsManager: \(notification)")
-        }
-        
-        // Handle deep linking
-        handleNotificationTap(userInfo: userInfo)
     }
     
     // Called when app receives device token from APNs
@@ -87,31 +46,42 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didReceiveRemoteNotification userInfo: [AnyHashable: Any],
         fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
     ) {
-        print("[AppDelegate] didReceiveRemoteNotification called")
-        print("[AppDelegate] userInfo: \(userInfo)")
         
-        // Process the notification
-        processRemoteNotification(userInfo)
+        // Handle the notification payload
+        var notificationTitle = "Notification"
+        var notificationBody = ""
+        
+        if let aps = userInfo["aps"] as? [String: Any] {
+            if let alert = aps["alert"] as? [String: Any] {
+                if let title = alert["title"] as? String {
+                    notificationTitle = title
+                }
+                if let body = alert["body"] as? String {
+                    notificationBody = body
+                }
+            } else if let alert = aps["alert"] as? String {
+                notificationBody = alert
+            }
+        }
         
         // If app is in foreground, show an in-app notification banner
         DispatchQueue.main.async {
-            print("[AppDelegate] Application state: \(application.applicationState.rawValue)")
             if application.applicationState == .active {
-                print("[AppDelegate] App is active, posting InAppNotificationReceived")
                 // Show in-app banner notification
                 NotificationCenter.default.post(
                     name: NSNotification.Name("InAppNotificationReceived"),
                     object: nil,
-                    userInfo: userInfo
-                )
-                
-                // Navigate to notifications page
-                NotificationCenter.default.post(
-                    name: NSNotification.Name("NavigateToNotifications"),
-                    object: nil
+                    userInfo: [
+                        "title": notificationTitle,
+                        "body": notificationBody,
+                        "fullPayload": userInfo
+                    ]
                 )
             }
         }
+        
+        // Handle notification tap with deep linking and session ID
+        handleNotificationTap(userInfo: userInfo)
         
         completionHandler(.newData)
     }

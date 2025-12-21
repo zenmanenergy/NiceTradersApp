@@ -32,7 +32,7 @@ class APNService:
         self.key_id = key_id
         self.team_id = team_id
         self.topic = topic or "NiceTraders.Nice-Traders"
-        self.use_sandbox = False  # Set to False for production
+        self.use_sandbox = True  # Set to False for production
     
     def send_notification(self, user_id, title, body, badge=1, sound='default', 
                          session_id=None, deep_link_type=None, deep_link_id=None, device_id=None):
@@ -198,12 +198,11 @@ class APNService:
                             'aps': {
                                 'alert': alert,
                                 'badge': badge,
-                                'sound': sound,
-                                'content-available': 1  # Wakes app in background to call didReceiveRemoteNotification
+                                'sound': sound
                             },
                             **custom_data
                         },
-                        push_type=PushType.BACKGROUND
+                        push_type=PushType.ALERT
                     )
                     response = await apns.send_notification(request)
                     if not response.is_successful:
