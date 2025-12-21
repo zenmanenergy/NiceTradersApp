@@ -559,6 +559,10 @@ def send_apn_message():
             session_id=session_id  # Auto-include session ID for auto-login
         )
         
+        # Log the send attempt
+        from Profile.RegisterDevice import log_device_event
+        log_device_event(f"SEND_APN: user_id={user_id}, device_id={device_id}, title={title}, body={body}, result={result}")
+        
         # Build comprehensive debug response
         debug_response = {
             'success': result.get('success', False),

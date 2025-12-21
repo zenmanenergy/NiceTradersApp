@@ -13,7 +13,9 @@ blueprint = Blueprint('Login', __name__)
 @cross_origin()
 def Login():
 	try:
+		from Profile.RegisterDevice import log_device_event
 		LoginData = request.args.to_dict()
+		log_device_event(f"LOGIN ENDPOINT HIT: LoginData={LoginData}")
 
 		# Extract the Email and Password from the LoginData
 		Email = LoginData.get('Email', None)
@@ -25,9 +27,12 @@ def Login():
 		device_name = LoginData.get('deviceName', None)
 		app_version = LoginData.get('appVersion', None)
 		os_version = LoginData.get('osVersion', None)
+		
+		log_device_event(f"LOGIN EXTRACTED: Email={Email}, device_token={device_token}, device_type={device_type}, device_name={device_name}, app_version={app_version}, os_version={os_version}")
 
 		# Call the get_login function from GetLogin.py with the extracted data
 		result = get_login(Email, Password, device_token, device_type, device_name, app_version, os_version)
+		log_device_event(f"LOGIN RESULT: {result}")
 
 		return result
 	except Exception as e:
