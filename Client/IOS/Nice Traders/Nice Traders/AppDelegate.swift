@@ -48,8 +48,36 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         
         // Handle the notification payload
-        if let title = userInfo["aps"] as? [String: Any],
-           let alert = title["alert"] as? [String: Any] {
+        var notificationTitle = "Notification"
+        var notificationBody = ""
+        
+        if let aps = userInfo["aps"] as? [String: Any] {
+            if let alert = aps["alert"] as? [String: Any] {
+                if let title = alert["title"] as? String {
+                    notificationTitle = title
+                }
+                if let body = alert["body"] as? String {
+                    notificationBody = body
+                }
+            } else if let alert = aps["alert"] as? String {
+                notificationBody = alert
+            }
+        }
+        
+        // If app is in foreground, show an in-app notification banner
+        DispatchQueue.main.async {
+            if application.applicationState == .active {
+                // Show in-app banner notification
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("InAppNotificationReceived"),
+                    object: nil,
+                    userInfo: [
+                        "title": notificationTitle,
+                        "body": notificationBody,
+                        "fullPayload": userInfo
+                    ]
+                )
+            }
         }
         
         // Handle notification tap with deep linking and session ID
