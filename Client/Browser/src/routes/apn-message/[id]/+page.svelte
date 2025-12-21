@@ -1,12 +1,14 @@
 <script>
 	import SuperFetch from '../../../SuperFetch.js';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import AdminLayout from '$lib/AdminLayout.svelte';
+	import { onMount } from 'svelte';
 	
-	export let data;
-	
-	let user = data.user;
-	let userDevices = data.userDevices || [];
+	let user = null;
+	let userDevices = [];
+	let loading = true;
+	let error = null;
 	
 	let messageTitle = '';
 	let messageBody = '';
@@ -16,6 +18,48 @@
 	let sendResult = null;
 	let showResult = false;
 	let selectedDeviceId = null;
+
+	onMount(async () => {
+		await loadUserData();
+	});
+	
+	async function loadUserData() {
+		loading = true;
+		error = null;
+		
+		try {
+			const userId = $page.params.id;
+			const API_URL = 'https://api.nicetraders.net';
+			
+			// Fetch user data
+			const userRes = await fetch(`${API_URL}/Admin/GetUserById`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const userData = await userRes.json();
+			
+			if (!userData.success) {
+				throw new Error('User not found');
+			}
+			user = userData.user;
+			
+			// Fetch user devices
+			const devicesRes = await fetch(`${API_URL}/Admin/GetUserDevices`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const devicesData = await devicesRes.json();
+			userDevices = devicesData.devices || [];
+			
+		} catch (err) {
+			console.error('Error loading user:', err);
+			error = err.message || 'Failed to load user';
+		} finally {
+			loading = false;
+		}
+	}
 
 	// Get all iOS devices (whether active or not)
 	$: iosDevices = userDevices.filter(d => d.device_type === 'ios');

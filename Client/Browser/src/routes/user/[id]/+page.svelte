@@ -2,9 +2,9 @@
 	import SuperFetch from '../../../SuperFetch.js';
 	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import AdminLayout from '$lib/AdminLayout.svelte';
-	
-	export let data;
+	import { onMount } from 'svelte';
 	
 	let editMode = false;
 	let editFormData = {};
@@ -12,14 +12,85 @@
 	let editError = null;
 	let editSuccess = false;
 	
-	let user = data.user;
-	let userListings = data.userListings || [];
-	let userPurchases = data.userPurchases || [];
-	let userMessages = data.userMessages || [];
-	let userDevices = data.userDevices || [];
+	let user = null;
+	let userListings = [];
+	let userPurchases = [];
+	let userMessages = [];
+	let userDevices = [];
+	let loading = true;
+	let error = null;
 	
 	$: if (user && !editFormData.Email) {
 		editFormData = { ...user };
+	}
+	
+	onMount(async () => {
+		await loadUserData();
+	});
+	
+	async function loadUserData() {
+		loading = true;
+		error = null;
+		
+		try {
+			const userId = $page.params.id;
+			const API_URL = 'https://api.nicetraders.net';
+			
+			// Fetch user data
+			const userRes = await fetch(`${API_URL}/Admin/GetUserById`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const userData = await userRes.json();
+			
+			if (!userData.success) {
+				throw new Error('User not found');
+			}
+			user = userData.user;
+			
+			// Fetch user listings
+			const listingsRes = await fetch(`${API_URL}/Admin/GetUserListings`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const listingsData = await listingsRes.json();
+			userListings = listingsData.listings || [];
+			
+			// Fetch user purchases
+			const purchasesRes = await fetch(`${API_URL}/Admin/GetUserPurchases`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const purchasesData = await purchasesRes.json();
+			userPurchases = purchasesData.purchases || [];
+			
+			// Fetch user messages
+			const messagesRes = await fetch(`${API_URL}/Admin/GetUserMessages`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const messagesData = await messagesRes.json();
+			userMessages = messagesData.messages || [];
+			
+			// Fetch user devices
+			const devicesRes = await fetch(`${API_URL}/Admin/GetUserDevices`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ user_id: userId })
+			});
+			const devicesData = await devicesRes.json();
+			userDevices = devicesData.devices || [];
+			
+		} catch (err) {
+			console.error('Error loading user:', err);
+			error = err.message || 'Failed to load user';
+		} finally {
+			loading = false;
+		}
 	}
 	
 	async function toggleEditMode() {

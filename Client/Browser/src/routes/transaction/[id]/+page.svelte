@@ -1,13 +1,89 @@
 <script>
 	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import AdminLayout from '$lib/AdminLayout.svelte';
+	import { onMount } from 'svelte';
 	
-	export let data;
+	let transaction = null;
+	let transactionBuyer = null;
+	let transactionSeller = null;
+	let transactionListing = null;
+	let loading = true;
+	let error = null;
 	
-	let transaction = data.transaction;
-	let transactionBuyer = data.transactionBuyer;
-	let transactionSeller = data.transactionSeller;
-	let transactionListing = data.transactionListing;
+	onMount(async () => {
+		await loadTransactionData();
+	});
+	
+	async function loadTransactionData() {
+		loading = true;
+		error = null;
+		
+		try {
+			const transactionId = $page.params.id;
+			const API_URL = 'https://api.nicetraders.net';
+			
+			// Fetch transaction data
+			const txRes = await fetch(`${API_URL}/Admin/GetTransactionById`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ transactionId })
+			});
+			const txData = await txRes.json();
+			
+			if (!txData.success) {
+				throw new Error('Transaction not found');
+			}
+			
+			transaction = txData.transaction;
+			
+			// Fetch buyer
+			if (transaction.user_id) {
+				const buyerRes = await fetch(`${API_URL}/Admin/GetUserById`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ user_id: transaction.user_id })
+				});
+				const buyerData = await buyerRes.json();
+				if (buyerData.success) {
+					transactionBuyer = buyerData.user;
+				}
+			}
+			
+			// Fetch listing and seller
+			if (transaction.listing_id) {
+				const listingRes = await fetch(`${API_URL}/Admin/GetListingById`, {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ listingId: transaction.listing_id })
+				});
+				const listingData = await listingRes.json();
+				
+				if (listingData.success) {
+					transactionListing = listingData.listing;
+					
+					// Fetch seller
+					if (listingData.listing.user_id) {
+						const sellerRes = await fetch(`${API_URL}/Admin/GetUserById`, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify({ user_id: listingData.listing.user_id })
+						});
+						const sellerData = await sellerRes.json();
+						if (sellerData.success) {
+							transactionSeller = sellerData.user;
+						}
+					}
+				}
+			}
+		} catch (err) {
+			console.error('Error loading transaction:', err);
+			error = err.message || 'Failed to load transaction';
+		} finally {
+			loading = false;
+		}
+	}
 	
 	function viewUser(userId) {
 		goto(`/user/${userId}`);
