@@ -202,7 +202,8 @@ class APNService:
                             },
                             **custom_data
                         },
-                        push_type=PushType.ALERT
+                        push_type=PushType.ALERT,
+	                    priority=10
                     )
                     response = await apns.send_notification(request)
                     if not response.is_successful:

@@ -90,7 +90,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
         
         // Handle notification tap with deep linking and session ID
-        handleNotificationTap(userInfo: userInfo)
+        // handleNotificationTap(userInfo: userInfo)
         
         completionHandler(.newData)
     }
