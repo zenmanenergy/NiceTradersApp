@@ -77,6 +77,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                         "fullPayload": userInfo
                     ]
                 )
+                
+                // Also navigate to notifications
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("NavigateToNotifications"),
+                    object: nil
+                )
             }
         }
         
