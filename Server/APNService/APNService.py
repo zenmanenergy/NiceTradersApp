@@ -192,6 +192,7 @@ class APNService:
             failed_tokens = []
             for token in tokens:
                 try:
+                    print(f"📤 [APNService] Sending to token: {token[:20]}...")
                     request = NotificationRequest(
                         device_token=token,
                         message={
@@ -206,9 +207,14 @@ class APNService:
 	                    priority=10
                     )
                     response = await apns.send_notification(request)
+                    print(f"📥 [APNService] APNs response - Success: {response.is_successful}, Status: {response.status}, Description: {response.description}")
                     if not response.is_successful:
-                        failed_tokens.append({'token': token, 'error': response.description})
+                        print(f"❌ [APNService] Failed to send - Status: {response.status}, Reason: {response.description}")
+                        failed_tokens.append({'token': token, 'error': response.description, 'status': response.status})
+                    else:
+                        print(f"✅ [APNService] Successfully sent notification to device")
                 except Exception as e:
+                    print(f"❌ [APNService] Exception sending notification: {str(e)}")
                     failed_tokens.append({'token': token, 'error': str(e)})
             
             # Log the notification

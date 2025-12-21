@@ -173,6 +173,20 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print("🔔 [AppDelegate] Notification body: \(notification.request.content.body)")
         print("🔔 [AppDelegate] User info: \(notification.request.content.userInfo)")
         print("🔔 [AppDelegate] Showing banner with sound and badge")
+        
+        // Post notification for in-app handling
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("InAppNotificationReceived"),
+                object: nil,
+                userInfo: [
+                    "title": notification.request.content.title,
+                    "body": notification.request.content.body,
+                    "fullPayload": notification.request.content.userInfo
+                ]
+            )
+        }
+        
         // Show banner, sound, and badge even when app is in foreground
         completionHandler([.banner, .sound, .badge])
     }
