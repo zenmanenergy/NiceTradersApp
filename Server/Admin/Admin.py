@@ -695,29 +695,29 @@ def get_payment_reports():
         
         cursor, connection = ConnectToDatabase()
         
-        # Build base query
-        query = "SELECT * FROM purchased_listings WHERE 1=1"
+        # Build base query - join with paypal_orders and users to get amount and buyer name
+        query = "SELECT lp.*, po.amount, po.currency, po.status as payment_status, u.FirstName, u.LastName FROM listing_payments lp LEFT JOIN paypal_orders po ON lp.buyer_transaction_id = po.transaction_id LEFT JOIN users u ON lp.buyer_id = u.user_id WHERE 1=1"
         query_params = []
         
         # Add filters
         if start_date:
-            query += " AND purchased_at >= %s"
+            query += " AND lp.created_at >= %s"
             query_params.append(start_date)
         
         if end_date:
-            query += " AND purchased_at <= %s"
+            query += " AND lp.created_at <= %s"
             query_params.append(end_date)
         
         if payment_method:
-            query += " AND payment_method = %s"
+            query += " AND lp.payment_method = %s"
             query_params.append(payment_method)
         
         if status:
-            query += " AND status = %s"
+            query += " AND po.status = %s"
             query_params.append(status)
         
         # Get all matching transactions
-        query += " ORDER BY purchased_at DESC"
+        query += " ORDER BY lp.created_at DESC"
         cursor.execute(query, query_params)
         transactions = cursor.fetchall()
         
@@ -725,30 +725,25 @@ def get_payment_reports():
         stats_query = """
             SELECT 
                 COUNT(*) as total_transactions,
-                SUM(amount_paid) as total_amount,
-                AVG(amount_paid) as average_amount,
-                COUNT(DISTINCT user_id) as unique_users,
-                COUNT(DISTINCT listing_id) as unique_listings
-            FROM purchased_listings
+                SUM(po.amount) as total_amount,
+                AVG(po.amount) as average_amount
+            FROM listing_payments lp
+            LEFT JOIN paypal_orders po ON lp.buyer_transaction_id = po.transaction_id
             WHERE 1=1
         """
         stats_params = []
         
         if start_date:
-            stats_query += " AND purchased_at >= %s"
+            stats_query += " AND lp.created_at >= %s"
             stats_params.append(start_date)
         
         if end_date:
-            stats_query += " AND purchased_at <= %s"
+            stats_query += " AND lp.created_at <= %s"
             stats_params.append(end_date)
         
         if payment_method:
-            stats_query += " AND payment_method = %s"
+            stats_query += " AND lp.payment_method = %s"
             stats_params.append(payment_method)
-        
-        if status:
-            stats_query += " AND status = %s"
-            stats_params.append(status)
         
         cursor.execute(stats_query, stats_params)
         stats = cursor.fetchone()
@@ -756,23 +751,24 @@ def get_payment_reports():
         # Get payment method breakdown
         method_query = """
             SELECT 
-                payment_method,
+                lp.payment_method,
                 COUNT(*) as count,
-                SUM(amount_paid) as total
-            FROM purchased_listings
+                SUM(po.amount) as total
+            FROM listing_payments lp
+            LEFT JOIN paypal_orders po ON lp.buyer_transaction_id = po.transaction_id
             WHERE 1=1
         """
         method_params = []
         
         if start_date:
-            method_query += " AND purchased_at >= %s"
+            method_query += " AND lp.created_at >= %s"
             method_params.append(start_date)
         
         if end_date:
-            method_query += " AND purchased_at <= %s"
+            method_query += " AND lp.created_at <= %s"
             method_params.append(end_date)
         
-        method_query += " GROUP BY payment_method ORDER BY total DESC"
+        method_query += " GROUP BY lp.payment_method ORDER BY total DESC"
         cursor.execute(method_query, method_params)
         payment_methods = cursor.fetchall()
         

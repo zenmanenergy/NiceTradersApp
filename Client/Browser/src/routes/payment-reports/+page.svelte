@@ -1,7 +1,8 @@
 <script>
 	import SuperFetch from '../../SuperFetch.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
-	
+	import AdminLayout from '$lib/AdminLayout.svelte';
+
 	let loading = false;
 	let error = null;
 	let reports = null;
@@ -44,15 +45,15 @@
 			return;
 		}
 		
-		const headers = ['Date', 'User ID', 'Listing ID', 'Amount', 'Currency', 'Payment Method', 'Status'];
+		const headers = ['Date', 'User Name', 'Listing ID', 'Amount', 'Currency', 'Payment Method', 'Status'];
 		const rows = reports.map(tx => [
-			formatDate(tx.purchased_at),
-			tx.user_id,
+			formatDate(tx.created_at),
+			`${tx.FirstName || ''} ${tx.LastName || ''}`,
 			tx.listing_id,
-			tx.amount_paid,
+			tx.amount,
 			tx.currency,
 			tx.payment_method,
-			tx.status || 'completed'
+			tx.payment_status || 'CREATED'
 		]);
 		
 		const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
@@ -75,11 +76,12 @@
 	}
 </script>
 
-<div class="reports-container">
-	<div class="reports-header">
-		<h2>💳 Payment Reports</h2>
-		<p>View and analyze payment transactions</p>
-	</div>
+<AdminLayout>
+	<div class="reports-container">
+		<div class="reports-header">
+			<h2>💳 Payment Reports</h2>
+			<p>View and analyze payment transactions</p>
+		</div>
 	
 	<div class="filter-section">
 		<div class="filters">
@@ -194,15 +196,15 @@
 						<tbody>
 							{#each reports as transaction}
 								<tr>
-									<td>{formatDate(transaction.purchased_at)}</td>
-									<td><code>{transaction.user_id}</code></td>
+									<td>{formatDate(transaction.created_at)}</td>
+									<td>{transaction.FirstName || ''} {transaction.LastName || ''}</td>
 									<td><code>{transaction.listing_id}</code></td>
-									<td class="amount">${transaction.amount_paid.toFixed(2)}</td>
-									<td>{transaction.currency}</td>
+									<td class="amount">${transaction.amount ? transaction.amount.toFixed(2) : 'N/A'}</td>
+									<td>{transaction.currency || 'N/A'}</td>
 									<td>{transaction.payment_method || 'N/A'}</td>
 									<td>
-										<span class="status-badge {(transaction.status || 'completed').toLowerCase()}">
-											{transaction.status || 'completed'}
+										<span class="status-badge {(transaction.payment_status || 'CREATED').toLowerCase()}">
+											{transaction.payment_status || 'CREATED'}
 										</span>
 									</td>
 								</tr>
@@ -216,6 +218,7 @@
 		</div>
 	{/if}
 </div>
+</AdminLayout>
 
 <style>
 	.reports-container {

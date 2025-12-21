@@ -1,7 +1,13 @@
 <script>
-	import { viewState, userDetailState } from '../../lib/adminStore';
-	import SuperFetch from '../../SuperFetch.js';
-
+	import SuperFetch from '../../../SuperFetch.js';
+	import { goto } from '$app/navigation';
+	import AdminLayout from '$lib/AdminLayout.svelte';
+	
+	export let data;
+	
+	let user = data.user;
+	let userDevices = data.userDevices || [];
+	
 	let messageTitle = '';
 	let messageBody = '';
 	let badge = 1;
@@ -12,10 +18,10 @@
 	let selectedDeviceId = null;
 
 	// Get all iOS devices (whether active or not)
-	$: iosDevices = $userDetailState.userDevices.filter(d => d.device_type === 'ios');
+	$: iosDevices = userDevices.filter(d => d.device_type === 'ios');
 	
 	// Get active iOS devices
-	$: activeIOSDevices = $userDetailState.userDevices.filter(d => 
+	$: activeIOSDevices = userDevices.filter(d => 
 		d.device_type === 'ios' && d.device_token && d.is_active === 1
 	);
 
@@ -52,7 +58,7 @@
 
 		try {
 			const response = await SuperFetch('/Admin/SendApnMessage', {
-				user_id: $userDetailState.currentUser.user_id,
+				user_id: user.user_id,
 				device_id: selectedDeviceId,
 				title: messageTitle,
 				body: messageBody,
@@ -89,34 +95,24 @@
 	}
 
 	function goBack() {
-		viewState.update(state => ({
-			...state,
-			currentView: 'user'
-		}));
+		goto(`/user/${user.user_id}`);
 	}
 </script>
 
-<div class="message-view">
-	<div class="header">
-		<button class="back-btn" on:click={goBack}>← Back</button>
-		<h2>Send APN Message</h2>
-		<div class="user-info">
-			<strong>{$userDetailState.currentUser.FirstName} {$userDetailState.currentUser.LastName}</strong>
-			<span class="email">{$userDetailState.currentUser.Email}</span>
-		</div>
-	</div>
+<AdminLayout>
+	<div class="message-view">
 
 	<div class="form-container">
 		<!-- Device Status Section -->
 		<div class="device-status-section">
 			<h3>📱 Registered iOS Devices</h3>
-			{#if $userDetailState.userDevices.length === 0}
+			{#if userDevices.length === 0}
 				<div class="alert alert-warning">
 					⚠️ No devices registered for this user
 				</div>
 			{:else}
 				<div class="devices-info">
-					{#each $userDetailState.userDevices as device}
+					{#each userDevices as device}
 						<div class="device-item {device.device_type === 'ios' ? 'ios' : 'other'}">
 							<div class="device-header-row">
 								<div class="device-type-badge">
@@ -275,6 +271,7 @@
 		{/if}
 	</div>
 </div>
+</AdminLayout>
 
 <style>
 	.message-view {

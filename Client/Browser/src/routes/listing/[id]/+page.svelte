@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import SuperFetch from '../../../SuperFetch.js';
 	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
+	import AdminLayout from '$lib/AdminLayout.svelte';
 	
 	let currentListing = null;
 	let listingOwner = null;
@@ -47,13 +48,13 @@
 	<title>Listing - Nice Traders</title>
 </svelte:head>
 
-{#if loading}
-	<div class="loading">Loading listing...</div>
-{:else if error}
-	<div class="error">{error}</div>
-{:else if currentListing}
-	<div class="detail-view">
-		<a href="/map" class="back-link">← Back to Map</a>
+<AdminLayout>
+	{#if loading}
+		<div class="loading">Loading listing...</div>
+	{:else if error}
+		<div class="error">{error}</div>
+	{:else if currentListing}
+		<div class="detail-view">
 		
 		<div class="detail-header">
 			<h2>💱 {currentListing.currency} → {currentListing.accept_currency}</h2>
@@ -121,7 +122,8 @@
 			{/if}
 		</div>
 	</div>
-{/if}
+	{/if}
+</AdminLayout>
 
 <style>
 	.back-link {

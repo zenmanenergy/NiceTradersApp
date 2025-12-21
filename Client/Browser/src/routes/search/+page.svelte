@@ -1,9 +1,8 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import AdminLayout from '../../admin/AdminLayout.svelte';
-	import SearchView from '../../admin/SearchView.svelte';
-	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
+	import { formatDate, formatCurrency } from '$lib/adminUtils.js';
+	import AdminLayout from '$lib/AdminLayout.svelte';
 
 	export let data;
 	
@@ -12,7 +11,7 @@
 	
 	async function handleSearch() {
 		if (!searchTerm.trim()) return;
-		goto(`/admin/search?q=${encodeURIComponent(searchTerm)}&type=${searchType}`);
+		goto(`/search?q=${encodeURIComponent(searchTerm)}&type=${searchType}`);
 	}
 	
 	async function handleKeydown(e) {
@@ -72,7 +71,7 @@
 				<div class="results-list">
 					{#each data.results as result}
 						{#if searchType === 'users'}
-							<div class="result-card" on:click={() => goto(`/admin/user/${result.user_id}`)}>
+							<div class="result-card" on:click={() => goto(`/user/${result.user_id}`)}>
 								<div class="result-icon">👤</div>
 								<div class="result-info">
 									<h4>{result.FirstName} {result.LastName}</h4>
@@ -82,7 +81,7 @@
 								<div class="result-arrow">→</div>
 							</div>
 						{:else if searchType === 'listings'}
-							<div class="result-card" on:click={() => goto(`/admin/listing/${result.listing_id}`)}>
+							<div class="result-card" on:click={() => goto(`/listing/${result.listing_id}`)}>
 								<div class="result-icon">💱</div>
 								<div class="result-info">
 									<h4>{result.currency} → {result.accept_currency}</h4>
@@ -92,7 +91,7 @@
 								<div class="result-arrow">→</div>
 							</div>
 						{:else if searchType === 'transactions'}
-							<div class="result-card" on:click={() => goto(`/admin/transaction/${result.payment_id}`)}>
+							<div class="result-card" on:click={() => goto(`/transaction/${result.payment_id}`)}>
 								<div class="result-icon">💰</div>
 								<div class="result-info">
 									<h4>Payment: {formatCurrency(result.amount, result.currency)}</h4>

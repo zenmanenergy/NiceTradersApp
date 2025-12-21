@@ -1,110 +1,134 @@
 <script>
-	import AdminLayout from './admin/AdminLayout.svelte';
-	import SearchView from './admin/SearchView.svelte';
-	import UserView from './admin/UserView.svelte';
-	import ListingView from './admin/ListingView.svelte';
-	import TransactionView from './admin/TransactionView.svelte';
-	import ApnMessageView from './admin/ApnMessageView.svelte';
-	import LogsView from './admin/LogsView.svelte';
-	import PaymentReportsView from './admin/PaymentReportsView.svelte';
-	import SuperFetch from '../SuperFetch.js';
-	import { viewState, userDetailState, listingDetailState, transactionDetailState } from '../lib/adminStore.js';
-	
-	async function viewUser(user_id, userName = 'User') {
-		try {
-			const userResponse = await SuperFetch('/Admin/GetUserById', { user_id });
-			if (!userResponse.success) throw new Error('Failed to load user');
-			const currentUser = userResponse.user;
-			const listingsResponse = await SuperFetch('/Admin/GetUserListings', { user_id });
-			const userListings = listingsResponse.success ? listingsResponse.listings : [];
-			const purchasesResponse = await SuperFetch('/Admin/GetUserPurchases', { user_id });
-			const userPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
-			const messagesResponse = await SuperFetch('/Admin/GetUserMessages', { user_id });
-			const userMessages = messagesResponse.success ? messagesResponse.messages : [];
-			const ratingsResponse = await SuperFetch('/Admin/GetUserRatings', { user_id });
-			const userRatings = ratingsResponse.success ? ratingsResponse.ratings : [];
-			const devicesResponse = await SuperFetch('/Admin/GetUserDevices', { user_id });
-			const userDevices = devicesResponse.success ? devicesResponse.devices : [];
-			userDetailState.set({ currentUser, userListings, userPurchases, userMessages, userRatings, userDevices });
-			viewState.update(state => ({
-				currentView: 'user',
-				breadcrumbs: [...state.breadcrumbs, { type: 'user', id: user_id, label: userName }]
-			}));
-		} catch (err) {
-			console.error('Error loading user:', err);
-		}
-	}
-	
-	async function viewListing(listingId, listingName = 'Listing') {
-		try {
-			const listingResponse = await SuperFetch('/Admin/GetListingById', { listingId });
-			if (!listingResponse.success) throw new Error('Failed to load listing');
-			const currentListing = listingResponse.listing;
-			const ownerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentListing.user_id });
-			const listingOwner = ownerResponse.success ? ownerResponse.user : null;
-			const purchasesResponse = await SuperFetch('/Admin/GetListingPurchases', { listingId });
-			const listingPurchases = purchasesResponse.success ? purchasesResponse.purchases : [];
-			const messagesResponse = await SuperFetch('/Admin/GetListingMessages', { listingId });
-			const listingMessages = messagesResponse.success ? messagesResponse.messages : [];
-			listingDetailState.set({ currentListing, listingPurchases, listingMessages, listingOwner });
-			viewState.update(state => ({
-				currentView: 'listing',
-				breadcrumbs: [...state.breadcrumbs, { type: 'listing', id: listingId, label: listingName }]
-			}));
-		} catch (err) {
-			console.error('Error loading listing:', err);
-		}
-	}
-	
-	async function viewTransaction(transactionId, transactionName = 'Transaction') {
-		try {
-			const txResponse = await SuperFetch('/Admin/GetTransactionById', { transactionId });
-			if (!txResponse.success) throw new Error('Failed to load transaction');
-			const currentTransaction = txResponse.transaction;
-			const buyerResponse = await SuperFetch('/Admin/GetUserById', { user_id: currentTransaction.user_id });
-			const transactionBuyer = buyerResponse.success ? buyerResponse.user : null;
-			const listingResponse = await SuperFetch('/Admin/GetListingById', { listingId: currentTransaction.listing_id });
-			let transactionSeller = null;
-			let transactionListing = null;
-			if (listingResponse.success) {
-				transactionListing = listingResponse.listing;
-				const sellerResponse = await SuperFetch('/Admin/GetUserById', { user_id: listingResponse.listing.user_id });
-				transactionSeller = sellerResponse.success ? sellerResponse.user : null;
-			}
-			transactionDetailState.set({ currentTransaction, transactionBuyer, transactionSeller, transactionListing });
-			viewState.update(state => ({
-				currentView: 'transaction',
-				breadcrumbs: [...state.breadcrumbs, { type: 'transaction', id: transactionId, label: transactionName }]
-			}));
-		} catch (err) {
-			console.error('Error loading transaction:', err);
-		}
-	}
+	import { goto } from '$app/navigation';
 </script>
 
-<AdminLayout>
-	{#if $viewState.currentView === 'search'}
-		<SearchView {viewUser} {viewListing} {viewTransaction} />
-	{:else if $viewState.currentView === 'user'}
-		<UserView {viewListing} {viewTransaction} />
-	{:else if $viewState.currentView === 'listing'}
-		<ListingView {viewUser} {viewTransaction} />
-	{:else if $viewState.currentView === 'transaction'}
-		<TransactionView {viewUser} {viewListing} />
-	{:else if $viewState.currentView === 'apn-message'}
-		<ApnMessageView />
-	{:else if $viewState.currentView === 'logs'}
-		<LogsView />
-	{:else if $viewState.currentView === 'payment-reports'}
-		<PaymentReportsView />
-	{/if}
-</AdminLayout>
+<div class="admin-home">
+	<div class="welcome-section">
+		<h1>Admin Dashboard</h1>
+		<p>Welcome to the Nice Traders Admin Panel</p>
+	</div>
+
+	<div class="quick-actions">
+		<h2>Quick Actions</h2>
+		<div class="action-grid">
+			<button class="action-card" on:click={() => goto('/search')}>
+				<div class="card-icon">🔍</div>
+				<div class="card-title">Search</div>
+				<div class="card-description">Search users, listings, and transactions</div>
+			</button>
+			
+			<button class="action-card" on:click={() => goto('/logs')}>
+				<div class="card-icon">📋</div>
+				<div class="card-title">View Logs</div>
+				<div class="card-description">Monitor application logs</div>
+			</button>
+			
+			<button class="action-card" on:click={() => goto('/payment-reports')}>
+				<div class="card-icon">💳</div>
+				<div class="card-title">Payment Reports</div>
+				<div class="card-description">View payment and transaction data</div>
+			</button>
+		</div>
+	</div>
+
+	<div class="admin-info">
+		<h2>Admin Info</h2>
+		<p>Use the navigation buttons above to access different admin sections.</p>
+	</div>
+</div>
 
 <style>
-	:global(body) {
+	.admin-home {
+		padding: 40px 20px;
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.welcome-section {
+		text-align: center;
+		margin-bottom: 50px;
+	}
+
+	.welcome-section h1 {
+		font-size: 2.5rem;
+		margin: 0 0 10px 0;
+		color: #333;
+	}
+
+	.welcome-section p {
+		font-size: 1.1rem;
+		color: #666;
 		margin: 0;
-		padding: 0;
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	}
+
+	.quick-actions {
+		margin-bottom: 50px;
+	}
+
+	.quick-actions h2 {
+		font-size: 1.5rem;
+		margin: 0 0 30px 0;
+		color: #333;
+	}
+
+	.action-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 20px;
+	}
+
+	.action-card {
+		background: white;
+		border: 2px solid #e0e0e0;
+		border-radius: 12px;
+		padding: 30px 20px;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		font-family: inherit;
+		font-size: 1rem;
+	}
+
+	.action-card:hover {
+		border-color: #667eea;
+		box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+		transform: translateY(-5px);
+	}
+
+	.card-icon {
+		font-size: 3rem;
+		margin-bottom: 15px;
+	}
+
+	.card-title {
+		font-size: 1.2rem;
+		font-weight: 600;
+		color: #333;
+		margin-bottom: 8px;
+	}
+
+	.card-description {
+		font-size: 0.9rem;
+		color: #666;
+		margin: 0;
+	}
+
+	.admin-info {
 		background: #f5f7fa;
+		padding: 30px;
+		border-radius: 12px;
+	}
+
+	.admin-info h2 {
+		margin: 0 0 15px 0;
+		color: #333;
+	}
+
+	.admin-info p {
+		margin: 0;
+		color: #666;
 	}
 </style>

@@ -1,7 +1,10 @@
 <script>
-	import SuperFetch from '../../SuperFetch.js';
-	import { userDetailState, viewState } from '../../lib/adminStore.js';
-	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
+	import SuperFetch from '../../../SuperFetch.js';
+	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
+	import { goto } from '$app/navigation';
+	import AdminLayout from '$lib/AdminLayout.svelte';
+	
+	export let data;
 	
 	let editMode = false;
 	let editFormData = {};
@@ -9,8 +12,14 @@
 	let editError = null;
 	let editSuccess = false;
 	
-	$: if ($userDetailState.currentUser && !editFormData.Email) {
-		editFormData = { ...($userDetailState.currentUser || {}) };
+	let user = data.user;
+	let userListings = data.userListings || [];
+	let userPurchases = data.userPurchases || [];
+	let userMessages = data.userMessages || [];
+	let userDevices = data.userDevices || [];
+	
+	$: if (user && !editFormData.Email) {
+		editFormData = { ...user };
 	}
 	
 	async function toggleEditMode() {
@@ -26,15 +35,12 @@
 		
 		try {
 			const response = await SuperFetch('/Admin/UpdateUser', {
-				user_id: $userDetailState.currentUser.user_id,
+				user_id: user.user_id,
 				...editFormData
 			});
 			
 			if (response.success) {
-				userDetailState.update(state => ({
-					...state,
-					currentUser: { ...state.currentUser, ...editFormData }
-				}));
+				user = { ...user, ...editFormData };
 				editSuccess = true;
 				setTimeout(() => {
 					editSuccess = false;
@@ -51,35 +57,25 @@
 	}
 
 	function sendApnMessage() {
-		viewState.update(state => ({
-			...state,
-			currentView: 'apn-message'
-		}));
+		goto(`/apn-message/${user.user_id}`);
 	}
 	
-	function viewListing(listingId, listingName) {
-		// This will be handled by parent
-		viewState.update(state => ({
-			...state,
-			breadcrumbs: [...state.breadcrumbs, { type: 'listing', id: listingId, label: listingName }]
-		}));
+	function viewListing(listingId) {
+		goto(`/listing/${listingId}`);
 	}
 	
-	function viewTransaction(transactionId, transactionName) {
-		// This will be handled by parent
-		viewState.update(state => ({
-			...state,
-			breadcrumbs: [...state.breadcrumbs, { type: 'transaction', id: transactionId, label: transactionName }]
-		}));
+	function viewTransaction(transactionId) {
+		goto(`/transaction/${transactionId}`);
 	}
 </script>
 
-{#if $userDetailState.currentUser}
-	<div class="detail-view">
+<AdminLayout>
+	{#if user}
+		<div class="detail-view">
 		<div class="detail-header">
-			<h2>👤 {$userDetailState.currentUser.FirstName} {$userDetailState.currentUser.LastName}</h2>
-			<span class="badge {$userDetailState.currentUser.IsActive ? 'active' : 'inactive'}">
-				{$userDetailState.currentUser.IsActive ? 'Active' : 'Inactive'}
+			<h2>👤 {user.FirstName} {user.LastName}</h2>
+			<span class="badge {user.IsActive ? 'active' : 'inactive'}">
+				{user.IsActive ? 'Active' : 'Inactive'}
 			</span>
 		</div>
 		
@@ -146,18 +142,18 @@
 			<div class="detail-grid">
 				<div class="info-card">
 					<h3>Contact Information</h3>
-					<div class="info-row"><strong>Email:</strong> {$userDetailState.currentUser.Email}</div>
-					<div class="info-row"><strong>Phone:</strong> {$userDetailState.currentUser.Phone || '-'}</div>
-					<div class="info-row"><strong>Location:</strong> {$userDetailState.currentUser.Location || '-'}</div>
-					<div class="info-row"><strong>Bio:</strong> {$userDetailState.currentUser.Bio || '-'}</div>
+					<div class="info-row"><strong>Email:</strong> {user.Email}</div>
+					<div class="info-row"><strong>Phone:</strong> {user.Phone || '-'}</div>
+					<div class="info-row"><strong>Location:</strong> {user.Location || '-'}</div>
+					<div class="info-row"><strong>Bio:</strong> {user.Bio || '-'}</div>
 				</div>
 				
 				<div class="info-card">
 					<h3>Statistics</h3>
-					<div class="info-row"><strong>Rating:</strong> {$userDetailState.currentUser.Rating} ⭐</div>
-					<div class="info-row"><strong>Total Exchanges:</strong> {$userDetailState.currentUser.TotalExchanges}</div>
-					<div class="info-row"><strong>User Type:</strong> {$userDetailState.currentUser.UserType}</div>
-					<div class="info-row"><strong>Joined:</strong> {formatDate($userDetailState.currentUser.DateCreated)}</div>
+					<div class="info-row"><strong>Rating:</strong> {user.Rating} ⭐</div>
+					<div class="info-row"><strong>Total Exchanges:</strong> {user.TotalExchanges}</div>
+					<div class="info-row"><strong>User Type:</strong> {user.UserType}</div>
+					<div class="info-row"><strong>Joined:</strong> {formatDate(user.DateCreated)}</div>
 				</div>
 			</div>
 			
@@ -168,13 +164,13 @@
 		{/if}
 
 		<div class="section">
-			<h3>📋 Listings ({$userDetailState.userListings.length})</h3>
-			{#if $userDetailState.userListings.length === 0}
+			<h3>📋 Listings ({userListings.length})</h3>
+			{#if userListings.length === 0}
 				<p class="empty-state">No listings</p>
 			{:else}
 				<div class="list-grid">
-					{#each $userDetailState.userListings as listing}
-						<div class="list-card" on:click={() => viewListing(listing.listing_id, `${listing.currency} → ${listing.accept_currency}`)}>
+					{#each userListings as listing}
+						<div class="list-card" on:click={() => viewListing(listing.listing_id)}>
 							<div class="list-header">
 								<strong>{listing.currency} → {listing.accept_currency}</strong>
 								<span class="status-badge {listing.status}">{listing.status}</span>
@@ -188,13 +184,13 @@
 		</div>
 
 		<div class="section">
-			<h3>💰 Purchases ({$userDetailState.userPurchases.length})</h3>
-			{#if $userDetailState.userPurchases.length === 0}
+			<h3>💰 Purchases ({userPurchases.length})</h3>
+			{#if userPurchases.length === 0}
 				<p class="empty-state">No purchases</p>
 			{:else}
 				<div class="list-grid">
-					{#each $userDetailState.userPurchases as purchase}
-						<div class="list-card" on:click={() => viewTransaction(purchase.access_id, `Purchase ${purchase.access_id.substring(0, 8)}`)}>
+					{#each userPurchases as purchase}
+						<div class="list-card" on:click={() => viewTransaction(purchase.access_id)}>
 							<div class="list-header">
 								<strong>{formatCurrency(purchase.amount_paid, purchase.currency)}</strong>
 								<span class="status-badge {purchase.status}">{purchase.status}</span>
@@ -208,12 +204,12 @@
 		</div>
 
 		<div class="section">
-			<h3>💬 Messages ({$userDetailState.userMessages.length})</h3>
-			{#if $userDetailState.userMessages.length === 0}
+			<h3>💬 Messages ({userMessages.length})</h3>
+			{#if userMessages.length === 0}
 				<p class="empty-state">No messages</p>
 			{:else}
 				<div class="messages-list">
-					{#each $userDetailState.userMessages as message}
+					{#each userMessages as message}
 						<div class="message-card">
 							<div class="message-header">
 								<span>{message.message_type}</span>
@@ -227,12 +223,12 @@
 		</div>
 
 		<div class="section">
-			<h3>📱 Registered Devices ({$userDetailState.userDevices.length})</h3>
-			{#if $userDetailState.userDevices.length === 0}
+			<h3>📱 Registered Devices ({userDevices.length})</h3>
+			{#if userDevices.length === 0}
 				<p class="empty-state">No registered devices</p>
 			{:else}
 				<div class="devices-list">
-					{#each $userDetailState.userDevices as device}
+					{#each userDevices as device}
 						<div class="device-card">
 							<div class="device-header">
 								<div class="device-type">
@@ -285,7 +281,8 @@
 			{/if}
 		</div>
 	</div>
-{/if}
+	{/if}
+</AdminLayout>
 
 <style>
 	.detail-view {
