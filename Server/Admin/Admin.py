@@ -339,6 +339,15 @@ def get_user_devices():
         cursor.execute(query, (user_id,))
         devices = cursor.fetchall()
         
+        # Convert datetime objects to ISO format strings
+        for device in devices:
+            if device.get('registered_at'):
+                device['registered_at'] = device['registered_at'].isoformat()
+            if device.get('last_used_at'):
+                device['last_used_at'] = device['last_used_at'].isoformat()
+            if device.get('updated_at'):
+                device['updated_at'] = device['updated_at'].isoformat()
+        
         cursor.close()
         connection.close()
         
