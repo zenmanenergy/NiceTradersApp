@@ -48,6 +48,8 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 			connection.close()
 			
 			# Always register device (token may be None initially, will be updated when APNs provides it)
+			from Profile.RegisterDevice import log_device_event
+			log_device_event(f"LOGIN: Registering device for user {result['user_id']} with device_type={device_type}, device_name={device_name}, app_version={app_version}, os_version={os_version}, device_token={device_token}")
 			register_device(result['user_id'], device_token, device_type, device_name, app_version, os_version)
 
 			# Return success with session data and user ID

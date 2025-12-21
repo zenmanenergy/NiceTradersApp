@@ -4,6 +4,15 @@ Register or update a user's device token for push notifications
 from _Lib import Database
 import uuid
 import datetime
+import os
+
+
+def log_device_event(message):
+	"""Log device registration events to a file"""
+	log_file = '/tmp/device_registration.log'
+	timestamp = datetime.datetime.now().isoformat()
+	with open(log_file, 'a') as f:
+		f.write(f"[{timestamp}] {message}\n")
 
 
 def register_device(user_id, device_token, device_type='ios', device_name=None, app_version=None, os_version=None):
@@ -21,11 +30,15 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 	Returns:
 		JSON string with success status
 	"""
+	log_device_event(f"register_device called: user_id={user_id}, device_type={device_type}, device_token={device_token}, device_name={device_name}, app_version={app_version}, os_version={os_version}")
+	
 	if not user_id:
+		log_device_event("ERROR: user_id is required")
 		return '{"success": false, "error": "user_id is required"}'
 	
 	# Validate device type
 	if device_type not in ['ios', 'android', 'web']:
+		log_device_event(f"ERROR: Invalid device_type: {device_type}")
 		return '{"success": false, "error": "Invalid device_type. Must be ios, android, or web"}'
 	
 	# Connect to the database
@@ -101,8 +114,12 @@ def register_device(user_id, device_token, device_type='ios', device_name=None, 
 		connection.commit()
 		connection.close()
 		
+		log_device_event(f"SUCCESS: Device registered for user {user_id}")
 		return '{"success": true, "message": "Device registered successfully"}'
 		
 	except Exception as e:
 		connection.close()
+		log_device_event(f"ERROR: Database error for user {user_id}: {str(e)}")
+		import traceback
+		log_device_event(f"Traceback: {traceback.format_exc()}")
 		return f'{{"success": false, "error": "Database error: {str(e)}"}}'
