@@ -198,7 +198,8 @@ class APNService:
                             'aps': {
                                 'alert': alert,
                                 'badge': badge,
-                                'sound': sound
+                                'sound': sound,
+                                'content-available': 1  # Wakes app in background to call didReceiveRemoteNotification
                             },
                             **custom_data
                         },
