@@ -12,6 +12,8 @@ struct SplashScreenView: View {
         Image("SplashScreen")
             .resizable()
             .scaledToFit()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black)
             .ignoresSafeArea()
     }
 }

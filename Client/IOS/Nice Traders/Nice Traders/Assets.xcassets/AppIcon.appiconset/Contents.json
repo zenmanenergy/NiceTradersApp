@@ -1,30 +1,22 @@
 {
   "images" : [
     {
-      "filename" : "AppIcon-48.png",
       "idiom" : "iphone",
-      "role" : "notificationCenter",
       "scale" : "2x",
-      "size" : "24x24"
+      "size" : "20x20"
     },
     {
-      "filename" : "AppIcon-72.png",
       "idiom" : "iphone",
-      "role" : "notificationCenter",
       "scale" : "3x",
-      "size" : "24x24"
+      "size" : "20x20"
     },
     {
-      "filename" : "AppIcon-58.png",
       "idiom" : "iphone",
-      "role" : "companionSettings",
       "scale" : "2x",
       "size" : "29x29"
     },
     {
-      "filename" : "AppIcon-87.png",
       "idiom" : "iphone",
-      "role" : "companionSettings",
       "scale" : "3x",
       "size" : "29x29"
     },
@@ -57,6 +49,34 @@
       "idiom" : "ios-marketing",
       "scale" : "1x",
       "size" : "1024x1024"
+    },
+    {
+      "filename" : "AppIcon-48.png",
+      "idiom" : "iphone",
+      "role" : "notificationCenter",
+      "scale" : "2x",
+      "size" : "24x24"
+    },
+    {
+      "filename" : "AppIcon-72.png",
+      "idiom" : "iphone",
+      "role" : "notificationCenter",
+      "scale" : "3x",
+      "size" : "24x24"
+    },
+    {
+      "filename" : "AppIcon-58.png",
+      "idiom" : "iphone",
+      "role" : "companionSettings",
+      "scale" : "2x",
+      "size" : "29x29"
+    },
+    {
+      "filename" : "AppIcon-87.png",
+      "idiom" : "iphone",
+      "role" : "companionSettings",
+      "scale" : "3x",
+      "size" : "29x29"
     }
   ],
   "info" : {
