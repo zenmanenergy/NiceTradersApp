@@ -91,6 +91,11 @@ struct NotificationsView: View {
         }
         .background(Color(red: 0.97, green: 0.98, blue: 0.99))
         .navigationBarHidden(true)
+        .onAppear {
+            // Ensure notifications are loaded when view appears
+            // This is especially important when app is opened from a notification tap
+            print("📱 [NotificationsView] onAppear - notifications count: \(notificationsManager.notifications.count)")
+        }
         .navigationDestination(isPresented: $navigateToListing) {
             if let listingId = selectedNotification?.deepLinkId {
                 SearchView(navigateToSearch: .constant(false))

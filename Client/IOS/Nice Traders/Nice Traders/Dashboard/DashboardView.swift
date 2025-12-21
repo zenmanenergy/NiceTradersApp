@@ -84,12 +84,29 @@ struct DashboardView: View {
             }
         }
         .onAppear {
+            print("📱 [DashboardView] onAppear called")
+            print("📱 [DashboardView] shouldNavigateToNotificationsOnAppLaunch: \(AppDelegate.shared.shouldNavigateToNotificationsOnAppLaunch)")
+            
             verifySessionAndLoadData()
             setupNavigationListeners(
                 onSearch: { navigateToSearch = true },
                 onCreateListing: { navigateToCreateListing = true },
                 onMessages: { navigateToMessages = true }
             )
+            
+            // Check if app was launched from a notification tap
+            if AppDelegate.shared.shouldNavigateToNotificationsOnAppLaunch {
+                print("📱 [DashboardView] ✅ Flag is TRUE - App was launched from notification!")
+                AppDelegate.shared.shouldNavigateToNotificationsOnAppLaunch = false
+                print("📱 [DashboardView] Reset flag to FALSE")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    print("📱 [DashboardView] Setting navigateToNotifications = true")
+                    navigateToNotifications = true
+                    print("📱 [DashboardView] navigateToNotifications is now: \(navigateToNotifications)")
+                }
+            } else {
+                print("📱 [DashboardView] Flag is FALSE - normal launch or already processed")
+            }
         }
         .onChange(of: navigateToContact) { oldValue, newValue in
             // When returning from MeetingDetailView (navigateToContact becomes false), refresh dashboard

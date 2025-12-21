@@ -11,7 +11,7 @@ struct SplashScreenView: View {
     var body: some View {
         Image("SplashScreen")
             .resizable()
-            .aspectRatio(contentMode: .fill)
+            .scaledToFit()
             .ignoresSafeArea()
     }
 }

@@ -67,7 +67,12 @@ class NotificationsManager: ObservableObject {
     
     func addNotification(_ notification: AppNotification) {
         DispatchQueue.main.async {
+            fputs("ADDNOTIFICATION_CALLED_\(notification.title)\n", stderr)
+            fflush(stderr)
+            print("🔔 [NotificationsManager] Adding notification: \(notification.title)")
+            print("🔔 [NotificationsManager] Before: \(self.notifications.count) notifications")
             self.notifications.insert(notification, at: 0)
+            print("🔔 [NotificationsManager] After: \(self.notifications.count) notifications")
             self.updateUnreadCount()
             self.saveNotifications()
         }
