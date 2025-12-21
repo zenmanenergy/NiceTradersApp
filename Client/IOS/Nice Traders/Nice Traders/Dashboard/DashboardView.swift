@@ -9,57 +9,58 @@ struct DashboardView: View {
     @State private var navigateToSearch = false
     @State private var navigateToProfile = false
     @State private var navigateToMessages = false
+    @State private var navigateToNotifications = false
     @State private var navigateToNegotiation = false
     @State private var selectedExchangeId: String?
     @State private var selectedTab = 0
     
     var body: some View {
-        ZStack {
-            // In-app notification banner (appears on top when notifications arrive while app is open)
-            VStack {
-                InAppNotificationBanner()
-                    .zIndex(1000)
-                Spacer()
-            }
-            
-            if viewModel.isLoading {
-                LoadingView()
-            } else if let error = viewModel.error {
-                ErrorView(error: error) {
-                    viewModel.loadDashboardData()
-                }
-            } else if navigateToContact && selectedContactData != nil {
-                MeetingDetailView(contactData: selectedContactData!, initialDisplayStatus: selectedDisplayStatus, navigateToContact: $navigateToContact)
-            } else {
-                MainDashboardView(
-                    viewModel: viewModel,
-                    selectedContactData: $selectedContactData,
-                    selectedDisplayStatus: $selectedDisplayStatus,
-                    navigateToContact: $navigateToContact,
-                    navigateToCreateListing: $navigateToCreateListing,
-                    navigateToProfile: $navigateToProfile,
-                    navigateToMessages: $navigateToMessages,
-                    navigateToNegotiation: $navigateToNegotiation,
-                    selectedExchangeId: $selectedExchangeId,
-                    onRefresh: {
+        ZStack(alignment: .top) {
+            // Main content
+            VStack(spacing: 0) {
+                if viewModel.isLoading {
+                    LoadingView()
+                } else if let error = viewModel.error {
+                    ErrorView(error: error) {
                         viewModel.loadDashboardData()
-                    },
-                    onRefreshAsync: { completion in
-                        viewModel.loadDashboardData()
-                        // Wait for data to load
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            var waitTime = 0.0
-                            let checkTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                                waitTime += 0.1
-                                if !viewModel.isLoading || waitTime > 5.0 {
-                                    timer.invalidate()
-                                    completion()
+                    }
+                } else if navigateToContact && selectedContactData != nil {
+                    MeetingDetailView(contactData: selectedContactData!, initialDisplayStatus: selectedDisplayStatus, navigateToContact: $navigateToContact)
+                } else {
+                    MainDashboardView(
+                        viewModel: viewModel,
+                        selectedContactData: $selectedContactData,
+                        selectedDisplayStatus: $selectedDisplayStatus,
+                        navigateToContact: $navigateToContact,
+                        navigateToCreateListing: $navigateToCreateListing,
+                        navigateToProfile: $navigateToProfile,
+                        navigateToMessages: $navigateToMessages,
+                        navigateToNegotiation: $navigateToNegotiation,
+                        selectedExchangeId: $selectedExchangeId,
+                        onRefresh: {
+                            viewModel.loadDashboardData()
+                        },
+                        onRefreshAsync: { completion in
+                            viewModel.loadDashboardData()
+                            // Wait for data to load
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                var waitTime = 0.0
+                                let checkTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                                    waitTime += 0.1
+                                    if !viewModel.isLoading || waitTime > 5.0 {
+                                        timer.invalidate()
+                                        completion()
+                                    }
                                 }
                             }
                         }
-                    }
-                )
+                    )
+                }
             }
+            
+            // In-app notification banner (always on top)
+            InAppNotificationBanner()
+                .zIndex(1000)
         }
         .navigationBarHidden(true)
         .navigationDestination(isPresented: $navigateToCreateListing) {
@@ -73,6 +74,9 @@ struct DashboardView: View {
         }
         .navigationDestination(isPresented: $navigateToMessages) {
             MessagesView(navigateToMessages: $navigateToMessages)
+        }
+        .navigationDestination(isPresented: $navigateToNotifications) {
+            NotificationsView()
         }
         .navigationDestination(isPresented: $navigateToNegotiation) {
             if let listingId = selectedExchangeId {
@@ -146,6 +150,9 @@ struct DashboardView: View {
         NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToMessages"), object: nil, queue: .main) { _ in
             onMessages()
         }
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToNotifications"), object: nil, queue: .main) { _ in
+            navigateToNotifications = true
+        }
         NotificationCenter.default.addObserver(forName: NSNotification.Name("NavigateToListing"), object: nil, queue: .main) { _ in
             navigateToSearch = true
         }
@@ -158,6 +165,7 @@ struct DashboardView: View {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToSearch"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToCreateListing"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToMessages"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToNotifications"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToListing"), object: nil)
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name("NavigateToNegotiations"), object: nil)
     }

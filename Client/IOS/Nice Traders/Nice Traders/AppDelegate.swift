@@ -76,7 +76,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         DispatchQueue.main.async {
             print("[AppDelegate] Application state: \(application.applicationState.rawValue)")
             if application.applicationState == .active {
-                print("[AppDelegate] App is active, posting InAppNotificationReceived")
+                print("[AppDelegate] App is active, posting InAppNotificationReceived and navigating to notifications")
                 // Show in-app banner notification
                 NotificationCenter.default.post(
                     name: NSNotification.Name("InAppNotificationReceived"),
@@ -86,6 +86,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                         "body": notificationBody,
                         "fullPayload": userInfo
                     ]
+                )
+                
+                // Navigate to notifications page
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("NavigateToNotifications"),
+                    object: nil
                 )
             } else {
                 print("[AppDelegate] App is not active (state: \(application.applicationState.rawValue))")

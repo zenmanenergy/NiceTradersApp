@@ -46,7 +46,7 @@ struct BottomNavigation: View {
                 NavItem(icon: "house.fill", label: "HOME", isActive: activeTab == "home", action: goHome)
                 NavItem(icon: "magnifyingglass", label: "SEARCH", isActive: activeTab == "search", action: goSearch)
                 NavItem(icon: "plus.circle.fill", label: "LIST", isActive: activeTab == "create", action: goCreateListing)
-                NavItem(icon: "message.fill", label: "MESSAGES", isActive: activeTab == "messages", action: goMessages)
+                NavItem(icon: "bell.fill", label: "NOTIFICATIONS", isActive: activeTab == "messages", action: goNotifications)
             }
             .padding(.vertical, 12)
             .background(Color.white)
@@ -74,9 +74,9 @@ struct BottomNavigation: View {
         NotificationCenter.default.post(name: NSNotification.Name("NavigateToCreateListing"), object: nil)
     }
     
-    func goMessages() {
-        // Post notification to navigate to messages
-        NotificationCenter.default.post(name: NSNotification.Name("NavigateToMessages"), object: nil)
+    func goNotifications() {
+        // Post notification to navigate to notifications
+        NotificationCenter.default.post(name: NSNotification.Name("NavigateToNotifications"), object: nil)
     }
     
     func logout() {
