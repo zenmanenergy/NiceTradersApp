@@ -357,9 +357,9 @@ struct MeetingLocationView: View {
                     listingId: contactData.listing.listingId,
                     currency: contactData.listing.currency,
                     amount: contactData.listing.amount,
-                    acceptCurrency: contactData.listing.acceptCurrency,
+                    acceptCurrency: contactData.listing.acceptCurrency ?? "USD",
                     sellerName: contactData.otherUser.firstName,
-                    willRoundToNearestDollar: contactData.listing.willRoundToNearestDollar,
+                    willRoundToNearestDollar: contactData.listing.willRoundToNearestDollar ?? false,
                     navigateToDashboard: $showProposeTimeView
                 )
             }
@@ -900,8 +900,10 @@ extension MeetingLocationView {
             
             do {
                 let result = try JSONDecoder().decode(RespondToProposalResponse.self, from: data)
-                if result.success {
-                    print("✓ Responded to proposal: \(response)")
+                DispatchQueue.main.async {
+                    if result.success {
+                        print("✓ Responded to proposal: \(response)")
+                    }
                 }
             } catch {
                 print("ERROR: Failed to parse response: \(error)")
@@ -1149,10 +1151,9 @@ extension MeetingLocationView {
     }
     
     func openAppleDirections(latitude: Double, longitude: Double, name: String) {
-        let destinationCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        let mapItem = MKMapItem(
-            location: CLLocationCoordinate2DMake(destinationCoordinate.latitude, destinationCoordinate.longitude)
-        )
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
         mapItem.name = name
         
         let launchOptions = [MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving]
@@ -1284,11 +1285,12 @@ extension MeetingLocationView {
                     )
                     
                     if distance <= Double(contactData.listing.radius) {
+                        let address = mapItem.placemark.title ?? mapItem.placemark.thoroughfare ?? ""
                         return MapSearchResult(
                             id: "\(index)",
                             name: mapItem.name ?? "Unknown",
                             coordinate: mapItem.placemark.coordinate,
-                            address: mapItem.placemark.title ?? "",
+                            address: address,
                             distance: distance
                         )
                     }
