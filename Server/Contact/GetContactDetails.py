@@ -77,8 +77,8 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 u.DateCreated as user_joined_date,
                 u.DateCreated as last_active,
                 u.IsActive as verified,
-                4.5 as rating,
-                0 as total_trades
+                u.Rating as rating,
+                u.TotalExchanges as total_trades
             FROM listings l
             INNER JOIN users u ON l.user_id = u.user_id
             WHERE l.listing_id = %s 

@@ -36,6 +36,10 @@ struct MeetingDetailView: View {
     @State var userPaidAt: String? = nil
     @State var otherUserPaidAt: String? = nil
     
+    // User rating and trades state
+    @State var otherUserRating: Double? = nil
+    @State var otherUserTotalTrades: Int? = nil
+    
     // Countdown timer
     @State var countdownText: String = ""
     @State var countdownTimer: Timer? = nil
@@ -246,13 +250,44 @@ struct MeetingDetailView: View {
     
     private var detailsView: some View {
         VStack(spacing: 16) {
-            exchangeDetailsSection
-            traderInformationSection
-            timeProposalSection
-            paymentTrackingSection
-            locationProposalSection
-            ratingSection
+            // Action buttons at the top
             actionButtonsSection
+            
+            // Check acceptance status
+            let timeExplicitlyAccepted = timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)
+            let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+            let locationAccepted = locationProposals.contains { $0.status == "accepted" }
+            
+            // Show time proposal at top if not accepted
+            if !timeExplicitlyAccepted {
+                timeProposalSection
+            }
+            
+            // Show location proposal at top if not accepted
+            if !locationAccepted {
+                locationProposalSection
+            }
+            
+            // Payment tracking
+            paymentTrackingSection
+            
+            // If location is accepted, show it
+            if locationAccepted {
+                locationProposalSection
+            }
+            
+            // If time is accepted (and location isn't), show it
+            if timeExplicitlyAccepted && !locationAccepted {
+                acceptedTimeSection
+            }
+            
+            exchangeDetailsSection
+            
+            traderInformationSection
+            ratingSection
+            
+            // Cancel buttons at the bottom
+            cancelButtonsSection
         }
     }
 }

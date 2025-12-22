@@ -6,7 +6,7 @@ Creates a listing_meeting_time row with accepted_at = NULL
 
 import pymysql
 import pymysql.cursors
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import uuid
 
 # Test values
@@ -43,7 +43,10 @@ try:
     
     # Create time negotiation with buyer proposing
     time_negotiation_id = f"TNL-{uuid.uuid4().hex[:35]}"
-    proposed_time = datetime.now() + timedelta(days=2)
+    # Store as UTC time - convert current local time to UTC
+    proposed_time_utc = datetime.now(timezone.utc) + timedelta(days=2)
+    # Remove timezone info for MySQL storage (MySQL will treat it as UTC)
+    proposed_time = proposed_time_utc.replace(tzinfo=None)
     
     cursor.execute("""
         INSERT INTO listing_meeting_time

@@ -13,6 +13,9 @@ extension MeetingDetailView {
     // MARK: - Load Meeting Proposals
     
     func loadMeetingProposals() {
+        // First, fetch the user's rating and trades
+        loadUserRating()
+        
         guard let sessionId = SessionManager.shared.sessionId else {
             print("🔴 [MDV-LOAD] ERROR: No session ID available")
             return
@@ -154,6 +157,39 @@ extension MeetingDetailView {
                 }
                 
                 print("🟠 [MDV-LOAD] ===== END LOAD PROPOSALS =====")
+            }
+        }.resume()
+    }
+    
+    // MARK: - Load User Rating and Trades
+    
+    private func loadUserRating() {
+        let baseURL = Settings.shared.baseURL
+        var components = URLComponents(string: "\(baseURL)/Contact/GetContactDetails")!
+        components.queryItems = [
+            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
+        ]
+        
+        guard let url = components.url else { return }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                guard let data = data, 
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let success = json["success"] as? Bool, success,
+                      let listing = json["listing"] as? [String: Any],
+                      let userInfo = listing["user"] as? [String: Any] else {
+                    return
+                }
+                
+                let rating = (userInfo["rating"] as? NSNumber)?.doubleValue ?? 0
+                let trades = (userInfo["trades"] as? NSNumber)?.intValue ?? 0
+                
+                print("[MDV] Updated user rating: \(rating), trades: \(trades)")
+                
+                // Update state variables with real rating and trades
+                self.otherUserRating = rating
+                self.otherUserTotalTrades = trades
             }
         }.resume()
     }

@@ -102,66 +102,83 @@ struct ProposeTimeView: View {
                             Divider()
                             
                             // Time Picker with 15-minute increments
-                            HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Time")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
-                                
-                                Spacer()
+                                    .padding(.horizontal)
                                 
                                 HStack(spacing: 8) {
                                     // Hour Picker
-                                    Picker("Hour", selection: Binding(
-                                        get: {
-                                            Calendar.current.component(.hour, from: proposedDate)
-                                        },
-                                        set: { newHour in
-                                            proposedDate = Calendar.current.date(
-                                                bySettingHour: newHour,
-                                                minute: Calendar.current.component(.minute, from: proposedDate),
-                                                second: 0,
-                                                of: proposedDate
-                                            ) ?? proposedDate
+                                    VStack(spacing: 4) {
+                                        Text("Hour")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Picker("Hour", selection: Binding(
+                                            get: {
+                                                Calendar.current.component(.hour, from: proposedDate)
+                                            },
+                                            set: { newHour in
+                                                proposedDate = Calendar.current.date(
+                                                    bySettingHour: newHour,
+                                                    minute: Calendar.current.component(.minute, from: proposedDate),
+                                                    second: 0,
+                                                    of: proposedDate
+                                                ) ?? proposedDate
+                                            }
+                                        )) {
+                                            ForEach(0..<24, id: \.self) { hour in
+                                                Text(String(format: "%02d", hour)).tag(hour)
+                                            }
                                         }
-                                    )) {
-                                        ForEach(0..<24, id: \.self) { hour in
-                                            Text(String(format: "%02d", hour)).tag(hour)
-                                        }
+                                        .pickerStyle(.wheel)
+                                        .frame(height: 120)
                                     }
-                                    .frame(width: 50)
-                                    
-                                    Text(":").font(.headline)
                                     
                                     // Minute Picker (15-minute increments)
-                                    Picker("Minute", selection: Binding(
-                                        get: {
-                                            let minute = Calendar.current.component(.minute, from: proposedDate)
-                                            return (minute / 15) * 15
-                                        },
-                                        set: { newMinute in
-                                            proposedDate = Calendar.current.date(
-                                                bySettingHour: Calendar.current.component(.hour, from: proposedDate),
-                                                minute: newMinute,
-                                                second: 0,
-                                                of: proposedDate
-                                            ) ?? proposedDate
+                                    VStack(spacing: 4) {
+                                        Text("Minute")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Picker("Minute", selection: Binding(
+                                            get: {
+                                                let minute = Calendar.current.component(.minute, from: proposedDate)
+                                                return (minute / 15) * 15
+                                            },
+                                            set: { newMinute in
+                                                proposedDate = Calendar.current.date(
+                                                    bySettingHour: Calendar.current.component(.hour, from: proposedDate),
+                                                    minute: newMinute,
+                                                    second: 0,
+                                                    of: proposedDate
+                                                ) ?? proposedDate
+                                            }
+                                        )) {
+                                            Text("00").tag(0)
+                                            Text("15").tag(15)
+                                            Text("30").tag(30)
+                                            Text("45").tag(45)
                                         }
-                                    )) {
-                                        Text("00").tag(0)
-                                        Text("15").tag(15)
-                                        Text("30").tag(30)
-                                        Text("45").tag(45)
+                                        .pickerStyle(.wheel)
+                                        .frame(height: 120)
                                     }
-                                    .frame(width: 50)
                                     
-                                    Text(Calendar.current.component(.hour, from: proposedDate) < 12 ? "AM" : "PM")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 35)
+                                    // AM/PM display
+                                    VStack(spacing: 4) {
+                                        Text("AM/PM")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text(Calendar.current.component(.hour, from: proposedDate) < 12 ? "AM" : "PM")
+                                            .font(.headline)
+                                            .foregroundColor(Color(hex: "667eea"))
+                                            .frame(height: 120, alignment: .center)
+                                    }
                                 }
-                                .pickerStyle(.segmented)
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                         }
                         .padding()
                         .background(Color(UIColor.secondarySystemGroupedBackground))
@@ -239,8 +256,8 @@ struct ProposeTimeView: View {
             .background(Color(UIColor.systemGroupedBackground))
             .alert("Proposal Sent!", isPresented: $showSuccess) {
                 Button("OK") {
-                    // Navigate back to dashboard
                     navigateToDashboard = true
+                    dismiss()
                 }
             } message: {
                 Text("Your meeting time proposal has been sent to \(sellerName). You'll be notified when they respond.")

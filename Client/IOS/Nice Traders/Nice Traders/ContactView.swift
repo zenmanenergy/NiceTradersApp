@@ -248,15 +248,24 @@ struct ContactView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
-                HStack(spacing: 8) {
+                HStack(spacing: 4) {
                     ForEach(0..<5) { index in
-                        Text("★")
-                            .font(.system(size: 16))
-                            .foregroundColor(index < Int(contactData.other_user.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
+                        let rating = contactData.other_user.rating ?? 0
+                        let starIndex = Double(index)
+                        
+                        if starIndex < rating {
+                            Image(systemName: "star.fill")
+                                .foregroundColor(Color(hex: "fbbf24"))
+                        } else if starIndex < rating + 1 && rating.truncatingRemainder(dividingBy: 1) > 0 {
+                            Image(systemName: "star.leadinghalf.fill")
+                                .foregroundColor(Color(hex: "fbbf24"))
+                        } else {
+                            Image(systemName: "star")
+                                .foregroundColor(Color(hex: "e2e8f0"))
+                        }
                     }
-                    
-                    Text("(\\(contactData.other_user.total_trades ?? 0) " + localizationManager.localize("TRADES") + ")")
-                        .font(.system(size: 14))
+                    Text("(\(contactData.other_user.total_trades ?? 0) \(localizationManager.localize("TRADES")))")
+                        .font(.system(size: 12))
                         .foregroundColor(Color(hex: "718096"))
                 }
             }

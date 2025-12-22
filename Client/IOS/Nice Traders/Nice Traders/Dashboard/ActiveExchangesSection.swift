@@ -140,18 +140,6 @@ struct ActiveExchangeCard: View {
                 }
             
             getStatusView()
-            
-            HStack {
-                Text("💬 " + localizationManager.localize("START_CONVERSATION"))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(red: 1.0, green: 0.84, blue: 0.0))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(12)
-                
-                Spacer()
-            }
         }
         .padding(16)
         .background(Color.white.opacity(0.1))

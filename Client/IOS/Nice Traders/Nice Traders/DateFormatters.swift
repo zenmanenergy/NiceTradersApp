@@ -32,6 +32,7 @@ struct DateFormatters {
         if date == nil {
             let fallbackFormatter = DateFormatter()
             fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+            fallbackFormatter.timeZone = TimeZone(abbreviation: "UTC")
             
             let formats = [
                 "yyyy-MM-dd'T'HH:mm:ss",      // 2025-11-28T20:13:25
@@ -61,6 +62,7 @@ struct DateFormatters {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d '@' h:mma"
         formatter.timeZone = TimeZone.current  // Use user's local timezone
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         
         return formatter.string(from: date)
     }

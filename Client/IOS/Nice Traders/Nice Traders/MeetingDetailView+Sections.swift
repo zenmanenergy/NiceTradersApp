@@ -84,7 +84,7 @@ extension MeetingDetailView {
             
             HStack(spacing: 4) {
                 ForEach(0..<5) { index in
-                    let rating = contactData.otherUser.rating ?? 0
+                    let rating = otherUserRating ?? contactData.otherUser.rating ?? 0
                     let starIndex = Double(index)
                     
                     if starIndex < rating {
@@ -98,7 +98,7 @@ extension MeetingDetailView {
                             .foregroundColor(Color(hex: "e2e8f0"))
                     }
                 }
-                Text("(\(contactData.otherUser.totalTrades ?? 0) trades)")
+                Text("(\(otherUserTotalTrades ?? contactData.otherUser.totalTrades ?? 0) trades)")
                     .font(.system(size: 12))
                     .foregroundColor(Color(hex: "718096"))
             }
@@ -411,24 +411,27 @@ extension MeetingDetailView {
                         
                         // Show proposed location details
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "mappin.circle.fill")
-                                    .foregroundColor(Color(hex: "667eea"))
-                                    .font(.system(size: 14))
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(localizationManager.localize("PROPOSED_LOCATION"))
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
+                            Button(action: { activeTab = .location }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .foregroundColor(Color(hex: "667eea"))
+                                        .font(.system(size: 14))
                                     
-                                    Text(pendingLoc.proposedLocation)
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(Color(hex: "2d3748"))
-                                        .lineLimit(2)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(localizationManager.localize("PROPOSED_LOCATION"))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(pendingLoc.proposedLocation)
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(Color(hex: "667eea"))
+                                            .lineLimit(2)
+                                    }
+                                    
+                                    Spacer()
                                 }
-                                
-                                Spacer()
                             }
+                            .contentShape(Rectangle())
                             
                             if let message = pendingLoc.message, !message.isEmpty {
                                 Divider()
@@ -509,24 +512,27 @@ extension MeetingDetailView {
                         
                         // Show proposed location details
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "mappin.circle.fill")
-                                    .foregroundColor(Color(hex: "667eea"))
-                                    .font(.system(size: 14))
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(localizationManager.localize("PROPOSED_LOCATION"))
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.gray)
+                            Button(action: { activeTab = .location }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .foregroundColor(Color(hex: "667eea"))
+                                        .font(.system(size: 14))
                                     
-                                    Text(pendingLoc.proposedLocation)
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(Color(hex: "2d3748"))
-                                        .lineLimit(2)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(localizationManager.localize("PROPOSED_LOCATION"))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(pendingLoc.proposedLocation)
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundColor(Color(hex: "667eea"))
+                                            .lineLimit(2)
+                                    }
+                                    
+                                    Spacer()
                                 }
-                                
-                                Spacer()
                             }
+                            .contentShape(Rectangle())
                             
                             if let message = pendingLoc.message, !message.isEmpty {
                                 Divider()
@@ -726,63 +732,65 @@ extension MeetingDetailView {
     
     @ViewBuilder
     var actionButtonsSection: some View {
-        // Only show action buttons when both time and location are accepted
+        // Only show mark trade as complete button when both time and location are accepted
         if timeAcceptedAt != nil && locationAcceptedAt != nil {
-            VStack(alignment: .center, spacing: 12) {
-                // Mark Trade as Complete button
-                Button(action: completeExchange) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "checkmark.seal.fill")
-                            .font(.system(size: 14))
-                        Text("Mark Trade as Complete")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+            Button(action: completeExchange) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 14))
+                    Text("Mark Trade as Complete")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(12)
+                .foregroundColor(.white)
+                .background(Color(hex: "10b981"))
+                .cornerRadius(8)
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        }
+    }
+    
+    @ViewBuilder
+    var cancelButtonsSection: some View {
+        // Only show cancel buttons when both time and location are accepted
+        if timeAcceptedAt != nil && locationAcceptedAt != nil {
+            VStack(spacing: 8) {
+                // Cancel Meeting Time button - only show if time accepted
+                if timeAcceptedAt != nil {
+                    Button(action: cancelMeetingTime) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "clock.badge.xmark.fill")
+                                .font(.system(size: 14))
+                            Text("Cancel Meeting Time")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(10)
+                        .foregroundColor(.white)
+                        .background(Color(hex: "ef4444"))
+                        .cornerRadius(8)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(12)
-                    .foregroundColor(.white)
-                    .background(Color(hex: "10b981"))
-                    .cornerRadius(8)
                 }
                 
-                // Extra spacing to prevent accidental clicks
-                Spacer()
-                    .frame(height: 24)
-                
-                // Cancel buttons section
-                VStack(spacing: 8) {
-                    // Cancel Meeting Time button - only show if time accepted
-                    if timeAcceptedAt != nil {
-                        Button(action: cancelMeetingTime) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "clock.badge.xmark.fill")
-                                    .font(.system(size: 14))
-                                Text("Cancel Meeting Time")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(10)
-                            .foregroundColor(.white)
-                            .background(Color(hex: "ef4444"))
-                            .cornerRadius(8)
+                // Cancel Location button - only show if location accepted
+                if locationAcceptedAt != nil {
+                    Button(action: cancelLocation) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "location.slash.fill")
+                                .font(.system(size: 14))
+                            Text("Cancel Location")
+                                .font(.system(size: 14, weight: .semibold))
                         }
-                    }
-                    
-                    // Cancel Location button - only show if location accepted
-                    if locationAcceptedAt != nil {
-                        Button(action: cancelLocation) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "location.slash.fill")
-                                    .font(.system(size: 14))
-                                Text("Cancel Location")
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(10)
-                            .foregroundColor(.white)
-                            .background(Color(hex: "ef4444"))
-                            .cornerRadius(8)
-                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(10)
+                        .foregroundColor(.white)
+                        .background(Color(hex: "ef4444"))
+                        .cornerRadius(8)
                     }
                 }
             }
@@ -807,5 +815,72 @@ extension MeetingDetailView {
     
     func formatDateTime(_ dateString: String) -> String {
         return DateFormatters.formatCompact(dateString)
+    }
+    
+    @ViewBuilder
+    var acceptedTimeSection: some View {
+        // Show accepted time if time is explicitly accepted but location is not
+        let timeExplicitlyAccepted = timeAcceptedAt != nil && !(timeAcceptedAt?.isEmpty ?? true)
+        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+        let locationAccepted = locationProposals.contains { $0.status == "accepted" }
+        
+        if timeExplicitlyAccepted && !locationAccepted, let meetingTime = currentMeeting?.time {
+            VStack(alignment: .center, spacing: 12) {
+                HStack {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(Color(hex: "38a169"))
+                        .font(.system(size: 20))
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Meeting Time Confirmed!")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(Color(hex: "38a169"))
+                        
+                        Text(DateFormatters.formatCompact(meetingTime))
+                            .font(.system(size: 15))
+                            .foregroundColor(Color(hex: "2d3748"))
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+                .background(Color(hex: "ecfdf5"))
+                .cornerRadius(8)
+                
+                // Countdown Timer
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "hourglass.bottomhalf.fill")
+                            .foregroundColor(Color(hex: "f97316"))
+                            .font(.system(size: 14))
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Time Until Meeting")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                            
+                            Text(countdownText.isEmpty ? "Calculating..." : countdownText)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(Color(hex: "f97316"))
+                        }
+                        
+                        Spacer()
+                    }
+                }
+                .padding()
+                .background(Color(hex: "fafafa"))
+                .cornerRadius(8)
+            }
+            .padding()
+            .onAppear {
+                startCountdownTimer(meetingTime: meetingTime)
+            }
+            .onDisappear {
+                countdownTimer?.invalidate()
+            }
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+        }
     }
 }
