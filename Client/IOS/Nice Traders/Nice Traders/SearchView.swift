@@ -57,6 +57,7 @@ struct SearchView: View {
     @State private var navigateToCreateListing = false
     @State private var navigateToMessages = false
     @State private var navigateToDashboard = false
+    @State private var shouldScrollToResults = false
     
     var filteredCurrencies: [String] {
         if currencySearchQuery.isEmpty {
@@ -73,18 +74,31 @@ struct SearchView: View {
             headerView
             
             // List View
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Quick Search
-                    quickSearchSection
-                    
-                    // Results Section - only show if a search has been performed
-                    if hasSearched {
-                        resultsSection
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Quick Search
+                        quickSearchSection
+                        
+                        // Results Section - only show if a search has been performed
+                        if hasSearched {
+                            resultsSection
+                                .id("results")
+                        }
+                    }
+                }
+                .background(Color(hex: "f8fafc"))
+                .onChange(of: shouldScrollToResults) { newValue in
+                    if newValue {
+                        withAnimation {
+                            proxy.scrollTo("results", anchor: .top)
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            shouldScrollToResults = false
+                        }
                     }
                 }
             }
-            .background(Color(hex: "f8fafc"))
             
             // Bottom Navigation
             BottomNavigation(activeTab: "search", isContactView: false, contactActiveTab: .constant(nil))
@@ -713,6 +727,9 @@ struct SearchView: View {
                     pagination.hasMore = paginationData["hasMore"] as? Bool ?? false
                     print("Pagination: total=\(pagination.total), hasMore=\(pagination.hasMore)")
                 }
+                
+                // Scroll to results
+                shouldScrollToResults = true
                 
                 print("=== SEARCH REQUEST COMPLETE ===\n")
             }

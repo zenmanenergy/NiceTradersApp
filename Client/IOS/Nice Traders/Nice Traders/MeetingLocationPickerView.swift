@@ -217,9 +217,11 @@ struct MeetingLocationPickerView: View {
                     .cornerRadius(12)
                     .shadow(radius: 8)
                     .padding()
+                    .padding(.bottom, 200)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea(.keyboard)
             
             // Confirm Button
             if selectedCoordinate != nil {
