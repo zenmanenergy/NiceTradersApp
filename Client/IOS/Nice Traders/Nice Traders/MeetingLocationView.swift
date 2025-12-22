@@ -40,6 +40,8 @@ struct MeetingLocationView: View {
     @State private var highlightedProposalId: String? = nil
     @State private var highlightedResultId: String? = nil
     @State private var keyboardHeight: CGFloat = 0
+    @State private var hasSelectedItem: Bool = false
+    @FocusState private var isSearchFieldFocused: Bool
     
     init(contactData: ContactData, initialDisplayStatus: String?, currentMeeting: Binding<CurrentMeeting?>, meetingProposals: Binding<[MeetingProposal]>, onBackTapped: (() -> Void)? = nil) {
         self.initialContactData = contactData
@@ -53,8 +55,8 @@ struct MeetingLocationView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Map at the top - only show when keyboard is hidden
-                if keyboardHeight == 0 {
+                // Map at the top - shows unless search field is focused
+                if !isSearchFieldFocused {
                     ZStack {
                         if mapIsReady {
                             let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
@@ -205,7 +207,7 @@ struct MeetingLocationView: View {
                     .padding(16)
                 }
                 
-                // Search section
+                // Search section - ALWAYS visible
                 VStack(alignment: .leading, spacing: 12) {
                     let hasAcceptedLocation = locationProposals.contains { $0.status == "accepted" }
                     
@@ -215,6 +217,7 @@ struct MeetingLocationView: View {
                                 .foregroundColor(.gray)
                             
                             TextField("Search locations in area...", text: $searchText)
+                                .focused($isSearchFieldFocused)
                                 .onChange(of: searchText) {
                                     if !searchText.isEmpty {
                                         searchLocations()
@@ -228,6 +231,7 @@ struct MeetingLocationView: View {
                                     searchText = ""
                                     searchResults = []
                                     selectedResultId = nil
+                                    hasSelectedItem = false
                                 }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundColor(.gray)
@@ -247,33 +251,41 @@ struct MeetingLocationView: View {
                                     .foregroundColor(.gray)
                                 Spacer()
                             }
-                        } else if !searchResults.isEmpty {
+                        }
+                        
+                        // Results section - ALWAYS visible when there are results
+                        if !searchResults.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Results (\(searchResults.count))")
                                     .font(.caption)
                                     .foregroundColor(.gray)
                                 
-                                VStack(alignment: .leading, spacing: 8) {
-                                    ForEach(searchResults, id: \.id) { result in
-                                        SearchResultRow(
-                                            result: result,
-                                            displayStatus: displayStatus,
-                                            isSelected: selectedResultId == result.id,
-                                            onTap: {
-                                                selectedResultId = result.id
-                                                centerMapOnResult(result)
-                                            },
-                                            onProposeLocation: {
-                                                selectedLocationForProposal = result
-                                                if let latestProposal = meetingProposals.first {
-                                                    currentMeetingTime = latestProposal.proposedTime
+                                ScrollView {
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        ForEach(searchResults, id: \.id) { result in
+                                            SearchResultRow(
+                                                result: result,
+                                                displayStatus: displayStatus,
+                                                isSelected: selectedResultId == result.id,
+                                                onTap: {
+                                                    selectedResultId = result.id
+                                                    hasSelectedItem = true
+                                                    isSearchFieldFocused = false
+                                                    centerMapOnResult(result)
+                                                },
+                                                onProposeLocation: {
+                                                    selectedLocationForProposal = result
+                                                    if let latestProposal = meetingProposals.first {
+                                                        currentMeetingTime = latestProposal.proposedTime
+                                                    }
+                                                    showLocationProposalConfirm = true
                                                 }
-                                                showLocationProposalConfirm = true
-                                            }
-                                        )
+                                            )
+                                        }
                                     }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(maxHeight: 300)
                             }
                         }
                     }
@@ -281,7 +293,7 @@ struct MeetingLocationView: View {
                 .padding(16)
                 .background(Color(hex: "f0f9ff"))
                 
-                // Bottom content area - scrollable
+                // Bottom content area - scrollable (proposals only)
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         VStack(spacing: 12) {
