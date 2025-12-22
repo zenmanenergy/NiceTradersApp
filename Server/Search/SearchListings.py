@@ -111,7 +111,19 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
             base_query += " AND " + " AND ".join(conditions)
             
         # Add ordering and pagination
-        base_query += " ORDER BY l.created_at DESC"
+        # If distance filtering is applied, sort by distance ascending (closest first)
+        # Otherwise sort by creation date descending (newest first)
+        if MaxDistance and UserLatitude and UserLongitude:
+            base_query += """ ORDER BY (
+                6371 * acos(
+                    cos(radians(%s)) * cos(radians(l.latitude)) *
+                    cos(radians(l.longitude) - radians(%s)) +
+                    sin(radians(%s)) * sin(radians(l.latitude))
+                )
+            ) ASC"""
+            params.extend([float(UserLatitude), float(UserLongitude), float(UserLatitude)])
+        else:
+            base_query += " ORDER BY l.created_at DESC"
         
         # Set defaults for pagination
         limit_val = int(Limit) if Limit else 20

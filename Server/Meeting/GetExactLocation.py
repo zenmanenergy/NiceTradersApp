@@ -1,6 +1,6 @@
 from _Lib import Database
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 def get_exact_location(session_id, listing_id):
     """
@@ -72,6 +72,12 @@ def get_exact_location(session_id, listing_id):
         # Allow access 1 hour before and up to 2 hours after meeting time
         is_meeting_time = (-1 <= time_until_meeting <= 2)
         
+        # Convert meeting_time to UTC ISO format for API response
+        meeting_time_str = None
+        if meeting_time:
+            dt_with_tz = meeting_time.replace(tzinfo=timezone.utc)
+            meeting_time_str = dt_with_tz.isoformat()
+        
         if is_meeting_time:
             # Reveal exact location
             print(f"[GetExactLocation] Revealing exact location - meeting in {time_until_meeting:.1f} hours")
@@ -84,7 +90,7 @@ def get_exact_location(session_id, listing_id):
                     'latitude': float(meeting['meeting_location_lat']) if meeting['meeting_location_lat'] else None,
                     'longitude': float(meeting['meeting_location_lng']) if meeting['meeting_location_lng'] else None
                 },
-                'meeting_time': meeting_time.isoformat(),
+                'meeting_time': meeting_time_str,
                 'time_until_meeting_hours': time_until_meeting
             })
         else:
@@ -99,7 +105,7 @@ def get_exact_location(session_id, listing_id):
                     'latitude': None,
                     'longitude': None
                 },
-                'meeting_time': meeting_time.isoformat(),
+                'meeting_time': meeting_time_str,
                 'time_until_meeting_hours': time_until_meeting,
                 'message': 'Exact location will be revealed 1 hour before your meeting'
             })

@@ -24,6 +24,19 @@ def get_profile(SessionId):
 			connection.close()
 			return '{"success": false, "error": "Invalid session"}'
 		
+		# Get completed exchanges count
+		user_id = user_result['user_id']
+		completed_query = """
+			SELECT COUNT(DISTINCT l.listing_id) as count
+			FROM listings l
+			JOIN listing_meeting_time lmt ON l.listing_id = lmt.listing_id
+			WHERE (l.user_id = %s OR lmt.buyer_id = %s)
+			AND l.status = 'completed'
+		"""
+		cursor.execute(completed_query, (user_id, user_id))
+		completed_result = cursor.fetchone()
+		completed_exchanges = completed_result['count'] if completed_result else 0
+		
 		# Format the response
 		profile_data = {
 			"success": True,
@@ -34,6 +47,7 @@ def get_profile(SessionId):
 				"joinDate": user_result['DateCreated'].strftime('%B %d, %Y') if user_result['DateCreated'] else '',
 				"rating": float(user_result['Rating']) if user_result['Rating'] else 0.0,
 				"totalExchanges": int(user_result['TotalExchanges']) if user_result['TotalExchanges'] else 0,
+				"completedExchanges": int(completed_exchanges) if completed_exchanges else 0,
 				"location": user_result['Location'] or '',
 				"bio": user_result['Bio'] or '',
 				"preferredLanguage": user_result.get('PreferredLanguage', 'en') or 'en'

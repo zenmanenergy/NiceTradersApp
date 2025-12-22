@@ -32,7 +32,6 @@ struct CreateListingView: View {
     @State private var selectedAcceptCurrency: Currency?
     @State private var location: String = ""
     @State private var locationRadius: String = "5"
-    @State private var meetingPreference: String = "public"
     @State private var availableUntil: Date = Calendar.current.date(byAdding: .day, value: 180, to: Date()) ?? Date()
     @State private var willRoundToNearestDollar: Bool = true
     
@@ -626,59 +625,6 @@ struct CreateListingView: View {
                 }
             }
             
-            // Meeting Preference
-            VStack(alignment: .leading, spacing: 8) {
-                Text(localizationManager.localize("MEETING_PREFERENCE"))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Color(hex: "2d3748"))
-                
-                VStack(spacing: 12) {
-                    Button(action: {
-                        meetingPreference = "public"
-                    }) {
-                        HStack {
-                            Image(systemName: meetingPreference == "public" ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(meetingPreference == "public" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
-                            
-                            Text(localizationManager.localize("PUBLIC_PLACES_ONLY_RECOMMENDED"))
-                                .font(.system(size: 15))
-                                .foregroundColor(Color(hex: "4a5568"))
-                            
-                            Spacer()
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(meetingPreference == "public" ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
-                        )
-                    }
-                    
-                    Button(action: {
-                        meetingPreference = "flexible"
-                    }) {
-                        HStack {
-                            Image(systemName: meetingPreference == "flexible" ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(meetingPreference == "flexible" ? Color(hex: "667eea") : Color(hex: "cbd5e0"))
-                            
-                            Text(localizationManager.localize("FLEXIBLE_MEETING_LOCATIONS"))
-                                .font(.system(size: 15))
-                                .foregroundColor(Color(hex: "4a5568"))
-                            
-                            Spacer()
-                        }
-                        .padding(16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(meetingPreference == "flexible" ? Color(hex: "667eea") : Color(hex: "e2e8f0"), lineWidth: 2)
-                        )
-                    }
-                }
-            }
-            
             // Available Until
             VStack(alignment: .leading, spacing: 8) {
                 Text(localizationManager.localize("AVAILABLE_UNTIL"))
@@ -796,18 +742,6 @@ struct CreateListingView: View {
                                 .font(.system(size: 14))
                                 .foregroundColor(Color(hex: "718096"))
                         }
-                    }
-                    
-                    HStack {
-                        Text(localizationManager.localize("MEETING_COLON"))
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(Color(hex: "4a5568"))
-                        
-                        Spacer()
-                        
-                        Text(meetingPreference == "public" ? "Public places only" : "Flexible locations")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(hex: "718096"))
                     }
                     
                     HStack {
@@ -1259,7 +1193,6 @@ struct CreateListingView: View {
             URLQueryItem(name: "latitude", value: latitude),
             URLQueryItem(name: "longitude", value: longitude),
             URLQueryItem(name: "locationRadius", value: locationRadius),
-            URLQueryItem(name: "meetingPreference", value: meetingPreference),
             URLQueryItem(name: "availableUntil", value: availableUntilString),
             URLQueryItem(name: "willRoundToNearestDollar", value: willRoundToNearestDollar ? "true" : "false")
         ]

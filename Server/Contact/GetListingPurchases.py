@@ -1,6 +1,6 @@
 from _Lib import Database
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
 sys.path.insert(0, '/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server')
 from Dashboard.GetUserDashboard import calculate_negotiation_status
@@ -88,7 +88,7 @@ def get_listing_purchases(session_id):
             
             purchase = {
                 'listing_id': row['listing_id'],
-                'meeting_time': row['meeting_time'].isoformat() if row['meeting_time'] else None,
+                'meeting_time': row['meeting_time'].replace(tzinfo=timezone.utc).isoformat() if row['meeting_time'] else None,
                 'accepted_at': row['accepted_at'].isoformat() if row['accepted_at'] else None,
                 'rejected_at': row['rejected_at'].isoformat() if row['rejected_at'] else None,
                 'buyer_paid_at': row['buyer_paid_at'].isoformat() if row['buyer_paid_at'] else None,

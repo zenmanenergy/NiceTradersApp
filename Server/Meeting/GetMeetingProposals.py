@@ -1,6 +1,7 @@
 from _Lib import Database
 from Dashboard.GetUserDashboard import calculate_negotiation_status
 import json
+from datetime import timezone
 
 def get_meeting_proposals(session_id, listing_id):
     """Get all meeting proposals for a listing (using new normalized tables)"""
@@ -107,10 +108,17 @@ def get_meeting_proposals(session_id, listing_id):
             proposer_name = proposal.get('proposer_name') or 'Unknown'
             print(f"  - Time proposal: id={proposal['time_negotiation_id']}, status={status}, time={proposal['meeting_time']}, proposed_by={proposer_name}")
             
+            # Convert naive datetime to UTC ISO format
+            proposed_time_str = None
+            if proposal['meeting_time']:
+                # Assume stored time is in UTC
+                dt_with_tz = proposal['meeting_time'].replace(tzinfo=timezone.utc)
+                proposed_time_str = dt_with_tz.isoformat()
+            
             response['proposals'].append({
                 'proposal_id': proposal['time_negotiation_id'],
                 'type': 'time',
-                'proposed_time': proposal['meeting_time'].isoformat() if proposal['meeting_time'] else None,
+                'proposed_time': proposed_time_str,
                 'proposed_location': '',
                 'proposed_by_id': proposal['proposed_by'],
                 'proposed_by_name': proposer_name,
@@ -122,13 +130,18 @@ def get_meeting_proposals(session_id, listing_id):
             # If this is the accepted time, store it for current_meeting
             if status == 'accepted':
                 time_accepted_at = proposal['accepted_at']
+                accepted_at_str = None
+                if proposal['accepted_at']:
+                    dt_with_tz = proposal['accepted_at'].replace(tzinfo=timezone.utc)
+                    accepted_at_str = dt_with_tz.isoformat()
+                
                 response['current_meeting'] = {
-                    'time': proposal['meeting_time'].isoformat() if proposal['meeting_time'] else None,
+                    'time': proposed_time_str,
                     'location': None,
                     'latitude': None,
                     'longitude': None,
-                    'agreed_at': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None,
-                    'timeAcceptedAt': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None,
+                    'agreed_at': accepted_at_str,
+                    'timeAcceptedAt': accepted_at_str,
                     'locationAcceptedAt': None
                 }
                 print(f"  ✅ Time accepted at: {time_accepted_at}")
@@ -169,11 +182,16 @@ def get_meeting_proposals(session_id, listing_id):
             
             # If this is the accepted location, update current_meeting
             if status == 'accepted':
+                location_accepted_at_str = None
+                if proposal['accepted_at']:
+                    dt_with_tz = proposal['accepted_at'].replace(tzinfo=timezone.utc)
+                    location_accepted_at_str = dt_with_tz.isoformat()
+                
                 if response['current_meeting']:
                     response['current_meeting']['location'] = proposal['meeting_location_name']
                     response['current_meeting']['latitude'] = float(proposal['meeting_location_lat']) if proposal['meeting_location_lat'] else None
                     response['current_meeting']['longitude'] = float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None
-                    response['current_meeting']['locationAcceptedAt'] = proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None
+                    response['current_meeting']['locationAcceptedAt'] = location_accepted_at_str
                     print(f"  ✅ Location accepted at: {proposal['accepted_at']}")
                 else:
                     # Location accepted but no time accepted yet
@@ -184,7 +202,7 @@ def get_meeting_proposals(session_id, listing_id):
                         'longitude': float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None,
                         'agreed_at': None,
                         'timeAcceptedAt': None,
-                        'locationAcceptedAt': proposal['accepted_at'].isoformat() if proposal['accepted_at'] else None
+                        'locationAcceptedAt': location_accepted_at_str
                     }
                     print(f"  ✅ Location accepted at: {proposal['accepted_at']} (no time accepted yet)")
         
@@ -216,8 +234,14 @@ def get_meeting_proposals(session_id, listing_id):
         other_user_paid_at = None
         
         if payment_result:
-            buyer_paid_at = payment_result['buyer_paid_at'].isoformat() if payment_result['buyer_paid_at'] else None
-            seller_paid_at = payment_result['seller_paid_at'].isoformat() if payment_result['seller_paid_at'] else None
+            buyer_paid_at = None
+            seller_paid_at = None
+            if payment_result['buyer_paid_at']:
+                dt_with_tz = payment_result['buyer_paid_at'].replace(tzinfo=timezone.utc)
+                buyer_paid_at = dt_with_tz.isoformat()
+            if payment_result['seller_paid_at']:
+                dt_with_tz = payment_result['seller_paid_at'].replace(tzinfo=timezone.utc)
+                seller_paid_at = dt_with_tz.isoformat()
             
             # Map based on current user's role
             if is_current_user_buyer:

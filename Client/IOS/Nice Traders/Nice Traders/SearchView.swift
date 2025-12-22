@@ -150,7 +150,7 @@ struct SearchView: View {
     var quickSearchSection: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text(localizationManager.localize("FIND_CURRENCY_EXCHANGE"))
-                .font(.system(size: 22, weight: .bold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             // Question 1: What currency do you have?
@@ -260,7 +260,7 @@ struct SearchView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text(resultTitle)
-                    .font(.system(size: 19, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color(hex: "2d3748"))
                 
                 Spacer()
@@ -323,7 +323,7 @@ struct SearchView: View {
                 .font(.system(size: 48))
             
             Text(localizationManager.localize("SEARCH_ERROR"))
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             Text(error)

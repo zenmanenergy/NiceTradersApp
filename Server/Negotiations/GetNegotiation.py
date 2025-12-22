@@ -115,8 +115,11 @@ def get_negotiation(listing_id, session_id):
         
         # Format meeting time with timezone
         meeting_time = time_neg['meeting_time']
-        if meeting_time and meeting_time.tzinfo is None:
-            meeting_time = meeting_time.replace(tzinfo=timezone.utc)
+        meeting_time_str = None
+        if meeting_time:
+            if meeting_time.tzinfo is None:
+                meeting_time = meeting_time.replace(tzinfo=timezone.utc)
+            meeting_time_str = meeting_time.isoformat()
         
         # Build location response if exists
         location_response = None
@@ -135,7 +138,7 @@ def get_negotiation(listing_id, session_id):
             'negotiation': {
                 'listingId': listing_id,
                 'status': overall_status,
-                'currentProposedTime': meeting_time.isoformat() if meeting_time else None,
+                'currentProposedTime': meeting_time_str,
                 'proposedBy': time_neg['proposed_by'],
                 'buyerPaid': payment['buyer_paid_at'] is not None if payment else False,
                 'sellerPaid': payment['seller_paid_at'] is not None if payment else False,

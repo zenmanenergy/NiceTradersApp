@@ -604,13 +604,21 @@ extension MeetingDetailView {
                     return
                 }
                 
-                if let data = data,
-                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                guard let data = data else {
+                    print("[DEBUG] Reject error: No data received")
+                    self.errorMessage = "No response from server"
+                    return
+                }
+                
+                let responseStr = String(data: data, encoding: .utf8) ?? "unknown"
+                print("[DEBUG] Reject raw response: \(responseStr)")
+                
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                    let success = json["success"] as? Bool, success {
-                    print("[DEBUG] Reject successful")
-                    self.dismiss()
+                    print("[DEBUG] Reject successful - navigating back to dashboard")
+                    self.navigateToContact = false
                 } else {
-                    let errorMsg = (try? JSONSerialization.jsonObject(with: data ?? Data())) as? [String: Any]
+                    let errorMsg = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
                     self.errorMessage = errorMsg?["error"] as? String ?? "Failed to reject exchange"
                     print("[DEBUG] Reject failed: \(self.errorMessage)")
                 }

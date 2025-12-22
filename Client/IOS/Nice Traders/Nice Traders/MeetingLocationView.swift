@@ -36,6 +36,8 @@ struct MeetingLocationView: View {
     @State private var zoomRetryCount: Int = 0
     @State private var zoomRetryTimer: Timer? = nil
     @State private var showProposeTimeView: Bool = false
+    @State private var highlightedProposalId: String? = nil
+    @State private var highlightedResultId: String? = nil
     
     init(contactData: ContactData, initialDisplayStatus: String?, currentMeeting: Binding<CurrentMeeting?>, meetingProposals: Binding<[MeetingProposal]>, onBackTapped: (() -> Void)? = nil) {
         self.initialContactData = contactData
@@ -89,13 +91,19 @@ struct MeetingLocationView: View {
                                let lat = proposedLocation.latitude,
                                let lng = proposedLocation.longitude {
                                 Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)) {
-                                    VStack {
-                                        Image(systemName: "mappin.circle.fill")
-                                            .font(.title2)
-                                            .foregroundColor(.green)
-                                        Text("Proposed")
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
+                                    Button(action: {
+                                        highlightedProposalId = proposedLocation.proposalId
+                                        highlightedResultId = nil
+                                        scrollToProposal(proposedLocation.proposalId)
+                                    }) {
+                                        VStack {
+                                            Image(systemName: "mappin.circle.fill")
+                                                .font(.title2)
+                                                .foregroundColor(.green)
+                                            Text("Proposed")
+                                                .font(.caption)
+                                                .fontWeight(.semibold)
+                                        }
                                     }
                                 }
                             }
@@ -103,13 +111,19 @@ struct MeetingLocationView: View {
                             // Search result pins
                             ForEach(searchResults, id: \.id) { result in
                                 Annotation("", coordinate: result.coordinate) {
-                                    VStack {
-                                        Image(systemName: "mappin.circle.fill")
-                                            .font(.title2)
-                                            .foregroundColor(selectedResultId == result.id ? .orange : .purple)
-                                        Text(result.name)
-                                            .font(.caption2)
-                                            .fontWeight(.semibold)
+                                    Button(action: {
+                                        highlightedResultId = result.id
+                                        highlightedProposalId = nil
+                                        scrollToResult(result.id)
+                                    }) {
+                                        VStack {
+                                            Image(systemName: "mappin.circle.fill")
+                                                .font(.title2)
+                                                .foregroundColor(selectedResultId == result.id || highlightedResultId == result.id ? .orange : .purple)
+                                            Text(result.name)
+                                                .font(.caption2)
+                                                .fontWeight(.semibold)
+                                        }
                                     }
                                 }
                             }
@@ -264,54 +278,61 @@ struct MeetingLocationView: View {
                 .background(Color(hex: "f0f9ff"))
                 
                 // Bottom content area
-                ScrollView {
-                    VStack(spacing: 12) {
-                        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
-                        
-                        if !countdownText.isEmpty {
-                            HStack(spacing: 8) {
-                                Image(systemName: "hourglass.tophalf.fill")
-                                    .foregroundColor(Color(hex: "f97316"))
-                                    .font(.system(size: 14))
-                                
-                                Text(countdownText)
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(Color(hex: "f97316"))
-                                
-                                Spacer()
+                ScrollViewReader { scrollProxy in
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                            
+                            if !countdownText.isEmpty {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "hourglass.tophalf.fill")
+                                        .foregroundColor(Color(hex: "f97316"))
+                                        .font(.system(size: 14))
+                                    
+                                    Text(countdownText)
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(Color(hex: "f97316"))
+                                    
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(Color(hex: "fff7ed"))
+                                .cornerRadius(8)
                             }
-                            .padding()
-                            .background(Color(hex: "fff7ed"))
-                            .cornerRadius(8)
-                        }
-                        
-                        if !locationProposals.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(localizationManager.localize("MEETING_PROPOSALS"))
-                                    .font(.subheadline)
-                                    .fontWeight(.semibold)
-                                
-                                ForEach(locationProposals, id: \.proposalId) { proposal in
-                                    LocationProposalCard(
-                                        proposal: proposal,
-                                        displayStatus: displayStatus,
-                                        meetingTime: currentMeeting?.time,
-                                        onAccept: {
-                                            respondToProposal(proposalId: proposal.proposalId, response: "accepted")
-                                        },
-                                        onReject: {
-                                            respondToProposal(proposalId: proposal.proposalId, response: "rejected")
-                                        },
-                                        onCounterPropose: {
-                                            showProposeTimeView = true
-                                        }
-                                    )
+                            
+                            if !locationProposals.isEmpty {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(localizationManager.localize("MEETING_PROPOSALS"))
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    
+                                    ForEach(locationProposals, id: \.proposalId) { proposal in
+                                        LocationProposalCard(
+                                            proposal: proposal,
+                                            displayStatus: displayStatus,
+                                            meetingTime: currentMeeting?.time,
+                                            isHighlighted: highlightedProposalId == proposal.proposalId,
+                                            onAccept: {
+                                                respondToProposal(proposalId: proposal.proposalId, response: "accepted")
+                                            },
+                                            onReject: {
+                                                respondToProposal(proposalId: proposal.proposalId, response: "rejected")
+                                            },
+                                            onCounterPropose: {
+                                                showProposeTimeView = true
+                                            }
+                                        )
+                                        .id(proposal.proposalId)
+                                    }
                                 }
                             }
+                            
+                            Spacer()
                         }
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .padding(16)
                     }
-                    .padding(16)
                 }
             }
             
@@ -496,6 +517,7 @@ struct LocationProposalCard: View {
     let proposal: MeetingProposal
     let displayStatus: String?
     let meetingTime: String?
+    let isHighlighted: Bool
     var onAccept: () -> Void
     var onReject: () -> Void
     var onCounterPropose: () -> Void
@@ -698,11 +720,11 @@ struct LocationProposalCard: View {
             }
         }
         .padding(12)
-        .background(Color.white)
+        .background(isHighlighted ? Color(hex: "fef3c7") : Color.white)
         .overlay(
             RoundedRectangle(cornerRadius: 8).stroke(
-                statusColor.opacity(0.3),
-                lineWidth: 1
+                isHighlighted ? Color(hex: "f59e0b") : statusColor.opacity(0.3),
+                lineWidth: isHighlighted ? 2 : 1
             )
         )
         .cornerRadius(8)
@@ -748,6 +770,23 @@ struct LocationProposalCard: View {
             countdownText = "\(hours) \(hourText) \(minutes) \(minuteText) until meeting"
         } else {
             countdownText = "\(minutes) \(minuteText) until meeting"
+        }
+    }
+}
+
+// MARK: - Scroll Helper Methods
+
+extension MeetingLocationView {
+    func scrollToProposal(_ proposalId: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            highlightedProposalId = proposalId
+        }
+    }
+    
+    func scrollToResult(_ resultId: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            highlightedResultId = resultId
+            selectedResultId = resultId
         }
     }
 }

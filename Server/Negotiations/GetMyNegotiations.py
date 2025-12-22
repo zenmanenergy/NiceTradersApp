@@ -7,6 +7,7 @@ from _Lib.NegotiationStatus import (
     get_negotiation_overall_status,
     action_required_for_user
 )
+from datetime import timezone
 
 def get_my_negotiations(session_id):
     """
@@ -129,7 +130,7 @@ def get_my_negotiations(session_id):
                 'timeNegotiationId': time_neg['time_negotiation_id'],
                 'listingId': listing_id,
                 'status': overall_status,
-                'currentProposedTime': time_neg['meeting_time'].isoformat() if time_neg['meeting_time'] else None,
+                'currentProposedTime': time_neg['meeting_time'].replace(tzinfo=timezone.utc).isoformat() if time_neg['meeting_time'] else None,
                 'proposedBy': time_neg.get('proposed_by'),  # Last who proposed
                 'actionRequired': action_req,
                 'buyerPaid': payment['buyer_paid_at'] is not None if payment else False,

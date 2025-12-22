@@ -1,6 +1,6 @@
 from _Lib import Database
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     """Calculate distance between two GPS coordinates using Haversine formula"""
@@ -171,7 +171,7 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                 if meeting_result:
                     listing_data['current_meeting'] = {
                         'location': meeting_result.get('meeting_location_name') or '',
-                        'time': meeting_result['meeting_time'].isoformat() if meeting_result['meeting_time'] else None,
+                        'time': meeting_result['meeting_time'].replace(tzinfo=timezone.utc).isoformat() if meeting_result['meeting_time'] else None,
                         'message': None,
                         'agreed_at': meeting_result['accepted_at'].isoformat() if meeting_result['accepted_at'] else None
                     }

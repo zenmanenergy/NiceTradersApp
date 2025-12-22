@@ -1,6 +1,6 @@
 from _Lib import Database
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 def calculate_negotiation_status(exchange, user_id):
@@ -95,7 +95,7 @@ def get_user_dashboard(SessionId):
         
         # Get user profile information
         user_query = """
-            SELECT user_id, FirstName, LastName, Email, Phone, UserType, DateCreated, IsActive
+            SELECT user_id, FirstName, LastName, Email, Phone, UserType, DateCreated, IsActive, Rating, TotalExchanges
             FROM users 
             WHERE user_id = %s
         """
@@ -197,7 +197,9 @@ def get_user_dashboard(SessionId):
                 'phone': user_data['Phone'],
                 'userType': user_data['UserType'],
                 'dateCreated': user_data['DateCreated'].isoformat() if user_data['DateCreated'] else None,
-                'isActive': bool(user_data['IsActive'])
+                'isActive': bool(user_data['IsActive']),
+                'rating': float(user_data['Rating']) if user_data['Rating'] is not None else 0.0,
+                'totalExchanges': int(user_data['TotalExchanges']) if user_data['TotalExchanges'] is not None else 0
             },
             'stats': {
                 'activeListings': active_listings_count,
@@ -245,7 +247,7 @@ def get_user_dashboard(SessionId):
                     'negotiationStatus': 'accepted' if exchange['accepted_at'] else 'proposed',
                     'displayStatus': calculate_negotiation_status(exchange, user_id),
                     'status': exchange['status'],
-                    'meetingTime': exchange.get('meeting_time').isoformat() if exchange.get('meeting_time') else None,
+                    'meetingTime': exchange.get('meeting_time').replace(tzinfo=timezone.utc).isoformat() if exchange.get('meeting_time') else None,
                     'createdAt': exchange['created_at'].isoformat() if exchange['created_at'] else None,
                     'availableUntil': exchange['available_until'].isoformat() if exchange['available_until'] else None,
                     'willRoundToNearestDollar': bool(exchange['will_round_to_nearest_dollar']) if exchange['will_round_to_nearest_dollar'] is not None else False,

@@ -80,10 +80,13 @@ class DashboardViewModel: ObservableObject {
         let lastName = userData["lastName"] as? String ?? ""
         let dateCreated = userData["dateCreated"] as? String ?? ""
         
+        let rating = userData["rating"] as? Double ?? 0.0
+        let totalExchanges = userData["totalExchanges"] as? Int ?? 0
+        
         user = DashboardUserInfo(
             name: "\(firstName) \(lastName)",
-            rating: 0,
-            totalExchanges: 0,
+            rating: rating,
+            totalExchanges: totalExchanges,
             joinDate: formatJoinDate(dateCreated)
         )
         

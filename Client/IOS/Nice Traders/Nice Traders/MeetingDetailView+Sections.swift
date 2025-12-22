@@ -47,9 +47,10 @@ extension MeetingDetailView {
             // Check if location is accepted
             let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
             let hasAcceptedLocation = locationProposals.contains { $0.status == "accepted" }
+            let hasPendingLocation = locationProposals.contains { $0.status == "pending" }
             
-            // Only show these sections if location is NOT accepted
-            if !hasAcceptedLocation {
+            // Only show these sections if location is NOT accepted and NO location proposal is pending
+            if !hasAcceptedLocation && !hasPendingLocation {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(localizationManager.localize("GENERAL_AREA"))
                         .font(.system(size: 12))
@@ -83,8 +84,19 @@ extension MeetingDetailView {
             
             HStack(spacing: 4) {
                 ForEach(0..<5) { index in
-                    Image(systemName: index < Int(contactData.otherUser.rating ?? 0) ? "star.fill" : "star")
-                        .foregroundColor(index < Int(contactData.otherUser.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
+                    let rating = contactData.otherUser.rating ?? 0
+                    let starIndex = Double(index)
+                    
+                    if starIndex < rating {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(Color(hex: "fbbf24"))
+                    } else if starIndex < rating + 1 && rating.truncatingRemainder(dividingBy: 1) > 0 {
+                        Image(systemName: "star.leadinghalf.fill")
+                            .foregroundColor(Color(hex: "fbbf24"))
+                    } else {
+                        Image(systemName: "star")
+                            .foregroundColor(Color(hex: "e2e8f0"))
+                    }
                 }
                 Text("(\(contactData.otherUser.totalTrades ?? 0) trades)")
                     .font(.system(size: 12))
@@ -375,15 +387,75 @@ extension MeetingDetailView {
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
             } else if let pendingLoc = pendingLocationProposal {
-                VStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12) {
                     if pendingLoc.isFromMe {
-                        Text("⏳ Waiting for Location Approval")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(Color(hex: "f59e0b"))
+                        HStack {
+                            Image(systemName: "clock.badge.checkmark.fill")
+                                .foregroundColor(Color(hex: "f59e0b"))
+                                .font(.system(size: 16))
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("⏳ Waiting for Location Approval")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(Color(hex: "f59e0b"))
+                                
+                                Text("You proposed this location")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(hex: "6b7280"))
+                            }
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color(hex: "fffbeb"))
+                        .cornerRadius(8)
                         
-                        Text("You proposed a meeting location. Waiting for the other trader to accept or counter.")
-                            .font(.system(size: 15))
-                            .foregroundColor(Color(hex: "4a5568"))
+                        // Show proposed location details
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundColor(Color(hex: "667eea"))
+                                    .font(.system(size: 14))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizationManager.localize("PROPOSED_LOCATION"))
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+                                    
+                                    Text(pendingLoc.proposedLocation)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(Color(hex: "2d3748"))
+                                        .lineLimit(2)
+                                }
+                                
+                                Spacer()
+                            }
+                            
+                            if let message = pendingLoc.message, !message.isEmpty {
+                                Divider()
+                                
+                                HStack(spacing: 8) {
+                                    Image(systemName: "note.text")
+                                        .foregroundColor(Color(hex: "667eea"))
+                                        .font(.system(size: 14))
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(localizationManager.localize("MESSAGE"))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(message)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(Color(hex: "4a5568"))
+                                            .lineLimit(3)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(hex: "fafafa"))
+                        .cornerRadius(8)
                         
                         VStack(spacing: 8) {
                             Button(action: { activeTab = .location }) {
@@ -415,9 +487,73 @@ extension MeetingDetailView {
                             }
                         }
                     } else {
-                        Text("Accept location?")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(Color(hex: "2d3748"))
+                        HStack {
+                            Image(systemName: "mappin.and.ellipse")
+                                .foregroundColor(Color(hex: "667eea"))
+                                .font(.system(size: 16))
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Location Proposal Received")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(Color(hex: "2d3748"))
+                                
+                                Text("From \(pendingLoc.proposer.firstName)")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(Color(hex: "6b7280"))
+                            }
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color(hex: "f0f4ff"))
+                        .cornerRadius(8)
+                        
+                        // Show proposed location details
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "mappin.circle.fill")
+                                    .foregroundColor(Color(hex: "667eea"))
+                                    .font(.system(size: 14))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localizationManager.localize("PROPOSED_LOCATION"))
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+                                    
+                                    Text(pendingLoc.proposedLocation)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(Color(hex: "2d3748"))
+                                        .lineLimit(2)
+                                }
+                                
+                                Spacer()
+                            }
+                            
+                            if let message = pendingLoc.message, !message.isEmpty {
+                                Divider()
+                                
+                                HStack(spacing: 8) {
+                                    Image(systemName: "note.text")
+                                        .foregroundColor(Color(hex: "667eea"))
+                                        .font(.system(size: 14))
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(localizationManager.localize("MESSAGE"))
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.gray)
+                                        
+                                        Text(message)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(Color(hex: "4a5568"))
+                                            .lineLimit(3)
+                                    }
+                                    
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(hex: "fafafa"))
+                        .cornerRadius(8)
                         
                         HStack(spacing: 12) {
                             Button(action: { acceptLocationProposal(proposalId: pendingLoc.proposalId) }) {
