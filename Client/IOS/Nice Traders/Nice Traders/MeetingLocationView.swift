@@ -6,6 +6,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import UIKit
 
 struct MeetingLocationView: View {
     let initialContactData: ContactData
@@ -38,6 +39,7 @@ struct MeetingLocationView: View {
     @State private var showProposeTimeView: Bool = false
     @State private var highlightedProposalId: String? = nil
     @State private var highlightedResultId: String? = nil
+    @State private var keyboardHeight: CGFloat = 0
     
     init(contactData: ContactData, initialDisplayStatus: String?, currentMeeting: Binding<CurrentMeeting?>, meetingProposals: Binding<[MeetingProposal]>, onBackTapped: (() -> Void)? = nil) {
         self.initialContactData = contactData
@@ -51,124 +53,126 @@ struct MeetingLocationView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // Map at the top
-                ZStack {
-                    if mapIsReady {
-                        let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
-                        let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" && !$0.proposedLocation.isEmpty }
-                        
-                        Map(position: $cameraPosition) {
-                            // Listing location circle - only show if location not yet confirmed
-                            if !hasConfirmedLocation {
-                                MapCircle(
-                                    center: CLLocationCoordinate2D(
-                                        latitude: contactData.listing.latitude,
-                                        longitude: contactData.listing.longitude
-                                    ),
-                                    radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
-                                )
-                                .foregroundStyle(Color.blue.opacity(0.2))
-                                .stroke(Color.blue.opacity(0.5), lineWidth: 2)
-                            }
-                            
-                            // User location pin
-                            if let userCoord = locationManager.location?.coordinate {
-                                Annotation("", coordinate: userCoord) {
-                                    VStack {
-                                        Image(systemName: "location.circle.fill")
-                                            .font(.title2)
-                                            .foregroundColor(.blue)
-                                        Text("You")
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                    }
-                                }
-                            }
-                            
-                            // Proposed location pin
+                // Map at the top - only show when keyboard is hidden
+                if keyboardHeight == 0 {
+                    ZStack {
+                        if mapIsReady {
                             let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
-                            if let proposedLocation = locationProposals.first,
-                               let lat = proposedLocation.latitude,
-                               let lng = proposedLocation.longitude {
-                                Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)) {
-                                    Button(action: {
-                                        highlightedProposalId = proposedLocation.proposalId
-                                        highlightedResultId = nil
-                                        scrollToProposal(proposedLocation.proposalId)
-                                    }) {
+                            let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" && !$0.proposedLocation.isEmpty }
+                            
+                            Map(position: $cameraPosition) {
+                                // Listing location circle - only show if location not yet confirmed
+                                if !hasConfirmedLocation {
+                                    MapCircle(
+                                        center: CLLocationCoordinate2D(
+                                            latitude: contactData.listing.latitude,
+                                            longitude: contactData.listing.longitude
+                                        ),
+                                        radius: CLLocationDistance(Double(contactData.listing.radius) * 1609.34)
+                                    )
+                                    .foregroundStyle(Color.blue.opacity(0.2))
+                                    .stroke(Color.blue.opacity(0.5), lineWidth: 2)
+                                }
+                                
+                                // User location pin
+                                if let userCoord = locationManager.location?.coordinate {
+                                    Annotation("", coordinate: userCoord) {
                                         VStack {
-                                            Image(systemName: "mappin.circle.fill")
+                                            Image(systemName: "location.circle.fill")
                                                 .font(.title2)
-                                                .foregroundColor(.green)
-                                            Text("Proposed")
+                                                .foregroundColor(.blue)
+                                            Text("You")
                                                 .font(.caption)
                                                 .fontWeight(.semibold)
                                         }
                                     }
                                 }
-                            }
-                            
-                            // Search result pins
-                            ForEach(searchResults, id: \.id) { result in
-                                Annotation("", coordinate: result.coordinate) {
-                                    Button(action: {
-                                        highlightedResultId = result.id
-                                        highlightedProposalId = nil
-                                        scrollToResult(result.id)
-                                    }) {
-                                        VStack {
-                                            Image(systemName: "mappin.circle.fill")
-                                                .font(.title2)
-                                                .foregroundColor(selectedResultId == result.id || highlightedResultId == result.id ? .orange : .purple)
-                                            Text(result.name)
-                                                .font(.caption2)
-                                                .fontWeight(.semibold)
+                                
+                                // Proposed location pin
+                                let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
+                                if let proposedLocation = locationProposals.first,
+                                   let lat = proposedLocation.latitude,
+                                   let lng = proposedLocation.longitude {
+                                    Annotation("", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lng)) {
+                                        Button(action: {
+                                            highlightedProposalId = proposedLocation.proposalId
+                                            highlightedResultId = nil
+                                            scrollToProposal(proposedLocation.proposalId)
+                                        }) {
+                                            VStack {
+                                                Image(systemName: "mappin.circle.fill")
+                                                    .font(.title2)
+                                                    .foregroundColor(.green)
+                                                Text("Proposed")
+                                                    .font(.caption)
+                                                    .fontWeight(.semibold)
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                // Search result pins
+                                ForEach(searchResults, id: \.id) { result in
+                                    Annotation("", coordinate: result.coordinate) {
+                                        Button(action: {
+                                            highlightedResultId = result.id
+                                            highlightedProposalId = nil
+                                            scrollToResult(result.id)
+                                        }) {
+                                            VStack {
+                                                Image(systemName: "mappin.circle.fill")
+                                                    .font(.title2)
+                                                    .foregroundColor(selectedResultId == result.id || highlightedResultId == result.id ? .orange : .purple)
+                                                Text(result.name)
+                                                    .font(.caption2)
+                                                    .fontWeight(.semibold)
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        .mapStyle(.standard)
-                        .frame(height: 300)
-                        .onAppear {
-                            print("[DEBUG MLV] Map appeared")
-                        }
-                    } else {
-                        Color(hex: "e2e8f0")
+                            .mapStyle(.standard)
                             .frame(height: 300)
                             .onAppear {
-                                print("[DEBUG MLV] Map initializing...")
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    mapIsReady = true
-                                }
+                                print("[DEBUG MLV] Map appeared")
                             }
-                    }
-                    
-                    // Zoom controls
-                    VStack(spacing: 0) {
-                        Spacer()
-                        HStack(spacing: 0) {
+                        } else {
+                            Color(hex: "e2e8f0")
+                                .frame(height: 300)
+                                .onAppear {
+                                    print("[DEBUG MLV] Map initializing...")
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        mapIsReady = true
+                                    }
+                                }
+                        }
+                        
+                        // Zoom controls
+                        VStack(spacing: 0) {
                             Spacer()
-                            VStack(spacing: 8) {
-                                Button(action: { zoomIn() }) {
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .frame(width: 36, height: 36)
-                                        .background(Color.blue)
-                                        .cornerRadius(6)
+                            HStack(spacing: 0) {
+                                Spacer()
+                                VStack(spacing: 8) {
+                                    Button(action: { zoomIn() }) {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .frame(width: 36, height: 36)
+                                            .background(Color.blue)
+                                            .cornerRadius(6)
+                                    }
+                                    
+                                    Button(action: { zoomOut() }) {
+                                        Image(systemName: "minus")
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .frame(width: 36, height: 36)
+                                            .background(Color.blue)
+                                            .cornerRadius(6)
+                                    }
                                 }
-                                
-                                Button(action: { zoomOut() }) {
-                                    Image(systemName: "minus")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.white)
-                                        .frame(width: 36, height: 36)
-                                        .background(Color.blue)
-                                        .cornerRadius(6)
-                                }
+                                .padding(12)
                             }
-                            .padding(12)
                         }
                     }
                 }
@@ -277,7 +281,7 @@ struct MeetingLocationView: View {
                 .padding(16)
                 .background(Color(hex: "f0f9ff"))
                 
-                // Bottom content area
+                // Bottom content area - scrollable
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         VStack(spacing: 12) {
@@ -333,6 +337,18 @@ struct MeetingLocationView: View {
                         .frame(maxWidth: .infinity, alignment: .topLeading)
                         .padding(16)
                     }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+                if let keyboardSize = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+                    withAnimation {
+                        keyboardHeight = keyboardSize.height
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+                withAnimation {
+                    keyboardHeight = 0
                 }
             }
             
