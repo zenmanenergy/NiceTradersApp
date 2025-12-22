@@ -1333,3 +1333,181 @@ def get_paypal_transaction_by_id():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+
+@blueprint.route('/Admin/GetExchangeRates', methods=['GET', 'POST'])
+@cross_origin()
+def get_exchange_rates():
+    """Get all current exchange rates and last updated timestamp"""
+    try:
+        cursor, connection = ConnectToDatabase()
+        
+        # Get all exchange rates
+        query = """
+            SELECT currency_code, rate_to_usd, last_updated, date_retrieved
+            FROM exchange_rates
+            ORDER BY currency_code ASC
+        """
+        cursor.execute(query)
+        rates = cursor.fetchall()
+        
+        # Get the latest update date
+        latest_update_query = """
+            SELECT MAX(date_retrieved) as last_update_date, MAX(last_updated) as last_update_time
+            FROM exchange_rates
+        """
+        cursor.execute(latest_update_query)
+        update_info = cursor.fetchone()
+        
+        # Get count of rates
+        count_query = "SELECT COUNT(*) as total_rates FROM exchange_rates"
+        cursor.execute(count_query)
+        count_info = cursor.fetchone()
+        
+        cursor.close()
+        connection.close()
+        
+        # Format the response
+        response_data = {
+            'success': True,
+            'rates': rates if rates else [],
+            'total_rates': count_info['total_rates'] if count_info else 0,
+            'last_update_date': update_info['last_update_date'].isoformat() if update_info and update_info['last_update_date'] else None,
+            'last_update_time': update_info['last_update_time'].isoformat() if update_info and update_info['last_update_time'] else None,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify(response_data)
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@blueprint.route('/Admin/RefreshExchangeRates', methods=['POST'])
+@cross_origin()
+def refresh_exchange_rates():
+    """Manually trigger exchange rate download"""
+    try:
+        from ExchangeRates.DownloadExchangeRates import download_and_save_exchange_rates
+        
+        result = download_and_save_exchange_rates()
+        result_data = json.loads(result)
+        
+        return jsonify({
+            'success': result_data.get('success', False),
+            'message': result_data.get('message', 'Exchange rates refresh initiated'),
+            'rates_count': result_data.get('rates_count', 0),
+            'update_date': result_data.get('update_date'),
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+@blueprint.route('/Admin/RefundPayPalTransaction', methods=['POST'])
+@cross_origin()
+def refund_paypal_transaction():
+    """
+    Refund a PayPal transaction fee to user as credit
+    
+    Request:
+    {
+        "order_id": "paypal_order_id",
+        "reason": "refund reason"
+    }
+    """
+    try:
+        params = request.get_json()
+        order_id = params.get('order_id')
+        reason = params.get('reason', 'Admin refund')
+        
+        if not order_id:
+            return jsonify({'success': False, 'error': 'order_id is required'})
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Get PayPal transaction details
+        cursor.execute("""
+            SELECT order_id, user_id, listing_id, amount, currency, status
+            FROM paypal_orders
+            WHERE order_id = %s
+        """, (order_id,))
+        
+        transaction = cursor.fetchone()
+        
+        if not transaction:
+            return jsonify({'success': False, 'error': 'PayPal transaction not found'})
+        
+        if transaction['status'] != 'COMPLETED':
+            return jsonify({'success': False, 'error': 'Can only refund completed transactions'})
+        
+        user_id = transaction['user_id']
+        amount = transaction['amount']
+        currency = transaction['currency']
+        listing_id = transaction['listing_id']
+        
+        # Create credit record for refund
+        credit_id = str(uuid.uuid4())
+        cursor.execute("""
+            INSERT INTO user_credits (
+                credit_id, user_id, amount, currency, reason, 
+                transaction_id, status, created_at, updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """, (credit_id, user_id, amount, currency, reason, order_id, 'available'))
+        
+        # Update PayPal order status
+        cursor.execute("""
+            UPDATE paypal_orders
+            SET status = %s, updated_at = NOW()
+            WHERE order_id = %s
+        """, ('REFUNDED', order_id))
+        
+        # Remove from listing_payments if applicable
+        cursor.execute("""
+            SELECT payment_id, buyer_paid_at, seller_paid_at, buyer_id
+            FROM listing_payments
+            WHERE listing_id = %s
+        """, (listing_id,))
+        
+        payment = cursor.fetchone()
+        
+        if payment:
+            is_buyer = (user_id == payment['buyer_id'])
+            
+            if is_buyer and payment['buyer_paid_at']:
+                cursor.execute("""
+                    UPDATE listing_payments
+                    SET buyer_paid_at = NULL, buyer_transaction_id = NULL, updated_at = NOW()
+                    WHERE listing_id = %s
+                """, (listing_id,))
+            elif not is_buyer and payment['seller_paid_at']:
+                cursor.execute("""
+                    UPDATE listing_payments
+                    SET seller_paid_at = NULL, seller_transaction_id = NULL, updated_at = NOW()
+                    WHERE listing_id = %s
+                """, (listing_id,))
+        
+        connection.commit()
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Refunded ${amount:.2f} to user',
+            'credit_id': credit_id,
+            'user_id': user_id,
+            'amount': amount,
+            'currency': currency
+        })
+        
+    except Exception as e:
+        try:
+            connection.rollback()
+        except:
+            pass
+        print(f"[Admin] RefundPayPalTransaction error: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500

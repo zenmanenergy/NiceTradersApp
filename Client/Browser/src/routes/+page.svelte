@@ -22,6 +22,12 @@
 				<div class="card-description">Search users, listings, and transactions</div>
 			</button>
 			
+			<button class="action-card" on:click={() => goto('/exchange-rates')}>
+				<div class="card-icon">💱</div>
+				<div class="card-title">Exchange Rates</div>
+				<div class="card-description">View and manage currency rates</div>
+			</button>
+			
 			<button class="action-card" on:click={() => goto('/logs')}>
 				<div class="card-icon">📋</div>
 				<div class="card-title">View Logs</div>
@@ -32,6 +38,12 @@
 				<div class="card-icon">💳</div>
 				<div class="card-title">Payment Reports</div>
 				<div class="card-description">View payment and transaction data</div>
+			</button>
+			
+			<button class="action-card" on:click={() => goto('/paypal-transactions')}>
+				<div class="card-icon">🔄</div>
+				<div class="card-title">PayPal Transactions</div>
+				<div class="card-description">View and refund PayPal payments</div>
 			</button>
 		</div>
 	</div>

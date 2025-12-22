@@ -222,6 +222,25 @@ struct CounterResponse: Codable {
     let error: String?
 }
 
+struct CreateOrderResponse: Codable {
+    let success: Bool
+    let orderId: String?
+    let approvalUrl: String?
+    let error: String?
+}
+
+struct CaptureOrderResponse: Codable {
+    let success: Bool
+    let status: String?
+    let transactionId: String?
+    let amountCharged: Double?
+    let bothPaid: Bool?
+    let message: String?
+    let payerEmail: String?
+    let payerName: String?
+    let error: String?
+}
+
 struct PaymentResponse: Codable {
     let success: Bool
     let status: String?

@@ -9,6 +9,11 @@ cd /opt/NiceTradersApp
 echo "📥 Pulling latest code from Git..."
 git pull
 
+# Install Python dependencies
+echo "📦 Installing Python dependencies..."
+cd /opt/NiceTradersApp/Server
+./venv/bin/pip install -r requirements.txt
+
 # Clear Python cache
 echo "🧹 Clearing Python cache..."
 find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null

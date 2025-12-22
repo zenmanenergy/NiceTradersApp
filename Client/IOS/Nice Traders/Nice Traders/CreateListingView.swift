@@ -33,7 +33,7 @@ struct CreateListingView: View {
     @State private var location: String = ""
     @State private var locationRadius: String = "5"
     @State private var meetingPreference: String = "public"
-    @State private var availableUntil: Date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    @State private var availableUntil: Date = Calendar.current.date(byAdding: .day, value: 180, to: Date()) ?? Date()
     @State private var willRoundToNearestDollar: Bool = true
     
     // UI state

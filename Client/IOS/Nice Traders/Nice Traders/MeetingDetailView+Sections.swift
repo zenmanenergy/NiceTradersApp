@@ -13,18 +13,17 @@ extension MeetingDetailView {
     var exchangeDetailsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(localizationManager.localize("EXCHANGE_DETAILS"))
-                .font(.headline)
+                .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("You bring:")
-                            .font(.caption)
+                            .font(.system(size: 12))
                             .foregroundColor(Color(hex: "718096"))
                         Text("$\(formatExchangeAmount(contactData.listing.amount, shouldRound: contactData.listing.willRoundToNearestDollar ?? false)) \(contactData.listing.currency)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(Color(hex: "2d3748"))
                     }
                     Spacer()
@@ -33,11 +32,10 @@ extension MeetingDetailView {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("They bring:")
-                            .font(.caption)
+                            .font(.system(size: 12))
                             .foregroundColor(Color(hex: "718096"))
                         Text("\(formatConvertedAmount()) \(contactData.listing.acceptCurrency ?? "")")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(Color(hex: "2d3748"))
                     }
                 }
@@ -52,11 +50,9 @@ extension MeetingDetailView {
             
             // Only show these sections if location is NOT accepted
             if !hasAcceptedLocation {
-                detailRow(label: "Meeting Preference:", value: contactData.listing.meetingPreference ?? "Not specified")
-                
                 VStack(alignment: .leading, spacing: 8) {
                     Text(localizationManager.localize("GENERAL_AREA"))
-                        .font(.caption)
+                        .font(.system(size: 12))
                         .foregroundColor(Color(hex: "718096"))
                     HStack(spacing: 8) {
                         Image(systemName: "location.fill")
@@ -78,12 +74,11 @@ extension MeetingDetailView {
     var traderInformationSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(localizationManager.localize("TRADER_INFORMATION"))
-                .font(.headline)
+                .font(.system(size: 19, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             Text(contactData.otherUser.firstName + " " + contactData.otherUser.lastName)
-                .font(.title3)
-                .fontWeight(.semibold)
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color(hex: "2d3748"))
             
             HStack(spacing: 4) {
@@ -92,7 +87,7 @@ extension MeetingDetailView {
                         .foregroundColor(index < Int(contactData.otherUser.rating ?? 0) ? Color(hex: "fbbf24") : Color(hex: "e2e8f0"))
                 }
                 Text("(\(contactData.otherUser.totalTrades ?? 0) trades)")
-                    .font(.caption)
+                    .font(.system(size: 12))
                     .foregroundColor(Color(hex: "718096"))
             }
         }
@@ -105,8 +100,10 @@ extension MeetingDetailView {
     
     @ViewBuilder
     var timeProposalSection: some View {
-        let pendingTimeProposal = meetingProposals.first(where: { 
-            !$0.proposedTime.isEmpty && $0.status == "pending"
+        let pendingTimeProposal = meetingProposals.first(where: { proposal in
+            guard !proposal.proposedTime.isEmpty else { return false }
+            guard !proposal.status.isEmpty else { return false }
+            return proposal.status == "pending"
         })
         
         // Check if both users have paid (time is implicitly accepted when in payment/location phase)
@@ -120,11 +117,11 @@ extension MeetingDetailView {
                 // I proposed the time - show waiting/cancel message
                 VStack(alignment: .center, spacing: 12) {
                     Text("⏳ Waiting for Acceptance")
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "f59e0b"))
                     
                     Text("You proposed a meeting time. Waiting for the other trader to accept or counter.")
-                        .font(.subheadline)
+                        .font(.system(size: 15))
                         .foregroundColor(Color(hex: "4a5568"))
                     
                     if let meeting = currentMeeting {
@@ -154,12 +151,49 @@ extension MeetingDetailView {
                 .background(Color(hex: "fef3c7"))
                 .cornerRadius(16)
                 .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-            } else if pendingTimeProposal != nil && !bothUsersPaid {
+            } else if let pendingProposal = pendingTimeProposal, !bothUsersPaid {
                 // They proposed the time AND we haven't moved to payment phase - show accept/counter/reject buttons
-                VStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .center, spacing: 16) {
                     Text("Accept this exchange?")
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
+                    
+                    // Show the proposed time
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "clock.fill")
+                                .foregroundColor(Color(hex: "667eea"))
+                                .font(.system(size: 14))
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Proposed Meeting Time")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray)
+                                    .textCase(.uppercase)
+                                
+                                let formattedTime = DateFormatters.formatCompact(pendingProposal.proposedTime)
+                                Text(formattedTime)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(Color(hex: "2d3748"))
+                            }
+                            
+                            Spacer()
+                        }
+                        
+                        if !pendingProposal.proposer.firstName.isEmpty {
+                            Text("Proposed by \(pendingProposal.proposer.firstName)")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        } else {
+                            Text("Proposed by user")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(hex: "f0f9ff"))
+                    .cornerRadius(8)
+                    .border(Color(hex: "667eea"), width: 1)
                     
                     HStack(spacing: 12) {
                         Button(action: { acceptExchange() }) {
@@ -244,12 +278,11 @@ extension MeetingDetailView {
                         
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Location Confirmed!")
-                                .font(.headline)
-                                .fontWeight(.semibold)
+                                .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(Color(hex: "38a169"))
                             
                             Text(acceptedLoc.proposedLocation)
-                                .font(.subheadline)
+                                .font(.system(size: 15))
                                 .foregroundColor(Color(hex: "2d3748"))
                         }
                         
@@ -271,12 +304,11 @@ extension MeetingDetailView {
                                     
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("Meeting Time")
-                                            .font(.caption)
+                                            .font(.system(size: 12))
                                             .foregroundColor(.gray)
                                         
                                         Text(DateFormatters.formatCompact(meetingTime))
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
+                                            .font(.system(size: 15, weight: .semibold))
                                             .foregroundColor(Color(hex: "2d3748"))
                                     }
                                     
@@ -291,12 +323,11 @@ extension MeetingDetailView {
                                     
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text("Time Until")
-                                            .font(.caption)
+                                            .font(.system(size: 12))
                                             .foregroundColor(.gray)
                                         
                                         Text(countdownText.isEmpty ? "Calculating..." : countdownText)
-                                            .font(.subheadline)
-                                            .fontWeight(.semibold)
+                                            .font(.system(size: 15, weight: .semibold))
                                             .foregroundColor(Color(hex: "f97316"))
                                     }
                                     
@@ -313,15 +344,13 @@ extension MeetingDetailView {
                         Image(systemName: "map.fill")
                             .foregroundColor(Color(hex: "667eea"))
                         Text("Ready to Meet")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(Color(hex: "667eea"))
                         Spacer()
                         
                         HStack(spacing: 4) {
                             Text("Directions")
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                                .font(.system(size: 12, weight: .semibold))
                             Image(systemName: "arrow.right")
                                 .font(.system(size: 10))
                         }
@@ -349,11 +378,11 @@ extension MeetingDetailView {
                 VStack(alignment: .center, spacing: 12) {
                     if pendingLoc.isFromMe {
                         Text("⏳ Waiting for Location Approval")
-                            .font(.headline)
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(Color(hex: "f59e0b"))
                         
                         Text("You proposed a meeting location. Waiting for the other trader to accept or counter.")
-                            .font(.subheadline)
+                            .font(.system(size: 15))
                             .foregroundColor(Color(hex: "4a5568"))
                         
                         VStack(spacing: 8) {
@@ -387,7 +416,7 @@ extension MeetingDetailView {
                         }
                     } else {
                         Text("Accept location?")
-                            .font(.headline)
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(Color(hex: "2d3748"))
                         
                         HStack(spacing: 12) {
@@ -433,7 +462,7 @@ extension MeetingDetailView {
                 // But only if both users have paid
                 VStack(alignment: .center, spacing: 12) {
                     Text("Ready to propose a meeting location?")
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
                     Button(action: { proposeLocation() }) {
@@ -470,22 +499,21 @@ extension MeetingDetailView {
             if !bothPaid && (locationAcceptedAt == nil || locationAcceptedAt?.isEmpty ?? true) {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Payment Required")
-                        .font(.headline)
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color(hex: "2d3748"))
                     
                     Text("Both users need to pay $2.00 before proceeding to location negotiation.")
-                        .font(.subheadline)
+                        .font(.system(size: 15))
                         .foregroundColor(Color(hex: "4a5568"))
                     
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("Your Payment:")
-                                .font(.caption)
+                                .font(.system(size: 12))
                                 .foregroundColor(Color(hex: "718096"))
                             Spacer()
                             Text(userHasPaid ? "✅ Paid" : "⏳ Pending")
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(userHasPaid ? Color(hex: "38a169") : Color(hex: "f59e0b"))
                         }
                         .padding(12)
@@ -494,12 +522,11 @@ extension MeetingDetailView {
                         
                         HStack {
                             Text("Other User's Payment:")
-                                .font(.caption)
+                                .font(.system(size: 12))
                                 .foregroundColor(Color(hex: "718096"))
                             Spacer()
                             Text(otherUserHasPaid ? "✅ Paid" : "⏳ Pending")
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(otherUserHasPaid ? Color(hex: "38a169") : Color(hex: "f59e0b"))
                         }
                         .padding(12)
@@ -595,8 +622,7 @@ extension MeetingDetailView {
                                 Image(systemName: "clock.badge.xmark.fill")
                                     .font(.system(size: 14))
                                 Text("Cancel Meeting Time")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
+                                    .font(.system(size: 14, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
                             .padding(10)
@@ -613,8 +639,7 @@ extension MeetingDetailView {
                                 Image(systemName: "location.slash.fill")
                                     .font(.system(size: 14))
                                 Text("Cancel Location")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
+                                    .font(.system(size: 14, weight: .semibold))
                             }
                             .frame(maxWidth: .infinity)
                             .padding(10)
@@ -635,11 +660,11 @@ extension MeetingDetailView {
     func detailRow(label: String, value: String) -> some View {
         HStack(spacing: 12) {
             Text(label)
-                .font(.caption)
+                .font(.system(size: 12))
                 .foregroundColor(Color(hex: "718096"))
             Spacer()
             Text(value)
-                .font(.caption)
+                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(Color(hex: "2d3748"))
         }
     }

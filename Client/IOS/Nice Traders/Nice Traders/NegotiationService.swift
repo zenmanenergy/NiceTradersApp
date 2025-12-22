@@ -329,6 +329,79 @@ class NegotiationService {
         }.resume()
     }
     
+    // MARK: - PayPal Payment Integration
+    
+    func createPayPalOrder(listingId: String, amount: Double = 2.00, completion: @escaping (Result<CreateOrderResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&sessionId=\(sessionId)&amount=\(amount)"
+        
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .useDefaultKeys
+                let result = try decoder.decode(CreateOrderResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    func capturePayPalOrder(orderId: String, listingId: String, completion: @escaping (Result<CaptureOrderResponse, Error>) -> Void) {
+        guard let sessionId = SessionManager.shared.sessionId,
+              let userId = SessionManager.shared.user_id else {
+            completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
+            return
+        }
+        
+        let urlString = "\(baseURL)/Payments/CaptureOrder?orderId=\(orderId)&listingId=\(listingId)&sessionId=\(sessionId)&userId=\(userId)"
+        
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                return
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .useDefaultKeys
+                let result = try decoder.decode(CaptureOrderResponse.self, from: data)
+                completion(.success(result))
+            } catch {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
     // MARK: - Get My Negotiations
     
     func getMyNegotiations(completion: @escaping (Result<MyNegotiationsResponse, Error>) -> Void) {

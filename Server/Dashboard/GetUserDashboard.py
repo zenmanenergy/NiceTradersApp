@@ -18,7 +18,7 @@ def calculate_negotiation_status(exchange, user_id):
         if is_current_user_proposer:
             return "⏳ Waiting for Acceptance"
         else:
-            return "🎯 Action: Acceptance"
+            return "👤 Buyer Proposed a Time"
     else:
         # Time is accepted, check payment status
         is_buyer = (exchange.get('buyer_id') == user_id)
@@ -54,7 +54,7 @@ def calculate_negotiation_status(exchange, user_id):
                 if is_current_user_proposer:
                     return "⏳ Waiting for Acceptance"
                 else:
-                    return "🎯 Action: Acceptance"
+                    return "👤 Buyer Proposed a Location"
             else:
                 # No location proposal yet
                 return "🎯 Action: Propose Location"

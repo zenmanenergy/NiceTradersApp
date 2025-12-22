@@ -18,6 +18,10 @@ eggs/
 parts/
 sdist/
 var/
+
+# Environment variables
+Server/.env
+.env
 wheels/
 *.egg-info/
 .installed.cfg

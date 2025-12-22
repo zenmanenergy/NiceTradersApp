@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SafariServices
 
 struct PaymentView: View {
     let negotiationId: String
@@ -21,7 +22,10 @@ struct PaymentView: View {
     @State private var errorMessage: String?
     @State private var availableCredit: Double = 0
     @State private var showSuccess = false
-    @State private var paymentResult: PaymentResponse?
+    @State private var paymentResult: CaptureOrderResponse?
+    @State private var showSafari = false
+    @State private var safariURL: URL?
+    @State private var currentOrderId: String?
     
     let feeAmount = 2.00
     
@@ -120,6 +124,24 @@ struct PaymentView: View {
                         .cornerRadius(12)
                         .padding(.horizontal)
                         
+                        // PayPal Info
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "creditcard.fill")
+                                .foregroundColor(.orange)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Secure PayPal Payment")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                Text("You'll be redirected to PayPal to complete your secure payment.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding()
+                        .background(Color.orange.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                        
                         // Error Message
                         if let errorMessage = errorMessage {
                             Text(errorMessage)
@@ -135,6 +157,7 @@ struct PaymentView: View {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 } else {
+                                    Image(systemName: "creditcard.fill")
                                     Text(localizationManager.localize("CONFIRM_PAYMENT"))
                                         .fontWeight(.semibold)
                                 }
@@ -180,6 +203,17 @@ struct PaymentView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showSafari) {
+                if let url = safariURL {
+                    SafariView(url: url)
+                        .onDisappear {
+                            // After user returns from PayPal, capture the order
+                            if let orderId = currentOrderId {
+                                capturePayPalOrder(orderId: orderId)
+                            }
+                        }
+                }
+            }
             .onAppear {
                 print("VIEW: PaymentView")
             }
@@ -190,10 +224,36 @@ struct PaymentView: View {
         isLoading = true
         errorMessage = nil
         
-        NegotiationService.shared.payNegotiationFee(negotiationId: negotiationId) { result in
+        // Step 1: Create PayPal order
+        NegotiationService.shared.createPayPalOrder(listingId: negotiationId) { result in
             DispatchQueue.main.async {
                 isLoading = false
                 
+                switch result {
+                case .success(let response):
+                    if response.success, let orderId = response.orderId, let approvalUrl = response.approvalUrl {
+                        // Store order ID for later capture
+                        currentOrderId = orderId
+                        
+                        // Open PayPal approval URL
+                        if let url = URL(string: approvalUrl) {
+                            safariURL = url
+                            showSafari = true
+                        }
+                    } else {
+                        errorMessage = response.error ?? localizationManager.localize("PAYMENT_FAILED")
+                    }
+                case .failure(let error):
+                    errorMessage = error.localizedDescription
+                }
+            }
+        }
+    }
+    
+    private func capturePayPalOrder(orderId: String) {
+        // Step 2: Capture PayPal order after user approval
+        NegotiationService.shared.capturePayPalOrder(orderId: orderId, listingId: negotiationId) { result in
+            DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
                     if response.success {
@@ -207,6 +267,22 @@ struct PaymentView: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Safari View Wrapper
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    
+    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
+        let safariViewController = SFSafariViewController(url: url)
+        safariViewController.preferredControlTintColor = UIColor(red: 0.4, green: 0.49, blue: 0.92, alpha: 1.0) // Purple
+        return safariViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) {
+        // No update needed
     }
 }
 

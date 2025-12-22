@@ -16,6 +16,14 @@
 	function goToPaymentReports() {
 		goto('/payment-reports');
 	}
+
+	function goToPayPalTransactions() {
+		goto('/paypal-transactions');
+	}
+
+	function goToExchangeRates() {
+		goto('/exchange-rates');
+	}
 </script>
 
 <main class="admin-container">
@@ -25,8 +33,8 @@
 				<button class="home-btn" on:click={goHome}>🏠 Admin Dashboard</button>
 				<p>Nice Traders Admin</p>
 			</div>
-			<div class="header-buttons">
-				<button class="header-btn" on:click={goToPaymentReports}>💳 Payment Reports</button>
+			<div class="header-buttons">			<button class="header-btn" on:click={goToExchangeRates}>💱 Exchange Rates</button>				<button class="header-btn" on:click={goToPaymentReports}>💳 Payment Reports</button>
+				<button class="header-btn" on:click={goToPayPalTransactions}>🔄 PayPal</button>
 				<button class="header-btn" on:click={goToTerminal}>📋 Terminal</button>
 				<button class="header-btn" on:click={goToSearch}>🔍 Search</button>
 			</div>

@@ -32,6 +32,7 @@ class LocalizationManager: NSObject, ObservableObject {
     }
     
     @Published var languageVersion: Int = 0
+    @Published var isTranslationsReady: Bool = false  // Flag to block UI until translations loaded
     
     static let shared = LocalizationManager()
     
@@ -140,6 +141,16 @@ class LocalizationManager: NSObject, ObservableObject {
             "CONFIRM_PASSWORD": "Confirm Password",
             "CONFIRM_PASSWORD_PLACEHOLDER": "Confirm your password",
             "CREATING_ACCOUNT": "Creating account...",
+            // Dashboard UI
+            "ALL_ACTIVE_EXCHANGES": "All Active Exchanges",
+            "MY_ACTIVE_LISTINGS": "My Active Listings",
+            "EDIT_LISTING": "Edit Listing",
+            "PRIORITY": "Priority",
+            "START_CONVERSATION": "Start Conversation",
+            "HOME": "Home",
+            "SEARCH": "Search",
+            "LIST": "List",
+            "NOTIFICATIONS": "Notifications",
         ]
     ]
     
@@ -151,29 +162,49 @@ class LocalizationManager: NSObject, ObservableObject {
         // Initialize before super.init()
         self.currentLanguage = "en"
         super.init()
+        print("🌐 [LocalizationManager] Initializing...")
+        print("🌐 [LocalizationManager] Base URL: \(baseURL)")
+        
         // Try to load saved language preference
         if let savedLanguage = UserDefaults.standard.string(forKey: "AppLanguage") {
             self.currentLanguage = savedLanguage
+            print("🌐 [LocalizationManager] Loaded saved language: \(savedLanguage)")
         } else {
             // Auto-detect from system locale first
             let systemLocale = Locale.preferredLanguages.first ?? "en"
             let languageCode = String(systemLocale.prefix(2))
             self.currentLanguage = supportedLanguages[languageCode] != nil ? languageCode : "en"
+            print("🌐 [LocalizationManager] Auto-detected language: \(self.currentLanguage) (system: \(systemLocale))")
         }
         
         // Force clear old cache to ensure fresh data on app updates
         UserDefaults.standard.removeObject(forKey: "translations_global_timestamp")
         UserDefaults.standard.synchronize()
+        print("🌐 [LocalizationManager] Cleared old cache timestamp")
         
         // Load all cached translations and check for updates
         Task {
+            print("🌐 [LocalizationManager] Starting initialization task...")
             // First, load supported languages from backend
             await self.loadSupportedLanguages()
             
             // Load all translations from cache
-            if let allCached = self.loadAllTranslationsFromCache(),
-               let languageTranslations = allCached[self.currentLanguage] {
-                self.cachedTranslations = languageTranslations
+            print("🌐 [LocalizationManager] Attempting to load from cache...")
+            if let allCached = self.loadAllTranslationsFromCache() {
+                print("🌐 [LocalizationManager] Cache found with \(allCached.count) languages")
+                if let languageTranslations = allCached[self.currentLanguage] {
+                    self.cachedTranslations = languageTranslations
+                    print("🌐 [LocalizationManager] Loaded \(languageTranslations.count) translations for \(self.currentLanguage) from cache")
+                    // Mark translations as ready since we have cached data
+                    Task { @MainActor in
+                        self.isTranslationsReady = true
+                        print("✅ [LocalizationManager] Translations ready (from cache)")
+                    }
+                } else {
+                    print("🌐 [LocalizationManager] ⚠️ No cached translations for language: \(self.currentLanguage)")
+                }
+            } else {
+                print("🌐 [LocalizationManager] ⚠️ No cache found - will download fresh")
             }
             
             // Check if we need to download updates
@@ -195,9 +226,17 @@ class LocalizationManager: NSObject, ObservableObject {
             return translated
         }
         
+        // If not in cache, log warning and check fallback
+        let isCacheEmpty = cachedTranslations.isEmpty
+        if isCacheEmpty {
+            print("⚠️ [localize] Cache is EMPTY for '\(key)' (language: \(selectedLanguage))")
+            print("🌐 [localize] In-memory cache count: \(cachedTranslations.count)")
+        }
+        
         // Fallback to hardcoded translations
         if let languageDict = fallbackTranslations[selectedLanguage],
            let translated = languageDict[key] {
+            print("📌 [localize] Using fallback translation for '\(key)' in \(selectedLanguage)")
             return translated
         }
         
@@ -245,6 +284,8 @@ class LocalizationManager: NSObject, ObservableObject {
                     // Trigger UI update
                     Task { @MainActor in
                         self.languageVersion += 1
+                        self.isTranslationsReady = true
+                        print("✅ [LocalizationManager] Translations ready (from download)")
                     }
                 } else {
                     print("⚠️ No translations found for language: \(self.currentLanguage)")
@@ -411,9 +452,11 @@ class LocalizationManager: NSObject, ObservableObject {
                 if let translations = try JSONSerialization.jsonObject(with: jsonData) as? [String: [String: String]] {
                     let timestamp = getGlobalCachedTimestamp()
                     let totalKeys = translations.values.reduce(0) { $0 + $1.count }
+                    print("📂 [loadAllTranslationsFromCache] Loaded from FILE: \(translations.count) languages, \(totalKeys) total keys, timestamp: \(timestamp ?? "nil")")
                     return translations
                 }
             } catch {
+                print("❌ [loadAllTranslationsFromCache] Error loading from file: \(error)")
             }
         }
         
@@ -424,8 +467,10 @@ class LocalizationManager: NSObject, ObservableObject {
            let translations = try? JSONSerialization.jsonObject(with: jsonData) as? [String: [String: String]] {
             let timestamp = getGlobalCachedTimestamp()
             let totalKeys = translations.values.reduce(0) { $0 + $1.count }
+            print("💾 [loadAllTranslationsFromCache] Loaded from USERDEFAULTS: \(translations.count) languages, \(totalKeys) total keys, timestamp: \(timestamp ?? "nil")")
             return translations
         }
+        print("❌ [loadAllTranslationsFromCache] No cache found (file and UserDefaults empty)")
         return nil
     }
     

@@ -284,11 +284,27 @@ struct ContentView: View {
     }
     
     func checkPermissionsAndSession() {
-        // Skip permission waiting - just proceed directly to session check
-        // Permissions can be requested/granted later when needed
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            isCheckingSession = true
-            checkExistingSession()
+        // Wait for translations to be ready before proceeding
+        print("⏳ [ContentView] Waiting for translations to be ready...")
+        
+        // Check every 50ms if translations are ready (max 5 seconds)
+        var attempts = 0
+        let maxAttempts = 100
+        
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { timer in
+            attempts += 1
+            
+            if self.localizationManager.isTranslationsReady || attempts >= maxAttempts {
+                timer.invalidate()
+                print("✅ [ContentView] Translations ready (or timeout) - proceeding to session check")
+                
+                // Skip permission waiting - just proceed directly to session check
+                // Permissions can be requested/granted later when needed
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.isCheckingSession = true
+                    self.checkExistingSession()
+                }
+            }
         }
     }
     
