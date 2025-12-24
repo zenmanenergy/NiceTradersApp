@@ -233,6 +233,13 @@ struct MeetingDetailView: View {
             }
             loadMeetingProposals()
         }
+        .onChange(of: activeTab) { newTab in
+            // Reload proposals when switching to Details tab
+            if newTab == .details {
+                print("🔄 [MDV] Switching to Details tab - reloading proposals")
+                loadMeetingProposals()
+            }
+        }
         .sheet(isPresented: $showRatingView) {
             RatingModalView(
                 isPresented: $showRatingView,

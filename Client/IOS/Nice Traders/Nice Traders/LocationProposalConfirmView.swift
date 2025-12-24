@@ -92,7 +92,7 @@ struct LocationProposalConfirmView: View {
                     // Meeting time (if available)
                     if let meetingTime = meetingTime {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("MEETING_TIME")
+                            Text(localizationManager.localize("MEETING_TIME"))
                                 .font(.caption)
                                 .foregroundColor(.gray)
                                 .textCase(.uppercase)
@@ -122,7 +122,7 @@ struct LocationProposalConfirmView: View {
                     }
                     .padding(16)
                 }
-                .frame(maxHeight: 400)
+                .frame(maxHeight: 475)
                 .background(Color.white)
                 
                 // Action buttons
