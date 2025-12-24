@@ -56,8 +56,9 @@ struct MeetingLocationView: View {
         ZStack {
             VStack(spacing: 0) {
                 // Map at the top - shows unless search field is focused
-                if !isSearchFieldFocused {
-                    ZStack {
+                Group {
+                    if !isSearchFieldFocused {
+                        ZStack {
                         if mapIsReady {
                             let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
                             let hasConfirmedLocation = locationProposals.contains { $0.status == "accepted" && !$0.proposedLocation.isEmpty }
@@ -134,13 +135,13 @@ struct MeetingLocationView: View {
                                 }
                             }
                             .mapStyle(.standard)
-                            .frame(height: 300)
+                            .frame(height: 200)
                             .onAppear {
                                 print("[DEBUG MLV] Map appeared")
                             }
                         } else {
                             Color(hex: "e2e8f0")
-                                .frame(height: 300)
+                                .frame(height: 200)
                                 .onAppear {
                                     print("[DEBUG MLV] Map initializing...")
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -178,6 +179,8 @@ struct MeetingLocationView: View {
                         }
                     }
                 }
+                }
+                .frame(height: 200)
                 
                 // Directions button
                 let locationProposals = meetingProposals.filter { !$0.proposedLocation.isEmpty }
@@ -283,9 +286,8 @@ struct MeetingLocationView: View {
                                             )
                                         }
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .frame(maxWidth: 500, alignment: .leading)
                                 }
-                                .frame(maxHeight: 300)
                             }
                         }
                     }
@@ -892,6 +894,13 @@ extension MeetingLocationView {
                    let success = json["success"] as? Bool, success,
                    let dashboardData = json["data"] as? [String: Any],
                    let activeExchanges = dashboardData["activeExchanges"] as? [[String: Any]] {
+                    
+                    print("[DEBUG MLV refreshListingData] Found \(activeExchanges.count) active exchanges in response")
+                    for exchange in activeExchanges {
+                        if let lid = exchange["listingId"] as? String {
+                            print("[DEBUG MLV refreshListingData]   - Exchange listing ID: \(lid)")
+                        }
+                    }
                     
                     if let matchingExchange = activeExchanges.first(where: { ($0["listingId"] as? String) == self.contactData.listing.listingId }) {
                         if let listingData = matchingExchange["listing"] as? [String: Any] {
