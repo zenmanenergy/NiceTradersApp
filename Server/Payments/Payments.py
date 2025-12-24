@@ -1,6 +1,7 @@
 from flask import Blueprint, request, Response
 from flask_cors import cross_origin
 import json
+from _Lib import Database
 from Payments.PayPalPayment import create_paypal_order, capture_paypal_order
 
 payments_bp = Blueprint('payments', __name__)
@@ -31,10 +32,26 @@ def CreatePayPalOrder():
                 mimetype='application/json'
             )
         
-        # For now, we'll use a simple approach - in production you might want more validation
-        # This endpoint creates the order, user then approves on PayPal
+        # Extract user_id from session
+        cursor, connection = Database.ConnectToDatabase()
+        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        session_result = cursor.fetchone()
+        connection.close()
+        
+        if not session_result:
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'Invalid session'
+                }),
+                mimetype='application/json'
+            )
+        
+        user_id = session_result['user_id']
+        
+        # Create the PayPal order
         result = create_paypal_order(
-            user_id=None,  # Will be extracted from session in PayPalPayment
+            user_id=user_id,
             listing_id=listing_id,
             amount=float(amount)
         )

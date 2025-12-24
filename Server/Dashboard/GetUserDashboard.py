@@ -64,8 +64,6 @@ def get_user_dashboard(SessionId):
     try:
         session_id = SessionId
         
-        print(f"[GetUserDashboard] Getting dashboard data for session: {session_id}")
-        
         if not session_id:
             return json.dumps({
                 'success': False,
@@ -91,7 +89,6 @@ def get_user_dashboard(SessionId):
             })
         
         user_id = session_result['user_id']
-        print(f"[GetUserDashboard] User ID from session: {user_id}")
         
         # Get user profile information
         user_query = """
@@ -101,7 +98,6 @@ def get_user_dashboard(SessionId):
         """
         cursor.execute(user_query, (user_id,))
         user_data = cursor.fetchone()
-        print(f"[GetUserDashboard] User data: {user_data}")
         
         # Get user's active listings count (listings created by user as seller)
         active_listings_query = """
@@ -143,12 +139,8 @@ def get_user_dashboard(SessionId):
             ORDER BY l.created_at DESC 
             LIMIT 10
         """
-        print(f"[GetUserDashboard] Querying user listings for user_id: {user_id}")
         cursor.execute(user_listings_query, (user_id,))
         user_listings = cursor.fetchall()
-        print(f"[GetUserDashboard] Found {len(user_listings)} user listings")
-        for listing in user_listings:
-            print(f"[GetUserDashboard]   - Listing: {listing['listing_id']}, currency: {listing['currency']}, amount: {listing['amount']}, status: {listing['status']}")
         
         # Get user's active exchanges (listings user is negotiating on as buyer or seller)
         active_exchanges_query = """
@@ -180,7 +172,6 @@ def get_user_dashboard(SessionId):
         """
         cursor.execute(active_exchanges_query, (user_id, user_id))
         active_exchanges = cursor.fetchall()
-        print(f"[GetUserDashboard] Found {len(active_exchanges)} active exchanges")
         
         # Placeholder for pending offers (exchange_offers table is not being used)
         pending_offers = []
@@ -278,15 +269,12 @@ def get_user_dashboard(SessionId):
             ]
         }
         
-        print(f"[GetUserDashboard] Successfully retrieved dashboard data for user {user_id}")
-        
         return json.dumps({
             'success': True,
             'data': dashboard_data
         })
         
     except Exception as e:
-        print(f"[GetUserDashboard] Error: {str(e)}")
         return json.dumps({
             'success': False,
             'error': 'Failed to retrieve dashboard data'

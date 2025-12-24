@@ -6,8 +6,6 @@ def get_user_statistics(SessionId):
     try:
         session_id = SessionId
         
-        print(f"[GetUserStatistics] Getting statistics for session: {session_id}")
-        
         if not session_id:
             return json.dumps({
                 'success': False,
@@ -92,15 +90,12 @@ def get_user_statistics(SessionId):
             ]
         }
         
-        print(f"[GetUserStatistics] Successfully retrieved statistics for user {user_id}")
-        
         return json.dumps({
             'success': True,
             'data': statistics_data
         })
         
     except Exception as e:
-        print(f"[GetUserStatistics] Error: {str(e)}")
         return json.dumps({
             'success': False,
             'error': 'Failed to retrieve statistics'

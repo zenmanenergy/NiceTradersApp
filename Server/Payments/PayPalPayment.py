@@ -97,7 +97,7 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
                     'experience_context': {
                         'return_url': return_url,
                         'cancel_url': cancel_url,
-                        'user_action': 'PAY'
+                        'user_action': 'CONTINUE'
                     }
                 }
             }
@@ -110,6 +110,10 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
             json=order_data,
             timeout=10
         )
+        
+        # Log the response for debugging
+        print(f"[PayPal] Order creation response status: {response.status_code}")
+        print(f"[PayPal] Order creation response: {response.text}")
         
         response.raise_for_status()
         result = response.json()
@@ -133,7 +137,7 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
         # Find approval link
         approval_link = None
         for link in result.get('links', []):
-            if link.get('rel') == 'approve':
+            if link.get('rel') == 'payer-action':
                 approval_link = link.get('href')
                 break
         

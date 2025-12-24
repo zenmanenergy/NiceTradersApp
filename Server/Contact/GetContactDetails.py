@@ -44,14 +44,10 @@ def format_location_display(location_coords, user_lat=None, user_lng=None):
 def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=None):
     """Get detailed information about a listing and trader for contact page"""
     try:
-        print(f"[GetContactDetails] Getting details for listing {listing_id}")
-        
         # Connect to database
         try:
             cursor, connection = Database.ConnectToDatabase()
-            print(f"[GetContactDetails] Database connection successful")
         except Exception as db_err:
-            print(f"[GetContactDetails] Database connection failed: {str(db_err)}")
             raise db_err
         
         # Get detailed listing information with trader details
@@ -85,21 +81,16 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
             AND l.status = 'active'
         """
         
-        print(f"[GetContactDetails] Executing query with listing_id: {listing_id}")
         try:
             cursor.execute(query, (listing_id,))
             result = cursor.fetchone()
-            print(f"[GetContactDetails] Query result: {result}")
         except Exception as query_err:
-            print(f"[GetContactDetails] Query execution failed: {str(query_err)}")
-            print(f"[GetContactDetails] Query was: {query}")
             raise query_err
         
         if not result:
             # Check if listing exists but with different status
             cursor.execute("SELECT listing_id, status FROM listings WHERE listing_id = %s", (listing_id,))
             status_check = cursor.fetchone()
-            print(f"[GetContactDetails] Status check result: {status_check}")
             return json.dumps({
                 'success': False,
                 'error': 'Listing not found or inactive'
@@ -154,7 +145,6 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
         
         # Get current agreed meeting if exists
         if session_id:
-            print(f"[GetContactDetails] Fetching meeting for listing_id: {listing_id}")
             meeting_query = """
                 SELECT lmt.meeting_time, lmt.accepted_at,
                        lml.meeting_location_lat, lml.meeting_location_lng, lml.meeting_location_name, lml.accepted_at as location_accepted_at
@@ -167,7 +157,6 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
             try:
                 cursor.execute(meeting_query, (listing_id,))
                 meeting_result = cursor.fetchone()
-                print(f"[GetContactDetails] Meeting query result: {meeting_result}")
                 if meeting_result:
                     listing_data['current_meeting'] = {
                         'location': meeting_result.get('meeting_location_name') or '',
@@ -175,13 +164,10 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
                         'message': None,
                         'agreed_at': meeting_result['accepted_at'].isoformat() if meeting_result['accepted_at'] else None
                     }
-                    print(f"[GetContactDetails] Meeting added to response: {listing_data['current_meeting']}")
                 else:
-                    print(f"[GetContactDetails] No agreed meeting found for listing {listing_id}")
+                    pass
             except Exception as meeting_err:
-                print(f"[GetContactDetails] Error fetching meeting data: {str(meeting_err)}")
-        else:
-            print(f"[GetContactDetails] No session_id provided, skipping meeting fetch")
+                pass
         
         # Close database connection
         cursor.close()
@@ -190,7 +176,6 @@ def get_contact_details(listing_id, session_id=None, user_lat=None, user_lng=Non
         return json.dumps(listing_data)
         
     except Exception as e:
-        print(f"[GetContactDetails] Error: {str(e)}")
         return json.dumps({
             'success': False,
             'error': 'Failed to get contact details'

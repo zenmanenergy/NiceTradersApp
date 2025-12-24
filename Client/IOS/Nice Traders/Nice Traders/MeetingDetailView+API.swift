@@ -554,56 +554,69 @@ extension MeetingDetailView {
             return
         }
         
-        let baseURL = Settings.shared.baseURL
-        var components = URLComponents(string: "\(baseURL)/Payments/ProcessPayment")!
-        components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
-            URLQueryItem(name: "listingId", value: contactData.listing.listingId)
-        ]
-        
-        guard let url = components.url else {
-            print("[MDV-PAY] Failed to construct payment URL")
-            return
-        }
-        
+        // Use the same PayPal flow as PaymentView
+        // Step 1: Create PayPal order
         isLoading = true
-        print("[MDV-PAY] Processing payment - calling: \(url.absoluteString)")
+        print("[MDV-PAY] Creating PayPal order for listing: \(contactData.listing.listingId)")
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        NegotiationService.shared.createPayPalOrder(listingId: contactData.listing.listingId) { result in
             DispatchQueue.main.async {
                 self.isLoading = false
-                print("[MDV-PAY] Payment response received")
                 
-                if let error = error {
-                    print("[MDV-PAY] Payment error: \(error.localizedDescription)")
-                    self.errorMessage = "Payment failed: \(error.localizedDescription)"
-                    return
-                }
-                
-                if let httpResponse = response as? HTTPURLResponse {
-                    print("[MDV-PAY] Payment HTTP status: \(httpResponse.statusCode)")
-                }
-                
-                if let data = data {
-                    print("[MDV-PAY] Response data: \(String(data: data, encoding: .utf8) ?? "no data")")
-                    if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                        if let success = json["success"] as? Bool, success {
-                            print("[MDV-PAY] Payment successful")
-                            // Reload proposals to get updated payment status from server
-                            print("[MDV-PAY] Reloading proposals to get updated payment status...")
-                            self.loadMeetingProposals()
+                switch result {
+                case .success(let response):
+                    if response.success, let orderId = response.orderId, let approvalUrl = response.approvalUrl {
+                        print("[MDV-PAY] Order created: \(orderId)")
+                        print("[MDV-PAY] Approval URL: \(approvalUrl)")
+                        // Store order ID for later capture
+                        self.currentPayPalOrderId = orderId
+                        
+                        // Open PayPal approval URL
+                        if let url = URL(string: approvalUrl) {
+                            print("[MDV-PAY] Opening PayPal approval URL in Safari")
+                            self.safariURL = url
+                            self.showSafari = true
                         } else {
-                            let errorMsg = json["error"] as? String ?? "Payment processing failed"
-                            self.errorMessage = errorMsg
-                            print("[MDV-PAY] Payment failed: \(errorMsg)")
+                            print("[MDV-PAY] ERROR: Failed to create URL from approvalUrl: \(approvalUrl)")
+                            self.errorMessage = "Invalid approval URL"
                         }
                     } else {
-                        print("[MDV-PAY] Failed to parse response")
-                        self.errorMessage = "Invalid response format"
+                        let errorMsg = response.error ?? "Failed to create payment order"
+                        self.errorMessage = errorMsg
+                        print("[MDV-PAY] Order creation failed: \(errorMsg)")
                     }
+                case .failure(let error):
+                    self.errorMessage = "Payment failed: \(error.localizedDescription)"
+                    print("[MDV-PAY] Payment error: \(error.localizedDescription)")
                 }
             }
-        }.resume()
+        }
+    }
+    
+    func capturePayPalOrder(orderId: String) {
+        print("[MDV-PAY] Capturing PayPal order: \(orderId)")
+        // Step 2: Capture PayPal order after user approval
+        NegotiationService.shared.capturePayPalOrder(orderId: orderId, listingId: contactData.listing.listingId) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let response):
+                    if response.success {
+                        print("[MDV-PAY] Order captured successfully")
+                        self.showSafari = false
+                        self.currentPayPalOrderId = nil
+                        // Reload proposals to get updated payment status
+                        self.loadMeetingProposals()
+                    } else {
+                        let errorMsg = response.error ?? "Failed to capture payment"
+                        self.errorMessage = errorMsg
+                        print("[MDV-PAY] Order capture failed: \(errorMsg)")
+                    }
+                case .failure(let error):
+                    self.errorMessage = "Payment capture failed: \(error.localizedDescription)"
+                    print("[MDV-PAY] Capture error: \(error.localizedDescription)")
+                }
+            }
+        }
     }
     
     func rejectExchange() {

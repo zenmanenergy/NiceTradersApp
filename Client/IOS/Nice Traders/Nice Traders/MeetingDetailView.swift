@@ -7,6 +7,8 @@
 //
 
 import SwiftUI
+import SafariServices
+import WebKit
 
 struct MeetingDetailView: View {
     let contactData: ContactData
@@ -46,6 +48,11 @@ struct MeetingDetailView: View {
     
     @State var isLoading: Bool = false
     @State var errorMessage: String?
+    
+    // PayPal payment state
+    @State var currentPayPalOrderId: String?
+    @State var safariURL: URL?
+    @State var showSafari: Bool = false
     
     enum ContactTab: String, CaseIterable {
         case details = "Details"
@@ -251,6 +258,18 @@ struct MeetingDetailView: View {
                 }
             )
         }
+        .sheet(isPresented: $showSafari) {
+            if let safariURL = safariURL {
+                PayPalWebView(url: safariURL) {
+                    // After user approves on PayPal, capture the order
+                    if let orderId = currentPayPalOrderId {
+                        print("[MDV-PAY] User approved on PayPal, capturing order: \(orderId)")
+                        capturePayPalOrder(orderId: orderId)
+                    }
+                    showSafari = false
+                }
+            }
+        }
     }
     
     // MARK: - Details View
@@ -297,4 +316,20 @@ struct MeetingDetailView: View {
             cancelButtonsSection
         }
     }
+}
+
+// MARK: - PayPal WebView
+
+struct PayPalWebView: UIViewRepresentable {
+    let url: URL
+    let onComplete: () -> Void
+    
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        let request = URLRequest(url: url)
+        webView.load(request)
+        return webView
+    }
+    
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
 }

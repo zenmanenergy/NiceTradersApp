@@ -346,21 +346,30 @@ class NegotiationService {
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
+                print("[NegotiationService] createPayPalOrder network error: \(error)")
                 completion(.failure(error))
                 return
             }
             
             guard let data = data else {
+                print("[NegotiationService] createPayPalOrder: No data received")
                 completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
+            }
+            
+            // Log raw response
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("[NegotiationService] createPayPalOrder raw response: \(jsonString)")
             }
             
             do {
                 let decoder = JSONDecoder()
                 decoder.keyDecodingStrategy = .useDefaultKeys
                 let result = try decoder.decode(CreateOrderResponse.self, from: data)
+                print("[NegotiationService] createPayPalOrder success: orderId=\(result.orderId ?? "nil"), approvalUrl=\(result.approvalUrl ?? "nil")")
                 completion(.success(result))
             } catch {
+                print("[NegotiationService] createPayPalOrder decoding error: \(error)")
                 completion(.failure(error))
             }
         }.resume()
