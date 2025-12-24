@@ -6,6 +6,62 @@ from Payments.PayPalPayment import create_paypal_order, capture_paypal_order
 
 payments_bp = Blueprint('payments', __name__)
 
+@payments_bp.route('/Payments/GetPayPalApprovalURL', methods=['GET'])
+@cross_origin()
+def GetPayPalApprovalURL():
+    """
+    Get the PayPal approval URL for a given order ID
+    Used by iOS app to show approval flow in Safari
+    """
+    try:
+        order_id = request.args.get('orderId')
+        
+        if not order_id:
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'orderId is required'
+                }),
+                mimetype='application/json'
+            )
+        
+        # Fetch order from database to get approval link
+        cursor, connection = Database.ConnectToDatabase()
+        cursor.execute("""
+            SELECT approval_link FROM paypal_orders 
+            WHERE order_id = %s
+        """, (order_id,))
+        result = cursor.fetchone()
+        connection.close()
+        
+        if not result or not result.get('approval_link'):
+            return Response(
+                json.dumps({
+                    'success': False,
+                    'error': 'Order not found or approval URL not available'
+                }),
+                mimetype='application/json'
+            )
+        
+        return Response(
+            json.dumps({
+                'success': True,
+                'approvalURL': result['approval_link']
+            }),
+            mimetype='application/json'
+        )
+        
+    except Exception as e:
+        print(f"[Payments] GetPayPalApprovalURL error: {str(e)}")
+        return Response(
+            json.dumps({
+                'success': False,
+                'error': str(e)
+            }),
+            mimetype='application/json',
+            status=500
+        )
+
 @payments_bp.route('/Payments/CreateOrder', methods=['GET', 'POST'])
 @cross_origin()
 def CreatePayPalOrder():

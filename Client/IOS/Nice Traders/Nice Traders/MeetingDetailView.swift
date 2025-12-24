@@ -7,13 +7,10 @@
 //
 
 import SwiftUI
-import CorePayments
-import PayPalWebPayments
 
 struct MeetingDetailView: View {
     let contactData: ContactData
     let initialDisplayStatus: String?
-    @Environment(\.dismiss) var dismiss: DismissAction
     @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToContact: Bool
     
