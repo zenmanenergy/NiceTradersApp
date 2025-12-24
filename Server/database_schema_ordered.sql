@@ -294,6 +294,7 @@ CREATE TABLE `paypal_orders` (
   `payer_name` varchar(255) DEFAULT NULL,
   `amount` decimal(15,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT 'USD',
+  `approval_link` varchar(1000) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`order_id`),

@@ -32,6 +32,7 @@ def GetPayPalApprovalURL():
             WHERE order_id = %s
         """, (order_id,))
         result = cursor.fetchone()
+        cursor.close()
         connection.close()
         
         if not result or not result.get('approval_link'):

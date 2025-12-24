@@ -125,21 +125,21 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
                 'error': 'Failed to create PayPal order'
             })
         
-        # Store order in database
-        cursor.execute("""
-            INSERT INTO paypal_orders (
-                order_id, user_id, listing_id, status, amount, currency, created_at, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, NOW(), NOW())
-        """, (order_id, user_id, listing_id, 'CREATED', amount, currency))
-        
-        connection.commit()
-        
         # Find approval link
         approval_link = None
         for link in result.get('links', []):
             if link.get('rel') == 'payer-action':
                 approval_link = link.get('href')
                 break
+        
+        # Store order in database
+        cursor.execute("""
+            INSERT INTO paypal_orders (
+                order_id, user_id, listing_id, status, amount, currency, approval_link, created_at, updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+        """, (order_id, user_id, listing_id, 'CREATED', amount, currency, approval_link))
+        
+        connection.commit()
         
         return json.dumps({
             'success': True,
