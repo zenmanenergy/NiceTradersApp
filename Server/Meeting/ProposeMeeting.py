@@ -14,6 +14,7 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         print(f"  proposed_time: {proposed_time}")
         print(f"  proposed_latitude: {proposed_latitude}")
         print(f"  proposed_longitude: {proposed_longitude}")
+        print(f"  message: {message}")
         
         # Either location or time must be provided
         if not session_id or not listing_id or (not proposed_location and not proposed_time):
@@ -215,12 +216,13 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                         SET meeting_location_lat = %s, 
                             meeting_location_lng = %s,
                             meeting_location_name = %s,
+                            message = %s,
                             proposed_by = %s,
                             accepted_at = NULL,
                             rejected_at = NULL,
                             updated_at = NOW()
                         WHERE listing_id = %s
-                    """, (lat, lng, proposed_location, proposer_id, listing_id))
+                    """, (lat, lng, proposed_location, message, proposer_id, listing_id))
                 else:
                     # Location is the same, keep acceptance
                     cursor.execute("""
@@ -228,11 +230,12 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                         SET meeting_location_lat = %s, 
                             meeting_location_lng = %s,
                             meeting_location_name = %s,
+                            message = %s,
                             proposed_by = %s,
                             rejected_at = NULL,
                             updated_at = NOW()
                         WHERE listing_id = %s
-                    """, (lat, lng, proposed_location, proposer_id, listing_id))
+                    """, (lat, lng, proposed_location, message, proposer_id, listing_id))
                 results['proposal_ids']['location'] = existing['location_negotiation_id']
             else:
                 # Create new location negotiation
@@ -240,10 +243,10 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
                 cursor.execute("""
                     INSERT INTO listing_meeting_location
                     (location_negotiation_id, listing_id, buyer_id, proposed_by, 
-                     meeting_location_lat, meeting_location_lng, meeting_location_name,
+                     meeting_location_lat, meeting_location_lng, meeting_location_name, message,
                      created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                """, (location_negotiation_id, listing_id, buyer_id, proposer_id, lat, lng, proposed_location))
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                """, (location_negotiation_id, listing_id, buyer_id, proposer_id, lat, lng, proposed_location, message))
                 results['proposal_ids']['location'] = location_negotiation_id
             
             print(f"✅ [ProposeMeeting] Location proposal saved: {results['proposal_ids']['location']}")

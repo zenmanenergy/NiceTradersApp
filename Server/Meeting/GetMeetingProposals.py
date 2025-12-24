@@ -150,7 +150,7 @@ def get_meeting_proposals(session_id, listing_id):
         print(f"🟠 [GetMeetingProposals] Fetching location proposals...")
         cursor.execute("""
             SELECT l.location_negotiation_id, l.meeting_location_lat, l.meeting_location_lng, 
-                   l.meeting_location_name, l.accepted_at, l.rejected_at, l.proposed_by, l.created_at, l.updated_at,
+                   l.meeting_location_name, l.message, l.accepted_at, l.rejected_at, l.proposed_by, l.created_at, l.updated_at,
                    u.FirstName as proposer_name
             FROM listing_meeting_location l
             LEFT JOIN users u ON l.proposed_by = u.user_id
@@ -173,6 +173,7 @@ def get_meeting_proposals(session_id, listing_id):
                 'proposed_time': '',
                 'latitude': float(proposal['meeting_location_lat']) if proposal['meeting_location_lat'] else None,
                 'longitude': float(proposal['meeting_location_lng']) if proposal['meeting_location_lng'] else None,
+                'message': proposal.get('message'),
                 'proposed_by_id': proposal['proposed_by'],
                 'proposed_by_name': proposer_name,
                 'status': status,
