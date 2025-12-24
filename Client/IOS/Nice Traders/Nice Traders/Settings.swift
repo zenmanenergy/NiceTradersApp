@@ -19,5 +19,10 @@ class Settings {
         #endif
     }
     
+    // PayPal Client ID for SDK integration
+    var paypalClientId: String {
+        return "AWFaVRhLIgJ7dLWmIw5u0D8mC5HzIaJaM8hvQTN8HfaV5XzF_xDwQBLh8fUcMkxDVWYCJG_IY5AUwPHV"
+    }
+    
     private init() {}
 }

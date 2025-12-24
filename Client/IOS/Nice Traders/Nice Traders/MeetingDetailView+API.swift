@@ -565,21 +565,11 @@ extension MeetingDetailView {
                 
                 switch result {
                 case .success(let response):
-                    if response.success, let orderId = response.orderId, let approvalUrl = response.approvalUrl {
+                    if response.success, let orderId = response.orderId {
                         print("[MDV-PAY] Order created: \(orderId)")
-                        print("[MDV-PAY] Approval URL: \(approvalUrl)")
-                        // Store order ID for later capture
+                        // Store order ID and show PayPal payment UI
                         self.currentPayPalOrderId = orderId
-                        
-                        // Open PayPal approval URL
-                        if let url = URL(string: approvalUrl) {
-                            print("[MDV-PAY] Opening PayPal approval URL in Safari")
-                            self.safariURL = url
-                            self.showSafari = true
-                        } else {
-                            print("[MDV-PAY] ERROR: Failed to create URL from approvalUrl: \(approvalUrl)")
-                            self.errorMessage = "Invalid approval URL"
-                        }
+                        self.showPayPalPayment = true
                     } else {
                         let errorMsg = response.error ?? "Failed to create payment order"
                         self.errorMessage = errorMsg
@@ -595,14 +585,17 @@ extension MeetingDetailView {
     
     func capturePayPalOrder(orderId: String) {
         print("[MDV-PAY] Capturing PayPal order: \(orderId)")
-        // Step 2: Capture PayPal order after user approval
+        isCapturingPayment = true
+        // Step 2: Capture PayPal order after user confirmation
         NegotiationService.shared.capturePayPalOrder(orderId: orderId, listingId: contactData.listing.listingId) { result in
             DispatchQueue.main.async {
+                self.isCapturingPayment = false
+                self.showPaymentConfirmation = false
+                
                 switch result {
                 case .success(let response):
                     if response.success {
                         print("[MDV-PAY] Order captured successfully")
-                        self.showSafari = false
                         self.currentPayPalOrderId = nil
                         // Reload proposals to get updated payment status
                         self.loadMeetingProposals()

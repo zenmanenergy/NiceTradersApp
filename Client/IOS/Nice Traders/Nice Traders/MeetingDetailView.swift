@@ -7,13 +7,13 @@
 //
 
 import SwiftUI
-import SafariServices
-import WebKit
+import CorePayments
+import PayPalWebPayments
 
 struct MeetingDetailView: View {
     let contactData: ContactData
     let initialDisplayStatus: String?
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) var dismiss: DismissAction
     @ObservedObject var localizationManager = LocalizationManager.shared
     @Binding var navigateToContact: Bool
     
@@ -51,8 +51,9 @@ struct MeetingDetailView: View {
     
     // PayPal payment state
     @State var currentPayPalOrderId: String?
-    @State var safariURL: URL?
-    @State var showSafari: Bool = false
+    @State var showPaymentConfirmation: Bool = false
+    @State var isCapturingPayment: Bool = false
+    @State var showPayPalPayment: Bool = false
     
     enum ContactTab: String, CaseIterable {
         case details = "Details"
@@ -258,16 +259,19 @@ struct MeetingDetailView: View {
                 }
             )
         }
-        .sheet(isPresented: $showSafari) {
-            if let safariURL = safariURL {
-                PayPalWebView(url: safariURL) {
-                    // After user approves on PayPal, capture the order
-                    if let orderId = currentPayPalOrderId {
-                        print("[MDV-PAY] User approved on PayPal, capturing order: \(orderId)")
-                        capturePayPalOrder(orderId: orderId)
-                    }
-                    showSafari = false
-                }
+        .sheet(isPresented: $showPayPalPayment) {
+            if let orderId = currentPayPalOrderId {
+                PayPalCheckoutView(orderId: orderId, onSuccess: {
+                    self.capturePayPalOrder(orderId: orderId)
+                    self.showPayPalPayment = false
+                }, onCancel: {
+                    self.showPayPalPayment = false
+                    self.currentPayPalOrderId = nil
+                }, onError: { error in
+                    self.errorMessage = "Payment error: \(error)"
+                    self.showPayPalPayment = false
+                    self.currentPayPalOrderId = nil
+                })
             }
         }
     }
@@ -316,20 +320,4 @@ struct MeetingDetailView: View {
             cancelButtonsSection
         }
     }
-}
-
-// MARK: - PayPal WebView
-
-struct PayPalWebView: UIViewRepresentable {
-    let url: URL
-    let onComplete: () -> Void
-    
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        let request = URLRequest(url: url)
-        webView.load(request)
-        return webView
-    }
-    
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
