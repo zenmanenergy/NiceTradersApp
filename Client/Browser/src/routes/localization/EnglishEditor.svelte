@@ -10,7 +10,6 @@
 	let currentKey = null;
 	let englishValue = '';
 	let oldEnglishValue = '';
-	let hasUnsavedChanges = false;
 	let updateStrategy = 'manual_review';
 	let loading = false;
 	let saving = false;
@@ -18,10 +17,7 @@
 	let success = null;
 	let usedInViews = [];
 
-	function handleTextareaChange() {
-		hasUnsavedChanges = englishValue !== oldEnglishValue;
-		console.log(`📝 Changes detected: ${hasUnsavedChanges}, current: "${englishValue}", old: "${oldEnglishValue}"`);
-	}
+	$: hasUnsavedChanges = englishValue !== oldEnglishValue && englishValue.trim() !== '';
 
 	$: if (translationKey && translationKey !== currentKey) {
 		currentKey = translationKey;
@@ -172,8 +168,6 @@
 				<textarea
 					id="english-input"
 					bind:value={englishValue}
-					on:input={handleTextareaChange}
-					on:change={handleTextareaChange}
 					placeholder="Enter English translation"
 					disabled={loading}
 					rows="4"
@@ -217,15 +211,13 @@
 
 			<!-- Action buttons -->
 			<div class="button-group">
+				<button class="btn btn-primary" on:click={handleSave} disabled={saving || !hasUnsavedChanges}>
+					{saving ? '💾 Saving...' : '💾 Save Changes'}
+				</button>
 				{#if hasUnsavedChanges}
-					<button class="btn btn-primary" on:click={handleSave} disabled={saving}>
-						{saving ? '💾 Saving...' : '💾 Save Changes'}
-					</button>
 					<button class="btn btn-secondary" on:click={handleCancel} disabled={saving}>
 						Cancel
 					</button>
-				{:else}
-					<p class="no-changes">No changes to save</p>
 				{/if}
 			</div>
 		</div>
