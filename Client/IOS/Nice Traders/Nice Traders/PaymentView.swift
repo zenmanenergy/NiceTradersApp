@@ -23,7 +23,6 @@ struct PaymentView: View {
     @State private var showSuccess = false
     @State private var paymentResult: CaptureOrderResponse?
     @State private var showPayPalCheckout = false
-    @State private var currentOrderId: String?
     
     let feeAmount = 2.00
     
@@ -213,23 +212,18 @@ struct PaymentView: View {
             }
             .sheet(isPresented: $showPayPalCheckout) {
                 PayPalCheckoutView(
-                    orderId: currentOrderId ?? "",
-                    listingId: negotiationId,
-                    cardholderNameInitial: "",
+                    negotiationId: negotiationId,
                     onSuccess: {
-                        // Payment and capture were successful
-                        print("[PaymentView] ✅ Payment complete, updating state")
                         self.showSuccess = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             self.onComplete()
                         }
                     },
                     onCancel: {
-                        currentOrderId = nil
+                        // User cancelled
                     },
                     onError: { errorMsg in
                         errorMessage = errorMsg
-                        currentOrderId = nil
                     }
                 )
             }
@@ -240,41 +234,11 @@ struct PaymentView: View {
     }
     
     private func processPayment() {
-        print("[MDV-PAY] processPayment() CALLED")
         isLoading = true
         errorMessage = nil
-        
-        // Step 1: Create PayPal order
-        print("[MDV-PAY] About to call createPayPalOrder")
-        NegotiationService.shared.createPayPalOrder(listingId: negotiationId) { result in
-            DispatchQueue.main.async {
-                isLoading = false
-                
-                switch result {
-                case .success(let response):
-                    print("[MDV-PAY] Response received: success=\(response.success), orderId=\(response.orderId ?? "nil"), approvalUrl=\(response.approvalUrl ?? "nil")")
-                    
-                    if response.success, let orderId = response.orderId {
-                        // Store order ID for later capture
-                        currentOrderId = orderId
-                        print("[MDV-PAY] Setting currentOrderId: \(orderId)")
-                        
-                        // Show PayPal checkout
-                        print("[MDV-PAY] About to show PayPal checkout sheet")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            showPayPalCheckout = true
-                            print("[MDV-PAY] showPayPalCheckout set to true")
-                        }
-                    } else {
-                        print("[MDV-PAY] Response missing required fields")
-                        errorMessage = response.error ?? localizationManager.localize("PAYMENT_FAILED")
-                    }
-                case .failure(let error):
-                    print("[MDV-PAY] Request failed: \(error.localizedDescription)")
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
+        // Show the form immediately while order is being created in background
+        showPayPalCheckout = true
+        isLoading = false
     }
     
     private func capturePayPalOrder(orderId: String) {

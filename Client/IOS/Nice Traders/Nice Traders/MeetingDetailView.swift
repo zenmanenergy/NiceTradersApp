@@ -47,7 +47,6 @@ struct MeetingDetailView: View {
     @State var errorMessage: String?
     
     // PayPal payment state
-    @State var currentPayPalOrderId: String?
     @State var showPaymentConfirmation: Bool = false
     @State var isCapturingPayment: Bool = false
     @State var showPayPalPayment: Bool = false
@@ -257,34 +256,19 @@ struct MeetingDetailView: View {
                 }
             )
         }
-        .sheet(isPresented: Binding(
-            get: { showPayPalPayment && currentPayPalOrderId != nil },
-            set: { showPayPalPayment = $0 }
-        )) {
+        .sheet(isPresented: $showPayPalPayment) {
             PayPalCheckoutView(
-                orderId: currentPayPalOrderId ?? "",
-                listingId: contactData.listing.listingId,
-                cardholderNameInitial: currentUserName,
+                negotiationId: contactData.listing.listingId,
                 onSuccess: {
-                    print("[MDV-Payment] ===== onSuccess CALLBACK =====")
-                    print("[MDV-Payment] ✅ Payment completed successfully")
-                    print("[MDV-Payment] Calling loadMeetingProposals()")
                     self.loadMeetingProposals()
-                    print("[MDV-Payment] loadMeetingProposals started (async)")
-                    print("[MDV-Payment] Scheduling modal dismiss in 0.5s")
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        print("[MDV-Payment] DISMISSING MODAL NOW")
                         self.showPayPalPayment = false
                     }
                 }, onCancel: {
-                print("[MeetingDetailView] 🔴 Payment cancelled")
-                self.showPayPalPayment = false
-                self.currentPayPalOrderId = nil
+                    self.showPayPalPayment = false
             }, onError: { error in
-                print("[MeetingDetailView] ❌ Payment error: \(error)")
                 self.errorMessage = "Payment error: \(error)"
                 self.showPayPalPayment = false
-                self.currentPayPalOrderId = nil
             }
         )
         }

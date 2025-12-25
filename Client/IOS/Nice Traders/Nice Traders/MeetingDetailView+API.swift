@@ -548,76 +548,15 @@ extension MeetingDetailView {
     }
     
     func processPayment() {
-        print("[processPayment] 🟠 FUNCTION CALLED")
-        
         guard let sessionId = SessionManager.shared.sessionId else {
-            print("[processPayment] ❌ ERROR: No session ID")
             errorMessage = "No active session"
             return
         }
         
-        // Get user's name from cached session data (no need to fetch again!)
-        let firstName = SessionManager.shared.firstName ?? ""
-        let lastName = SessionManager.shared.lastName ?? ""
-        currentUserName = [firstName, lastName].filter { !$0.isEmpty }.joined(separator: " ")
-        print("[processPayment] ✅ Using cached user name: '\(currentUserName)'")
-        
-        // Create PayPal order
-        print("[processPayment] 🟠 Creating PayPal order...")
-        isLoading = true
-        
-        NegotiationService.shared.createPayPalOrder(listingId: contactData.listing.listingId) { result in
-            DispatchQueue.main.async {
-                self.isLoading = false
-                
-                switch result {
-                case .success(let response):
-                    if response.success, let orderId = response.orderId {
-                        print("[processPayment] ✅ Order created: \(orderId)")
-                        self.currentPayPalOrderId = orderId
-                        print("[processPayment] ✅ currentUserName is: '\(self.currentUserName)'")
-                        // Show the sheet - the binding will only show it if orderId is set
-                        self.showPayPalPayment = true
-                    } else {
-                        print("[processPayment] ❌ FAILED - no orderId")
-                        self.errorMessage = response.error ?? "Failed to create order"
-                    }
-                case .failure(let error):
-                    print("[processPayment] ❌ FAILED - \(error.localizedDescription)")
-                    self.errorMessage = error.localizedDescription
-                }
-            }
-        }
+        // Show PayPal checkout immediately - it will create the order in background
+        showPayPalPayment = true
     }
     
-    func capturePayPalOrder(orderId: String) {
-        print("[MDV-PAY] Capturing PayPal order: \(orderId)")
-        isCapturingPayment = true
-        // Step 2: Capture PayPal order after user confirmation
-        NegotiationService.shared.capturePayPalOrder(orderId: orderId, listingId: contactData.listing.listingId) { result in
-            DispatchQueue.main.async {
-                self.isCapturingPayment = false
-                self.showPaymentConfirmation = false
-                
-                switch result {
-                case .success(let response):
-                    if response.success {
-                        print("[MDV-PAY] Order captured successfully")
-                        self.currentPayPalOrderId = nil
-                        // Reload proposals to get updated payment status
-                        self.loadMeetingProposals()
-                    } else {
-                        let errorMsg = response.error ?? "Failed to capture payment"
-                        self.errorMessage = errorMsg
-                        print("[MDV-PAY] Order capture failed: \(errorMsg)")
-                    }
-                case .failure(let error):
-                    self.errorMessage = "Payment capture failed: \(error.localizedDescription)"
-                    print("[MDV-PAY] Capture error: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
     
     func rejectExchange() {
         guard let sessionId = SessionManager.shared.sessionId else {
