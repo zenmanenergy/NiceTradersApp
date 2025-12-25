@@ -48,12 +48,13 @@
 				dispatch('englishValueChanged', englishValue);
 				console.log('✅ Key details loaded');
 			} else {
-				error = data.message || 'Failed to load';
+				// Key doesn't exist yet - allow user to create it
 				englishValue = '';
 				oldEnglishValue = '';
 				usedInViews = [];
 				dispatch('englishValueChanged', '');
-				console.error('❌ Server error:', data.message);
+				error = `${data.message} — You can enter a value below to create this translation`;
+				console.log('⚠️  Key not found, ready to create new translation');
 			}
 		} catch (e) {
 			error = `Failed to load details: ${e.message}`;

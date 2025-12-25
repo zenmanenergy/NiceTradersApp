@@ -120,8 +120,6 @@
 	}
 </script>
 
-<AdminHeader />
-
 <div class="localization-editor">
 	<header class="editor-header">
 		<h1>🌐 Localization Editor</h1>

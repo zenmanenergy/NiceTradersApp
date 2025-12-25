@@ -893,10 +893,10 @@ def rollback():
 
 @admin_translations_bp.route('/AutoTranslate', methods=['POST'])
 def auto_translate():
-    """Auto-translate English text to multiple languages using Google Translate API or fallback service"""
+    """Auto-translate English text to multiple languages using Google Cloud Translate"""
     try:
-        import requests
         import os
+        from google.cloud import translate_v3
         
         data = request.get_json()
         english_text = data.get('englishText')
@@ -909,19 +909,11 @@ def auto_translate():
                 'message': 'englishText and translationKey are required'
             }), 400
         
-        # Try Google Cloud Translate v3 first, fallback to MyMemory API
+        # Use Google Cloud Translate v3
         translations = {}
-        use_google = False
-        
-        try:
-            from google.cloud import translate_v3
-            translate_client = translate_v3.TranslationServiceClient()
-            project_id = os.getenv('GOOGLE_CLOUD_PROJECT', 'nicetraders')
-            parent = f"projects/{project_id}/locations/global"
-            use_google = True
-            print("[INFO] Using Google Cloud Translate v3")
-        except Exception as e:
-            print(f"[INFO] Google Translate not available, using MyMemory API: {str(e)}")
+        translate_client = translate_v3.TranslationServiceClient()
+        project_id = os.getenv('GOOGLE_CLOUD_PROJECT', 'nicetraders')
+        parent = f"projects/{project_id}/locations/global"
         
         # Translate to each target language
         for lang_code in target_languages:
@@ -930,62 +922,19 @@ def auto_translate():
                     translations[lang_code] = english_text
                     continue
                 
-                if use_google:
-                    # Use Google Translate v3
-                    lang_map = {
-                        'ja': 'ja',
-                        'es': 'es',
-                        'fr': 'fr',
-                        'de': 'de',
-                        'ar': 'ar',
-                        'hi': 'hi',
-                        'pt': 'pt',
-                        'ru': 'ru',
-                        'sk': 'sk',
-                        'zh': 'zh-CN'
+                response = translate_client.translate_text(
+                    request={
+                        "parent": parent,
+                        "contents": [english_text],
+                        "mime_type": "text/plain",
+                        "source_language_code": "en",
+                        "target_language_code": lang_code,
                     }
-                    
-                    target_lang = lang_map.get(lang_code, lang_code)
-                    
-                    response = translate_client.translate_text(
-                        request={
-                            'parent': parent,
-                            'target_language_code': target_lang,
-                            'source_language_code': 'en',
-                            'contents': [english_text]
-                        }
-                    )
-                    
-                    translated_text = response.translations[0].translated_text
-                    translations[lang_code] = translated_text
-                else:
-                    # Use MyMemory API (free, no auth required)
-                    lang_code_full = lang_code
-                    if lang_code == 'zh':
-                        lang_code_full = 'zh-CN'
-                    
-                    response = requests.get(
-                        f'https://api.mymemory.translated.net/get',
-                        params={
-                            'q': english_text,
-                            'langpair': f'en|{lang_code_full}'
-                        },
-                        timeout=5
-                    )
-                    
-                    result = response.json()
-                    if result.get('responseStatus') == 200:
-                        translated_text = result.get('responseData', {}).get('translatedText', '')
-                        if translated_text and translated_text != english_text:
-                            translations[lang_code] = translated_text
-                        else:
-                            print(f"[WARNING] MyMemory returned original text for {lang_code}")
-                            translations[lang_code] = None
-                    else:
-                        print(f"[ERROR] MyMemory API error for {lang_code}: {result.get('responseStatus')}")
-                        translations[lang_code] = None
+                )
                 
-                print(f"[DEBUG] Auto-translated to {lang_code}: {translations[lang_code]}")
+                translated_text = response.translations[0].translated_text
+                translations[lang_code] = translated_text
+                print(f"[DEBUG] Auto-translated to {lang_code}: {translated_text}")
                 
             except Exception as e:
                 print(f"[ERROR] Failed to translate to {lang_code}: {str(e)}")

@@ -132,8 +132,6 @@
 	}
 </script>
 
-<AdminHeader />
-
 <div class="status-dashboard">
 	<header class="dashboard-header">
 		<h1>📊 Translation Status Dashboard</h1>
