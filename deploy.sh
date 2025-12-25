@@ -25,7 +25,7 @@ sudo systemctl restart nicetraders
 
 # Deploy Svelte Admin
 echo "🎨 Building Svelte app..."
-cd Client/Browser
+cd /opt/NiceTradersApp/Client/Browser
 npm install
 npm run build
 
