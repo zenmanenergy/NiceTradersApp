@@ -16,13 +16,13 @@ db = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 cursor = db.cursor()
-cursor.execute("SELECT SessionId FROM usersessions WHERE user_id = %s LIMIT 1", (seller_user_id,))
+cursor.execute("SELECT session_id FROM user_sessions WHERE user_id = %s LIMIT 1", (seller_user_id,))
 session = cursor.fetchone()
 db.close()
 
 if session:
-    print(f"[TEST] Seller session found: {session['SessionId']}")
-    result = get_user_dashboard(session['SessionId'])
+    print(f"[TEST] Seller session found: {session['session_id']}")
+    result = get_user_dashboard(session['session_id'])
     data = json.loads(result)
     print(f"[TEST] API success: {data['success']}")
     if data['success']:

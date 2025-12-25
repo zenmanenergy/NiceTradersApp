@@ -18,7 +18,7 @@ def send_contact_message(session_id, listing_id, message_text):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

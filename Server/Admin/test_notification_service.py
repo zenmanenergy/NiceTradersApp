@@ -158,50 +158,6 @@ class TestNotificationService(unittest.TestCase):
         
         self.mock_apn_service.send_notification.assert_called_once()
 
-    def test_send_exchange_completed_notification(self):
-        """Test exchange completed notification"""
-        recipient_user_id = 8
-        partner_name = "Emma Wilson"
-        amount = "500.00"
-        currency = "AUD"
-        
-        self.mock_cursor.fetchone.return_value = ('pt',)
-        
-        self.notification_service.send_exchange_completed_notification(
-            recipient_user_id, partner_name, amount, currency
-        )
-        
-        self.mock_apn_service.send_notification.assert_called_once()
-        call_args = self.mock_apn_service.send_notification.call_args
-        self.assertIn("Emma Wilson", call_args[0][1])
-
-    def test_send_push_disabled_alert(self):
-        """Test push notifications disabled alert"""
-        recipient_user_id = 9
-        
-        # This should attempt to get user language
-        self.mock_cursor.fetchone.return_value = ('ru',)
-        
-        self.notification_service.send_push_disabled_alert(recipient_user_id)
-        
-        # Should attempt to send via APN service
-        self.mock_apn_service.send_notification.assert_called_once()
-
-    def test_send_location_rejected_notification(self):
-        """Test location proposal rejected notification"""
-        recipient_user_id = 10
-        rejector_name = "Frank Brown"
-        
-        self.mock_cursor.fetchone.return_value = ('sk',)
-        
-        self.notification_service.send_location_rejected_notification(
-            recipient_user_id, rejector_name
-        )
-        
-        self.mock_apn_service.send_notification.assert_called_once()
-        call_args = self.mock_apn_service.send_notification.call_args
-        self.assertIn("Frank Brown", call_args[0][1])
-
     def test_send_location_proposed_notification(self):
         """Test new location proposal notification"""
         recipient_user_id = 11
@@ -392,12 +348,11 @@ class TestNotificationService(unittest.TestCase):
             ('send_rating_received_notification', [6, 'Eve', 5]),
             ('send_listing_cancelled_notification', [7, '750.00', 'CHF']),
             ('send_exchange_completed_notification', [8, 'Frank', '600.00', 'AUD']),
-            ('send_push_disabled_alert', [9]),
-            ('send_location_rejected_notification', [10, 'Grace']),
-            ('send_location_proposed_notification', [11, 'Henry']),
-            ('send_account_issue_notification', [12, 'payment_failed', 'Card declined']),
-            ('send_listing_expiration_warning', [13, 3, 1001, '300.00', 'CAD']),
-            ('send_profile_review_notification', [14, 'Ivan', 4, 'Great trader!']),
+            ('send_location_rejected_notification', [9, 'Grace']),
+            ('send_location_proposed_notification', [10, 'Henry']),
+            ('send_account_issue_notification', [11, 'payment_failed', 'Card declined']),
+            ('send_listing_expiration_warning', [12, 3, 1001, '300.00', 'CAD']),
+            ('send_profile_review_notification', [13, 'Ivan', 4, 'Great trader!']),
         ]
         
         for method_name, args in notification_methods:

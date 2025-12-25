@@ -124,7 +124,7 @@ class TestListingsEndpoints:
         
         session_id = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, user_id)
+            INSERT INTO user_sessions (session_id, user_id)
             VALUES (%s, %s)
         """, (session_id, user_id))
         connection.commit()
@@ -140,7 +140,7 @@ class TestListingsEndpoints:
         assert data['success'] is False
         
         # Cleanup
-        cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM user_sessions WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         connection.commit()
     

@@ -218,7 +218,7 @@ def GetLockedExchangeRate():
         from _Lib import Database
         cursor, connection = Database.ConnectToDatabase()
         
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

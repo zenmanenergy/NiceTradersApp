@@ -19,8 +19,8 @@ def propose_location(negotiation_id, session_id, proposed_location, proposed_lat
         
         # Verify session and get user ID
         session_query = """
-            SELECT user_id FROM usersessions 
-            WHERE SessionId = %s
+            SELECT user_id FROM user_sessions 
+            WHERE session_id = %s
         """
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()

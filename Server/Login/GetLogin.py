@@ -32,14 +32,14 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 		else:
 			print(result)
 			# Delete existing sessions for the user
-			query = "DELETE FROM usersessions WHERE user_id = %s"
+			query = "DELETE FROM user_sessions WHERE user_id = %s"
 			values = (result['user_id'],)
 			cursor.execute(query, values)
 			connection.commit()
 
 			# Create a new session
 			SessionId = "SES" + str(uuid.uuid4())
-			query = "INSERT INTO usersessions(SessionId, user_id, DateAdded) VALUES (%s, %s, %s)"
+			query = "INSERT INTO user_sessions(session_id, user_id, DateAdded) VALUES (%s, %s, %s)"
 			values = (SessionId, result['user_id'], datetime.datetime.now(),)
 			cursor.execute(query, values)
 			connection.commit()
@@ -64,18 +64,9 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 					)
 					device_check = cursor_check.fetchone()
 					
-					# If no active iOS device with token, alert user
+					# If no active iOS device with token, log it
 					if not device_check or not device_check.get('device_token'):
 						log_device_event(f"LOGIN: Push notifications not enabled for user {result['user_id']}")
-						# Send a push notification alert that push notifications are disabled
-						try:
-							from Admin.NotificationService import notification_service
-							notification_service.send_push_disabled_alert(
-								user_id=result['user_id'],
-								session_id=SessionId
-							)
-						except Exception as notif_error:
-							log_device_event(f"LOGIN: Failed to send push disabled alert: {str(notif_error)}")
 				except Exception as device_check_error:
 					log_device_event(f"LOGIN: Error checking device status: {str(device_check_error)}")
 				finally:

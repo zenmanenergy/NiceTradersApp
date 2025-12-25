@@ -40,13 +40,13 @@ def test_process_card_payment():
         try:
             cursor, connection = Database.ConnectToDatabase()
             # Get or create a session for the test user
-            cursor.execute("SELECT SessionId FROM usersessions WHERE user_id = %s LIMIT 1", (test_user_id,))
+            cursor.execute("SELECT session_id FROM user_sessions WHERE user_id = %s LIMIT 1", (test_user_id,))
             result = cursor.fetchone()
             cursor.close()
             connection.close()
             
             if result:
-                session_id = result['SessionId']
+                session_id = result['session_id']
                 print(f"✅ Using session: {session_id}")
             else:
                 print("❌ No session found for test user - create one first!")

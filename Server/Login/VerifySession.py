@@ -11,10 +11,10 @@ def verify_session(SessionId):
 
 	# Construct the SQL query with COLLATE to fix collation mismatch
 	query = """
-		SELECT usersessions.SessionId, users.UserType 
-		FROM usersessions 
-		INNER JOIN users ON usersessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci 
-		WHERE usersessions.SessionId COLLATE utf8mb4_general_ci = %s
+		SELECT user_sessions.session_id, users.UserType 
+		FROM user_sessions 
+		INNER JOIN users ON user_sessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci 
+		WHERE user_sessions.session_id COLLATE utf8mb4_general_ci = %s
 	"""
 	values = (SessionId,)
 
@@ -28,5 +28,5 @@ def verify_session(SessionId):
 	if not result:
 		return '""'
 	else:
-		return '{"SessionId": "' + result["SessionId"] + '", "UserType": "' + result["UserType"] + '"}'
+		return '{"session_id": "' + result["session_id"] + '", "UserType": "' + result["UserType"] + '"}'
 

@@ -4,12 +4,24 @@ Notification Service - Centralized module for triggering APN and other notificat
 from APNService.APNService import APNService
 from _Lib.Database import ConnectToDatabase
 from _Lib.i18n import get_translation, format_currency, format_datetime
+import os
+
+# Initialize APN Service with credentials (same as Admin.py)
+APN_KEY_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'AuthKey_LST3TZH33S.p8')
+APN_KEY_ID = 'LST3TZH33S'
+APN_TEAM_ID = 'J7S264TV3T'
+APN_TOPIC = 'NiceTraders.Nice-Traders'
 
 class NotificationService:
     """Service for managing all types of notifications"""
     
     def __init__(self):
-        self.apn_service = APNService()
+        self.apn_service = APNService(
+            certificate_path=APN_KEY_PATH,
+            key_id=APN_KEY_ID,
+            team_id=APN_TEAM_ID,
+            topic=APN_TOPIC
+        )
     
     def send_payment_received_notification(self, seller_id, buyer_name, amount, currency, listing_id, session_id=None):
         """
@@ -29,9 +41,9 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(seller_id)
         
-        title = get_translation(seller_lang, 'PAYMENT_RECEIVED')
+        title = self.get_translation_from_db(seller_lang, 'PAYMENT_RECEIVED')
         currency_str = format_currency(amount, currency)
-        body = f"{buyer_name} {get_translation(seller_lang, 'has_paid_negotiation_fee')} ({currency_str})"
+        body = f"{buyer_name} {self.get_translation_from_db(seller_lang, 'has_paid_negotiation_fee')} ({currency_str})"
         
         result = self.apn_service.send_notification(
             user_id=seller_id,
@@ -49,11 +61,11 @@ class NotificationService:
     def send_meeting_proposal_notification(self, recipient_id, proposer_name, proposed_time, 
                                           listing_id, proposal_id, session_id=None):
         """
-        Send notification when a meeting is proposed
+        Send notification when a meeting time proposal is accepted/confirmed
         Args:
-            recipient_id: ID of the user receiving the proposal
-            proposer_name: Name of the user proposing the meeting
-            proposed_time: Time of the proposed meeting (formatted string)
+            recipient_id: ID of the user receiving the confirmation
+            proposer_name: Name of the user who accepted the meeting time
+            proposed_time: Time of the meeting
             listing_id: ID of the listing
             proposal_id: ID of the proposal
             session_id: Optional session ID for auto-login (will be fetched if not provided)
@@ -65,9 +77,24 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(recipient_id)
         
-        title = get_translation(recipient_lang, 'MEETING_PROPOSED')
-        proposed_text = get_translation(recipient_lang, 'meeting_proposed_text')
-        body = f"{proposer_name} {proposed_text} {proposed_time}"
+        # Format the time nicely
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
+            time_str = dt.strftime('%b %d at %I:%M %p')
+            # Remove leading zero from hour (02:30 PM -> 2:30 PM)
+            parts = time_str.split(' at ')
+            date_part = parts[0]
+            time_part = parts[1]
+            hour, rest = time_part.split(':', 1)
+            hour = str(int(hour))
+            formatted_time = f"{date_part} at {hour}:{rest}"
+        except:
+            formatted_time = proposed_time
+        
+        title = self.get_translation_from_db(recipient_lang, 'MEETING_ACCEPTED')
+        accepted_text = self.get_translation_from_db(recipient_lang, 'meeting_time_accepted')
+        body = f"{proposer_name} {accepted_text} {formatted_time}"
         
         result = self.apn_service.send_notification(
             user_id=recipient_id,
@@ -77,6 +104,57 @@ class NotificationService:
             sound='default',
             session_id=session_id,
             deep_link_type='meeting',
+            deep_link_id=proposal_id
+        )
+        
+        return result
+    
+    def send_meeting_counter_proposal_notification(self, recipient_id, proposer_name, counter_time, 
+                                                   listing_id, proposal_id, session_id=None):
+        """
+        Send notification when a counter-time proposal is made (neither party has accepted yet)
+        Args:
+            recipient_id: ID of the user receiving the counter-proposal
+            proposer_name: Name of the user proposing the counter-time
+            counter_time: The newly proposed meeting time
+            listing_id: ID of the listing
+            proposal_id: ID of the counter-proposal
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        # Get recipient's preferred language
+        recipient_lang = self.get_user_language(recipient_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(recipient_id)
+        
+        # Format the time nicely
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(counter_time.replace('Z', '+00:00'))
+            time_str = dt.strftime('%b %d at %I:%M %p')
+            # Remove leading zero from hour (02:30 PM -> 2:30 PM)
+            parts = time_str.split(' at ')
+            date_part = parts[0]
+            time_part = parts[1]
+            hour, rest = time_part.split(':', 1)
+            hour = str(int(hour))
+            formatted_time = f"{date_part} at {hour}:{rest}"
+        except:
+            formatted_time = counter_time
+        
+        title = self.get_translation_from_db(recipient_lang, 'MEETING_COUNTER_PROPOSAL')
+        counter_text = self.get_translation_from_db(recipient_lang, 'meeting_counter_proposal_text')
+        body = f"{proposer_name} {counter_text} {formatted_time}"
+        
+        result = self.apn_service.send_notification(
+            user_id=recipient_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='negotiation',
             deep_link_id=proposal_id
         )
         
@@ -101,8 +179,8 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(recipient_id)
         
-        title = get_translation(recipient_lang, 'NEW_MESSAGE')
-        message_from_text = get_translation(recipient_lang, 'message_from')
+        title = self.get_translation_from_db(recipient_lang, 'NEW_MESSAGE')
+        message_from_text = self.get_translation_from_db(recipient_lang, 'message_from')
         body = f"{sender_name} {message_from_text} {message_preview[:50]}"
         
         result = self.apn_service.send_notification(
@@ -144,7 +222,7 @@ class NotificationService:
         }
         
         translation_key = status_key_map.get(status, 'listing_flagged')
-        title = get_translation(seller_lang, translation_key)
+        title = self.get_translation_from_db(seller_lang, translation_key)
         body = reason if reason else f"Your listing #{listing_id[:8]}"
         
         result = self.apn_service.send_notification(
@@ -177,7 +255,7 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(user_id)
         
-        title = get_translation(user_lang, 'RATING_RECEIVED')
+        title = self.get_translation_from_db(user_lang, 'RATING_RECEIVED')
         stars = "⭐" * rating
         body = f"{rater_name} gave you a {rating}-star rating {stars}"
         
@@ -205,22 +283,64 @@ class NotificationService:
         """
         try:
             cursor, connection = ConnectToDatabase()
+            # Get language from users table (PreferredLanguage column)
             cursor.execute(
-                "SELECT SettingsJson FROM user_settings WHERE user_id = %s",
+                "SELECT PreferredLanguage FROM users WHERE user_id = %s",
                 (user_id,)
             )
             result = cursor.fetchone()
             cursor.close()
             connection.close()
             
-            if result and result.get('SettingsJson'):
-                import json
-                settings = json.loads(result['SettingsJson'])
-                return settings.get('language', 'en')
+            if result and result.get('PreferredLanguage'):
+                return result['PreferredLanguage']
             return 'en'
         except Exception as e:
             print(f"Error getting user language: {e}")
             return 'en'
+    
+    def get_translation_from_db(self, language_code, translation_key):
+        """
+        Get translation from database
+        Args:
+            language_code: Language code (e.g., 'en', 'es')
+            translation_key: Translation key
+        
+        Returns:
+            Translated string or the key itself as fallback
+        """
+        try:
+            cursor, connection = ConnectToDatabase()
+            cursor.execute(
+                "SELECT translation_value FROM translations WHERE translation_key = %s AND language_code = %s",
+                (translation_key, language_code)
+            )
+            result = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            
+            if result:
+                return result.get('translation_value', translation_key)
+            
+            # Fallback to English if translation not found
+            if language_code != 'en':
+                cursor, connection = ConnectToDatabase()
+                cursor.execute(
+                    "SELECT translation_value FROM translations WHERE translation_key = %s AND language_code = 'en'",
+                    (translation_key,)
+                )
+                result = cursor.fetchone()
+                cursor.close()
+                connection.close()
+                
+                if result:
+                    return result.get('translation_value', translation_key)
+            
+            # Last resort: return the key itself
+            return translation_key
+        except Exception as e:
+            print(f"Error getting translation from database: {e}")
+            return translation_key
     
     def get_user_session(self, user_id):
         """
@@ -234,7 +354,7 @@ class NotificationService:
         try:
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT SessionId FROM usersessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
+                "SELECT session_id FROM user_sessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
                 (user_id,)
             )
             result = cursor.fetchone()
@@ -242,7 +362,7 @@ class NotificationService:
             connection.close()
             
             if result:
-                return result['SessionId']
+                return result.get('session_id')
             return None
         except Exception as e:
             print(f"Error getting user session: {e}")
@@ -271,11 +391,18 @@ class NotificationService:
         try:
             from datetime import datetime
             dt = datetime.fromisoformat(proposed_time.replace('Z', '+00:00'))
-            formatted_time = dt.strftime('%b %d at %I:%M %p')
+            time_str = dt.strftime('%b %d at %I:%M %p')
+            # Remove leading zero from hour (02:30 PM -> 2:30 PM)
+            parts = time_str.split(' at ')
+            date_part = parts[0]
+            time_part = parts[1]
+            hour, rest = time_part.split(':', 1)
+            hour = str(int(hour))
+            formatted_time = f"{date_part} at {hour}:{rest}"
         except:
             formatted_time = proposed_time
         
-        title = get_translation(seller_lang, 'NEGOTIATION_PROPOSAL')
+        title = self.get_translation_from_db(seller_lang, 'NEGOTIATION_PROPOSAL')
         body = f"{buyer_name} wants to meet on {formatted_time}"
         
         result = self.apn_service.send_notification(
@@ -306,8 +433,8 @@ class NotificationService:
         session_id = self.get_user_session(buyer_id)
         
         # Get translation for title
-        title = get_translation(buyer_lang, 'listing_cancelled')
-        body = f"{seller_name}'s listing '{listing_title}' was cancelled"
+        title = self.get_translation_from_db(buyer_lang, 'listing_cancelled')
+        body = self.get_translation_from_db(buyer_lang, 'listing_cancelled_text').replace('{seller_name}', seller_name).replace('{listing_title}', listing_title)
         
         result = self.apn_service.send_notification(
             user_id=buyer_id,
@@ -322,95 +449,9 @@ class NotificationService:
         
         return result
 
-    def send_exchange_completed_notification(self, user_id, partner_name):
-        """
-        Send notification when an exchange is completed by the other party
-        Args:
-            user_id: ID of the user being notified
-            partner_name: Name of the partner who completed the exchange
-        """
-        # Get user's preferred language
-        user_lang = self.get_user_language(user_id)
-        
-        # Get session ID for user
-        session_id = self.get_user_session(user_id)
-        
-        # Get translation for title
-        title = get_translation(user_lang, 'exchange_completed')
-        body = f"{partner_name} has confirmed the exchange completion"
-        
-        result = self.apn_service.send_notification(
-            user_id=user_id,
-            title=title,
-            body=body,
-            badge=1,
-            sound='default',
-            session_id=session_id,
-            deep_link_type='dashboard',
-            deep_link_id=None
-        )
-        
-        return result
+
     
-    def send_push_disabled_alert(self, user_id, session_id=None):
-        """
-        Send alert when user logs in but push notifications are disabled
-        Args:
-            user_id: ID of the user
-            session_id: Optional session ID for auto-login (will be fetched if not provided)
-        """
-        # Get user's preferred language
-        user_lang = self.get_user_language(user_id)
-        
-        # Get session ID if not provided
-        if not session_id:
-            session_id = self.get_user_session(user_id)
-        
-        title = get_translation(user_lang, 'PUSH_NOTIFICATIONS_DISABLED')
-        body = get_translation(user_lang, 'PUSH_NOTIFICATIONS_REQUIRED_MESSAGE')
-        
-        result = self.apn_service.send_notification(
-            user_id=user_id,
-            title=title,
-            body=body,
-            badge=1,
-            sound='default',
-            session_id=session_id,
-            deep_link_type='settings',
-            deep_link_id='notifications'
-        )
-        
-        return result
-    
-    def send_location_rejected_notification(self, user_id, proposer_name, listing_id, session_id=None):
-        """
-        Send notification when a proposed meeting location is rejected
-        Args:
-            user_id: ID of the user whose location proposal was rejected
-            proposer_name: Name of the user who rejected the proposal
-            listing_id: ID of the listing
-            session_id: Optional session ID for auto-login (will be fetched if not provided)
-        """
-        user_lang = self.get_user_language(user_id)
-        
-        if not session_id:
-            session_id = self.get_user_session(user_id)
-        
-        title = get_translation(user_lang, 'LOCATION_REJECTED')
-        body = f"{proposer_name} {get_translation(user_lang, 'rejected_your_location_proposal')}"
-        
-        result = self.apn_service.send_notification(
-            user_id=user_id,
-            title=title,
-            body=body,
-            badge=1,
-            sound='default',
-            session_id=session_id,
-            deep_link_type='listing',
-            deep_link_id=listing_id
-        )
-        
-        return result
+
     
     def send_location_proposed_notification(self, user_id, proposer_name, listing_id, session_id=None):
         """
@@ -426,8 +467,8 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(user_id)
         
-        title = get_translation(user_lang, 'LOCATION_PROPOSED')
-        body = f"{proposer_name} {get_translation(user_lang, 'proposed_new_meeting_location')}"
+        title = self.get_translation_from_db(user_lang, 'LOCATION_PROPOSED')
+        body = f"{proposer_name} {self.get_translation_from_db(user_lang, 'proposed_new_meeting_location')}"
         
         result = self.apn_service.send_notification(
             user_id=user_id,
@@ -441,6 +482,64 @@ class NotificationService:
         )
         
         return result
+
+    def send_location_counter_notification(self, recipient_id, proposer_name, counter_location, listing_id, proposal_id):
+        """
+        Send notification when a counter-location proposal is made (neither party has accepted yet)
+        Args:
+            recipient_id: ID of the user receiving the notification
+            proposer_name: Name of the user proposing the counter location
+            counter_location: The counter location proposed
+            listing_id: ID of the listing
+            proposal_id: ID of the proposal
+        """
+        recipient_lang = self.get_user_language(recipient_id)
+        session_id = self.get_user_session(recipient_id)
+        
+        title = self.get_translation_from_db(recipient_lang, 'LOCATION_COUNTER_PROPOSAL')
+        body = f"{proposer_name} {self.get_translation_from_db(recipient_lang, 'location_counter_proposal_text')}"
+        
+        result = self.apn_service.send_notification(
+            user_id=recipient_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+
+    def send_location_accepted_notification(self, recipient_id, accepter_name, listing_id, proposal_id):
+        """
+        Send notification when a location proposal is accepted by the other party
+        Args:
+            recipient_id: ID of the user receiving the notification
+            accepter_name: Name of the user accepting the location
+            listing_id: ID of the listing
+            proposal_id: ID of the proposal
+        """
+        recipient_lang = self.get_user_language(recipient_id)
+        session_id = self.get_user_session(recipient_id)
+        
+        title = self.get_translation_from_db(recipient_lang, 'LOCATION_ACCEPTED')
+        body = f"{accepter_name} {self.get_translation_from_db(recipient_lang, 'location_accepted_text')}"
+        
+        result = self.apn_service.send_notification(
+            user_id=recipient_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+
     
     def send_exchange_marked_complete_notification(self, user_id, partner_name, listing_id, session_id=None):
         """
@@ -456,7 +555,7 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(user_id)
         
-        title = get_translation(user_lang, 'EXCHANGE_MARKED_COMPLETE')
+        title = self.get_translation_from_db(user_lang, 'EXCHANGE_MARKED_COMPLETE')
         body = f"{partner_name} has confirmed their exchange completion"
         
         result = self.apn_service.send_notification(
@@ -486,7 +585,7 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(seller_id)
         
-        title = get_translation(user_lang, 'LISTING_REPORTED')
+        title = self.get_translation_from_db(user_lang, 'LISTING_REPORTED')
         reason_formatted = reason.replace('_', ' ').title()
         body = f"Your listing was reported for: {reason_formatted}"
         
@@ -517,7 +616,7 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(user_id)
         
-        title = get_translation(user_lang, 'ACCOUNT_ISSUE')
+        title = self.get_translation_from_db(user_lang, 'ACCOUNT_ISSUE')
         body = issue_description
         
         result = self.apn_service.send_notification(
@@ -548,7 +647,7 @@ class NotificationService:
         if not session_id:
             session_id = self.get_user_session(seller_id)
         
-        title = get_translation(user_lang, 'LISTING_EXPIRING_SOON')
+        title = self.get_translation_from_db(user_lang, 'LISTING_EXPIRING_SOON')
         body = f"'{listing_title}' expires in {days_remaining} days"
         
         result = self.apn_service.send_notification(
@@ -564,36 +663,6 @@ class NotificationService:
         
         return result
     
-    def send_profile_review_notification(self, user_id, reviewer_name, review_text, session_id=None):
-        """
-        Send notification when user receives a profile review/comment
-        Args:
-            user_id: ID of the user receiving the review
-            reviewer_name: Name of the user leaving the review
-            review_text: Text of the review (preview)
-            session_id: Optional session ID for auto-login (will be fetched if not provided)
-        """
-        user_lang = self.get_user_language(user_id)
-        
-        if not session_id:
-            session_id = self.get_user_session(user_id)
-        
-        title = get_translation(user_lang, 'PROFILE_REVIEW_RECEIVED')
-        body = f"{reviewer_name} left a comment: {review_text[:50]}"
-        
-        result = self.apn_service.send_notification(
-            user_id=user_id,
-            title=title,
-            body=body,
-            badge=1,
-            sound='default',
-            session_id=session_id,
-            deep_link_type='profile',
-            deep_link_id=reviewer_name
-        )
-        
-        return result
-
 
 # Global instance
 notification_service = NotificationService()

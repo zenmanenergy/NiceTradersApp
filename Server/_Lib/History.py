@@ -73,7 +73,7 @@ def SaveHistory(Data, Table, KeyName,KeyValue ):
 	if SessionId=="ImportData":
 		user_id = "1"
 	else:
-		query = f"SELECT user_id from usersessions WHERE SessionId = '{SessionId}'"
+		query = f"SELECT user_id from user_sessions WHERE session_id = '{SessionId}'"
 		
 		# print(query)
 

@@ -18,7 +18,6 @@
 	let sendResult = null;
 	let showResult = false;
 	let selectedDeviceId = null;
-	let deletingDeviceId = null;
 
 	onMount(async () => {
 		await loadUserData();
@@ -142,39 +141,6 @@
 	function goBack() {
 		goto(`/user/${user.user_id}`);
 	}
-
-	async function deleteDevice(deviceId) {
-		if (!confirm('Are you sure you want to delete this device? It will be unregistered.')) {
-			return;
-		}
-
-		deletingDeviceId = deviceId;
-
-		try {
-			const response = await SuperFetch('/Admin/DeleteDevice', {
-				device_id: deviceId,
-				user_id: user.user_id
-			}, 'POST');
-
-			if (response && response.success) {
-				// Remove from array directly
-				const index = userDevices.findIndex(d => d.device_id === deviceId);
-				if (index > -1) {
-					userDevices.splice(index, 1);
-					userDevices = userDevices; // Trigger reactivity
-				}
-				alert('Device deleted successfully');
-			} else {
-				console.error('Delete response:', response);
-				alert('Failed to delete device: ' + (response?.error || 'Unknown error'));
-			}
-		} catch (error) {
-			console.error('Delete error:', error);
-			alert('Error deleting device: ' + error.message);
-		} finally {
-			deletingDeviceId = null;
-		}
-	}
 </script>
 
 <AdminLayout>
@@ -220,33 +186,15 @@
 								{/if}
 								<div>
 									<strong>Token:</strong>
-									{#if device.device_token}
-										<div class="token-display">
-											<span class="badge badge-success">✓ Registered</span>
-											<div class="token-value" title={device.device_token}>
-												{device.device_token}
-											</div>
-										</div>
-									{:else}
-										<span class="device-token-indicator no-token">
-											✗ Missing
-										</span>
-									{/if}
+									<span class="device-token-indicator {device.device_token ? 'has-token' : 'no-token'}">
+										{device.device_token ? '✓ Registered' : '✗ Missing'}
+									</span>
 								</div>
 								<div>
 									<strong>Active:</strong>
 									<span class="active-indicator {device.is_active ? 'active' : 'inactive'}">
 										{device.is_active ? 'Yes' : 'No'}
 									</span>
-								</div>
-								<div class="device-actions">
-									<button 
-										class="btn-delete-device" 
-										on:click={() => deleteDevice(device.device_id)}
-										disabled={deletingDeviceId === device.device_id}
-									>
-										{deletingDeviceId === device.device_id ? '⏳ Deleting...' : '🗑️ Delete Device'}
-									</button>
 								</div>
 							</div>
 						</div>
@@ -638,54 +586,6 @@
 		display: flex;
 		gap: 12px;
 		margin-top: 32px;
-	}
-
-	.token-display {
-		margin-top: 8px;
-	}
-
-	.token-value {
-		background: #f5f5f5;
-		border: 1px solid #e0e0e0;
-		border-radius: 4px;
-		padding: 12px;
-		margin-top: 8px;
-		font-family: 'Monaco', 'Courier New', monospace;
-		font-size: 12px;
-		word-break: break-all;
-		color: #333;
-		max-height: 100px;
-		overflow-y: auto;
-		line-height: 1.4;
-		user-select: all;
-	}
-
-	.device-actions {
-		margin-top: 12px;
-		padding-top: 12px;
-		border-top: 1px solid #e0e0e0;
-	}
-
-	.btn-delete-device {
-		padding: 8px 12px;
-		background-color: #fee2e2;
-		border: 1px solid #fca5a5;
-		border-radius: 4px;
-		color: #991b1b;
-		cursor: pointer;
-		font-size: 13px;
-		font-weight: 500;
-		transition: all 0.2s;
-	}
-
-	.btn-delete-device:hover:not(:disabled) {
-		background-color: #fecaca;
-		border-color: #f87171;
-	}
-
-	.btn-delete-device:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
 	}
 
 	button {

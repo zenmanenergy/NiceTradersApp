@@ -115,7 +115,7 @@ def UpdateLocation():
         from _Lib.Database import ConnectToDatabase
         cursor, connection = ConnectToDatabase()
         
-        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM user_sessions WHERE session_id = %s"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()
@@ -150,7 +150,7 @@ def GetOtherUserLocation():
         from _Lib.Database import ConnectToDatabase
         cursor, connection = ConnectToDatabase()
         
-        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM user_sessions WHERE session_id = %s"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()
@@ -183,7 +183,7 @@ def GetTrackingStatus():
         from _Lib.Database import ConnectToDatabase
         cursor, connection = ConnectToDatabase()
         
-        session_query = "SELECT user_id FROM sessions WHERE SessionId = %s AND ExpiresAt > NOW()"
+        session_query = "SELECT user_id FROM user_sessions WHERE session_id = %s"
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         connection.close()

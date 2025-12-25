@@ -89,7 +89,7 @@ class TestProfileEndpoints:
         
         session_id = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, user_id)
+            INSERT INTO user_sessions (session_id, user_id)
             VALUES (%s, %s)
         """, (session_id, user_id))
         connection.commit()

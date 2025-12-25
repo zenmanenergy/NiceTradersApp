@@ -42,8 +42,8 @@ def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
         
         # Verify session and get rater user ID
         session_query = """
-            SELECT user_id FROM usersessions 
-            WHERE SessionId = %s
+            SELECT user_id FROM user_sessions 
+            WHERE session_id = %s
         """
         cursor.execute(session_query, (SessionId,))
         session_result = cursor.fetchone()

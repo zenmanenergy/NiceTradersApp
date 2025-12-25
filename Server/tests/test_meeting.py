@@ -29,7 +29,7 @@ class TestMeetingEndpoints:
         
         proposer_session = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, user_id)
+            INSERT INTO user_sessions (session_id, user_id)
             VALUES (%s, %s)
         """, (proposer_session, proposer_id))
         
@@ -86,7 +86,7 @@ class TestMeetingEndpoints:
         cursor.execute("DELETE FROM listing_meeting_time WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM listing_payments WHERE listing_id = %s", (listing_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
+        cursor.execute("DELETE FROM user_sessions WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
         cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (proposer_id, recipient_id))
         connection.commit()
     
@@ -122,7 +122,7 @@ class TestMeetingEndpoints:
         
         user1_session = generate_uuid('SES')
         cursor.execute("""
-            INSERT INTO usersessions (SessionId, user_id)
+            INSERT INTO user_sessions (session_id, user_id)
             VALUES (%s, %s)
         """, (user1_session, user1_id))
         
@@ -176,6 +176,6 @@ class TestMeetingEndpoints:
         # Cleanup
         cursor.execute("DELETE FROM meeting_proposals WHERE proposal_id = %s", (proposal_id,))
         cursor.execute("DELETE FROM listings WHERE listing_id = %s", (listing_id,))
-        cursor.execute("DELETE FROM usersessions WHERE user_id IN (%s, %s)", (user1_id, user2_id))
+        cursor.execute("DELETE FROM user_sessions WHERE user_id IN (%s, %s)", (user1_id, user2_id))
         cursor.execute("DELETE FROM users WHERE user_id IN (%s, %s)", (user1_id, user2_id))
         connection.commit()

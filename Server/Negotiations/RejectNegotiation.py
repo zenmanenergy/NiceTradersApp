@@ -17,7 +17,7 @@ def reject_negotiation(listing_id, session_id):
     
     try:
         # Verify session and get user_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

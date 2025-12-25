@@ -12,7 +12,7 @@ def report_listing(listing_id, session_id, reason, description=''):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

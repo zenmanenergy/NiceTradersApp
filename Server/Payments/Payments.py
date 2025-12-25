@@ -91,7 +91,7 @@ def CreatePayPalOrder():
         
         # Extract user_id from session
         cursor, connection = Database.ConnectToDatabase()
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         connection.close()
         

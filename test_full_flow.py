@@ -20,9 +20,9 @@ db = pymysql.connect(
 )
 cursor = db.cursor()
 
-cursor.execute("SELECT SessionId, user_id FROM usersessions LIMIT 1")
+cursor.execute("SELECT session_id, user_id FROM user_sessions LIMIT 1")
 session_row = cursor.fetchone()
-session_id = session_row['SessionId']
+session_id = session_row['session_id']
 user_id = session_row['user_id']
 
 listing_id = '684e682e-cd15-4084-b92b-3b5c3ab8e639'
@@ -54,11 +54,11 @@ if result_json['proposals']:
     if proposer_row:
         proposer_id = proposer_row['proposed_by']
         # Get proposer's session
-        cursor.execute("SELECT SessionId FROM usersessions WHERE user_id = %s LIMIT 1", (proposer_id,))
+        cursor.execute("SELECT session_id FROM user_sessions WHERE user_id = %s LIMIT 1", (proposer_id,))
         proposer_session_row = cursor.fetchone()
         
         if proposer_session_row:
-            proposer_session = proposer_session_row['SessionId']
+            proposer_session = proposer_session_row['session_id']
             
             # Now accept as the other party
             response = respond_to_meeting(session_id, first_proposal_id, 'accepted')

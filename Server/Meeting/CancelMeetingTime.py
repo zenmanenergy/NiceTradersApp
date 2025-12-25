@@ -27,7 +27,7 @@ def cancel_meeting_time(session_id, listing_id):
         
         # Get the user ID from session
         cursor.execute(
-            "SELECT user_id FROM usersessions WHERE SessionId = %s",
+            "SELECT user_id FROM user_sessions WHERE session_id = %s",
             (session_id,)
         )
         result = cursor.fetchone()

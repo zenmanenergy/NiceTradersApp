@@ -23,7 +23,7 @@ def respond_to_meeting(session_id, proposal_type, proposal_id, response):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:
@@ -110,23 +110,10 @@ def respond_to_meeting(session_id, proposal_type, proposal_id, response):
                     responder = cursor.fetchone()
                     responder_name = f"{responder['FirstName']} {responder['LastName']}" if responder else "A user"
                     
-                    if proposal_type == 'location':
-                        notification_service.send_location_rejected_notification(
-                            user_id=proposer_id,
-                            proposer_name=responder_name,
-                            listing_id=listing_id
-                        )
-                    elif proposal_type == 'time':
-                        # For time proposal rejections, use a generic message
-                        notification_service.send_location_rejected_notification(
-                            user_id=proposer_id,
-                            proposer_name=responder_name,
-                            listing_id=listing_id
-                        )
-                    
-                    print(f"[RespondToMeeting] Sent rejection notification to proposer {proposer_id}")
+                    # No rejection notification - locations/times are either accepted or countered
+                    print(f"[RespondToMeeting] Proposal {proposal_id} was rejected by user {user_id}")
             except Exception as notif_error:
-                print(f"[RespondToMeeting] Warning: Failed to send rejection notification: {str(notif_error)}")
+                print(f"[RespondToMeeting] Warning: Failed to process rejection: {str(notif_error)}")
         
         connection.close()
         

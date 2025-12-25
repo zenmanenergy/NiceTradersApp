@@ -37,7 +37,7 @@ class TestLoginEndpoints:
         assert 'UserType' in data
         
         # Cleanup
-        cursor.execute("DELETE FROM usersessions WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM user_sessions WHERE user_id = %s", (user_id,))
         cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
         connection.commit()
     

@@ -105,17 +105,6 @@ class MockNotificationService:
             'body': body
         })
     
-    def send_push_disabled_alert(self, user_id):
-        """Send alert that push notifications are disabled"""
-        title = "Enable Push Notifications"
-        body = "Push notifications are disabled. Enable them to get important updates."
-        self.notifications_sent.append({
-            'type': 'push_disabled_alert',
-            'user_id': user_id,
-            'title': title,
-            'body': body
-        })
-    
     def send_location_rejected_notification(self, user_id, rejector_name):
         """Send location proposal rejected notification"""
         title = "Location Proposal Rejected"
@@ -404,14 +393,6 @@ class TestAccountNotifications(unittest.TestCase):
     def setUp(self):
         self.service = MockNotificationService()
     
-    def test_push_disabled_alert(self):
-        """Test push notifications disabled alert"""
-        self.service.send_push_disabled_alert(120)
-        
-        notification = self.service.notifications_sent[0]
-        self.assertEqual(notification['user_id'], 120)
-        self.assertIn("enable", notification['title'].lower())
-    
     def test_account_issue_payment_failed(self):
         """Test account issue notification for failed payment"""
         self.service.send_account_issue_notification(121, "payment_failed", "Your card was declined")
@@ -497,19 +478,18 @@ class TestNotificationIntegration(unittest.TestCase):
             ('send_rating_received_notification', (6, 'User', 5)),
             ('send_listing_cancelled_notification', (7, '100.00', 'USD')),
             ('send_exchange_completed_notification', (8, 'User', '100.00', 'USD')),
-            ('send_push_disabled_alert', (9,)),
-            ('send_location_rejected_notification', (10, 'User')),
-            ('send_location_proposed_notification', (11, 'User')),
-            ('send_account_issue_notification', (12, 'payment_failed', 'Details')),
-            ('send_listing_expiration_warning', (13, 3, 1001, '100.00', 'USD')),
-            ('send_profile_review_notification', (14, 'User', 5, 'Good')),
+            ('send_location_rejected_notification', (9, 'User')),
+            ('send_location_proposed_notification', (10, 'User')),
+            ('send_account_issue_notification', (11, 'payment_failed', 'Details')),
+            ('send_listing_expiration_warning', (12, 3, 1001, '100.00', 'USD')),
+            ('send_profile_review_notification', (13, 'User', 5, 'Good')),
         ]
         
         for method_name, args in notification_calls:
             getattr(self.service, method_name)(*args)
         
-        # Should have 14 notifications
-        self.assertEqual(len(self.service.notifications_sent), 14)
+        # Should have 13 notifications
+        self.assertEqual(len(self.service.notifications_sent), 13)
         
         # Each should have required fields
         for notification in self.service.notifications_sent:

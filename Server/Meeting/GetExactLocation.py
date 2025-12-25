@@ -20,7 +20,7 @@ def get_exact_location(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session and get user ID
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

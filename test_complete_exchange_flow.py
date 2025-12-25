@@ -67,7 +67,7 @@ def test_complete_exchange_flow():
         import uuid
         session_id = str(uuid.uuid4())
         cursor.execute(
-            "INSERT INTO usersessions (SessionId, user_id, ExpiresAt) VALUES (%s, %s, DATE_ADD(NOW(), INTERVAL 1 HOUR))",
+            "INSERT INTO user_sessions (session_id, user_id, ExpiresAt) VALUES (%s, %s, DATE_ADD(NOW(), INTERVAL 1 HOUR))",
             (session_id, buyer_id)
         )
         connection.commit()
@@ -125,7 +125,7 @@ def test_complete_exchange_flow():
             print(f"❌ CompleteExchange failed: {result.get('error')}")
         
         # Cleanup: Remove test session
-        cursor.execute("DELETE FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("DELETE FROM user_sessions WHERE session_id = %s", (session_id,))
         connection.commit()
         
         print("\n" + "="*60)

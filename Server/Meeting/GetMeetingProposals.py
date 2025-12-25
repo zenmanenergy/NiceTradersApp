@@ -16,7 +16,7 @@ def get_meeting_proposals(session_id, listing_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

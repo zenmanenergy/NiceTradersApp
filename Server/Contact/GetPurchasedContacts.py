@@ -14,7 +14,7 @@ def get_purchased_contacts(session_id):
         cursor, connection = Database.ConnectToDatabase()
         
         # First, get user_id from session_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

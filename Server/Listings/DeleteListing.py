@@ -21,8 +21,8 @@ def delete_listing(SessionId, ListingId, Permanent):
         
         # Verify session and get user ID
         session_query = """
-            SELECT user_id FROM usersessions 
-            WHERE SessionId = %s
+            SELECT user_id FROM user_sessions 
+            WHERE session_id = %s
         """
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
@@ -78,14 +78,14 @@ def delete_listing(SessionId, ListingId, Permanent):
         
         # Get listing and seller information for notification
         listing_query = """
-            SELECT title, description, seller_id FROM listings 
+            SELECT amount, currency, user_id FROM listings 
             WHERE listing_id = %s
         """
         cursor.execute(listing_query, (listing_id,))
         listing_info = cursor.fetchone()
         
         if listing_info:
-            listing_title = listing_info[0]
+            listing_title = f"{listing_info[0]} {listing_info[1]}"
             seller_id = listing_info[2]
             
             # Get seller name

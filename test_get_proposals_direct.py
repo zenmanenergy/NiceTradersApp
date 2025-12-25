@@ -21,14 +21,14 @@ db = pymysql.connect(
 cursor = db.cursor()
 
 # Get a valid session ID
-cursor.execute("SELECT SessionId, user_id FROM usersessions LIMIT 1")
+cursor.execute("SELECT session_id, user_id FROM user_sessions LIMIT 1")
 session_row = cursor.fetchone()
 
 if not session_row:
     print("ERROR: No active sessions found in database")
     sys.exit(1)
 
-session_id = session_row['SessionId']
+session_id = session_row['session_id']
 user_id = session_row['user_id']
 
 print(f"\nUsing session_id: {session_id}")

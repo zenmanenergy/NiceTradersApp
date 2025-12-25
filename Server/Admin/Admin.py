@@ -538,11 +538,11 @@ def send_apn_message():
         try:
             cursor, connection = ConnectToDatabase()
             cursor.execute(
-                "SELECT SessionId FROM usersessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
+                "SELECT session_id FROM user_sessions WHERE user_id = %s ORDER BY DateAdded DESC LIMIT 1",
                 (user_id,)
             )
             session_result = cursor.fetchone()
-            session_id = session_result['SessionId'] if session_result else None
+            session_id = session_result['session_id'] if session_result else None
             cursor.close()
             connection.close()
         except Exception as sess_err:

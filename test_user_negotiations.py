@@ -13,7 +13,7 @@ cursor = db.cursor()
 
 # Get the current user
 session_id = 'SES108a7b27-8159-44c6-94ba-19ba954ce70b'
-cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
 session_result = cursor.fetchone()
 user_id = session_result['user_id']
 

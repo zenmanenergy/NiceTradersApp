@@ -17,8 +17,8 @@ def get_user_statistics(SessionId):
         
         # Verify session and get user ID
         session_query = """
-            SELECT user_id FROM usersessions 
-            WHERE SessionId = %s
+            SELECT user_id FROM user_sessions 
+            WHERE session_id = %s
         """
         cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()

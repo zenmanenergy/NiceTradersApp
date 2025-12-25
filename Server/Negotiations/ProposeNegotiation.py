@@ -22,7 +22,7 @@ def propose_negotiation(listing_id, session_id, proposed_time):
         print(f"[Negotiations] ProposeNegotiation called with listing_id={listing_id}, session_id={session_id}, proposed_time={proposed_time}")
         
         # Verify session and get buyer user_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         print(f"[Negotiations] Session lookup result: {session_result}")

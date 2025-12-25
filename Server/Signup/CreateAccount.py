@@ -49,7 +49,7 @@ def create_account(FirstName, LastName, Email, Phone, Password, device_token=Non
 		
 		# Create initial session for the new user
 		SessionId = "SES" + str(uuid.uuid4())
-		query = "INSERT INTO usersessions(SessionId, user_id, DateAdded) VALUES (%s, %s, %s)"
+		query = "INSERT INTO user_sessions(session_id, user_id, DateAdded) VALUES (%s, %s, %s)"
 		values = (SessionId, user_id, datetime.datetime.now())
 		cursor.execute(query, values)
 		connection.commit()

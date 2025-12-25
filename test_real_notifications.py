@@ -6,7 +6,9 @@ Sends real APN messages to devices registered in the database
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add Server directory to path for imports
+server_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Server')
+sys.path.insert(0, server_dir)
 
 from Admin.NotificationService import NotificationService
 import pymysql

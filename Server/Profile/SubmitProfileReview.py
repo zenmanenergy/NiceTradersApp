@@ -15,7 +15,7 @@ def submit_profile_review(session_id, reviewed_user_id, review_text, rating=None
         cursor, connection = Database.ConnectToDatabase()
         
         # Verify session and get reviewer user_id
-        cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (session_id,))
+        cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

@@ -12,7 +12,7 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         # Get current user ID from session to exclude their own listings
         current_user_id = None
         if SessionId:
-            cursor.execute("SELECT user_id FROM usersessions WHERE SessionId = %s", (SessionId,))
+            cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (SessionId,))
             session_result = cursor.fetchone()
             if session_result:
                 current_user_id = session_result['user_id']

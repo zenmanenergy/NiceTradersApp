@@ -31,8 +31,8 @@ def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
         
         # Verify session and get user ID
         session_query = """
-            SELECT user_id FROM usersessions 
-            WHERE SessionId = %s
+            SELECT user_id FROM user_sessions 
+            WHERE session_id = %s
         """
         print(f"[CompleteExchange] Checking session: {SessionId}")
         cursor.execute(session_query, (SessionId,))
