@@ -5,7 +5,6 @@
 	let exchangeRates = [];
 	let lastUpdateDate = null;
 	let lastUpdateTime = null;
-	let nextUpdateTime = null;
 	let schedulerStatus = null;
 	let loading = false;
 	let refreshing = false;
@@ -27,20 +26,6 @@
 		} catch (e) {
 			console.error('Error loading scheduler status:', e);
 		}
-	}
-	
-	function calculateNextUpdate() {
-		// Next update is always at 6 AM UTC
-		const now = new Date();
-		const nextUpdate = new Date(now);
-		nextUpdate.setUTC(6, 0, 0, 0);
-		
-		// If 6 AM UTC has already passed today, schedule for tomorrow
-		if (nextUpdate <= now) {
-			nextUpdate.setDate(nextUpdate.getDate() + 1);
-		}
-		
-		return nextUpdate;
 	}
 	
 	async function loadExchangeRates() {
@@ -70,7 +55,6 @@
 				lastUpdateDate = data.last_update_date;
 				lastUpdateTime = data.last_update_time;
 				totalRates = data.total_rates || 0;
-				nextUpdateTime = calculateNextUpdate();
 				console.log('✅ Exchange rates loaded successfully');
 			} else {
 				error = data.error || 'Failed to load exchange rates';
@@ -148,13 +132,14 @@
 	}
 	
 	function getTimeUntilNextUpdate() {
-		if (!nextUpdateTime) return '';
+		if (!schedulerStatus?.next_scheduled_run) return '';
 		const now = new Date();
-		const diffMs = nextUpdateTime - now;
+		const nextRun = new Date(schedulerStatus.next_scheduled_run);
+		const diffMs = nextRun - now;
 		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 		const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
 		
-		if (diffMs < 0) return 'Pending...';
+		if (diffMs < 0) return 'Overdue...';
 		if (diffHours > 0) return `in ${diffHours}h ${diffMins}m`;
 		return `in ${diffMins}m`;
 	}
