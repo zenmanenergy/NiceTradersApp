@@ -45,6 +45,12 @@
 				<div class="card-title">PayPal Transactions</div>
 				<div class="card-description">View and refund PayPal payments</div>
 			</button>
+
+			<button class="action-card" on:click={() => goto('/localization')}>
+				<div class="card-icon">🌐</div>
+				<div class="card-title">Localization Editor</div>
+				<div class="card-description">Manage all translations and i18n content</div>
+			</button>
 		</div>
 	</div>
 
