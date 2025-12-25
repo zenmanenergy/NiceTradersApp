@@ -6,7 +6,7 @@
 	let { children } = $props();
 	
 	// Show header on all pages except login
-	$: showHeader = $page.url.pathname !== '/login';
+	const showHeader = $derived($page.url.pathname !== '/login');
 </script>
 
 <svelte:head>
