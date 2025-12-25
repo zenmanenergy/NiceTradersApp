@@ -157,8 +157,8 @@
 			});
 
 			if (response && response.success) {
-				// Remove from local array
-				userDevices = userDevices.filter(d => d.device_id !== deviceId);
+				// Reload user data to refresh device list
+				await loadUserData();
 				alert('Device deleted successfully');
 			} else {
 				alert('Failed to delete device: ' + (response?.error || 'Unknown error'));
