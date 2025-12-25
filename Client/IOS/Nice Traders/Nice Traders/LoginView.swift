@@ -269,6 +269,17 @@ green: 0.29, blue: 0.64)]),
                                     DeviceTokenManager.shared.updateDeviceTokenForUser(user_id: user_id, deviceToken: deviceToken)
                                 }
                             }
+                            
+                            // Save firstName and lastName if available
+                            if let firstName = json["firstName"] as? String {
+                                UserDefaults.standard.set(firstName, forKey: "firstName")
+                                print("[LoginView] ✅ Saved firstName: '\(firstName)'")
+                            }
+                            if let lastName = json["lastName"] as? String {
+                                UserDefaults.standard.set(lastName, forKey: "lastName")
+                                print("[LoginView] ✅ Saved lastName: '\(lastName)'")
+                            }
+                            
                             // Send the locally-selected language preference to the backend
                             LocalizationManager.shared.saveLanguagePreferenceToBackend(languageCode: LocalizationManager.shared.currentLanguage)
                             

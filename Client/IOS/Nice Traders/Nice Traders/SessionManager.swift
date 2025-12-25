@@ -46,6 +46,28 @@ class SessionManager: ObservableObject {
         }
     }
     
+    var firstName: String? {
+        get { UserDefaults.standard.string(forKey: "firstName") }
+        set { 
+            if let value = newValue {
+                UserDefaults.standard.set(value, forKey: "firstName")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "firstName")
+            }
+        }
+    }
+    
+    var lastName: String? {
+        get { UserDefaults.standard.string(forKey: "lastName") }
+        set { 
+            if let value = newValue {
+                UserDefaults.standard.set(value, forKey: "lastName")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "lastName")
+            }
+        }
+    }
+    
     var isLoggedIn: Bool {
         return sessionId != nil
     }
@@ -54,6 +76,8 @@ class SessionManager: ObservableObject {
         sessionId = nil
         userType = nil
         user_id = nil
+        firstName = nil
+        lastName = nil
     }
     
     func verifySession(completion: @escaping (Bool) -> Void) {

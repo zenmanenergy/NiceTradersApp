@@ -49,6 +49,14 @@ try:
     payment_count = cursor.rowcount
     print(f"   ✅ Deleted {payment_count} payment record(s)")
     
+    # Delete paypal orders for both users
+    cursor.execute("""
+        DELETE FROM paypal_orders
+        WHERE listing_id = %s
+    """, (listing_id,))
+    paypal_count = cursor.rowcount
+    print(f"   ✅ Deleted {paypal_count} PayPal order(s)")
+    
     db.commit()
     
     print(f"\n✅ Test State 0: Complete - All negotiation data reset for listing {listing_id}")

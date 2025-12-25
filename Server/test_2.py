@@ -22,6 +22,14 @@ db = pymysql.connect(
 cursor = db.cursor()
 
 try:
+    # Delete paypal orders for both users
+    cursor.execute("""
+        DELETE FROM paypal_orders
+        WHERE listing_id = %s
+    """, (listing_id,))
+    paypal_count = cursor.rowcount
+    print(f"   ✅ Deleted {paypal_count} PayPal order(s)")
+    
     # Get current time negotiation
     cursor.execute("""
         SELECT time_negotiation_id, meeting_time FROM listing_meeting_time

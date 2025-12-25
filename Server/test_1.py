@@ -41,6 +41,14 @@ try:
         """, (listing_id,))
         db.commit()
     
+    # Delete paypal orders for both users
+    cursor.execute("""
+        DELETE FROM paypal_orders
+        WHERE listing_id = %s
+    """, (listing_id,))
+    paypal_count = cursor.rowcount
+    print(f"   ✅ Deleted {paypal_count} PayPal order(s)")
+    
     # Create time negotiation with buyer proposing
     time_negotiation_id = f"TNL-{uuid.uuid4().hex[:35]}"
     # Store as UTC time - convert current local time to UTC

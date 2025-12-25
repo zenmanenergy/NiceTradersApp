@@ -64,6 +64,9 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
     cursor, connection = Database.ConnectToDatabase()
     
     try:
+        # Don't reuse old orders - always create fresh ones to avoid capture conflicts
+        # Each payment attempt should have its own order
+        
         mode = current_app.config.get('PAYPAL_MODE', 'sandbox')
         base_url = 'https://api.sandbox.paypal.com' if mode == 'sandbox' else 'https://api.paypal.com'
         
@@ -165,7 +168,7 @@ def create_paypal_order(user_id, listing_id, amount=2.00, currency='USD', return
         connection.close()
 
 
-def capture_paypal_order(order_id, user_id, listing_id, session_id):
+def capture_paypal_order(order_id, user_id, listing_id, session_id, card_details=None):
     """
     Capture (finalize) a PayPal order after approval
     
@@ -205,7 +208,7 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
         
         # Determine if user is buyer or seller
         cursor.execute("""
-            SELECT buyer_id FROM listing_meeting_time WHERE listing_id = %s
+            SELECT buyer_id, rejected_at, accepted_at FROM listing_meeting_time WHERE listing_id = %s
         """, (listing_id,))
         
         time_neg = cursor.fetchone()
@@ -213,6 +216,20 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
             return json.dumps({
                 'success': False,
                 'error': 'Time negotiation not found'
+            })
+        
+        # Check if negotiation was rejected
+        if time_neg['rejected_at'] is not None:
+            return json.dumps({
+                'success': False,
+                'error': 'This negotiation has been closed'
+            })
+        
+        # Check if negotiation was not yet accepted
+        if time_neg['accepted_at'] is None:
+            return json.dumps({
+                'success': False,
+                'error': 'This negotiation has not been accepted yet'
             })
         
         buyer_id = time_neg['buyer_id']
@@ -229,21 +246,79 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
             'Authorization': f'Bearer {access_token}'
         }
         
+        # Prepare capture payload
+        capture_payload = {}
+        
+        # If card details are provided, include them in the payment_source
+        if card_details and 'payment_source' in card_details:
+            capture_payload['payment_source'] = card_details['payment_source']
+        
         response = requests.post(
             f'{base_url}/v2/checkout/orders/{order_id}/capture',
             headers=headers,
-            json={},
+            json=capture_payload,
             timeout=10
         )
         
-        response.raise_for_status()
-        result = response.json()
+        result = None
+        
+        if response.status_code != 201:
+            error_details = response.text
+            error_json = {}
+            
+            try:
+                error_json = response.json()
+                error_details = json.dumps(error_json, indent=2)
+            except:
+                pass
+            
+            # Check for specific 422 errors
+            if response.status_code == 422 and error_json:
+                details = error_json.get('details', [])
+                if details and len(details) > 0:
+                    issue = details[0].get('issue', '')
+                    
+                    if issue == 'ORDER_ALREADY_CAPTURED':
+                        print(f"[PayPal] Order {order_id} already captured - treating as success")
+                        # Fetch the completed order to extract transaction details
+                        try:
+                            get_response = requests.get(
+                                f'{base_url}/v2/checkout/orders/{order_id}',
+                                headers=headers,
+                                timeout=10
+                            )
+                            if get_response.status_code == 200:
+                                result = get_response.json()
+                            else:
+                                # Order was captured but we can't fetch details, still treat as success
+                                result = {'status': 'COMPLETED', 'payer': {}, 'purchase_units': []}
+                        except Exception as fetch_error:
+                            print(f"[PayPal] Could not fetch order details: {str(fetch_error)}")
+                            result = {'status': 'COMPLETED', 'payer': {}, 'purchase_units': []}
+                    elif issue == 'ORDER_NOT_APPROVED':
+                        print(f"[PayPal] Order not approved - user must approve PayPal payment first")
+                        print(f"[PayPal] Error details: {error_details}")
+                        response.raise_for_status()
+                    else:
+                        print(f"[PayPal] Capture failed with status {response.status_code}: {error_details}")
+                        response.raise_for_status()
+                else:
+                    print(f"[PayPal] Capture failed with status {response.status_code}: {error_details}")
+                    response.raise_for_status()
+            else:
+                print(f"[PayPal] Capture failed with status {response.status_code}: {error_details}")
+                response.raise_for_status()
+        else:
+            result = response.json()
         
         if result.get('status') != 'COMPLETED':
+            print(f"[PayPal-Capture] ❌ Payment status not COMPLETED: {result.get('status')}")
             return json.dumps({
                 'success': False,
                 'error': f'PayPal payment not completed. Status: {result.get("status")}'
             })
+        
+        print(f"[PayPal-Capture] ✅ PayPal capture confirmed as COMPLETED")
         
         # Extract transaction details
         transaction_id = None
@@ -283,6 +358,25 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
         
         payment_record = cursor.fetchone()
         
+        # Check if user has already paid BEFORE updating
+        if payment_record:
+            if is_buyer and payment_record['buyer_paid_at']:
+                print(f"[PayPal-Capture] ❌ ALREADY PAID - buyer_paid_at is NOT NULL: {payment_record['buyer_paid_at']}")
+                cursor.close()
+                connection.close()
+                return json.dumps({
+                    'success': False,
+                    'error': 'You have already paid for this negotiation'
+                })
+            elif not is_buyer and payment_record['seller_paid_at']:
+                print(f"[PayPal-Capture] ❌ ALREADY PAID - seller_paid_at is NOT NULL: {payment_record['seller_paid_at']}")
+                cursor.close()
+                connection.close()
+                return json.dumps({
+                    'success': False,
+                    'error': 'You have already paid for this negotiation'
+                })
+        
         if not payment_record:
             # Create new payment record
             payment_id = str(uuid.uuid4())
@@ -296,22 +390,14 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
         
         # Update payment record based on user role
         if is_buyer:
-            if payment_record and payment_record['buyer_paid_at']:
-                return json.dumps({
-                    'success': False,
-                    'error': 'You have already paid for this negotiation'
-                })
+            print(f"[PayPal-Capture] ✅ Updating buyer payment - setting buyer_paid_at = NOW()")
             cursor.execute("""
                 UPDATE listing_payments
                 SET buyer_paid_at = NOW(), buyer_transaction_id = %s, payment_method = 'paypal', updated_at = NOW()
                 WHERE listing_id = %s
             """, (transaction_id, listing_id))
         else:
-            if payment_record and payment_record['seller_paid_at']:
-                return json.dumps({
-                    'success': False,
-                    'error': 'You have already paid for this negotiation'
-                })
+            print(f"[PayPal-Capture] ✅ Updating seller payment - setting seller_paid_at = NOW()")
             cursor.execute("""
                 UPDATE listing_payments
                 SET seller_paid_at = NOW(), seller_transaction_id = %s, payment_method = 'paypal', updated_at = NOW()
@@ -327,6 +413,7 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
         
         payment_check = cursor.fetchone()
         both_paid = (payment_check['buyer_paid_at'] is not None and payment_check['seller_paid_at'] is not None)
+        print(f"[PayPal-Capture] ✅ Both paid status: {both_paid}")
         
         if both_paid:
             cursor.execute("""
@@ -336,11 +423,14 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
             """, (buyer_id, seller_id))
             new_status = 'paid_complete'
             message = 'Payment successful! Both parties have paid. Messaging and location coordination now unlocked.'
+            print(f"[PayPal-Capture] ✅ Both users paid - incremented TotalExchanges")
         else:
             new_status = 'paid_partial'
             message = 'Payment successful! Waiting for other party to pay.'
+            print(f"[PayPal-Capture] ✅ One user paid - waiting for other party")
         
         connection.commit()
+        print(f"[PayPal-Capture] ✅ DATABASE COMMITTED - returning success response")
         
         return json.dumps({
             'success': True,
@@ -367,5 +457,11 @@ def capture_paypal_order(order_id, user_id, listing_id, session_id):
             'error': f'Failed to capture payment: {str(e)}'
         })
     finally:
-        cursor.close()
-        connection.close()
+        try:
+            cursor.close()
+        except:
+            pass
+        try:
+            connection.close()
+        except:
+            pass

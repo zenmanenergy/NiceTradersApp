@@ -22,6 +22,17 @@ db = pymysql.connect(
 cursor = db.cursor()
 
 try:
+    # First, create a simulated PayPal order for the seller
+    test_user_id = 'USR53a3c642-4914-4de8-8217-03ee3da42224'
+    test_order_id = f"TEST{uuid.uuid4().hex[:24].upper()}"
+    
+    cursor.execute("""
+        INSERT INTO paypal_orders 
+        (order_id, user_id, listing_id, status, amount, currency, approval_link, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+    """, (test_order_id, test_user_id, listing_id, 'COMPLETED', 2.00, 'USD', 'https://www.sandbox.paypal.com/checkoutnow?token=' + test_order_id))
+    print(f"✅ Created PayPal order: {test_order_id}")
+    
     # Check if payment record exists
     cursor.execute("""
         SELECT payment_id FROM listing_payments
@@ -31,27 +42,29 @@ try:
     payment = cursor.fetchone()
     
     if payment:
-        # Update existing payment record
+        # Update existing payment record with seller payment and transaction ID
         cursor.execute("""
             UPDATE listing_payments
-            SET seller_paid_at = NOW(), buyer_paid_at = NULL, updated_at = NOW()
+            SET seller_paid_at = NOW(), seller_transaction_id = %s, buyer_paid_at = NULL, updated_at = NOW()
             WHERE listing_id = %s
-        """, (listing_id,))
+        """, ('68W80765T46761745', listing_id))
     else:
-        # Create new payment record
+        # Create new payment record with seller payment
         payment_id = f"PAY-{uuid.uuid4().hex[:35]}"
         cursor.execute("""
             INSERT INTO listing_payments
-            (payment_id, listing_id, buyer_id, seller_paid_at, created_at, updated_at)
-            VALUES (%s, %s, %s, NOW(), NOW(), NOW())
-        """, (payment_id, listing_id, "USR387e9549-3339-4ea1-b0d2-f6a66c25c390"))
+            (payment_id, listing_id, buyer_id, seller_paid_at, seller_transaction_id, created_at, updated_at)
+            VALUES (%s, %s, %s, NOW(), %s, NOW(), NOW())
+        """, (payment_id, listing_id, "USR387e9549-3339-4ea1-b0d2-f6a66c25c390", '68W80765T46761745'))
     
     db.commit()
     
     print("✅ Test State 4: Seller has paid, buyer has not paid")
+    print(f"   PayPal order_id: {test_order_id}")
     print(f"   listing_id: {listing_id}")
     print(f"   buyer_paid_at: NULL")
     print(f"   seller_paid_at: NOW()")
+    print(f"   seller_transaction_id: 68W80765T46761745")
     
 except Exception as e:
     print(f"❌ Error: {str(e)}")

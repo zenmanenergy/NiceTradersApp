@@ -31,27 +31,32 @@ try:
     payment = cursor.fetchone()
     
     if payment:
-        # Update existing payment record
+        # Update existing payment record with both transaction IDs
         cursor.execute("""
             UPDATE listing_payments
-            SET buyer_paid_at = NOW(), seller_paid_at = NOW(), updated_at = NOW()
+            SET buyer_paid_at = NOW(), buyer_transaction_id = %s, 
+                seller_paid_at = NOW(), seller_transaction_id = %s, updated_at = NOW()
             WHERE listing_id = %s
-        """, (listing_id,))
+        """, ('5V73953924153452L', '68W80765T46761745', listing_id))
     else:
-        # Create new payment record
+        # Create new payment record with both transaction IDs
         payment_id = f"PAY-{uuid.uuid4().hex[:35]}"
         cursor.execute("""
             INSERT INTO listing_payments
-            (payment_id, listing_id, buyer_id, buyer_paid_at, seller_paid_at, created_at, updated_at)
-            VALUES (%s, %s, %s, NOW(), NOW(), NOW(), NOW())
-        """, (payment_id, listing_id, "USR387e9549-3339-4ea1-b0d2-f6a66c25c390"))
+            (payment_id, listing_id, buyer_id, buyer_paid_at, buyer_transaction_id, 
+             seller_paid_at, seller_transaction_id, created_at, updated_at)
+            VALUES (%s, %s, %s, NOW(), %s, NOW(), %s, NOW(), NOW())
+        """, (payment_id, listing_id, "USR387e9549-3339-4ea1-b0d2-f6a66c25c390", 
+              '5V73953924153452L', '68W80765T46761745'))
     
     db.commit()
     
     print("✅ Test State 5: Both buyer and seller have paid")
     print(f"   listing_id: {listing_id}")
     print(f"   buyer_paid_at: NOW()")
+    print(f"   buyer_transaction_id: 5V73953924153452L")
     print(f"   seller_paid_at: NOW()")
+    print(f"   seller_transaction_id: 68W80765T46761745")
     
 except Exception as e:
     print(f"❌ Error: {str(e)}")

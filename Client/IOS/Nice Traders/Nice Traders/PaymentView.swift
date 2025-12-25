@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SafariServices
 
 struct PaymentView: View {
     let negotiationId: String
@@ -23,8 +22,7 @@ struct PaymentView: View {
     @State private var availableCredit: Double = 0
     @State private var showSuccess = false
     @State private var paymentResult: CaptureOrderResponse?
-    @State private var showSafari = false
-    @State private var safariURL: URL?
+    @State private var showPayPalCheckout = false
     @State private var currentOrderId: String?
     
     let feeAmount = 2.00
@@ -151,7 +149,10 @@ struct PaymentView: View {
                         }
                         
                         // Pay Button
-                        Button(action: processPayment) {
+                        Button(action: {
+                            print("[BUTTON ACTION] CONFIRM PAYMENT BUTTON TAPPED")
+                            processPayment()
+                        }) {
                             HStack {
                                 if isLoading {
                                     ProgressView()
@@ -203,16 +204,34 @@ struct PaymentView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showSafari) {
-                if let url = safariURL {
-                    SafariView(url: url)
-                        .onDisappear {
-                            // After user returns from PayPal, capture the order
-                            if let orderId = currentOrderId {
-                                capturePayPalOrder(orderId: orderId)
-                            }
-                        }
+            .alert("Error", isPresented: .constant(errorMessage != nil)) {
+                Button("OK") {
+                    errorMessage = nil
                 }
+            } message: {
+                Text(errorMessage ?? "Unknown error")
+            }
+            .sheet(isPresented: $showPayPalCheckout) {
+                PayPalCheckoutView(
+                    orderId: currentOrderId ?? "",
+                    listingId: negotiationId,
+                    cardholderNameInitial: "",
+                    onSuccess: {
+                        // Payment and capture were successful
+                        print("[PaymentView] ✅ Payment complete, updating state")
+                        self.showSuccess = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            self.onComplete()
+                        }
+                    },
+                    onCancel: {
+                        currentOrderId = nil
+                    },
+                    onError: { errorMsg in
+                        errorMessage = errorMsg
+                        currentOrderId = nil
+                    }
+                )
             }
             .onAppear {
                 print("VIEW: PaymentView")
@@ -221,29 +240,37 @@ struct PaymentView: View {
     }
     
     private func processPayment() {
+        print("[MDV-PAY] processPayment() CALLED")
         isLoading = true
         errorMessage = nil
         
         // Step 1: Create PayPal order
+        print("[MDV-PAY] About to call createPayPalOrder")
         NegotiationService.shared.createPayPalOrder(listingId: negotiationId) { result in
             DispatchQueue.main.async {
                 isLoading = false
                 
                 switch result {
                 case .success(let response):
-                    if response.success, let orderId = response.orderId, let approvalUrl = response.approvalUrl {
+                    print("[MDV-PAY] Response received: success=\(response.success), orderId=\(response.orderId ?? "nil"), approvalUrl=\(response.approvalUrl ?? "nil")")
+                    
+                    if response.success, let orderId = response.orderId {
                         // Store order ID for later capture
                         currentOrderId = orderId
+                        print("[MDV-PAY] Setting currentOrderId: \(orderId)")
                         
-                        // Open PayPal approval URL
-                        if let url = URL(string: approvalUrl) {
-                            safariURL = url
-                            showSafari = true
+                        // Show PayPal checkout
+                        print("[MDV-PAY] About to show PayPal checkout sheet")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            showPayPalCheckout = true
+                            print("[MDV-PAY] showPayPalCheckout set to true")
                         }
                     } else {
+                        print("[MDV-PAY] Response missing required fields")
                         errorMessage = response.error ?? localizationManager.localize("PAYMENT_FAILED")
                     }
                 case .failure(let error):
+                    print("[MDV-PAY] Request failed: \(error.localizedDescription)")
                     errorMessage = error.localizedDescription
                 }
             }
@@ -267,22 +294,6 @@ struct PaymentView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Safari View Wrapper
-
-struct SafariView: UIViewControllerRepresentable {
-    let url: URL
-    
-    func makeUIViewController(context: UIViewControllerRepresentableContext<SafariView>) -> SFSafariViewController {
-        let safariViewController = SFSafariViewController(url: url)
-        safariViewController.preferredControlTintColor = UIColor(red: 0.4, green: 0.49, blue: 0.92, alpha: 1.0) // Purple
-        return safariViewController
-    }
-    
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: UIViewControllerRepresentableContext<SafariView>) {
-        // No update needed
     }
 }
 

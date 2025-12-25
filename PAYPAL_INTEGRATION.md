@@ -150,7 +150,7 @@ The iOS app needs to:
    let url = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&sessionId=\(sessionId)"
    URLSession.shared.dataTask(with: url) { data, _, _ in
        // Parse orderId and approvalUrl
-       // Open PayPal in SFSafariViewController
+       // Show PayPal checkout using native PayPal SDK
    }
    ```
 

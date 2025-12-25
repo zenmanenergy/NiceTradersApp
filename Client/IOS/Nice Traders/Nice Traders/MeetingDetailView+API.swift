@@ -548,16 +548,23 @@ extension MeetingDetailView {
     }
     
     func processPayment() {
+        print("[processPayment] 🟠 FUNCTION CALLED")
+        
         guard let sessionId = SessionManager.shared.sessionId else {
+            print("[processPayment] ❌ ERROR: No session ID")
             errorMessage = "No active session"
-            print("[MDV-PAY] No session ID available")
             return
         }
         
-        // Use the same PayPal flow as PaymentView
-        // Step 1: Create PayPal order
+        // Get user's name from cached session data (no need to fetch again!)
+        let firstName = SessionManager.shared.firstName ?? ""
+        let lastName = SessionManager.shared.lastName ?? ""
+        currentUserName = [firstName, lastName].filter { !$0.isEmpty }.joined(separator: " ")
+        print("[processPayment] ✅ Using cached user name: '\(currentUserName)'")
+        
+        // Create PayPal order
+        print("[processPayment] 🟠 Creating PayPal order...")
         isLoading = true
-        print("[MDV-PAY] Creating PayPal order for listing: \(contactData.listing.listingId)")
         
         NegotiationService.shared.createPayPalOrder(listingId: contactData.listing.listingId) { result in
             DispatchQueue.main.async {
@@ -566,18 +573,18 @@ extension MeetingDetailView {
                 switch result {
                 case .success(let response):
                     if response.success, let orderId = response.orderId {
-                        print("[MDV-PAY] Order created: \(orderId)")
-                        // Store order ID and show PayPal payment UI
+                        print("[processPayment] ✅ Order created: \(orderId)")
                         self.currentPayPalOrderId = orderId
+                        print("[processPayment] ✅ currentUserName is: '\(self.currentUserName)'")
+                        // Show the sheet - the binding will only show it if orderId is set
                         self.showPayPalPayment = true
                     } else {
-                        let errorMsg = response.error ?? "Failed to create payment order"
-                        self.errorMessage = errorMsg
-                        print("[MDV-PAY] Order creation failed: \(errorMsg)")
+                        print("[processPayment] ❌ FAILED - no orderId")
+                        self.errorMessage = response.error ?? "Failed to create order"
                     }
                 case .failure(let error):
-                    self.errorMessage = "Payment failed: \(error.localizedDescription)"
-                    print("[MDV-PAY] Payment error: \(error.localizedDescription)")
+                    print("[processPayment] ❌ FAILED - \(error.localizedDescription)")
+                    self.errorMessage = error.localizedDescription
                 }
             }
         }

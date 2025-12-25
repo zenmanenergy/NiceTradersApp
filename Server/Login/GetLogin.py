@@ -53,7 +53,7 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 			register_device(result['user_id'], device_token, device_type, device_name, app_version, os_version)
 
 			# Return success with session data and user ID
-			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}"}}'
+			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}", "firstName": "{result.get("FirstName", "")}", "lastName": "{result.get("LastName", "")}"}}'
 			
 	except Exception as e:
 		connection.close()

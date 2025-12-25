@@ -677,7 +677,10 @@ extension MeetingDetailView {
                     }
                     
                     if !userHasPaid {
-                        Button(action: { processPayment() }) {
+                        Button(action: {
+                            print("[BUTTON] CONFIRM PAYMENT TAPPED - calling processPayment()")
+                            processPayment()
+                        }) {
                             HStack {
                                 Image(systemName: "creditcard.fill")
                                     .font(.system(size: 14))
