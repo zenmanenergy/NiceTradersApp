@@ -12,6 +12,9 @@ class ExchangeRateScheduler:
     def __init__(self):
         self.scheduler_running = False
         self.scheduler_thread = None
+        self.last_successful_update = None
+        self.consecutive_failures = 0
+        self.next_scheduled_run = None
     
     def start_scheduler(self):
         """Start the background scheduler for exchange rate updates"""
@@ -24,6 +27,9 @@ class ExchangeRateScheduler:
         # Schedule daily download at 6 AM UTC (after ECB updates)
         schedule.every().day.at("06:00").do(self.scheduled_download)
         
+        # Calculate next run time
+        self._update_next_scheduled_run()
+        
         # Also check on startup if we need rates for today
         self.check_and_download_if_needed()
         
@@ -32,6 +38,19 @@ class ExchangeRateScheduler:
         self.scheduler_thread.start()
         
         print("[ExchangeRateScheduler] Scheduler started successfully")
+    
+    def _update_next_scheduled_run(self):
+        """Calculate the next scheduled run time"""
+        now = datetime.now()
+        next_run = datetime.now().replace(hour=6, minute=0, second=0, microsecond=0)
+        
+        # If 6 AM has already passed today, schedule for tomorrow
+        if next_run <= now:
+            from datetime import timedelta
+            next_run = next_run + timedelta(days=1)
+        
+        self.next_scheduled_run = next_run
+        print(f"[ExchangeRateScheduler] Next scheduled run: {next_run.isoformat()}")
     
     def stop_scheduler(self):
         """Stop the background scheduler"""
@@ -54,14 +73,28 @@ class ExchangeRateScheduler:
             
             if result_data['success']:
                 print(f"[ExchangeRateScheduler] Successfully downloaded {result_data.get('rates_count', 0)} rates")
+                self.last_successful_update = datetime.now()
+                self.consecutive_failures = 0
+                self._update_next_scheduled_run()
                 self.log_download_event(True, result_data.get('rates_count', 0))
             else:
                 print(f"[ExchangeRateScheduler] Download failed: {result_data.get('error', 'Unknown error')}")
+                self.consecutive_failures += 1
                 self.log_download_event(False, 0, result_data.get('error'))
                 
         except Exception as e:
             print(f"[ExchangeRateScheduler] Scheduled download error: {str(e)}")
+            self.consecutive_failures += 1
             self.log_download_event(False, 0, str(e))
+    
+    def get_status(self):
+        """Get current scheduler status"""
+        return {
+            'running': self.scheduler_running,
+            'last_successful_update': self.last_successful_update.isoformat() if self.last_successful_update else None,
+            'next_scheduled_run': self.next_scheduled_run.isoformat() if self.next_scheduled_run else None,
+            'consecutive_failures': self.consecutive_failures
+        }
     
     def check_and_download_if_needed(self):
         """Check if we have today's rates, download if not"""
@@ -74,7 +107,11 @@ class ExchangeRateScheduler:
                 self.scheduled_download()
             else:
                 print(f"[ExchangeRateScheduler] Rates for today ({today}) already exist")
+                # Update last successful update timestamp
+                if not self.last_successful_update:
+                    self.last_successful_update = datetime.now()
                 
+
         except Exception as e:
             print(f"[ExchangeRateScheduler] Error checking rates: {str(e)}")
     

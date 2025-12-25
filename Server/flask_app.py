@@ -38,6 +38,7 @@ from Dashboard import Dashboard
 from Search import Search
 from Contact import Contact
 from ExchangeRates import ExchangeRates
+from ExchangeRates.Scheduler import start_exchange_rate_scheduler
 from Meeting import Meeting
 from Admin import Admin
 from Translations import Translations, AdminTranslations
@@ -60,6 +61,9 @@ app.register_blueprint(AdminTranslations.admin_translations_bp)
 app.register_blueprint(negotiations_bp)
 app.register_blueprint(ratings_bp)
 app.register_blueprint(Payments.payments_bp)
+
+# Start exchange rate scheduler
+start_exchange_rate_scheduler()
 
 @app.route("/")
 @cross_origin()

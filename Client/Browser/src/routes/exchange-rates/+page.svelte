@@ -5,12 +5,43 @@
 	let exchangeRates = [];
 	let lastUpdateDate = null;
 	let lastUpdateTime = null;
+	let nextUpdateTime = null;
+	let schedulerStatus = null;
 	let loading = false;
 	let refreshing = false;
 	let error = null;
 	let totalRates = 0;
 	let searchTerm = '';
 	const API_BASE = Settings.baseURL;
+	
+	async function loadSchedulerStatus() {
+		try {
+			const url = `${API_BASE}/Admin/ExchangeRateSchedulerStatus`;
+			const response = await fetch(url);
+			const data = await response.json();
+			
+			if (data.success) {
+				schedulerStatus = data.scheduler;
+				console.log('✅ Scheduler status loaded:', schedulerStatus);
+			}
+		} catch (e) {
+			console.error('Error loading scheduler status:', e);
+		}
+	}
+	
+	function calculateNextUpdate() {
+		// Next update is always at 6 AM UTC
+		const now = new Date();
+		const nextUpdate = new Date(now);
+		nextUpdate.setUTC(6, 0, 0, 0);
+		
+		// If 6 AM UTC has already passed today, schedule for tomorrow
+		if (nextUpdate <= now) {
+			nextUpdate.setDate(nextUpdate.getDate() + 1);
+		}
+		
+		return nextUpdate;
+	}
 	
 	async function loadExchangeRates() {
 		loading = true;
@@ -39,6 +70,7 @@
 				lastUpdateDate = data.last_update_date;
 				lastUpdateTime = data.last_update_time;
 				totalRates = data.total_rates || 0;
+				nextUpdateTime = calculateNextUpdate();
 				console.log('✅ Exchange rates loaded successfully');
 			} else {
 				error = data.error || 'Failed to load exchange rates';
@@ -78,6 +110,7 @@
 				console.log('✅ Exchange rates refreshed successfully');
 				// Reload the rates after successful refresh
 				await loadExchangeRates();
+				await loadSchedulerStatus();
 			} else {
 				error = data.error || 'Failed to refresh exchange rates';
 				console.error('❌ Server error:', data.error);
@@ -91,6 +124,7 @@
 	
 	onMount(() => {
 		loadExchangeRates();
+		loadSchedulerStatus();
 	});
 	
 	$: filteredRates = exchangeRates.filter(rate => 
@@ -112,6 +146,18 @@
 	function formatRate(rate) {
 		return parseFloat(rate).toFixed(6);
 	}
+	
+	function getTimeUntilNextUpdate() {
+		if (!nextUpdateTime) return '';
+		const now = new Date();
+		const diffMs = nextUpdateTime - now;
+		const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+		const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+		
+		if (diffMs < 0) return 'Pending...';
+		if (diffHours > 0) return `in ${diffHours}h ${diffMins}m`;
+		return `in ${diffMins}m`;
+	}
 </script>
 
 
@@ -129,17 +175,27 @@
 	{/if}
 
 	<div class="status-panel">
+		<div class="status-item scheduler-status">
+			<span class="label">🤖 Scheduler:</span>
+			<span class="value scheduler-running">{schedulerStatus?.running ? '✅ Running' : '❌ Stopped'}</span>
+		</div>
 		<div class="status-item">
 			<span class="label">Total Rates:</span>
 			<span class="value">{totalRates} currencies</span>
 		</div>
 		<div class="status-item">
 			<span class="label">Last Updated:</span>
-			<span class="value">{formatDate(lastUpdateTime) || 'No data'}</span>
+			<span class="value">{schedulerStatus?.last_successful_update ? formatDate(schedulerStatus.last_successful_update) : (lastUpdateTime ? formatDate(lastUpdateTime) : 'No data')}</span>
 		</div>
-		<div class="status-item">
-			<span class="label">Update Date:</span>
-			<span class="value">{lastUpdateDate ? new Date(lastUpdateDate).toLocaleDateString() : 'No data'}</span>
+		{#if schedulerStatus?.consecutive_failures > 0}
+			<div class="status-item failures">
+				<span class="label">⚠️ Failures:</span>
+				<span class="value">{schedulerStatus.consecutive_failures} consecutive</span>
+			</div>
+		{/if}
+		<div class="status-item next-update">
+			<span class="label">Next Update:</span>
+			<span class="value next-update-time">{schedulerStatus?.next_scheduled_run ? formatDate(schedulerStatus.next_scheduled_run) : '-'} <span class="countdown">({getTimeUntilNextUpdate()})</span></span>
 		</div>
 		<button 
 			class="refresh-btn" 
@@ -277,6 +333,36 @@
 		background: #f5f5f5;
 		padding: 4px 8px;
 		border-radius: 4px;
+	}
+
+	.status-item.scheduler-status .value {
+		background: #e8f5e9;
+		color: #2e7d32;
+		font-weight: 600;
+	}
+
+	.status-item.scheduler-status .value.scheduler-stopped {
+		background: #ffebee;
+		color: #c62828;
+	}
+
+	.status-item.failures .value {
+		background: #fff3e0;
+		color: #e65100;
+		font-weight: 600;
+	}
+
+	.status-item.next-update .value {
+		background: #e3f2fd;
+		color: #1565c0;
+		font-weight: 600;
+	}
+
+	.countdown {
+		font-size: 0.85em;
+		color: #666;
+		font-weight: normal;
+		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
 	}
 
 	.refresh-btn {

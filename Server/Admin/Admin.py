@@ -4,6 +4,7 @@ from _Lib.Database import ConnectToDatabase
 from APNService.APNService import APNService
 import os
 from datetime import datetime
+import json
 
 blueprint = Blueprint('admin', __name__)
 
@@ -1474,6 +1475,82 @@ def refresh_exchange_rates():
             'success': False,
             'error': str(e)
         }), 500
+
+@blueprint.route('/Admin/ExchangeRateSchedulerStatus', methods=['GET'])
+@cross_origin()
+def get_exchange_rate_scheduler_status():
+    """Get the status of the exchange rate scheduler"""
+    try:
+        from ExchangeRates.Scheduler import scheduler
+        
+        status = scheduler.get_status()
+        
+        return jsonify({
+            'success': True,
+            'scheduler': status,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@blueprint.route('/Admin/ExchangeRateLogs', methods=['GET'])
+@cross_origin()
+def get_exchange_rate_logs():
+    """Get exchange rate download logs for monitoring"""
+    try:
+        cursor, connection = ConnectToDatabase()
+        
+        # Get the last 50 log entries
+        query = """
+            SELECT id, download_timestamp, success, rates_downloaded, error_message
+            FROM exchange_rate_logs
+            ORDER BY download_timestamp DESC
+            LIMIT 50
+        """
+        cursor.execute(query)
+        logs = cursor.fetchall()
+        
+        # Get summary stats
+        stats_query = """
+            SELECT 
+                COUNT(*) as total_attempts,
+                SUM(CASE WHEN success = 1 THEN 1 ELSE 0 END) as successful,
+                SUM(CASE WHEN success = 0 THEN 1 ELSE 0 END) as failed,
+                MAX(download_timestamp) as last_attempt,
+                AVG(rates_downloaded) as avg_rates_downloaded
+            FROM exchange_rate_logs
+            WHERE download_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        """
+        cursor.execute(stats_query)
+        stats = cursor.fetchone()
+        
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'logs': logs if logs else [],
+            'stats': {
+                'total_attempts': stats['total_attempts'] if stats else 0,
+                'successful': stats['successful'] if stats else 0,
+                'failed': stats['failed'] if stats else 0,
+                'last_attempt': stats['last_attempt'].isoformat() if stats and stats['last_attempt'] else None,
+                'success_rate': f"{(stats['successful'] / stats['total_attempts'] * 100):.1f}%" if stats and stats['total_attempts'] > 0 else '0%',
+                'avg_rates_downloaded': round(stats['avg_rates_downloaded'], 1) if stats and stats['avg_rates_downloaded'] else 0
+            },
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @blueprint.route('/Admin/RefundPayPalTransaction', methods=['POST'])
 @cross_origin()
 def refund_paypal_transaction():
