@@ -16,12 +16,16 @@
 set -e  # Exit on any error
 
 # Configuration
-REPO_ROOT="/Users/stevenelson/Documents/GitHub/NiceTradersApp"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_DIR="$REPO_ROOT/Server"
 BROWSER_DIR="$REPO_ROOT/Client/Browser"
 BACKUP_DIR="$REPO_ROOT/backups/localization"
-LOG_FILE="$REPO_ROOT/localization_deployment_$(date +%Y%m%d_%H%M%S).log"
+LOG_DIR="/tmp/localization_deploy"
+LOG_FILE="$LOG_DIR/localization_deployment_$(date +%Y%m%d_%H%M%S).log"
 VENV="$SERVER_DIR/venv/bin/python3"
+
+# Create log directory
+mkdir -p "$LOG_DIR"
 
 # Colors for output
 RED='\033[0;31m'
