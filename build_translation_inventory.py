@@ -11,12 +11,13 @@ import json
 import pymysql
 from datetime import datetime
 
-IOS_INVENTORY_FILE = "/Users/stevenelson/Documents/GitHub/NiceTradersApp/ios_translation_inventory.json"
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+IOS_INVENTORY_FILE = os.path.join(PROJECT_ROOT, "ios_translation_inventory.json")
 DB_HOST = 'localhost'
 DB_USER = 'stevenelson'
 DB_PASSWORD = 'mwitcitw711'
 DB_NAME = 'nicetraders'
-OUTPUT_FILE = "/Users/stevenelson/Documents/GitHub/NiceTradersApp/translation_inventory.json"
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "translation_inventory.json")
 
 def load_ios_inventory():
     """Load the iOS inventory from scanner output"""

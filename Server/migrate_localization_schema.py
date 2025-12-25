@@ -114,7 +114,9 @@ def run_migrations():
         import json
         import os
         
-        inventory_file = "/Users/stevenelson/Documents/GitHub/NiceTradersApp/translation_inventory.json"
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(script_dir)
+inventory_file = os.path.join(project_root, "translation_inventory.json")
         if os.path.exists(inventory_file):
             with open(inventory_file, 'r', encoding='utf-8') as f:
                 inventory = json.load(f)

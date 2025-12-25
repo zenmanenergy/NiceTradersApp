@@ -12,8 +12,9 @@ from collections import defaultdict
 from datetime import datetime
 
 # Configuration
-IOS_PROJECT_PATH = "/Users/stevenelson/Documents/GitHub/NiceTradersApp/Client/IOS/Nice Traders/Nice Traders"
-OUTPUT_FILE = "/Users/stevenelson/Documents/GitHub/NiceTradersApp/ios_translation_inventory.json"
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+IOS_PROJECT_PATH = os.path.join(PROJECT_ROOT, "Client/IOS/Nice Traders/Nice Traders")
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "ios_translation_inventory.json")
 
 # Regex patterns for finding localization calls
 PATTERNS = [

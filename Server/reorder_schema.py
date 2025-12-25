@@ -78,7 +78,8 @@ def topological_sort(tables):
     return sorted_tables
 
 def main():
-    schema = read_schema('/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/database_schema.sql')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+schema = read_schema(os.path.join(script_dir, "database_schema.sql"))
     tables = extract_tables(schema)
     sorted_table_names = topological_sort(tables)
     
@@ -87,7 +88,7 @@ def main():
     for table_name in sorted_table_names:
         output += tables[table_name] + "\n\n"
     
-    with open('/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/database_schema_ordered.sql', 'w') as f:
+    with open(os.path.join(script_dir, "database_schema_ordered.sql"), 'w') as f:
         f.write(output)
     
     print(f"✅ Schema reordered. Table creation order:")

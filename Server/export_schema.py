@@ -29,7 +29,8 @@ for (table_name,) in tables:
     schema_content += f"{create_statement};\n\n"
 
 # Write to file
-output_path = '/Users/stevenelson/Documents/GitHub/NiceTradersApp/Server/database_schema.sql'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+output_path = os.path.join(script_dir, "database_schema.sql")
 with open(output_path, 'w') as f:
     f.write(schema_content)
 
