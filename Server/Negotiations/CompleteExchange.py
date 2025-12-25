@@ -158,6 +158,25 @@ def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
         
         connection.commit()
         print(f"[CompleteExchange] Committed to database")
+        
+        # Send notification to partner that this user marked their part complete
+        try:
+            from Admin.NotificationService import notification_service
+            
+            # Get current user's name for notification
+            cursor.execute("SELECT FirstName, LastName FROM users WHERE user_id = %s", (user_id,))
+            current_user = cursor.fetchone()
+            current_user_name = f"{current_user['FirstName']} {current_user['LastName']}" if current_user else "A user"
+            
+            notification_service.send_exchange_marked_complete_notification(
+                user_id=partner_id,
+                partner_name=current_user_name,
+                listing_id=listing_id
+            )
+            print(f"[CompleteExchange] Sent notification to partner {partner_id}")
+        except Exception as notif_error:
+            print(f"[CompleteExchange] Failed to send notification: {str(notif_error)}")
+        
         connection.close()
         
         print(f"[CompleteExchange] Successfully completed exchange for listing {listing_id}")

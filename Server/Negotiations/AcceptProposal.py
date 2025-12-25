@@ -98,6 +98,38 @@ def accept_proposal(listing_id, session_id):
         
         print(f"[Negotiations] AcceptProposal success: listing_id={listing_id}, user_id={user_id}")
         
+        # Send APN notification to buyer
+        try:
+            from Admin.NotificationService import notification_service
+            
+            # Get acceptor name for notification
+            cursor.execute("SELECT FirstName, LastName FROM users WHERE user_id = %s", (user_id,))
+            acceptor = cursor.fetchone()
+            acceptor_name = f"{acceptor['FirstName']} {acceptor['LastName']}" if acceptor else "A user"
+            
+            # Determine who is the buyer/seller for notification
+            if user_id == seller_id:
+                # Seller accepted, notify buyer
+                notification_service.send_meeting_proposal_notification(
+                    recipient_id=time_neg['buyer_id'],
+                    proposer_name=acceptor_name,
+                    proposed_time=str(time_neg['meeting_time']),
+                    listing_id=listing_id,
+                    proposal_id=time_neg['time_negotiation_id']
+                )
+            else:
+                # Buyer accepted, notify seller
+                notification_service.send_meeting_proposal_notification(
+                    recipient_id=seller_id,
+                    proposer_name=acceptor_name,
+                    proposed_time=str(time_neg['meeting_time']),
+                    listing_id=listing_id,
+                    proposal_id=time_neg['time_negotiation_id']
+                )
+            print(f"[Negotiations] Sent APN notification for accepted proposal")
+        except Exception as notif_error:
+            print(f"[Negotiations] Failed to send notification: {str(notif_error)}")
+        
         return json.dumps({
             'success': True,
             'status': 'agreed',

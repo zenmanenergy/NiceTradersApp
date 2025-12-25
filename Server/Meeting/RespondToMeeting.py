@@ -83,6 +83,51 @@ def respond_to_meeting(session_id, proposal_type, proposal_id, response):
             })
         
         connection.commit()
+        
+        # Send notification for rejected proposals
+        if response == 'rejected':
+            try:
+                from Admin.NotificationService import notification_service
+                
+                # Get proposal details to find proposer
+                if proposal_type == 'location':
+                    cursor.execute("""
+                        SELECT proposed_by FROM listing_meeting_location 
+                        WHERE location_negotiation_id = %s
+                    """, (proposal_id,))
+                elif proposal_type == 'time':
+                    cursor.execute("""
+                        SELECT proposed_by FROM listing_meeting_time 
+                        WHERE time_negotiation_id = %s
+                    """, (proposal_id,))
+                
+                proposal = cursor.fetchone()
+                if proposal:
+                    proposer_id = proposal['proposed_by']
+                    
+                    # Get current user's name
+                    cursor.execute("SELECT FirstName, LastName FROM users WHERE user_id = %s", (user_id,))
+                    responder = cursor.fetchone()
+                    responder_name = f"{responder['FirstName']} {responder['LastName']}" if responder else "A user"
+                    
+                    if proposal_type == 'location':
+                        notification_service.send_location_rejected_notification(
+                            user_id=proposer_id,
+                            proposer_name=responder_name,
+                            listing_id=listing_id
+                        )
+                    elif proposal_type == 'time':
+                        # For time proposal rejections, use a generic message
+                        notification_service.send_location_rejected_notification(
+                            user_id=proposer_id,
+                            proposer_name=responder_name,
+                            listing_id=listing_id
+                        )
+                    
+                    print(f"[RespondToMeeting] Sent rejection notification to proposer {proposer_id}")
+            except Exception as notif_error:
+                print(f"[RespondToMeeting] Warning: Failed to send rejection notification: {str(notif_error)}")
+        
         connection.close()
         
         print(f"[RespondToMeeting] {proposal_type} proposal {response.upper()}: {proposal_id}")

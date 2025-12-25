@@ -351,6 +351,126 @@ class NotificationService:
         )
         
         return result
+    
+    def send_push_disabled_alert(self, user_id, session_id=None):
+        """
+        Send alert when user logs in but push notifications are disabled
+        Args:
+            user_id: ID of the user
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        # Get user's preferred language
+        user_lang = self.get_user_language(user_id)
+        
+        # Get session ID if not provided
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'PUSH_NOTIFICATIONS_DISABLED')
+        body = get_translation(user_lang, 'PUSH_NOTIFICATIONS_REQUIRED_MESSAGE')
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='settings',
+            deep_link_id='notifications'
+        )
+        
+        return result
+    
+    def send_location_rejected_notification(self, user_id, proposer_name, listing_id, session_id=None):
+        """
+        Send notification when a proposed meeting location is rejected
+        Args:
+            user_id: ID of the user whose location proposal was rejected
+            proposer_name: Name of the user who rejected the proposal
+            listing_id: ID of the listing
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(user_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'LOCATION_REJECTED')
+        body = f"{proposer_name} {get_translation(user_lang, 'rejected_your_location_proposal')}"
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+    
+    def send_location_proposed_notification(self, user_id, proposer_name, listing_id, session_id=None):
+        """
+        Send notification when an alternative meeting location is proposed
+        Args:
+            user_id: ID of the user being notified
+            proposer_name: Name of the user proposing the location
+            listing_id: ID of the listing
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(user_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'LOCATION_PROPOSED')
+        body = f"{proposer_name} {get_translation(user_lang, 'proposed_new_meeting_location')}"
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+    
+    def send_exchange_marked_complete_notification(self, user_id, partner_name, listing_id, session_id=None):
+        """
+        Send notification when one party marks the exchange as complete
+        Args:
+            user_id: ID of the user being notified
+            partner_name: Name of the partner who completed their part
+            listing_id: ID of the listing
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(user_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'EXCHANGE_MARKED_COMPLETE')
+        body = f"{partner_name} has confirmed their exchange completion"
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
 
 
 # Global instance

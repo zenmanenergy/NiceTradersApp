@@ -261,17 +261,29 @@ def propose_meeting(session_id, listing_id, proposed_location, proposed_time, pr
         proposer_name = f"{proposer['FirstName']} {proposer['LastName']}" if proposer else "A user"
         print(f"🟠 [ProposeMeeting] Sending notification to user {recipient_id} from {proposer_name}")
         
-        # Send APN notification to recipient
+        # Send APN notifications to recipient
         try:
             from Admin.NotificationService import notification_service
-            notification_service.send_meeting_proposal_notification(
-                recipient_id=recipient_id,
-                proposer_name=proposer_name,
-                proposed_time='',
-                listing_id=listing_id,
-                proposal_id=results['proposal_ids'].get('time') or results['proposal_ids'].get('location')
-            )
-            print(f"✅ [ProposeMeeting] APN notification sent successfully")
+            
+            # Send location notification if location was proposed
+            if 'location' in results['proposal_ids']:
+                notification_service.send_location_proposed_notification(
+                    user_id=recipient_id,
+                    proposer_name=proposer_name,
+                    listing_id=listing_id
+                )
+                print(f"✅ [ProposeMeeting] Location proposal notification sent")
+            
+            # Send time notification if time was proposed
+            if 'time' in results['proposal_ids']:
+                notification_service.send_meeting_proposal_notification(
+                    recipient_id=recipient_id,
+                    proposer_name=proposer_name,
+                    proposed_time=str(proposed_time) if proposed_time else '',
+                    listing_id=listing_id,
+                    proposal_id=results['proposal_ids']['time']
+                )
+                print(f"✅ [ProposeMeeting] Time proposal notification sent")
         except Exception as apn_error:
             print(f"🔴 [ProposeMeeting] APN error: {apn_error}")
         

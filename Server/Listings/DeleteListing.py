@@ -94,13 +94,22 @@ def delete_listing(SessionId, ListingId, Permanent):
             seller = cursor.fetchone()
             seller_name = f"{seller[0]} {seller[1]}" if seller else "Seller"
             
-            # TODO: Send notifications to affected buyers when notification service is available
-            # for buyer in buyers_to_notify:
-            #     buyer_id = buyer[0]
-            #     try:
-            #         send_buyer_notification(...)
-            #     except Exception as notification_error:
-            #         print(f"[DeleteListing] Warning: Failed to send notification")
+            # Send notifications to affected buyers
+            try:
+                from Admin.NotificationService import notification_service
+                for buyer in buyers_to_notify:
+                    buyer_id = buyer[0]
+                    try:
+                        notification_service.send_listing_cancelled_notification(
+                            buyer_id=buyer_id,
+                            seller_name=seller_name,
+                            listing_title=listing_title
+                        )
+                        print(f"[DeleteListing] Sent cancellation notification to buyer {buyer_id}")
+                    except Exception as buyer_notif_error:
+                        print(f"[DeleteListing] Warning: Failed to send notification to buyer {buyer_id}: {str(buyer_notif_error)}")
+            except Exception as notification_error:
+                print(f"[DeleteListing] Warning: Failed to import notification service: {str(notification_error)}")
         
         if permanent:
             # Permanently delete from database

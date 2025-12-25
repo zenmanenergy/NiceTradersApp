@@ -52,6 +52,36 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 			log_device_event(f"LOGIN: Registering device for user {result['user_id']} with device_type={device_type}, device_name={device_name}, app_version={app_version}, os_version={os_version}, device_token={device_token}")
 			register_device(result['user_id'], device_token, device_type, device_name, app_version, os_version)
 
+			# Check if user has push notifications enabled on iOS devices
+			if device_type == 'ios':
+				# Reconnect to database to check device status
+				cursor_check, connection_check = Database.ConnectToDatabase()
+				try:
+					# Check if device has a valid token
+					cursor_check.execute(
+						"SELECT device_token FROM user_devices WHERE user_id = %s AND device_type = 'ios' AND is_active = 1",
+						(result['user_id'],)
+					)
+					device_check = cursor_check.fetchone()
+					
+					# If no active iOS device with token, alert user
+					if not device_check or not device_check.get('device_token'):
+						log_device_event(f"LOGIN: Push notifications not enabled for user {result['user_id']}")
+						# Send a push notification alert that push notifications are disabled
+						try:
+							from Admin.NotificationService import notification_service
+							notification_service.send_push_disabled_alert(
+								user_id=result['user_id'],
+								session_id=SessionId
+							)
+						except Exception as notif_error:
+							log_device_event(f"LOGIN: Failed to send push disabled alert: {str(notif_error)}")
+				except Exception as device_check_error:
+					log_device_event(f"LOGIN: Error checking device status: {str(device_check_error)}")
+				finally:
+					cursor_check.close()
+					connection_check.close()
+
 			# Return success with session data and user ID
 			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}", "firstName": "{result.get("FirstName", "")}", "lastName": "{result.get("LastName", "")}"}}'
 			
