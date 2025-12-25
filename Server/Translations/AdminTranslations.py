@@ -300,15 +300,25 @@ def get_view_inventory():
         project_root = os.path.dirname(os.path.dirname(server_dir))
         inventory_file = os.path.join(project_root, 'translation_inventory.json')
         
+        print(f"[DEBUG] GetViewInventory called")
+        print(f"[DEBUG] server_dir: {server_dir}")
+        print(f"[DEBUG] project_root: {project_root}")
+        print(f"[DEBUG] inventory_file: {inventory_file}")
+        print(f"[DEBUG] file exists: {os.path.exists(inventory_file)}")
+        
         if not os.path.exists(inventory_file):
+            error_msg = f'Inventory file not found at {inventory_file}'
+            print(f"[ERROR] {error_msg}")
             return jsonify({
                 'success': False,
-                'message': 'Inventory file not found. Run build_translation_inventory.py first.'
+                'message': error_msg
             }), 404
         
+        print(f"[DEBUG] Loading inventory file...")
         with open(inventory_file, 'r', encoding='utf-8') as f:
             inventory = json.load(f)
         
+        print(f"[DEBUG] Inventory loaded, building response...")
         # Build response with views data
         views = []
         for view_id, view_data in inventory['iosViews'].items():
@@ -320,19 +330,55 @@ def get_view_inventory():
                 'keyCount': view_data['keyCount']
             })
         
-        return jsonify({
+        response = jsonify({
             'success': True,
             'views': sorted(views, key=lambda x: x['viewId']),
             'totalViews': len(views),
             'totalKeys': inventory['statistics']['totalKeys'],
             'languages': inventory['languages']
         })
+        print(f"[DEBUG] ✅ Returning inventory with {len(views)} views")
+        return response
         
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"[ERROR] GetViewInventory exception: {str(e)}")
+        print(f"[ERROR] Traceback:\n{error_trace}")
         return jsonify({
             'success': False,
-            'message': f'Error fetching view inventory: {str(e)}'
+            'message': f'Error fetching view inventory: {str(e)}',
+            'debug': error_trace
         }), 500
+
+
+@admin_translations_bp.route('/CheckInventoryStatus', methods=['GET'])
+def check_inventory_status():
+    """
+    Check if inventory file exists and debug info
+    """
+    server_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(server_dir))
+    inventory_file = os.path.join(project_root, 'translation_inventory.json')
+    
+    exists = os.path.exists(inventory_file)
+    file_info = {}
+    
+    if exists:
+        stat = os.stat(inventory_file)
+        file_info = {
+            'size': stat.st_size,
+            'modified': str(stat.st_mtime),
+            'readable': os.access(inventory_file, os.R_OK)
+        }
+    
+    return jsonify({
+        'inventory_file_path': inventory_file,
+        'exists': exists,
+        'project_root': project_root,
+        'server_dir': server_dir,
+        'file_info': file_info
+    })
 
 
 @admin_translations_bp.route('/UpdateEnglish', methods=['POST'])

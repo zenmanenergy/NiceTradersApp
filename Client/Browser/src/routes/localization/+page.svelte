@@ -13,17 +13,50 @@
 	let error = null;
 	let stats = null;
 	let activeTab = 'editor'; // editor, history, status
+	let debugInfo = null;
 
 	onMount(async () => {
+		console.log('🔍 Localization Editor mounted, checking inventory status...');
+		await checkInventoryStatus();
 		await loadViewInventory();
 	});
+
+	async function checkInventoryStatus() {
+		try {
+			const response = await fetch('/Admin/Translations/CheckInventoryStatus');
+			const data = await response.json();
+			debugInfo = data;
+			console.log('📋 Inventory Status:', data);
+		} catch (e) {
+			console.log('⚠️  Could not check inventory status:', e);
+		}
+	}
 
 	async function loadViewInventory() {
 		loading = true;
 		error = null;
 		try {
 			const response = await fetch('/Admin/Translations/GetViewInventory');
-			const data = await response.json();
+			
+			// Debug: Log response status and type
+			console.log('=== Inventory Load Debug ===');
+			console.log('Status:', response.status);
+			console.log('Content-Type:', response.headers.get('content-type'));
+			
+			const text = await response.text();
+			console.log('Response (first 500 chars):', text.substring(0, 500));
+			
+			// Try to parse as JSON
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				console.error('Response started with:', text.substring(0, 100));
+				error = `Invalid JSON response: ${parseErr.message}. Response: ${text.substring(0, 200)}`;
+				loading = false;
+				return;
+			}
 
 			if (data.success) {
 				viewInventory = data;
@@ -32,11 +65,17 @@
 					totalKeys: data.totalKeys,
 					languages: data.languages.length
 				};
+				console.log('✅ Inventory loaded successfully');
 			} else {
-				error = data.message;
+				error = data.message || 'Unknown error loading inventory';
+				console.error('❌ Server returned error:', data.message);
+				if (data.debug) {
+					console.error('Server debug info:', data.debug);
+				}
 			}
 		} catch (e) {
 			error = `Failed to load inventory: ${e.message}`;
+			console.error('❌ Fetch error:', e);
 		}
 		loading = false;
 	}
@@ -69,6 +108,26 @@
 </script>
 
 <div class="localization-editor">
+	<!-- Top Navigation Menu -->
+	<nav class="top-menu">
+		<div class="menu-container">
+			<div class="logo">
+				<a href="/">🏪 Nice Traders Admin</a>
+			</div>
+			<ul class="menu-links">
+				<li><a href="/dashboard">Dashboard</a></li>
+				<li><a href="/listings">Listings</a></li>
+				<li><a href="/users">Users</a></li>
+				<li><a href="/localization" class="active">Localization</a></li>
+				<li><a href="/payment-reports">Reports</a></li>
+			</ul>
+			<div class="menu-actions">
+				<a href="/profile" class="user-link">👤 Profile</a>
+				<a href="/login" class="logout-link">🚪 Logout</a>
+			</div>
+		</div>
+	</nav>
+
 	<header class="editor-header">
 		<h1>🌐 Localization Editor</h1>
 		<div class="stats">
@@ -110,6 +169,10 @@
 	{#if error}
 		<div class="error-message">
 			<strong>Error:</strong> {error}
+			<details style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd;">
+				<summary style="cursor: pointer; font-weight: 600; color: #666;">Debug Info</summary>
+				<pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; font-size: 12px; overflow-x: auto;">Check browser console (F12) for detailed debug logs</pre>
+			</details>
 		</div>
 	{/if}
 
@@ -160,6 +223,103 @@
 		display: flex;
 		flex-direction: column;
 		background-color: #f5f5f5;
+	}
+
+	/* Top Navigation Menu */
+	.top-menu {
+		background: #1a1a1a;
+		border-bottom: 3px solid #0066cc;
+		padding: 0;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	}
+
+	.menu-container {
+		max-width: 1400px;
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 20px;
+		height: 60px;
+	}
+
+	.logo a {
+		color: white;
+		text-decoration: none;
+		font-size: 16px;
+		font-weight: 700;
+		letter-spacing: 0.5px;
+		transition: color 0.2s;
+	}
+
+	.logo a:hover {
+		color: #0066cc;
+	}
+
+	.menu-links {
+		display: flex;
+		list-style: none;
+		gap: 0;
+		margin: 0;
+		padding: 0;
+		flex: 1;
+		justify-content: center;
+	}
+
+	.menu-links li {
+		margin: 0;
+		padding: 0;
+	}
+
+	.menu-links a {
+		display: block;
+		color: #ccc;
+		text-decoration: none;
+		padding: 20px 18px;
+		font-size: 14px;
+		font-weight: 500;
+		transition: all 0.2s;
+		border-bottom: 3px solid transparent;
+		height: 100%;
+		line-height: 20px;
+	}
+
+	.menu-links a:hover {
+		color: white;
+		background: rgba(0, 102, 204, 0.1);
+		border-bottom-color: #0066cc;
+	}
+
+	.menu-links a.active {
+		color: #0066cc;
+		border-bottom-color: #0066cc;
+		background: rgba(0, 102, 204, 0.05);
+	}
+
+	.menu-actions {
+		display: flex;
+		gap: 15px;
+		align-items: center;
+	}
+
+	.user-link,
+	.logout-link {
+		color: #ccc;
+		text-decoration: none;
+		font-size: 13px;
+		padding: 6px 12px;
+		border-radius: 4px;
+		transition: all 0.2s;
+	}
+
+	.user-link:hover {
+		color: white;
+		background: rgba(0, 102, 204, 0.2);
+	}
+
+	.logout-link:hover {
+		color: #ff6b6b;
+		background: rgba(255, 107, 107, 0.1);
 	}
 
 	.editor-header {
@@ -329,6 +489,10 @@
 		.right-panel {
 			display: block;
 			height: 300px;
+		}
+
+		.menu-links {
+			display: none;
 		}
 	}
 </style>
