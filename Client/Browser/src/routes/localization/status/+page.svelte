@@ -96,7 +96,7 @@
 		error = null;
 
 		try {
-			const response = await fetch('/Admin/Translations/ScanCodeForKeys', {
+			const response = await fetch(`${API_BASE}/Admin/Translations/ScanCodeForKeys`, {
 				method: 'POST'
 			});
 			const data = await response.json();
