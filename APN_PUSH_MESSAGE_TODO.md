@@ -10,20 +10,15 @@ This document tracks all places where APN push notifications should be sent in t
 
 ## Phase 1: Login Verification ⭐ HIGH PRIORITY
 
-### 1.1 Check Push Notifications Permission at Login
+### 1.1 ✅ Check Push Notifications Permission at Login
 - **File**: `Server/Login/GetLogin.py`
+- **Status**: IMPLEMENTED
 - **Trigger**: User successfully logs in
-- **Action Required**:
-  - Check if user has enabled push notifications on their device
-  - If push notifications are DISABLED, send an alert notification
+- **Action**: 
+  - Checks if user has enabled push notifications on their device
+  - If push notifications are DISABLED, sends alert notification
   - Alert message: "Push notifications are necessary for the app to function correctly. Please enable them in Settings."
-  - This should only be shown once per login session (not every request)
-
-**Implementation Details**:
-- When device logs in, check the `user_devices` table for the user's device
-- Verify that device has a valid `device_token` stored
-- If no token, display alert to user (in app and via in-app notification)
-- Store a flag to prevent repeated alerts
+  - Only shown when device token is missing
 
 ---
 
@@ -45,20 +40,20 @@ This document tracks all places where APN push notifications should be sent in t
 - **Message**: "Seller accepted your proposed meeting location"
 - **Deep Link**: `listing:{listing_id}`
 
-### 2.3 ❌ MISSING: Seller Rejects Meeting Location Proposal
-- **File**: `Server/Negotiations/RejectMeetingLocation.py`
-- **Status**: NOT IMPLEMENTED
+### 2.3 ✅ Seller Rejects Meeting Location Proposal
+- **File**: `Server/Meeting/RespondToMeeting.py`
+- **Status**: IMPLEMENTED
 - **Recipient**: Buyer (who proposed the location)
 - **Trigger**: Seller rejects buyer's proposed meeting location
-- **Message**: "Your proposed meeting location was rejected"
+- **Notification**: Buyer is notified that their location was rejected
 - **Deep Link**: `listing:{listing_id}`
 
-### 2.4 ❌ MISSING: Buyer Proposes Alternative Meeting Location
-- **File**: `Server/Meeting/ProposeMeetingLocation.py` (or similar)
-- **Status**: NOT IMPLEMENTED
+### 2.4 ✅ Buyer Proposes Alternative Meeting Location
+- **File**: `Server/Meeting/ProposeMeeting.py`
+- **Status**: IMPLEMENTED
 - **Recipient**: Seller
 - **Trigger**: Buyer proposes alternative meeting location
-- **Message**: "{buyer_name} proposed a different meeting location"
+- **Notification**: Seller receives location proposal notification
 - **Deep Link**: `listing:{listing_id}`
 
 ### 2.5 ❌ MISSING: Buyer Rejects Meeting Location Proposal
@@ -71,7 +66,7 @@ This document tracks all places where APN push notifications should be sent in t
 
 ### 2.6 ✅ EXISTING: Buyer Sends Interest Message
 - **File**: `Server/Contact/SendInterestMessage.py`
-- **Status**: PARTIALLY IMPLEMENTED (sends to DB, needs APN verification)
+- **Status**: IMPLEMENTED
 - **Recipient**: Listing owner
 - **Trigger**: Buyer sends message with interest in listing
 - **Message**: "{sender_name} has expressed interest in your {currency} {amount} listing"

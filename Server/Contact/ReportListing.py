@@ -127,6 +127,18 @@ def report_listing(listing_id, session_id, reason, description=''):
         # Commit the transaction
         connection.commit()
         
+        # Send notification to seller that their listing was reported
+        try:
+            from Admin.NotificationService import notification_service
+            notification_service.send_listing_reported_notification(
+                seller_id=listing_owner_id,
+                listing_id=listing_id,
+                reason=reason
+            )
+            print(f"[ReportListing] Sent notification to seller {listing_owner_id}")
+        except Exception as notif_error:
+            print(f"[ReportListing] Warning: Failed to send notification: {str(notif_error)}")
+        
         response_data = {
             'success': True,
             'message': 'Report submitted successfully',

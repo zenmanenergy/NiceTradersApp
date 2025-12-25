@@ -186,9 +186,18 @@
 								{/if}
 								<div>
 									<strong>Token:</strong>
-									<span class="device-token-indicator {device.device_token ? 'has-token' : 'no-token'}">
-										{device.device_token ? '✓ Registered' : '✗ Missing'}
-									</span>
+									{#if device.device_token}
+										<div class="token-display">
+											<span class="badge badge-success">✓ Registered</span>
+											<div class="token-value" title={device.device_token}>
+												{device.device_token}
+											</div>
+										</div>
+									{:else}
+										<span class="device-token-indicator no-token">
+											✗ Missing
+										</span>
+									{/if}
 								</div>
 								<div>
 									<strong>Active:</strong>
@@ -586,6 +595,26 @@
 		display: flex;
 		gap: 12px;
 		margin-top: 32px;
+	}
+
+	.token-display {
+		margin-top: 8px;
+	}
+
+	.token-value {
+		background: #f5f5f5;
+		border: 1px solid #e0e0e0;
+		border-radius: 4px;
+		padding: 12px;
+		margin-top: 8px;
+		font-family: 'Monaco', 'Courier New', monospace;
+		font-size: 12px;
+		word-break: break-all;
+		color: #333;
+		max-height: 100px;
+		overflow-y: auto;
+		line-height: 1.4;
+		user-select: all;
 	}
 
 	button {

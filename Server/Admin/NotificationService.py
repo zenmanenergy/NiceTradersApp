@@ -471,6 +471,128 @@ class NotificationService:
         )
         
         return result
+    
+    def send_listing_reported_notification(self, seller_id, listing_id, reason, session_id=None):
+        """
+        Send notification when a listing is reported by another user
+        Args:
+            seller_id: ID of the seller whose listing was reported
+            listing_id: ID of the listing
+            reason: Reason for the report
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(seller_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(seller_id)
+        
+        title = get_translation(user_lang, 'LISTING_REPORTED')
+        reason_formatted = reason.replace('_', ' ').title()
+        body = f"Your listing was reported for: {reason_formatted}"
+        
+        result = self.apn_service.send_notification(
+            user_id=seller_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+    
+    def send_account_issue_notification(self, user_id, issue_type, issue_description, session_id=None):
+        """
+        Send notification for account/payment issues
+        Args:
+            user_id: ID of the user
+            issue_type: Type of issue (payment_failed, account_suspended, etc.)
+            issue_description: Description of the issue
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(user_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'ACCOUNT_ISSUE')
+        body = issue_description
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='settings',
+            deep_link_id='account'
+        )
+        
+        return result
+    
+    def send_listing_expiration_warning(self, seller_id, listing_id, days_remaining, listing_title, session_id=None):
+        """
+        Send notification when listing is about to expire
+        Args:
+            seller_id: ID of the seller
+            listing_id: ID of the listing
+            days_remaining: Number of days until expiration
+            listing_title: Title of the listing
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(seller_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(seller_id)
+        
+        title = get_translation(user_lang, 'LISTING_EXPIRING_SOON')
+        body = f"'{listing_title}' expires in {days_remaining} days"
+        
+        result = self.apn_service.send_notification(
+            user_id=seller_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='listing',
+            deep_link_id=listing_id
+        )
+        
+        return result
+    
+    def send_profile_review_notification(self, user_id, reviewer_name, review_text, session_id=None):
+        """
+        Send notification when user receives a profile review/comment
+        Args:
+            user_id: ID of the user receiving the review
+            reviewer_name: Name of the user leaving the review
+            review_text: Text of the review (preview)
+            session_id: Optional session ID for auto-login (will be fetched if not provided)
+        """
+        user_lang = self.get_user_language(user_id)
+        
+        if not session_id:
+            session_id = self.get_user_session(user_id)
+        
+        title = get_translation(user_lang, 'PROFILE_REVIEW_RECEIVED')
+        body = f"{reviewer_name} left a comment: {review_text[:50]}"
+        
+        result = self.apn_service.send_notification(
+            user_id=user_id,
+            title=title,
+            body=body,
+            badge=1,
+            sound='default',
+            session_id=session_id,
+            deep_link_type='profile',
+            deep_link_id=reviewer_name
+        )
+        
+        return result
 
 
 # Global instance
