@@ -1,12 +1,15 @@
 <script>
 	import { onMount } from 'svelte';
+	import { Settings } from '../../../Settings.js';
 
 	let stats = null;
 	let loading = false;
 	let error = null;
 	let validationResults = null;
+	const API_BASE = Settings.baseURL;
 
 	onMount(async () => {
+		console.log(`🔍 Status Page loaded, API Base: ${API_BASE}`);
 		await loadStats();
 	});
 
@@ -15,8 +18,23 @@
 		error = null;
 
 		try {
-			const response = await fetch('/Admin/Translations/GetViewInventory');
-			const data = await response.json();
+			const url = `${API_BASE}/Admin/Translations/GetViewInventory`;
+			console.log(`📊 Loading stats from: ${url}`);
+			const response = await fetch(url);
+			
+			console.log('Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				console.error('Response:', text.substring(0, 200));
+				error = `Failed to load stats: Invalid JSON response`;
+				loading = false;
+				return;
+			}
 
 			if (data.success) {
 				stats = {
@@ -28,11 +46,14 @@
 
 				// Calculate coverage
 				calculateCoverage(data);
+				console.log('✅ Stats loaded successfully');
 			} else {
-				error = data.message;
+				error = data.message || 'Failed to load stats';
+				console.error('❌ Server error:', data.message);
 			}
 		} catch (e) {
 			error = `Failed to load stats: ${e.message}`;
+			console.error('❌ Fetch error:', e);
 		}
 
 		loading = false;

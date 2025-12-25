@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { Settings } from '../../Settings.js';
 	
 	let exchangeRates = [];
 	let lastUpdateDate = null;
@@ -9,24 +10,43 @@
 	let error = null;
 	let totalRates = 0;
 	let searchTerm = '';
+	const API_BASE = Settings.baseURL;
 	
 	async function loadExchangeRates() {
 		loading = true;
 		error = null;
 		try {
-			const response = await fetch('/Admin/GetExchangeRates');
-			const data = await response.json();
+			const url = `${API_BASE}/Admin/GetExchangeRates`;
+			console.log(`📈 Loading exchange rates from: ${url}`);
+			const response = await fetch(url);
+			
+			console.log('Status:', response.status, 'Content-Type:', response.headers.get('content-type'));
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				console.error('Response:', text.substring(0, 200));
+				error = `Failed to load exchange rates: Invalid JSON response`;
+				loading = false;
+				return;
+			}
 			
 			if (data.success) {
 				exchangeRates = data.rates || [];
 				lastUpdateDate = data.last_update_date;
 				lastUpdateTime = data.last_update_time;
 				totalRates = data.total_rates || 0;
+				console.log('✅ Exchange rates loaded successfully');
 			} else {
 				error = data.error || 'Failed to load exchange rates';
+				console.error('❌ Server error:', data.error);
 			}
 		} catch (e) {
 			error = 'Network error: ' + e.message;
+			console.error('❌ Fetch error:', e);
 		} finally {
 			loading = false;
 		}
@@ -36,17 +56,31 @@
 		refreshing = true;
 		error = null;
 		try {
-			const response = await fetch('/Admin/RefreshExchangeRates', {
+			const url = `${API_BASE}/Admin/RefreshExchangeRates`;
+			console.log(`🔄 Refreshing exchange rates at: ${url}`);
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' }
 			});
-			const data = await response.json();
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				error = 'Invalid response from server';
+				refreshing = false;
+				return;
+			}
 			
 			if (data.success) {
+				console.log('✅ Exchange rates refreshed successfully');
 				// Reload the rates after successful refresh
 				await loadExchangeRates();
 			} else {
 				error = data.error || 'Failed to refresh exchange rates';
+				console.error('❌ Server error:', data.error);
 			}
 		} catch (e) {
 			error = 'Network error: ' + e.message;

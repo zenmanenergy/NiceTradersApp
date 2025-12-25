@@ -1,4 +1,6 @@
 <script>
+	import { Settings } from '../../Settings.js';
+
 	export let translationKey = null;
 	export let languages = [];
 
@@ -9,6 +11,7 @@
 	let editingLang = null;
 	let editValues = {};
 	let currentKey = null;
+	const API_BASE = Settings.baseURL;
 
 	$: if (translationKey && translationKey !== currentKey) {
 		currentKey = translationKey;
@@ -19,16 +22,31 @@
 		loading = true;
 		error = null;
 		try {
-			const response = await fetch(`/Admin/Translations/GetDetails?key=${encodeURIComponent(currentKey)}`);
-			const data = await response.json();
+			const url = `${API_BASE}/Admin/Translations/GetDetails?key=${encodeURIComponent(currentKey)}`;
+			console.log(`🌐 Loading translations from: ${url}`);
+			const response = await fetch(url);
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				error = `Invalid response: ${parseErr.message}`;
+				loading = false;
+				return;
+			}
 
 			if (data.success) {
 				translations = data.translations;
+				console.log('✅ Translations loaded');
 			} else {
-				error = data.message;
+				error = data.message || 'Failed to load';
+				console.error('❌ Server error:', data.message);
 			}
 		} catch (e) {
 			error = `Failed to load translations: ${e.message}`;
+			console.error('❌ Fetch error:', e);
 		}
 		loading = false;
 	}
@@ -67,7 +85,7 @@
 		}
 
 		try {
-			const response = await fetch('/Admin/Translations/BulkUpdate', {
+			const response = await fetch(`${API_BASE}/Admin/Translations/BulkUpdate`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({

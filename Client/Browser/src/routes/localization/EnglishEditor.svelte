@@ -1,9 +1,11 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import { Settings } from '../../Settings.js';
 
 	export let translationKey = null;
 
 	const dispatch = createEventDispatcher();
+	const API_BASE = Settings.baseURL;
 
 	let currentKey = null;
 	let englishValue = '';
@@ -24,18 +26,33 @@
 		loading = true;
 		error = null;
 		try {
-			const response = await fetch(`/Admin/Translations/GetDetails?key=${encodeURIComponent(currentKey)}`);
-			const data = await response.json();
+			const url = `${API_BASE}/Admin/Translations/GetDetails?key=${encodeURIComponent(currentKey)}`;
+			console.log(`📝 Loading key details from: ${url}`);
+			const response = await fetch(url);
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				error = `Invalid response: ${parseErr.message}`;
+				loading = false;
+				return;
+			}
 
 			if (data.success) {
 				englishValue = data.englishValue || '';
 				oldEnglishValue = englishValue;
 				usedInViews = data.usedInViews || [];
+				console.log('✅ Key details loaded');
 			} else {
-				error = data.message;
+				error = data.message || 'Failed to load';
+				console.error('❌ Server error:', data.message);
 			}
 		} catch (e) {
 			error = `Failed to load details: ${e.message}`;
+			console.error('❌ Fetch error:', e);
 		}
 		loading = false;
 	}
@@ -51,7 +68,9 @@
 		success = null;
 
 		try {
-			const response = await fetch('/Admin/Translations/UpdateEnglish', {
+			const url = `${API_BASE}/Admin/Translations/UpdateEnglish`;
+			console.log(`💾 Saving English translation to: ${url}`);
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -61,11 +80,21 @@
 				})
 			});
 
-			const data = await response.json();
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				error = `Invalid response: ${parseErr.message}`;
+				saving = false;
+				return;
+			}
 
 			if (data.success) {
 				success = `✓ Updated "${currentKey}" and ${data.affectedTranslations} language(s) marked for review`;
 				oldEnglishValue = englishValue;
+				console.log('✅ Translation saved successfully');
 				dispatch('updated');
 
 				// Clear success message after 5 seconds

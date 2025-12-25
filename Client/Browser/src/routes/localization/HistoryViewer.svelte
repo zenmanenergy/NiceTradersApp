@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { Settings } from '../../Settings.js';
 
 	export let translationKey = null;
 
@@ -8,8 +9,10 @@
 	let error = null;
 	let selectedLanguage = null;
 	let languages = ['en', 'ja', 'es', 'fr', 'de', 'ar', 'hi', 'pt', 'ru', 'sk', 'zh'];
+	const API_BASE = Settings.baseURL;
 
 	onMount(async () => {
+		console.log(`📜 History Viewer loaded, API Base: ${API_BASE}`);
 		selectedLanguage = 'en';
 		await loadHistory();
 	});
@@ -21,18 +24,31 @@
 		error = null;
 
 		try {
-			const response = await fetch(
-				`/Admin/Translations/GetHistory?key=${encodeURIComponent(translationKey)}&language=${selectedLanguage}`
-			);
-			const data = await response.json();
+			const url = `${API_BASE}/Admin/Translations/GetHistory?key=${encodeURIComponent(translationKey)}&language=${selectedLanguage}`;
+			console.log(`📜 Loading history from: ${url}`);
+			const response = await fetch(url);
+			
+			const text = await response.text();
+			let data;
+			try {
+				data = JSON.parse(text);
+			} catch (parseErr) {
+				console.error('JSON Parse Error:', parseErr.message);
+				error = `Invalid response: ${parseErr.message}`;
+				loading = false;
+				return;
+			}
 
 			if (data.success) {
 				history = data.history || [];
+				console.log('✅ History loaded');
 			} else {
-				error = data.message;
+				error = data.message || 'Failed to load';
+				console.error('❌ Server error:', data.message);
 			}
 		} catch (e) {
 			error = `Failed to load history: ${e.message}`;
+			console.error('❌ Fetch error:', e);
 		}
 
 		loading = false;
@@ -44,7 +60,7 @@
 		}
 
 		try {
-			const response = await fetch('/Admin/Translations/RollbackTranslation', {
+			const response = await fetch(`${API_BASE}/Admin/Translations/RollbackTranslation`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
