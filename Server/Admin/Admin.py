@@ -628,6 +628,72 @@ def send_apn_message():
         }), 500
 
 
+@blueprint.route('/Admin/DeleteDevice', methods=['POST'])
+@cross_origin()
+def delete_device():
+    """Delete a user device"""
+    try:
+        params = request.get_json()
+        device_id = params.get('device_id')
+        user_id = params.get('user_id')
+        
+        if not device_id:
+            return jsonify({
+                'success': False,
+                'error': 'device_id is required'
+            }), 400
+        
+        cursor, connection = ConnectToDatabase()
+        
+        # Verify device belongs to user
+        cursor.execute(
+            "SELECT user_id FROM user_devices WHERE device_id = %s",
+            (device_id,)
+        )
+        device = cursor.fetchone()
+        
+        if not device:
+            cursor.close()
+            connection.close()
+            return jsonify({
+                'success': False,
+                'error': 'Device not found'
+            }), 404
+        
+        if device['user_id'] != user_id:
+            cursor.close()
+            connection.close()
+            return jsonify({
+                'success': False,
+                'error': 'Device does not belong to this user'
+            }), 403
+        
+        # Delete the device
+        cursor.execute(
+            "DELETE FROM user_devices WHERE device_id = %s",
+            (device_id,)
+        )
+        connection.commit()
+        cursor.close()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Device deleted successfully'
+        }), 200
+    
+    except Exception as e:
+        import traceback
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+            'debug': {
+                'exception_trace': traceback.format_exc()
+            }
+        }), 500
+
+
 @blueprint.route('/Admin/GetLogs', methods=['GET', 'POST'])
 @cross_origin()
 def get_logs():
