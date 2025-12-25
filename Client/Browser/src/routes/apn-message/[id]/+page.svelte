@@ -154,16 +154,22 @@
 			const response = await SuperFetch('/Admin/DeleteDevice', {
 				device_id: deviceId,
 				user_id: user.user_id
-			});
+			}, 'POST');
 
 			if (response && response.success) {
-				// Reload user data to refresh device list
-				await loadUserData();
+				// Remove from array directly
+				const index = userDevices.findIndex(d => d.device_id === deviceId);
+				if (index > -1) {
+					userDevices.splice(index, 1);
+					userDevices = userDevices; // Trigger reactivity
+				}
 				alert('Device deleted successfully');
 			} else {
+				console.error('Delete response:', response);
 				alert('Failed to delete device: ' + (response?.error || 'Unknown error'));
 			}
 		} catch (error) {
+			console.error('Delete error:', error);
 			alert('Error deleting device: ' + error.message);
 		} finally {
 			deletingDeviceId = null;
