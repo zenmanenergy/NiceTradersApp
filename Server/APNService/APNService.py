@@ -32,7 +32,7 @@ class APNService:
         self.key_id = key_id
         self.team_id = team_id
         self.topic = topic or "NiceTraders.Nice-Traders"
-        self.use_sandbox = True  # Set to False for production
+        self.use_sandbox = True  # Development builds use sandbox
     
     def send_notification(self, user_id, title, body, badge=1, sound='default', 
                          session_id=None, deep_link_type=None, deep_link_id=None, device_id=None):
