@@ -1,8 +1,11 @@
 <script>
 	import { goto } from '$app/navigation';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	
 	console.log('[Home Page] Loaded');
 </script>
+
+<AdminHeader />
 
 <div class="admin-home">
 	<div class="welcome-section">

@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { formatDate, formatCurrency } from '$lib/adminUtils.js';
 	import AdminLayout from '$lib/AdminLayout.svelte';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	import { onMount } from 'svelte';
 
 	let searchTerm = '';
@@ -90,6 +91,8 @@
 		}
 	}
 </script>
+
+<AdminHeader />
 
 <AdminLayout>
 	<div class="search-container">

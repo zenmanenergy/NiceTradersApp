@@ -1,5 +1,6 @@
 <script>
 	import SuperFetch from '../../SuperFetch.js';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	import AdminLayout from '$lib/AdminLayout.svelte';
 	import { onMount } from 'svelte';
 
@@ -123,6 +124,8 @@
 	// Load logs on mount
 	// (moved to onMount hook above)
 </script>
+
+<AdminHeader />
 
 <AdminLayout>
 	<div class="logs-view">

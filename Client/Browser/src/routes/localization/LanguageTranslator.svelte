@@ -3,6 +3,7 @@
 
 	export let translationKey = null;
 	export let languages = [];
+	export let englishValue = '';
 
 	let translations = {};
 	let loading = false;
@@ -11,6 +12,7 @@
 	let editingLang = null;
 	let editValues = {};
 	let currentKey = null;
+	let autoTranslating = false;
 	const API_BASE = Settings.baseURL;
 
 	$: if (translationKey && translationKey !== currentKey) {
@@ -120,6 +122,58 @@
 		}
 	}
 
+	async function autoTranslateAll() {
+		if (!englishValue || !englishValue.trim()) {
+			error = 'English translation must be set first';
+			return;
+		}
+
+		autoTranslating = true;
+		error = null;
+		success = null;
+
+		try {
+			const targetLanguages = languages.filter(lang => lang !== 'en');
+			
+			const response = await fetch(`${API_BASE}/Admin/Translations/AutoTranslate`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					englishText: englishValue,
+					translationKey: currentKey,
+					targetLanguages: targetLanguages
+				})
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				// Update translations with auto-translated values
+				for (const [lang, value] of Object.entries(data.translations)) {
+					if (value) {
+						translations[lang] = {
+							value: value,
+							lastModified: new Date().toISOString()
+						};
+					}
+				}
+				success = `✓ Auto-translated to ${data.savedCount} language${data.savedCount !== 1 ? 's' : ''}`;
+				editingLang = null;
+				
+				setTimeout(() => {
+					success = null;
+				}, 5000);
+			} else {
+				error = data.message || 'Auto-translation failed';
+			}
+		} catch (e) {
+			error = `Auto-translation error: ${e.message}`;
+			console.error('Auto-translate error:', e);
+		}
+
+		autoTranslating = false;
+	}
+
 	function getCompletionStatus(lang) {
 		if (lang === 'en') return 'complete';
 		const trans = translations[lang];
@@ -146,6 +200,14 @@
 	<div class="translator-header">
 		<h2>Translations</h2>
 		<span class="lang-count">{languages.length} languages</span>
+		<button
+			class="btn btn-auto-translate"
+			on:click={autoTranslateAll}
+			disabled={autoTranslating || !englishValue}
+			title="Auto-translate using Google Translate API"
+		>
+			{autoTranslating ? '⟳ Auto-translating...' : '🤖 Auto-Translate All'}
+		</button>
 	</div>
 
 	{#if loading}
@@ -428,5 +490,25 @@
 
 	.btn-cancel:hover {
 		background: #e0e0e0;
+	}
+
+	.btn-auto-translate {
+		background: #ff9800;
+		color: white;
+		padding: 10px 16px;
+		font-size: 13px;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.btn-auto-translate:hover:not(:disabled) {
+		background: #f57c00;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
+	}
+
+	.btn-auto-translate:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 </style>

@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Settings } from '../../Settings.js';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	
 	let exchangeRates = [];
 	let lastUpdateDate = null;
@@ -113,6 +114,8 @@
 		return parseFloat(rate).toFixed(6);
 	}
 </script>
+
+<AdminHeader />
 
 <div class="exchange-rates-container">
 	<div class="header">

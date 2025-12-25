@@ -4,6 +4,7 @@
 	import SuperFetch from '../../../SuperFetch.js';
 	import { formatDate, formatCurrency } from '../../../lib/adminUtils.js';
 	import AdminLayout from '$lib/AdminLayout.svelte';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	
 	let currentListing = null;
 	let listingOwner = null;
@@ -43,6 +44,8 @@
 		await loadListing();
 	});
 </script>
+
+<AdminHeader />
 
 <svelte:head>
 	<title>Listing - Nice Traders</title>

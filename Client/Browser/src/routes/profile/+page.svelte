@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { Session } from '../../Session.js';
 	import { handleGetProfile, handleUpdateProfile, handleGetExchangeHistory, handleUpdateSettings, handleDeleteAccount } from './handleProfile.js';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 	
 	// Mock user data (would come from authentication/API in real app)
 	let user = {
@@ -209,6 +210,8 @@
 		});
 	});
 </script>
+
+<AdminHeader />
 
 <svelte:head>
 	<title>Profile - NICE Traders</title>

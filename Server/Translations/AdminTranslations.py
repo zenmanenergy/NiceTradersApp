@@ -889,3 +889,162 @@ def rollback():
             'success': False,
             'message': f'Error rolling back: {str(e)}'
         }), 500
+
+
+@admin_translations_bp.route('/AutoTranslate', methods=['POST'])
+def auto_translate():
+    """Auto-translate English text to multiple languages using Google Translate API or fallback service"""
+    try:
+        import requests
+        import os
+        
+        data = request.get_json()
+        english_text = data.get('englishText')
+        translation_key = data.get('translationKey')
+        target_languages = data.get('targetLanguages', ['ja', 'es', 'fr', 'de', 'ar', 'hi', 'pt', 'ru', 'sk', 'zh'])
+        
+        if not english_text or not translation_key:
+            return jsonify({
+                'success': False,
+                'message': 'englishText and translationKey are required'
+            }), 400
+        
+        # Try Google Cloud Translate v3 first, fallback to MyMemory API
+        translations = {}
+        use_google = False
+        
+        try:
+            from google.cloud import translate_v3
+            translate_client = translate_v3.TranslationServiceClient()
+            project_id = os.getenv('GOOGLE_CLOUD_PROJECT', 'nicetraders')
+            parent = f"projects/{project_id}/locations/global"
+            use_google = True
+            print("[INFO] Using Google Cloud Translate v3")
+        except Exception as e:
+            print(f"[INFO] Google Translate not available, using MyMemory API: {str(e)}")
+        
+        # Translate to each target language
+        for lang_code in target_languages:
+            try:
+                if lang_code == 'en':
+                    translations[lang_code] = english_text
+                    continue
+                
+                if use_google:
+                    # Use Google Translate v3
+                    lang_map = {
+                        'ja': 'ja',
+                        'es': 'es',
+                        'fr': 'fr',
+                        'de': 'de',
+                        'ar': 'ar',
+                        'hi': 'hi',
+                        'pt': 'pt',
+                        'ru': 'ru',
+                        'sk': 'sk',
+                        'zh': 'zh-CN'
+                    }
+                    
+                    target_lang = lang_map.get(lang_code, lang_code)
+                    
+                    response = translate_client.translate_text(
+                        request={
+                            'parent': parent,
+                            'target_language_code': target_lang,
+                            'source_language_code': 'en',
+                            'contents': [english_text]
+                        }
+                    )
+                    
+                    translated_text = response.translations[0].translated_text
+                    translations[lang_code] = translated_text
+                else:
+                    # Use MyMemory API (free, no auth required)
+                    lang_code_full = lang_code
+                    if lang_code == 'zh':
+                        lang_code_full = 'zh-CN'
+                    
+                    response = requests.get(
+                        f'https://api.mymemory.translated.net/get',
+                        params={
+                            'q': english_text,
+                            'langpair': f'en|{lang_code_full}'
+                        },
+                        timeout=5
+                    )
+                    
+                    result = response.json()
+                    if result.get('responseStatus') == 200:
+                        translated_text = result.get('responseData', {}).get('translatedText', '')
+                        if translated_text and translated_text != english_text:
+                            translations[lang_code] = translated_text
+                        else:
+                            print(f"[WARNING] MyMemory returned original text for {lang_code}")
+                            translations[lang_code] = None
+                    else:
+                        print(f"[ERROR] MyMemory API error for {lang_code}: {result.get('responseStatus')}")
+                        translations[lang_code] = None
+                
+                print(f"[DEBUG] Auto-translated to {lang_code}: {translations[lang_code]}")
+                
+            except Exception as e:
+                print(f"[ERROR] Failed to translate to {lang_code}: {str(e)}")
+                translations[lang_code] = None
+        
+        # Save all translations to database
+        cursor, connection = Database.ConnectToDatabase()
+        
+        saved_count = 0
+        failed_count = 0
+        
+        for lang_code, translated_text in translations.items():
+            if translated_text is None:
+                failed_count += 1
+                continue
+            
+            try:
+                query = """
+                    INSERT INTO translations (translation_key, language_code, translation_value, updated_at, created_at)
+                    VALUES (%s, %s, %s, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE
+                    translation_value = VALUES(translation_value),
+                    updated_at = NOW()
+                """
+                cursor.execute(query, (translation_key, lang_code, translated_text))
+                saved_count += 1
+                
+                # Record in history
+                if lang_code != 'en':  # Don't double-record English
+                    record_translation_change(
+                        translation_key,
+                        lang_code,
+                        None,  # old value doesn't matter for auto-translate
+                        translated_text,
+                        'AUTO_TRANSLATE',
+                        cursor
+                    )
+                
+            except Exception as e:
+                print(f"[ERROR] Failed to save {lang_code} translation: {str(e)}")
+                failed_count += 1
+        
+        connection.commit()
+        connection.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Auto-translated {saved_count} languages successfully',
+            'translations': translations,
+            'savedCount': saved_count,
+            'failedCount': failed_count,
+            'translationKey': translation_key
+        }), 201
+        
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] Auto-translate error: {str(e)}")
+        print(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'message': f'Error auto-translating: {str(e)}'
+        }), 500

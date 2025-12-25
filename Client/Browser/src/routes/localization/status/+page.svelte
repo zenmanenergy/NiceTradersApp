@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Settings } from '../../../Settings.js';
+	import AdminHeader from '$lib/AdminHeader.svelte';
 
 	let stats = null;
 	let loading = false;
@@ -130,6 +131,8 @@
 		return names[code] || code;
 	}
 </script>
+
+<AdminHeader />
 
 <div class="status-dashboard">
 	<header class="dashboard-header">

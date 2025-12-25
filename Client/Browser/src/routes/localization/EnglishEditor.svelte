@@ -45,9 +45,14 @@
 				englishValue = data.englishValue || '';
 				oldEnglishValue = englishValue;
 				usedInViews = data.usedInViews || [];
+				dispatch('englishValueChanged', englishValue);
 				console.log('✅ Key details loaded');
 			} else {
 				error = data.message || 'Failed to load';
+				englishValue = '';
+				oldEnglishValue = '';
+				usedInViews = [];
+				dispatch('englishValueChanged', '');
 				console.error('❌ Server error:', data.message);
 			}
 		} catch (e) {
