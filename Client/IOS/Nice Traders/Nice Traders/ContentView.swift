@@ -86,9 +86,6 @@ struct ContentView: View {
                             VStack(spacing: 0) {
                                 // Hero Section
                                 VStack(spacing: 5) {
-                                    Text("💱")
-                                        .font(.system(size: 64))
-                                    
                                     Text(localizationManager.localize("EXCHANGE_CURRENCY_LOCALLY"))
                                         .font(.system(size: 29, weight: .semibold))
                                         .foregroundColor(Color(red: 0.18, green: 0.22, blue: 0.28))
@@ -115,7 +112,7 @@ struct ContentView: View {
                                 .padding(.bottom, 32)
                                 
                                 // CTA Section
-                                VStack(spacing: 16) {
+                                VStack(spacing: 12) {
                                     Button(action: {
                                         showSignup = true
                                     }) {
@@ -133,6 +130,19 @@ struct ContentView: View {
                                             )
                                             .cornerRadius(12)
                                             .shadow(color: Color(red: 0.4, green: 0.49, blue: 0.92).opacity(0.4), radius: 15, y: 4)
+                                    }
+                                    
+                                    Button(action: {
+                                        showLogin = true
+                                    }) {
+                                        Text(localizationManager.localize("SIGN_IN"))
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 16)
+                                            .background(Color(hex: "38b2ac"))
+                                            .cornerRadius(12)
+                                            .shadow(color: Color(hex: "38b2ac").opacity(0.4), radius: 15, y: 4)
                                     }
                                     
                                     Button(action: {

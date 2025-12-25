@@ -40,10 +40,7 @@ struct LearnMoreView: View {
                         .padding(.vertical, 12)
                         
                         // Title Section
-                        VStack(spacing: 12) {
-                            Text("💱")
-                                .font(.system(size: 64))
-                            
+                        VStack(spacing: 8) {
                             Text(localizationManager.localize("HOW_NICE_TRADERS_WORKS"))
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundColor(.white)
@@ -55,7 +52,7 @@ struct LearnMoreView: View {
                                 .multilineTextAlignment(.center)
                         }
                         .padding(.horizontal, 24)
-                        .padding(.vertical, 24)
+                        .padding(.vertical, 16)
                     }
                 }
                 .frame(maxWidth: .infinity)
