@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Settings } from '../../../Settings.js';
-	import AdminHeader from '$lib/AdminHeader.svelte';
 
 	let stats = null;
 	let loading = false;

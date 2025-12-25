@@ -1,7 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
 	import { Settings } from '../../Settings.js';
-	import AdminHeader from '$lib/AdminHeader.svelte';
 	
 	let exchangeRates = [];
 	let lastUpdateDate = null;
@@ -115,7 +114,6 @@
 	}
 </script>
 
-<AdminHeader />
 
 <div class="exchange-rates-container">
 	<div class="header">

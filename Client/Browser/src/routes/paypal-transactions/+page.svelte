@@ -3,7 +3,6 @@
 	import SuperFetch from '../../SuperFetch.js';
 	import { formatDate, formatCurrency } from '../../lib/adminUtils.js';
 	import AdminLayout from '$lib/AdminLayout.svelte';
-	import AdminHeader from '$lib/AdminHeader.svelte';
 
 	let loading = false;
 	let error = null;
@@ -180,7 +179,6 @@
 	});
 </script>
 
-<AdminHeader />
 
 <AdminLayout pageTitle="PayPal Transactions">
 	<div class="container">

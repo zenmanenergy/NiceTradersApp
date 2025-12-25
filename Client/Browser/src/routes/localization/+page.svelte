@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { Settings } from '../../Settings.js';
-	import AdminHeader from '$lib/AdminHeader.svelte';
 	import ViewList from './ViewList.svelte';
 	import EnglishEditor from './EnglishEditor.svelte';
 	import LanguageTranslator from './LanguageTranslator.svelte';

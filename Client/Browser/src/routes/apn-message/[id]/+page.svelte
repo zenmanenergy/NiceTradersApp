@@ -3,7 +3,6 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import AdminLayout from '$lib/AdminLayout.svelte';
-	import AdminHeader from '$lib/AdminHeader.svelte';
 	import { onMount } from 'svelte';
 	
 	let user = null;
@@ -144,7 +143,6 @@
 	}
 </script>
 
-<AdminHeader />
 
 <AdminLayout>
 	<div class="message-view">

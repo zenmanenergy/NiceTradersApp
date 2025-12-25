@@ -9,8 +9,8 @@
 			<a href="/">🏪 Nice Traders Admin</a>
 		</div>
 		<ul class="menu-links">
-			<li><a href="/dashboard" class:active={$page.url.pathname === '/dashboard'}>Dashboard</a></li>
-			<li><a href="/listings" class:active={$page.url.pathname === '/listings'}>Listings</a></li>
+			<li><a href="/" class:active={$page.url.pathname === '/'}>Dashboard</a></li>
+			<li><a href="/search" class:active={$page.url.pathname === '/search'}>Search</a></li>
 			<li><a href="/terminal" class:active={$page.url.pathname === '/terminal'}>Terminal</a></li>
 			<li><a href="/localization" class:active={$page.url.pathname === '/localization'}>Localization</a></li>
 			<li><a href="/payment-reports" class:active={$page.url.pathname === '/payment-reports'}>Reports</a></li>
