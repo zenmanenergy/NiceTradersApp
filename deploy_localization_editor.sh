@@ -20,12 +20,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SERVER_DIR="$REPO_ROOT/Server"
 BROWSER_DIR="$REPO_ROOT/Client/Browser"
 BACKUP_DIR="$REPO_ROOT/backups/localization"
-LOG_DIR="/tmp/localization_deploy"
-LOG_FILE="$LOG_DIR/localization_deployment_$(date +%Y%m%d_%H%M%S).log"
 VENV="$SERVER_DIR/venv/bin/python3"
-
-# Create log directory
-mkdir -p "$LOG_DIR"
 
 # Colors for output
 RED='\033[0;31m'
@@ -60,34 +55,22 @@ done
 # FUNCTIONS
 ###############################################################################
 
-log() {
-    local level=$1
-    shift
-    local msg="$@"
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "${timestamp} [${level}] ${msg}" | tee -a "$LOG_FILE"
-}
-
 log_step() {
     echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${BLUE}▶ $1${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    log "INFO" "$1"
 }
 
 log_success() {
     echo -e "${GREEN}✓ $1${NC}\n"
-    log "SUCCESS" "$1"
 }
 
 log_error() {
     echo -e "${RED}✗ $1${NC}\n"
-    log "ERROR" "$1"
 }
 
 log_warning() {
     echo -e "${YELLOW}⚠ $1${NC}\n"
-    log "WARNING" "$1"
 }
 
 run_cmd() {
@@ -95,13 +78,11 @@ run_cmd() {
     local description=$2
     
     echo -e "  ${BLUE}→${NC} ${description}"
-    log "CMD" "$cmd"
     
     if [ "$DRY_RUN" = true ]; then
         echo -e "    ${YELLOW}[DRY RUN]${NC} Would execute: $cmd"
-        log "DRY_RUN" "Would execute: $cmd"
     else
-        if eval "$cmd" >> "$LOG_FILE" 2>&1; then
+        if eval "$cmd" > /dev/null 2>&1; then
             echo -e "    ${GREEN}✓${NC} Done"
             return 0
         else
@@ -122,14 +103,14 @@ check_prerequisites() {
         log_error "Python3 not found"
         missing=1
     else
-        log "INFO" "Python3: $(python3 --version)"
+        echo "  ✓ Python3: $(python3 --version)"
     fi
     
     # Check MySQL
     if ! command -v mysql &> /dev/null; then
         log_warning "MySQL client not found - database operations may fail"
     else
-        log "INFO" "MySQL: Found"
+        echo "  ✓ MySQL: Found"
     fi
     
     # Check Node.js
@@ -137,7 +118,7 @@ check_prerequisites() {
         log_error "Node.js not found - frontend build will fail"
         missing=1
     else
-        log "INFO" "Node.js: $(node --version)"
+        echo "  ✓ Node.js: $(node --version)"
     fi
     
     # Check npm
@@ -145,18 +126,22 @@ check_prerequisites() {
         log_error "npm not found - frontend build will fail"
         missing=1
     else
-        log "INFO" "npm: $(npm --version)"
+        echo "  ✓ npm: $(npm --version)"
     fi
     
     # Check directories
     if [ ! -d "$SERVER_DIR" ]; then
         log_error "Server directory not found: $SERVER_DIR"
         missing=1
+    else
+        echo "  ✓ Server directory: $SERVER_DIR"
     fi
     
     if [ ! -d "$BROWSER_DIR" ]; then
         log_error "Browser directory not found: $BROWSER_DIR"
         missing=1
+    else
+        echo "  ✓ Browser directory: $BROWSER_DIR"
     fi
     
     if [ $missing -eq 1 ]; then
@@ -392,9 +377,6 @@ validate_deployment() {
 print_summary() {
     log_step "Deployment Summary"
     
-    echo -e "  ${BLUE}Deployment Log:${NC}"
-    echo -e "    $LOG_FILE\n"
-    
     if [ "$DRY_RUN" = true ]; then
         echo -e "  ${YELLOW}[DRY RUN MODE]${NC}"
         echo -e "    No actual changes were made. Remove --dry-run to deploy.\n"
@@ -409,17 +391,9 @@ print_summary() {
     fi
     
     echo -e "  ${BLUE}Next Steps:${NC}"
-    echo -e "    1. Review the deployment log: tail -f $LOG_FILE"
-    echo -e "    2. Start the Flask server: cd $SERVER_DIR && ./run.sh"
-    echo -e "    3. Test the localization editor: http://localhost:5173/localization"
-    echo -e "    4. Check status dashboard: http://localhost:5173/localization/status\n"
-    
-    echo -e "  ${BLUE}Rollback (if needed):${NC}"
-    if [ "$SKIP_BACKUP" != true ]; then
-        echo -e "    mysql -u stevenelson -pmwitcitw711 nicetraders < $(ls -t $BACKUP_DIR/*.sql 2>/dev/null | head -1)\n"
-    else
-        echo -e "    Database restore: restore from your backup system\n"
-    fi
+    echo -e "    1. Start the Flask server: cd $SERVER_DIR && ./run.sh"
+    echo -e "    2. Test the localization editor: http://localhost:5173/localization"
+    echo -e "    3. Check status dashboard: http://localhost:5173/localization/status\n"
 }
 
 handle_error() {
@@ -427,9 +401,6 @@ handle_error() {
     echo -e "\n${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${RED}DEPLOYMENT FAILED${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
-    
-    echo -e "${YELLOW}Review the deployment log for details:${NC}"
-    echo -e "  tail -f $LOG_FILE\n"
     
     if [ "$SKIP_BACKUP" != true ] && [ -d "$BACKUP_DIR" ]; then
         echo -e "${YELLOW}To rollback, restore the latest backup:${NC}"
@@ -450,11 +421,6 @@ main() {
     echo -e "\n${BLUE}╔════════════════════════════════════════════════════╗${NC}"
     echo -e "${BLUE}║  Localization Editor - Production Deployment        ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════════════╝${NC}\n"
-    
-    log "INFO" "========== DEPLOYMENT START =========="
-    log "INFO" "Dry run: $DRY_RUN"
-    log "INFO" "Skip backup: $SKIP_BACKUP"
-    log "INFO" "Repository: $REPO_ROOT"
     
     # Run deployment steps
     check_prerequisites || handle_error
@@ -479,8 +445,6 @@ main() {
     echo -e "\n${GREEN}╔════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║  ✓ DEPLOYMENT SUCCESSFUL                           ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════╝${NC}\n"
-    
-    log "INFO" "========== DEPLOYMENT SUCCESS =========="
     
     print_summary
 }
