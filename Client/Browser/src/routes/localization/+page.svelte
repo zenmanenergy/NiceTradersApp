@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { Settings } from '../../Settings.js';
 	import ViewList from './ViewList.svelte';
 	import EnglishEditor from './EnglishEditor.svelte';
 	import LanguageTranslator from './LanguageTranslator.svelte';
@@ -14,16 +15,20 @@
 	let stats = null;
 	let activeTab = 'editor'; // editor, history, status
 	let debugInfo = null;
+	const API_BASE = Settings.baseURL;
 
 	onMount(async () => {
 		console.log('🔍 Localization Editor mounted, checking inventory status...');
+		console.log(`📡 API Base URL: ${API_BASE}`);
 		await checkInventoryStatus();
 		await loadViewInventory();
 	});
 
 	async function checkInventoryStatus() {
 		try {
-			const response = await fetch('/Admin/Translations/CheckInventoryStatus');
+			const url = `${API_BASE}/Admin/Translations/CheckInventoryStatus`;
+			console.log(`📊 Checking inventory status at: ${url}`);
+			const response = await fetch(url);
 			const data = await response.json();
 			debugInfo = data;
 			console.log('📋 Inventory Status:', data);
@@ -36,7 +41,9 @@
 		loading = true;
 		error = null;
 		try {
-			const response = await fetch('/Admin/Translations/GetViewInventory');
+			const url = `${API_BASE}/Admin/Translations/GetViewInventory`;
+			console.log(`📥 Loading inventory from: ${url}`);
+			const response = await fetch(url);
 			
 			// Debug: Log response status and type
 			console.log('=== Inventory Load Debug ===');
