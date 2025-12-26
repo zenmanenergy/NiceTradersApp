@@ -825,7 +825,7 @@ extension MeetingLocationView {
 
 extension MeetingLocationView {
     func refreshDisplayStatus() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[DEBUG MLV refreshDisplayStatus] ERROR: No session ID available")
             return
         }
@@ -835,7 +835,7 @@ extension MeetingLocationView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Meeting/GetMeetingProposals")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId)
         ]
         
@@ -868,7 +868,7 @@ extension MeetingLocationView {
     }
     
     func refreshListingData() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[DEBUG MLV refreshListingData] ERROR: No session ID available")
             return
         }
@@ -876,7 +876,7 @@ extension MeetingLocationView {
         print("[DEBUG MLV refreshListingData] Starting refresh of listing data...")
         
         let baseURL = Settings.shared.baseURL
-        let urlString = "\(baseURL)/Dashboard/GetUserDashboard?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(baseURL)/Dashboard/GetUserDashboard?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             print("[DEBUG MLV refreshListingData] ERROR: Failed to construct URL")
@@ -945,14 +945,14 @@ extension MeetingLocationView {
     }
     
     func respondToProposal(proposalId: String, response: String) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("ERROR: No session ID available")
             return
         }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/RespondToMeeting")!
         let queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: response)
         ]
@@ -988,14 +988,14 @@ extension MeetingLocationView {
     }
     
     func proposeLocation(location: MapSearchResult, message: String?) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("🔴 [MLV-PROPOSE] ERROR: No session ID available")
             return
         }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/ProposeMeeting")!
         let queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId),
             URLQueryItem(name: "proposedLatitude", value: "\(location.coordinate.latitude)"),
             URLQueryItem(name: "proposedLongitude", value: "\(location.coordinate.longitude)"),
@@ -1055,7 +1055,7 @@ extension MeetingLocationView {
     }
     
     func reloadMeetingProposals() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[DEBUG MLV reloadMeetingProposals] ERROR: No session ID")
             return
         }
@@ -1064,7 +1064,7 @@ extension MeetingLocationView {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId)
         ]
         

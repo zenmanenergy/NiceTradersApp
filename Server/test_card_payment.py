@@ -78,7 +78,7 @@ def test_process_card_payment():
             method='POST',
             data=json.dumps({
                 'orderId': order_id,
-                'sessionId': session_id,
+                'session_id': session_id,
                 'cardNumber': '4111111111111111',
                 'cardholderName': 'Test User',
                 'expiryMonth': '12',

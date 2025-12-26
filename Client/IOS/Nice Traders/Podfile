@@ -1,5 +1,5 @@
 platform :ios, '14.0'
 
 target 'Nice Traders' do
-  pod 'PayPalCheckout'
+  # No third-party payment SDKs - using REST API instead
 end

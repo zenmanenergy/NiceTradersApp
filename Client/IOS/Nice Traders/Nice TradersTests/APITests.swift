@@ -14,13 +14,13 @@ final class APITests: XCTestCase {
     
     override func setUpWithError() throws {
         // Clear any stored session
-        UserDefaults.standard.removeObject(forKey: "SessionId")
+        UserDefaults.standard.removeObject(forKey: "session_id")
         UserDefaults.standard.removeObject(forKey: "UserType")
     }
     
     override func tearDownWithError() throws {
         // Clean up
-        UserDefaults.standard.removeObject(forKey: "SessionId")
+        UserDefaults.standard.removeObject(forKey: "session_id")
         UserDefaults.standard.removeObject(forKey: "UserType")
     }
     
@@ -91,7 +91,7 @@ final class APITests: XCTestCase {
     // MARK: - Create Listing API Tests
     
     func testCreateListingURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let currency = "USD"
         let amount = "100"
         let acceptCurrency = "EUR"
@@ -104,7 +104,7 @@ final class APITests: XCTestCase {
         
         var components = URLComponents(string: "https://api.nicetraders.net/Listings/CreateListing")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "currency", value: currency),
             URLQueryItem(name: "amount", value: amount),
             URLQueryItem(name: "acceptCurrency", value: acceptCurrency),
@@ -119,7 +119,7 @@ final class APITests: XCTestCase {
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("currency=USD"), "Should contain currency")
         XCTAssertTrue(urlString.contains("amount=100"), "Should contain amount")
         XCTAssertTrue(urlString.contains("acceptCurrency=EUR"), "Should contain accept currency")
@@ -156,13 +156,13 @@ final class APITests: XCTestCase {
     // MARK: - Search API Tests
     
     func testSearchListingsURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let limit = 20
         let offset = 0
         
         var components = URLComponents(string: "https://api.nicetraders.net/Search/SearchListings")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "limit", value: String(limit)),
             URLQueryItem(name: "offset", value: String(offset))
         ]
@@ -170,7 +170,7 @@ final class APITests: XCTestCase {
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("sessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("limit=20"), "Should contain limit")
         XCTAssertTrue(urlString.contains("offset=0"), "Should contain offset")
     }
@@ -201,42 +201,42 @@ final class APITests: XCTestCase {
     // MARK: - Dashboard API Tests
     
     func testDashboardURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
-        let encodedSessionId = sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let session_id = "TEST-SESSION-123"
+        let encodedSessionId = session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
-        let urlString = "https://api.nicetraders.net/Dashboard/GetUserDashboard?SessionId=\(encodedSessionId)"
+        let urlString = "https://api.nicetraders.net/Dashboard/GetUserDashboard?session_id=\(encodedSessionId)"
         
         XCTAssertNotNil(URL(string: urlString), "Dashboard URL should be valid")
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
     }
     
     // MARK: - Contact API Tests
     
     func testPurchaseContactAccessURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let listingId = "abc123-def456"
         
         var components = URLComponents(string: "https://api.nicetraders.net/Contact/PurchaseContactAccess")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId)
         ]
         
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("sessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("listingId=abc123-def456"), "Should contain listing ID")
     }
     
     func testSendMessageURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let listingId = "abc123"
         let message = "Hello, is this still available?"
         
         var components = URLComponents(string: "https://api.nicetraders.net/Contact/SendContactMessage")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId),
             URLQueryItem(name: "message", value: message)
         ]
@@ -244,7 +244,7 @@ final class APITests: XCTestCase {
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("sessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("listingId=abc123"), "Should contain listing ID")
         XCTAssertTrue(urlString.contains("message=Hello"), "Should contain message")
     }
@@ -252,7 +252,7 @@ final class APITests: XCTestCase {
     // MARK: - Meeting API Tests
     
     func testProposeMeetingURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let listingId = "abc123"
         let location = "Starbucks, Main St"
         let proposedTime = "2025-12-25 14:00:00"
@@ -260,7 +260,7 @@ final class APITests: XCTestCase {
         
         var components = URLComponents(string: "https://api.nicetraders.net/Meeting/ProposeMeeting")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId),
             URLQueryItem(name: "location", value: location),
             URLQueryItem(name: "proposedTime", value: proposedTime),
@@ -270,68 +270,68 @@ final class APITests: XCTestCase {
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("sessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("listingId=abc123"), "Should contain listing ID")
         XCTAssertTrue(urlString.contains("location=Starbucks"), "Should contain location")
         XCTAssertTrue(urlString.contains("proposedTime=2025-12-25"), "Should contain proposed time")
     }
     
     func testGetExactLocationURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let listingId = 1
         
         var components = URLComponents(string: "https://api.nicetraders.net/Meeting/GetExactLocation")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId)
         ]
         
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("listingId=1"), "Should contain listing ID")
     }
     
     // MARK: - Delete Listing API Tests
     
     func testDeleteListingURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let listingId = "abc123-def456"
         
         var components = URLComponents(string: "https://api.nicetraders.net/Listings/DeleteListing")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId)
         ]
         
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("listingId=abc123-def456"), "Should contain listing ID as string")
     }
     
     // MARK: - Profile API Tests
     
     func testGetProfileURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
-        let encodedSessionId = sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let session_id = "TEST-SESSION-123"
+        let encodedSessionId = session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
         
-        let urlString = "https://api.nicetraders.net/Profile/GetProfile?SessionId=\(encodedSessionId)"
+        let urlString = "https://api.nicetraders.net/Profile/GetProfile?session_id=\(encodedSessionId)"
         
         XCTAssertNotNil(URL(string: urlString), "Profile URL should be valid")
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
     }
     
     func testUpdateProfileURLFormat() throws {
-        let sessionId = "TEST-SESSION-123"
+        let session_id = "TEST-SESSION-123"
         let bio = "Currency trader since 2020"
         let location = "San Francisco, CA"
         
         var components = URLComponents(string: "https://api.nicetraders.net/Profile/UpdateProfile")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "bio", value: bio),
             URLQueryItem(name: "location", value: location)
         ]
@@ -339,7 +339,7 @@ final class APITests: XCTestCase {
         let url = components.url!
         let urlString = url.absoluteString
         
-        XCTAssertTrue(urlString.contains("SessionId=TEST-SESSION-123"), "Should contain session ID")
+        XCTAssertTrue(urlString.contains("session_id=TEST-SESSION-123"), "Should contain session ID")
         XCTAssertTrue(urlString.contains("bio=Currency"), "Should contain bio")
         XCTAssertTrue(urlString.contains("location=San"), "Should contain location")
     }
@@ -403,7 +403,7 @@ final class APITests: XCTestCase {
         {
             "success": true,
             "data": {
-                "sessionId": "TEST-123"
+                "session_id": "TEST-123"
             }
         }
         """

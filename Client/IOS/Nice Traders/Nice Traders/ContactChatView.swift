@@ -268,11 +268,11 @@ struct ContactChatView: View {
     // MARK: - API Functions
     
     private func loadMessages() {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/GetContactMessages")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing.listingId))
         ]
         
@@ -309,7 +309,7 @@ struct ContactChatView: View {
     
     private func sendMessage() {
         guard !newMessage.isEmpty else { return }
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
         let messageToSend = newMessage
         newMessage = ""
@@ -332,7 +332,7 @@ struct ContactChatView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/SendContactMessage")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing.listingId)),
             URLQueryItem(name: "message", value: messageToSend)
         ]

@@ -24,11 +24,11 @@ class TestSignupEndpoints:
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data['success'] is True
-        assert 'sessionId' in data
+        assert 'session_id' in data
         assert 'userType' in data
         
         # Cleanup - need to get user_id from session
-        session_id = data['sessionId']
+        session_id = data['session_id']
         cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
         session_result = cursor.fetchone()
         if session_result:

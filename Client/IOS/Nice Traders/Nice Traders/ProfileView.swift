@@ -562,14 +562,14 @@ struct ProfileView: View {
     
     func saveChanges() {
         guard let editedUser = editedUser,
-              let sessionId = SessionManager.shared.sessionId else {
+              let session_id = SessionManager.shared.session_id else {
             isEditing = false
             return
         }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Profile/UpdateProfile")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "name", value: editedUser.name),
             URLQueryItem(name: "email", value: editedUser.email),
             URLQueryItem(name: "phone", value: editedUser.phone),
@@ -605,11 +605,11 @@ struct ProfileView: View {
     }
     
     func confirmDeleteAccount() {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Profile/DeleteAccount")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId)
+            URLQueryItem(name: "session_id", value: session_id)
         ]
         
         guard let url = components.url else { return }
@@ -627,13 +627,13 @@ struct ProfileView: View {
     }
     
     func loadProfileData() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             isLoading = false
             return
         }
         
         // Load profile
-        let profileURL = URL(string: "\(Settings.shared.baseURL)/Profile/GetProfile?SessionId=\(sessionId)")!
+        let profileURL = URL(string: "\(Settings.shared.baseURL)/Profile/GetProfile?session_id=\(session_id)")!
         URLSession.shared.dataTask(with: profileURL) { data, response, error in
             DispatchQueue.main.async {
                 if let data = data,

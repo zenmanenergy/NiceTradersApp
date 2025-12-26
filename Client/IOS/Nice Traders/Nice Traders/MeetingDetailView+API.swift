@@ -16,7 +16,7 @@ extension MeetingDetailView {
         // First, fetch the user's rating and trades
         loadUserRating()
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("🔴 [MDV-LOAD] ERROR: No session ID available")
             return
         }
@@ -27,7 +27,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Meeting/GetMeetingProposals")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing.listingId))
         ]
         
@@ -223,7 +223,7 @@ extension MeetingDetailView {
     }
     
     private func submitCompleteExchange() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[MeetingDetailView] submitCompleteExchange: No session ID")
             return
@@ -231,7 +231,7 @@ extension MeetingDetailView {
         
         let baseURL = Settings.shared.baseURL
         let listingId = contactData.listing.listingId
-        let urlString = "\(baseURL)/Negotiations/CompleteExchange?SessionId=\(sessionId)&ListingId=\(listingId)"
+        let urlString = "\(baseURL)/Negotiations/CompleteExchange?session_id=\(session_id)&ListingId=\(listingId)"
         print("[MeetingDetailView] submitCompleteExchange: URL = \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -297,7 +297,7 @@ extension MeetingDetailView {
             return
         }
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             return
         }
@@ -312,7 +312,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Ratings/SubmitRating")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "user_id", value: partnerIdToRate),
             URLQueryItem(name: "Rating", value: String(userRating)),
             URLQueryItem(name: "Review", value: ratingMessage)
@@ -383,14 +383,14 @@ extension MeetingDetailView {
     }
     
     private func submitCancelMeetingTime() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             return
         }
         
         let baseURL = Settings.shared.baseURL
         let listingId = contactData.listing.listingId
-        let urlString = "\(baseURL)/Meeting/CancelMeetingTime?SessionId=\(sessionId)&ListingId=\(listingId)"
+        let urlString = "\(baseURL)/Meeting/CancelMeetingTime?session_id=\(session_id)&ListingId=\(listingId)"
         
         guard let url = URL(string: urlString) else {
             errorMessage = "Invalid URL"
@@ -436,14 +436,14 @@ extension MeetingDetailView {
     }
     
     private func submitCancelLocation() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             return
         }
         
         let baseURL = Settings.shared.baseURL
         let listingId = contactData.listing.listingId
-        let urlString = "\(baseURL)/Meeting/CancelLocation?SessionId=\(sessionId)&ListingId=\(listingId)"
+        let urlString = "\(baseURL)/Meeting/CancelLocation?session_id=\(session_id)&ListingId=\(listingId)"
         
         guard let url = URL(string: urlString) else {
             errorMessage = "Invalid URL"
@@ -470,7 +470,7 @@ extension MeetingDetailView {
     // MARK: - Meeting Coordination
     
     func acceptExchange() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available")
             return
@@ -479,7 +479,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/MeetingTime/Accept")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId)
         ]
         
@@ -548,7 +548,7 @@ extension MeetingDetailView {
     }
     
     func processPayment() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             return
         }
@@ -559,7 +559,7 @@ extension MeetingDetailView {
     
     
     func rejectExchange() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available for reject")
             return
@@ -568,7 +568,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/MeetingTime/Reject")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: contactData.listing.listingId)
         ]
         
@@ -620,7 +620,7 @@ extension MeetingDetailView {
     }
     
     func acceptLocationProposal(proposalId: String) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[MDV-ACTION] ERROR: No session ID available")
             return
@@ -631,7 +631,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: "accepted")
         ]
@@ -686,7 +686,7 @@ extension MeetingDetailView {
     }
     
     func cancelPendingLocationProposal() {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available for cancel location")
             return
@@ -696,7 +696,7 @@ extension MeetingDetailView {
         let listingId = contactData.listing.listingId
         var components = URLComponents(string: "\(baseURL)/Meeting/CancelLocation")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: listingId)
         ]
         
@@ -747,7 +747,7 @@ extension MeetingDetailView {
     }
     
     private func respondToLocationProposal(proposalId: String, response: String) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "No active session"
             print("[DEBUG] No session ID available for respond to location")
             return
@@ -756,7 +756,7 @@ extension MeetingDetailView {
         let baseURL = Settings.shared.baseURL
         var components = URLComponents(string: "\(baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: response)
         ]

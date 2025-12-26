@@ -32,13 +32,13 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
     
     // MARK: - Tracking
     
-    func startTracking(proposalId: String, sessionId: String, meetingLat: Double, meetingLon: Double) {
+    func startTracking(proposalId: String, session_id: String, meetingLat: Double, meetingLon: Double) {
         isTracking = true
         locationManager.startUpdatingLocation()
         
         // Set up periodic updates
         updateTimer = Timer.scheduledTimer(withTimeInterval: locationUpdateInterval, repeats: true) { [weak self] _ in
-            self?.sendLocationUpdate(proposalId: proposalId, sessionId: sessionId)
+            self?.sendLocationUpdate(proposalId: proposalId, session_id: session_id)
         }
     }
     
@@ -66,7 +66,7 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
     
     // MARK: - Backend Communication
     
-    private func sendLocationUpdate(proposalId: String, sessionId: String) {
+    private func sendLocationUpdate(proposalId: String, session_id: String) {
         guard let location = location else { return }
         
         let url = URL(string: "\(Settings.shared.baseURL)/Meeting/Location/Update")!
@@ -76,7 +76,7 @@ class UserLocationManager: NSObject, ObservableObject, CLLocationManagerDelegate
         
         let payload: [String: Any] = [
             "proposal_id": proposalId,
-            "session_id": sessionId,
+            "session_id": session_id,
             "latitude": location.coordinate.latitude,
             "longitude": location.coordinate.longitude
         ]

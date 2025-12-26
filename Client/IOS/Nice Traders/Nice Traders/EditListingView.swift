@@ -1140,7 +1140,7 @@ struct EditListingView: View {
     
     func loadListingData() {
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "Session not found"
             showError = true
             isLoading = false
@@ -1269,7 +1269,7 @@ struct EditListingView: View {
         fieldErrors = [:]
         showError = false
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "You must be logged in to update this listing"
             showError = true
             isSubmitting = false
@@ -1294,7 +1294,7 @@ struct EditListingView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/UpdateListing")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(listingId)),
             URLQueryItem(name: "currency", value: haveCurrency.code),
             URLQueryItem(name: "amount", value: amount),
@@ -1351,7 +1351,7 @@ struct EditListingView: View {
     func confirmDelete() {
         isDeleting = true
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "Session not found"
             showError = true
             isDeleting = false
@@ -1360,7 +1360,7 @@ struct EditListingView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/DeleteListing")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(listingId)),
             URLQueryItem(name: "permanent", value: "true")
         ]

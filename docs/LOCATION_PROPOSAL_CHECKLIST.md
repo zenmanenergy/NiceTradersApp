@@ -80,13 +80,13 @@ The process involves both users' devices (iOS) and the backend server.
 - [x] **Submit Proposal**: User B taps "Propose Meeting Time" button
 - [ ] **Client Network Request**: App calls `/Negotiations/Propose` endpoint with:
   - `listingId` (User A's listing)
-  - `sessionId` (User B's session)
+  - `session_id` (User B's session)
   - `proposedTime` (ISO 8601 datetime format)
 
 ### Backend Server (ProposeNegotiation)
 - [ ] **Endpoint Handler**: Flask route `/Negotiations/Propose` triggered
 - [ ] **Session Validation**: Verify User B's session ID
-  - Query `usersessions` with `sessionId`
+  - Query `usersessions` with `session_id`
   - Extract `user_id` (buyer_id = User B)
 - [ ] **Listing Lookup**: Verify listing exists and get seller
   - Query `listings` table for `listing_id`
@@ -136,7 +136,7 @@ The process involves both users' devices (iOS) and the backend server.
 - [x] **UI - Accept Button Tapped**: User A taps "Accept" button
 - [ ] **Client Network Request**: App calls `/Negotiations/Respond` endpoint with:
   - `negotiationId` (or `proposalId`)
-  - `sessionId` (User A's session)
+  - `session_id` (User A's session)
   - `response` = 'accepted'
 - [ ] **UI - Loading**: Show loading indicator
 
@@ -210,7 +210,7 @@ The process involves both users' devices (iOS) and the backend server.
 - [ ] **Select New Time**: User A picks a different date/time
 - [ ] **Client Network Request**: App calls `/Negotiations/Propose` with:
   - `negotiationId` (existing negotiation)
-  - `sessionId` (User A's session)
+  - `session_id` (User A's session)
   - `proposedTime` (User A's counter time)
 - [ ] **UI - Loading**: Show loading state
 
@@ -270,7 +270,7 @@ Once User A and User B have agreed on a meeting time:
 - [ ] **UI - Optional Message**: User can optionally add a message to the proposal
 - [ ] **UI - Send Button**: User taps "Propose" or "Send Location" button
 - [ ] **Client Network Request**: App constructs URL to `/Meeting/ProposeMeeting` endpoint with:
-  - `sessionId` (User A's session)
+  - `session_id` (User A's session)
   - `listingId` (the listing they're exchanging on)
   - `proposedLocation` (location name)
   - `proposedLatitude` (decimal coordinates)
@@ -284,7 +284,7 @@ Once User A and User B have agreed on a meeting time:
 ### Backend Server
 - [ ] **Endpoint Handler**: Flask route `/Meeting/ProposeMeeting` is triggered
 - [ ] **Session Validation**: Verify User A's session ID is valid
-  - Query `usersessions` table with provided `sessionId`
+  - Query `usersessions` table with provided `session_id`
   - Extract `user_id` (User A)
 - [ ] **Listing Lookup**: Verify listing exists and get listing owner
   - Query `listings` table for `listing_id`
@@ -334,7 +334,7 @@ Once User A and User B have agreed on a meeting time:
   - Notification content: "User A proposed a meeting at [location]"
 - [ ] **User Opens App/View**: User B opens the app or navigates to the contact view for this exchange
 - [ ] **Fetch Proposals**: App calls `/Meeting/GetMeetingProposals` endpoint with:
-  - `sessionId` (User B's session)
+  - `session_id` (User B's session)
   - `listingId` (same listing)
 - [ ] **Display Proposals**: List of proposals displayed in `LocationProposalCard` components
   - Each card shows:
@@ -382,7 +382,7 @@ Once User A and User B have agreed on a meeting time:
 ### Scenario 3A: User B Accepts the Location
 - [ ] **UI - Accept Button Tapped**: User B taps "Accept" on the location proposal
 - [ ] **Client Network Request**: App calls `/Meeting/RespondToMeeting` with:
-  - `sessionId` (User B's session)
+  - `session_id` (User B's session)
   - `proposalId` (the history_id of the proposal)
   - `response` value: `accepted`
 - [ ] **UI - Loading State**: Show loading indicator
@@ -424,7 +424,7 @@ Once User A and User B have agreed on a meeting time:
 ### Scenario 3B: User B Rejects the Location
 - [ ] **UI - Reject Button Tapped**: User B taps "Reject" on the location proposal
 - [ ] **Client Network Request**: App calls `/Meeting/RespondToMeeting` with:
-  - `sessionId` (User B's session)
+  - `session_id` (User B's session)
   - `proposalId` (the history_id of the proposal)
   - `response` value: `rejected`
 - [ ] **UI - Loading State**: Show loading indicator
@@ -458,7 +458,7 @@ Once User A and User B have agreed on a meeting time:
 - [ ] **UI - New Location Selected**: User B searches and selects a different location
 - [ ] **UI - Optional Message**: User B can add a message explaining the counter-proposal
 - [ ] **Client Network Request**: App calls `/Meeting/ProposeMeeting` with:
-  - `sessionId` (User B's session - now the proposer)
+  - `session_id` (User B's session - now the proposer)
   - `listingId` (same listing)
   - `proposedLocation` (User B's new location)
   - `proposedLatitude`, `proposedLongitude` (new coordinates)

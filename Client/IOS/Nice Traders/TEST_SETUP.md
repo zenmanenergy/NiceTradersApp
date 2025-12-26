@@ -107,7 +107,7 @@ xcodebuild test -project "Nice Traders.xcodeproj" -scheme "Nice Traders" -destin
    - Coordinates are within valid ranges (-90 to 90 lat, -180 to 180 long)
 
 3. **Required Parameters**
-   - SessionId included in authenticated requests
+   - session_id included in authenticated requests
    - All mandatory fields present (currency, amount, etc.)
    - Empty field validation catches missing data
 
@@ -127,32 +127,32 @@ GET /Signup/CreateAccount?email={email}&firstName={first}&lastName={last}&phone=
 
 ### Listings
 ```
-GET /Listings/CreateListing?SessionId={id}&currency={cur}&amount={amt}&acceptCurrency={acc}&location={loc}&latitude={lat}&longitude={lon}&locationRadius={rad}&meetingPreference={pref}&availableUntil={date}
-GET /Listings/DeleteListing?SessionId={id}&listingId={listingId}
-GET /Dashboard/GetUserDashboard?SessionId={id}
+GET /Listings/CreateListing?session_id={id}&currency={cur}&amount={amt}&acceptCurrency={acc}&location={loc}&latitude={lat}&longitude={lon}&locationRadius={rad}&meetingPreference={pref}&availableUntil={date}
+GET /Listings/DeleteListing?session_id={id}&listingId={listingId}
+GET /Dashboard/GetUserDashboard?session_id={id}
 ```
 
 ### Search
 ```
-GET /Search/SearchListings?sessionId={id}&limit={limit}&offset={offset}&Currency={cur}&AcceptCurrency={acc}&MinAmount={min}&MaxAmount={max}
+GET /Search/SearchListings?session_id={id}&limit={limit}&offset={offset}&Currency={cur}&AcceptCurrency={acc}&MinAmount={min}&MaxAmount={max}
 ```
 
 ### Contact/Messaging
 ```
-GET /Contact/PurchaseContactAccess?sessionId={id}&listingId={listingId}
-GET /Contact/SendContactMessage?sessionId={id}&listingId={listingId}&message={msg}
+GET /Contact/PurchaseContactAccess?session_id={id}&listingId={listingId}
+GET /Contact/SendContactMessage?session_id={id}&listingId={listingId}&message={msg}
 ```
 
 ### Meeting
 ```
-GET /Meeting/ProposeMeeting?sessionId={id}&listingId={listingId}&location={loc}&proposedTime={time}&message={msg}
-GET /Meeting/GetExactLocation?sessionId={id}&listingId={listingId}
+GET /Meeting/ProposeMeeting?session_id={id}&listingId={listingId}&location={loc}&proposedTime={time}&message={msg}
+GET /Meeting/GetExactLocation?session_id={id}&listingId={listingId}
 ```
 
 ### Profile
 ```
-GET /Profile/GetProfile?SessionId={id}
-GET /Profile/UpdateProfile?SessionId={id}&bio={bio}&location={location}
+GET /Profile/GetProfile?session_id={id}
+GET /Profile/UpdateProfile?session_id={id}&bio={bio}&location={location}
 ```
 
 ## Common Issues & Solutions

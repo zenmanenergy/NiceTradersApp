@@ -1160,7 +1160,7 @@ struct CreateListingView: View {
         fieldErrors = [:]
         showError = false
         
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             errorMessage = "You must be logged in to create a listing"
             showError = true
             isSubmitting = false
@@ -1185,7 +1185,7 @@ struct CreateListingView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Listings/CreateListing")!
         components.queryItems = [
-            URLQueryItem(name: "SessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "currency", value: haveCurrency.code),
             URLQueryItem(name: "amount", value: amount),
             URLQueryItem(name: "acceptCurrency", value: acceptCurrency.code),

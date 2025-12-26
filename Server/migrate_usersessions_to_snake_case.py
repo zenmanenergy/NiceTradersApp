@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Migration script to rename usersessions table and SessionId column to snake_case.
+Migration script to rename usersessions table and session_id column to snake_case.
 Renames:
   - usersessions -> user_sessions
-  - SessionId -> session_id
+  - session_id -> session_id
 """
 
 import pymysql
@@ -20,7 +20,7 @@ def run_migration():
         )
         cursor = db.cursor()
         
-        print("Starting migration: usersessions -> user_sessions, SessionId -> session_id")
+        print("Starting migration: usersessions -> user_sessions, session_id -> session_id")
         print("-" * 70)
         
         # Step 1: Rename the table
@@ -28,9 +28,9 @@ def run_migration():
         cursor.execute("ALTER TABLE `usersessions` RENAME TO `user_sessions`")
         print("✓ Table renamed successfully")
         
-        # Step 2: Rename the SessionId column
-        print("\nStep 2: Renaming column 'SessionId' to 'session_id'...")
-        cursor.execute("ALTER TABLE `user_sessions` CHANGE COLUMN `SessionId` `session_id` CHAR(39) NOT NULL")
+        # Step 2: Rename the session_id column
+        print("\nStep 2: Renaming column 'session_id' to 'session_id'...")
+        cursor.execute("ALTER TABLE `user_sessions` CHANGE COLUMN `session_id` `session_id` CHAR(39) NOT NULL")
         print("✓ Column renamed successfully")
         
         # Commit changes
@@ -42,7 +42,7 @@ def run_migration():
         print("  - Server/Login/GetLogin.py")
         print("  - Server/Profile/UpdateSettings.py")
         print("  - Server/Profile/GetProfile.py")
-        print("  - Any test files that reference usersessions or SessionId")
+        print("  - Any test files that reference usersessions or session_id")
         
         cursor.close()
         db.close()

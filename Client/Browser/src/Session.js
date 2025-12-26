@@ -2,24 +2,24 @@ import SuperFetch from './SuperFetch.js';
 import { baseURL } from './Settings';
 
 class session {
-	SessionId = "";
+	session_id = "";
 	UserType = "";
 
 	async logout() {
 		console.log("Handling logout...");
-		Cookies.remove("SessionId");
+		Cookies.remove("session_id");
 		Cookies.remove("UserType");
 		window.location.href = '/login';
 	}
 
 	async handleSession() {
 		console.log("Handling session...");
-		this.GetSessionId();
+		this.get_session_id();
 
 		await this.VerifySession((results) => {
-			if (results && results.SessionId && results.UserType) {
+			if (results && results.session_id && results.UserType) {
 				console.log("Session verified!", results);
-				Cookies.set("SessionId", results.SessionId, { expires: 365 });
+				Cookies.set("session_id", results.session_id, { expires: 365 });
 				Cookies.set("UserType", results.UserType, { expires: 365 });
 				this.UserType = results.UserType;
 			} else {
@@ -30,7 +30,7 @@ class session {
 
 	async VerifySession(callback) {
 		const VerifySessionData = {
-			SessionId: this.SessionId
+			session_id: this.session_id
 		};
 
 		const queryString = Object.keys(VerifySessionData)
@@ -41,7 +41,7 @@ class session {
 		console.log(url);
 		try {
 			const data = await SuperFetch(`${baseURL}/Login/Verify`, VerifySessionData);
-			if (data && data.SessionId && data.UserType) {
+			if (data && data.session_id && data.UserType) {
 				callback(data);
 			} else {
 				callback(null);
@@ -52,15 +52,15 @@ class session {
 		}
 	}
 
-	GetSessionId() {
+	get_session_id() {
 		const urlParams = new URLSearchParams(window.location.search);
 
-		if (urlParams.get("SessionId")) {
-			this.SessionId = urlParams.get("SessionId");
-		} else if (Cookies.get("SessionId")) {
-			this.SessionId = Cookies.get("SessionId");
+		if (urlParams.get("session_id")) {
+			this.session_id = urlParams.get("session_id");
+		} else if (Cookies.get("session_id")) {
+			this.session_id = Cookies.get("session_id");
 		} else {
-			this.SessionId = "";
+			this.session_id = "";
 			Cookies.set("previousLocation", location.href);
 			location.href = "/login";
 		}

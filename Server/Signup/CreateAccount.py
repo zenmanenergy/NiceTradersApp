@@ -48,9 +48,9 @@ def create_account(FirstName, LastName, Email, Phone, Password, device_token=Non
 		connection.commit()
 		
 		# Create initial session for the new user
-		SessionId = "SES" + str(uuid.uuid4())
+		session_id = "SES" + str(uuid.uuid4())
 		query = "INSERT INTO user_sessions(session_id, user_id, DateAdded) VALUES (%s, %s, %s)"
-		values = (SessionId, user_id, datetime.datetime.now())
+		values = (session_id, user_id, datetime.datetime.now())
 		cursor.execute(query, values)
 		connection.commit()
 		
@@ -61,7 +61,7 @@ def create_account(FirstName, LastName, Email, Phone, Password, device_token=Non
 		register_device(user_id, device_token, device_type, device_name, app_version, os_version)
 		
 		# Return success with session and user ID
-		return f'{{"success": true, "sessionId": "{SessionId}", "user_id": "{user_id}", "userType": "standard"}}'
+		return f'{{"success": true, "session_id": "{session_id}", "user_id": "{user_id}", "userType": "standard"}}'
 		
 	except Exception as e:
 		connection.close()

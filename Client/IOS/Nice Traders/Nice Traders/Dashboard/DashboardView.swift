@@ -120,39 +120,66 @@ struct DashboardView: View {
     }
     
     private func verifySessionAndLoadData() {
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+        guard let session_id = UserDefaults.standard.string(forKey: "session_id") else {
             return
         }
         
-        verifySession(sessionId: sessionId) { isValid in
+        verifySession(session_id: session_id) { isValid in
             if isValid {
                 viewModel.loadDashboardData()
             } else {
-                UserDefaults.standard.removeObject(forKey: "SessionId")
+                UserDefaults.standard.removeObject(forKey: "session_id")
                 UserDefaults.standard.removeObject(forKey: "UserType")
                 viewModel.error = "Session expired. Please log in again."
             }
         }
     }
     
-    private func verifySession(sessionId: String, completion: @escaping (Bool) -> Void) {
-        let urlString = "\(Settings.shared.baseURL)/Login/Verify?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func verifySession(session_id: String, completion: @escaping (Bool) -> Void) {
+        let urlString = "\(Settings.shared.baseURL)/Login/Verify?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        
+        print("🔍 [DashboardView] Verifying session with URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
+            print("🔴 [DashboardView] Failed to create URL")
             completion(false)
             return
         }
         
+        print("🔍 [DashboardView] Starting verify session request...")
         URLSession.shared.dataTask(with: url) { data, response, error in
+            print("🔍 [DashboardView] Verify response received")
             DispatchQueue.main.async {
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      json["SessionId"] as? String != nil,
-                      json["UserType"] as? String != nil else {
+                if let error = error {
+                    print("🔴 [DashboardView] Verify error: \(error)")
                     completion(false)
                     return
                 }
-                completion(true)
+                
+                guard let data = data else {
+                    print("🔴 [DashboardView] No data received")
+                    completion(false)
+                    return
+                }
+                
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("🔴 [DashboardView] Failed to parse JSON")
+                    completion(false)
+                    return
+                }
+                
+                print("🔍 [DashboardView] Verify JSON: \(json)")
+                
+                let sessionIdExists = (json["session_id"] as? String != nil) || (json["session_id"] as? String != nil)
+                let userTypeExists = json["UserType"] as? String != nil
+                
+                if sessionIdExists && userTypeExists {
+                    print("✅ [DashboardView] Session is valid")
+                    completion(true)
+                } else {
+                    print("🔴 [DashboardView] Session is invalid - session_id: \(sessionIdExists), userType: \(userTypeExists)")
+                    completion(false)
+                }
             }
         }.resume()
     }

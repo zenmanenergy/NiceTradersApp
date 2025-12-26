@@ -15,7 +15,7 @@ blueprint = Blueprint('Listings', __name__)
 def CreateListing():
 	try:
 		ListingData = request.args.to_dict()
-		SessionId = ListingData.get('SessionId', None)
+		session_id = ListingData.get('session_id', None)
 		Currency = ListingData.get('currency', None)
 		Amount = ListingData.get('amount', None)
 		AcceptCurrency = ListingData.get('acceptCurrency', None)
@@ -27,7 +27,7 @@ def CreateListing():
 		AvailableUntil = ListingData.get('availableUntil', None)
 		WillRoundToNearestDollar = ListingData.get('willRoundToNearestDollar', 'false').lower() == 'true'
 		
-		result = create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar)
+		result = create_listing(session_id, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -67,7 +67,7 @@ def GetListingById():
 def UpdateListing():
 	try:
 		ListingData = request.args.to_dict()
-		SessionId = ListingData.get('SessionId', None)
+		session_id = ListingData.get('session_id', None)
 		ListingId = ListingData.get('listingId', None)
 		Currency = ListingData.get('currency', None)
 		Amount = ListingData.get('amount', None)
@@ -83,7 +83,7 @@ def UpdateListing():
 		if WillRoundToNearestDollar is not None:
 			WillRoundToNearestDollar = WillRoundToNearestDollar.lower() == 'true'
 		
-		result = update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar)
+		result = update_listing(session_id, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -93,11 +93,11 @@ def UpdateListing():
 def DeleteListing():
 	try:
 		ListingData = request.args.to_dict()
-		SessionId = ListingData.get('SessionId', None)
+		session_id = ListingData.get('session_id', None)
 		ListingId = ListingData.get('listingId', None)
 		Permanent = ListingData.get('permanent', 'false')
 		
-		result = delete_listing(SessionId, ListingId, Permanent)
+		result = delete_listing(session_id, ListingId, Permanent)
 		return result
 	except Exception as e:
 		return Debugger(e)

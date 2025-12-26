@@ -33,7 +33,7 @@ class TestLoginEndpoints:
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert 'SessionId' in data
+        assert 'session_id' in data
         assert 'UserType' in data
         
         # Cleanup
@@ -66,18 +66,18 @@ class TestLoginEndpoints:
     def test_verify_session_valid(self, client, test_user):
         """Test session verification with valid session"""
         response = client.get('/Login/Verify', query_string={
-            'SessionId': test_user['session_id']
+            'session_id': test_user['session_id']
         })
         
         assert response.status_code == 200
         data = json.loads(response.data)
-        assert 'SessionId' in data
-        assert data['SessionId'] == test_user['session_id']
+        assert 'session_id' in data
+        assert data['session_id'] == test_user['session_id']
     
     def test_verify_session_invalid(self, client):
         """Test session verification with invalid session"""
         response = client.get('/Login/Verify', query_string={
-            'SessionId': 'INVALID-SESSION-ID'
+            'session_id': 'INVALID-SESSION-ID'
         })
         
         assert response.status_code == 200

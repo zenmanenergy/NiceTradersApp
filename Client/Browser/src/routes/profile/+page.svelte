@@ -92,10 +92,10 @@
 	function toggleEdit() {
 		if (isEditing) {
 			// Save changes via API
-			const sessionId = Cookies.get('SessionId');
-			if (sessionId) {
+			const session_id = Cookies.get('session_id');
+			if (session_id) {
 				handleUpdateProfile(
-					sessionId,
+					session_id,
 					editedUser.name,
 					editedUser.email,
 					editedUser.phone,
@@ -127,10 +127,10 @@
 		settings[category][setting] = !settings[category][setting];
 		
 		// Save settings via API
-		const sessionId = Cookies.get('SessionId');
-		if (sessionId) {
+		const session_id = Cookies.get('session_id');
+		if (session_id) {
 			handleUpdateSettings(
-				sessionId,
+				session_id,
 				JSON.stringify(settings),
 				(result) => {
 					if (result && result.success) {
@@ -145,7 +145,7 @@
 	
 	function handleLogout() {
 		// Clear authentication cookies
-		Cookies.remove("SessionId");
+		Cookies.remove("session_id");
 		Cookies.remove("UserType");
 		// Redirect to login page
 		goto('/login');
@@ -154,14 +154,14 @@
 	function deleteAccount() {
 		const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone.');
 		if (confirmed) {
-			const sessionId = Cookies.get('SessionId');
-			if (sessionId) {
+			const session_id = Cookies.get('session_id');
+			if (session_id) {
 				handleDeleteAccount(
-					sessionId,
+					session_id,
 					(result) => {
 						if (result && result.success) {
 							// Clear cookies and redirect to home
-							Cookies.remove('SessionId');
+							Cookies.remove('session_id');
 							Cookies.remove('UserType');
 							alert('Account deleted successfully');
 							goto('/');
@@ -180,16 +180,16 @@
 	
 	onMount(async () => {
 		await Session.handleSession();
-		Session.GetSessionId(); // This sets Session.SessionId
-		const sessionId = Session.SessionId;
+		Session.get_session_id(); // This sets Session.session_id
+		const session_id = Session.session_id;
 		
-		if (!sessionId) {
+		if (!session_id) {
 			goto('/login');
 			return;
 		}
 		
 		// Load profile data
-		handleGetProfile(sessionId, (result) => {
+		handleGetProfile(session_id, (result) => {
 			if (result && result.success && result.profile) {
 				user = { ...user, ...result.profile };
 				console.log('Profile loaded:', user.name);
@@ -199,7 +199,7 @@
 		});
 		
 		// Load exchange history
-		handleGetExchangeHistory(sessionId, (result) => {
+		handleGetExchangeHistory(session_id, (result) => {
 			if (result && result.success && result.exchanges) {
 				exchangeHistory = result.exchanges;
 				console.log('Exchange history loaded:', exchangeHistory.length, 'exchanges');

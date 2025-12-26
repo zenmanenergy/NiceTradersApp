@@ -1,10 +1,10 @@
 from _Lib import Database
 import json
 
-def delete_listing(SessionId, ListingId, Permanent):
+def delete_listing(session_id, ListingId, Permanent):
     """Delete or deactivate a listing"""
     try:
-        session_id = SessionId
+        session_id = session_id
         listing_id = ListingId
         permanent = (Permanent or 'false').lower() == 'true'
         

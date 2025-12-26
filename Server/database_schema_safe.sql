@@ -390,10 +390,10 @@ CREATE TABLE IF NOT EXISTS `user_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `usersessions` (
-  `SessionId` char(39) NOT NULL,
+  `session_id` char(39) NOT NULL,
   `user_id` char(39) NOT NULL,
   `DateAdded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`SessionId`),
+  PRIMARY KEY (`session_id`),
   KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

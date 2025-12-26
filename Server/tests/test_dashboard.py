@@ -10,7 +10,7 @@ class TestDashboardEndpoints:
     def test_get_user_dashboard_success(self, client, test_user):
         """Test getting user dashboard"""
         response = client.get('/Dashboard/GetUserDashboard', query_string={
-            'SessionId': test_user['session_id']
+            'session_id': test_user['session_id']
         })
         
         assert response.status_code == 200
@@ -25,7 +25,7 @@ class TestDashboardEndpoints:
     def test_get_user_dashboard_invalid_session(self, client):
         """Test getting dashboard with invalid session"""
         response = client.get('/Dashboard/GetUserDashboard', query_string={
-            'SessionId': 'INVALID-SESSION'
+            'session_id': 'INVALID-SESSION'
         })
         
         assert response.status_code == 200
@@ -44,7 +44,7 @@ class TestDashboardEndpoints:
     def test_get_user_statistics_success(self, client, test_user):
         """Test getting user statistics"""
         response = client.get('/Dashboard/GetUserStatistics', query_string={
-            'SessionId': test_user['session_id']
+            'session_id': test_user['session_id']
         })
         
         assert response.status_code == 200
@@ -59,7 +59,7 @@ class TestDashboardEndpoints:
     def test_get_user_statistics_invalid_session(self, client):
         """Test getting statistics with invalid session"""
         response = client.get('/Dashboard/GetUserStatistics', query_string={
-            'SessionId': 'INVALID-SESSION'
+            'session_id': 'INVALID-SESSION'
         })
         
         assert response.status_code == 200

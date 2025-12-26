@@ -13,13 +13,13 @@ class SessionManager: ObservableObject {
     
     private init() {}
     
-    var sessionId: String? {
-        get { UserDefaults.standard.string(forKey: "SessionId") }
+    var session_id: String? {
+        get { UserDefaults.standard.string(forKey: "session_id") }
         set { 
             if let value = newValue {
-                UserDefaults.standard.set(value, forKey: "SessionId")
+                UserDefaults.standard.set(value, forKey: "session_id")
             } else {
-                UserDefaults.standard.removeObject(forKey: "SessionId")
+                UserDefaults.standard.removeObject(forKey: "session_id")
             }
         }
     }
@@ -69,11 +69,11 @@ class SessionManager: ObservableObject {
     }
     
     var isLoggedIn: Bool {
-        return sessionId != nil
+        return session_id != nil
     }
     
     func logout() {
-        sessionId = nil
+        session_id = nil
         userType = nil
         user_id = nil
         firstName = nil
@@ -81,12 +81,12 @@ class SessionManager: ObservableObject {
     }
     
     func verifySession(completion: @escaping (Bool) -> Void) {
-        guard let sessionId = sessionId else {
+        guard let session_id = session_id else {
             completion(false)
             return
         }
         
-        let urlString = "\(Settings.shared.baseURL)/Login/Verify?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(Settings.shared.baseURL)/Login/Verify?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion(false)
@@ -97,7 +97,7 @@ class SessionManager: ObservableObject {
             DispatchQueue.main.async {
                 guard let data = data,
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let verifiedSessionId = json["SessionId"] as? String,
+                      let verifiedSessionId = json["session_id"] as? String,
                       let verifiedUserType = json["UserType"] as? String else {
                     self.logout()
                     completion(false)
@@ -105,7 +105,7 @@ class SessionManager: ObservableObject {
                 }
                 
                 // Update stored values
-                self.sessionId = verifiedSessionId
+                self.session_id = verifiedSessionId
                 self.userType = verifiedUserType
                 completion(true)
             }

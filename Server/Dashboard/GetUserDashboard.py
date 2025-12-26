@@ -59,10 +59,10 @@ def calculate_negotiation_status(exchange, user_id):
                 # No location proposal yet
                 return "🎯 Action: Propose Location"
 
-def get_user_dashboard(SessionId):
+def get_user_dashboard(session_id):
     """Get dashboard data for authenticated user"""
     try:
-        session_id = SessionId
+        session_id = session_id
         
         if not session_id:
             return json.dumps({

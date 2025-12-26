@@ -1,0 +1,34 @@
+I see you attempted an App Store distribution and Xcode got all the way through re-signing and creating the .ipa, but you still can’t distribute. From the packaging log, a few key observations and likely blockers:
+
+What worked
+• Copying payload and building the IPA completed successfully.
+• Re-signing your app and the embedded PPRiskMagnes.framework with your Apple Distribution certificate succeeded, including remote signing with Apple’s Developer Services.
+• Provisioning for distribution: the app’s entitlements were correctly transformed from development to distribution (aps-environment=production, get-task-allow=0, beta-reports-active=1).
+• IPA creation finished without errors.
+
+What looked suspicious or incomplete
+• “Upload Symbols Failed” appears early. Not fatal for building the IPA, but if you’re using Xcode Organizer to “Distribute App” to App Store Connect, symbol upload failures can block or warn during submission.
+• Your app bundle identifier in the log is NiceTraders.Nice-Traders. Make sure:
+   • This exact bundle ID exists in App Store Connect and in Certificates, Identifiers & Profiles.
+   • The distribution provisioning profile you embedded matches this bundle ID and your Distribution certificate.
+• Third-party frameworks/bundles (PayPal_* bundles and PPRiskMagnes.framework) were included and signed. If any of these are using prohibited APIs or missing required privacy manifests, App Store Connect validation can fail after upload.
+• Privacy manifests: I can see PrivacyInfo.xcprivacy for PayPal bundles and PPRiskMagnes. Ensure your main app also has a PrivacyInfo.xcprivacy if you use APIs that require declaration on iOS 17+.
+• If the failure happens after pressing “Distribute” (Organizer) rather than during packaging, it’s often an App Store Connect validation error. We need the specific validation error message.
+
+To help you quickly, please share:
+• The exact step where it fails: during “Validate”, “Upload”, or after upload (App Store Connect processing)?
+• Any Xcode Organizer error dialog text or the “Distribution” log at the point of failure (beyond the Packaging.log you pasted).
+• Your app’s bundle identifier as configured in the target (General > Identity) and in App Store Connect.
+• The provisioning profile name you selected for distribution.
+• Whether you’ve added a PrivacyInfo.xcprivacy to the app target.
+• If you saw errors about dSYMs upload or symbolication.
+
+Immediate things you can try
+• In Organizer, choose Validate App before Upload to see a precise validation error.
+• Ensure the target’s Signing (Release) uses “Automatically manage signing” or a matching Distribution provisioning profile for the exact bundle ID.
+• Regenerate and download a new iOS App Store provisioning profile for NiceTraders.Nice-Traders and re-archive.
+• Make sure your app target has a PrivacyInfo.xcprivacy if needed (iOS 17+ requires accurate privacy usage; third-party manifests don’t cover your app’s own usage).
+• Re-run archive with “Include bitcode” disabled (modern toolchains ignore it, but mismatches sometimes cause issues).
+• In Organizer > Archives, select the archive and use “Export” > “iOS App Store Package (.ipa)” to see if export succeeds and if validation produces a specific error.
+
+If you can paste the Organizer validation/upload error text, I can pinpoint the exact fix (entitlements, bundle ID/profile mismatch, privacy manifest, or symbol upload).

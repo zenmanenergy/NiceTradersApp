@@ -15,7 +15,7 @@ struct ExchangeMapView: View {
     let proposalId: String
     let meetingLat: Double
     let meetingLon: Double
-    let sessionId: String
+    let session_id: String
     
     private let localizationManager = LocalizationManager.shared
     private let fetchInterval: TimeInterval = 3 // Fetch other user location every 3 seconds
@@ -223,7 +223,7 @@ struct ExchangeMapView: View {
             // Start tracking
             locationManager.startTracking(
                 proposalId: proposalId,
-                sessionId: sessionId,
+                session_id: session_id,
                 meetingLat: meetingLat,
                 meetingLon: meetingLon
             )
@@ -265,7 +265,7 @@ struct ExchangeMapView: View {
     private func fetchOtherUserLocation() {
         isLoadingOtherLocation = true
         
-        let endpoint = "http://localhost:5000/Meeting/Location/Get?proposalId=\(proposalId)&sessionId=\(sessionId)"
+        let endpoint = "http://localhost:5000/Meeting/Location/Get?proposalId=\(proposalId)&session_id=\(session_id)"
         
         guard let url = URL(string: endpoint) else {
             updateError = "Invalid endpoint"
@@ -318,6 +318,6 @@ struct ExchangeMapView: View {
         proposalId: "test-proposal",
         meetingLat: 40.7128,
         meetingLon: -74.0060,
-        sessionId: "test-session"
+        session_id: "test-session"
     )
 }

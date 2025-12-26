@@ -3,12 +3,12 @@ import json
 from datetime import datetime
 import uuid
 
-def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
+def submit_rating(session_id, user_id, Rating, Review="", TransactionId=None):
     """
     Submit a rating for a user after a transaction
     
     Args:
-        SessionId: User session ID (rater)
+        session_id: User session ID (rater)
         user_id: User ID being rated
         Rating: Rating from 1-5
         Review: Optional review text
@@ -17,7 +17,7 @@ def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
     Returns: JSON response
     """
     try:
-        if not all([SessionId, user_id, Rating]):
+        if not all([session_id, user_id, Rating]):
             return json.dumps({
                 'success': False,
                 'error': 'Session ID, User ID, and Rating are required'
@@ -45,7 +45,7 @@ def submit_rating(SessionId, user_id, Rating, Review="", TransactionId=None):
             SELECT user_id FROM user_sessions 
             WHERE session_id = %s
         """
-        cursor.execute(session_query, (SessionId,))
+        cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

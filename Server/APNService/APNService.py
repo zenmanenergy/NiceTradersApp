@@ -183,7 +183,7 @@ class APNService:
                 'timestamp': datetime.now().isoformat()
             }
             if session_id:
-                custom_data['sessionId'] = session_id
+                custom_data['session_id'] = session_id
             if deep_link_type and deep_link_id:
                 custom_data['deepLinkType'] = deep_link_type
                 custom_data['deepLinkId'] = deep_link_id

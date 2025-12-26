@@ -77,14 +77,14 @@ def CreatePayPalOrder():
             request_data = request.args.to_dict()
         
         listing_id = request_data.get('listingId')
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         amount = request_data.get('amount', 2.00)
         
         if not all([listing_id, session_id]):
             return Response(
                 json.dumps({
                     'success': False,
-                    'error': 'listingId and sessionId are required'
+                    'error': 'listingId and session_id are required'
                 }),
                 mimetype='application/json'
             )
@@ -140,14 +140,14 @@ def CapturePayPalOrder():
         
         order_id = request_data.get('orderId')
         listing_id = request_data.get('listingId')
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         user_id = request_data.get('userId')
         
         if not all([order_id, listing_id, session_id, user_id]):
             return Response(
                 json.dumps({
                     'success': False,
-                    'error': 'orderId, listingId, sessionId, and userId are required'
+                    'error': 'orderId, listingId, session_id, and userId are required'
                 }),
                 mimetype='application/json'
             )
@@ -182,7 +182,7 @@ def ProcessCardPayment():
         request_data = request.get_json()
         
         order_id = request_data.get('orderId')
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         card_number = request_data.get('cardNumber')
         cardholder_name = request_data.get('cardholderName')
         expiry_month = request_data.get('expiryMonth')

@@ -296,11 +296,11 @@ struct SignupView: View {
                         
                         if let success = json["success"] as? Bool,
                            success,
-                           let sessionId = json["sessionId"] as? String,
+                           let session_id = json["session_id"] as? String,
                            let userType = json["userType"] as? String {
                             
                             // Save session data
-                            UserDefaults.standard.set(sessionId, forKey: "SessionId")
+                            UserDefaults.standard.set(session_id, forKey: "session_id")
                             UserDefaults.standard.set(userType, forKey: "UserType")
                             
                             // Save user ID if available

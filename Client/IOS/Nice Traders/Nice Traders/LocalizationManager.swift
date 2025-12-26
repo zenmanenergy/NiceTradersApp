@@ -371,13 +371,13 @@ class LocalizationManager: NSObject, ObservableObject {
     /// Load user's preferred language from backend database
     /// Called during initialization if user is logged in
     private func loadUserPreferredLanguageFromBackend() async {
-        // Check if user is logged in (get sessionId from UserDefaults)
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+        // Check if user is logged in (get session_id from UserDefaults)
+        guard let session_id = UserDefaults.standard.string(forKey: "session_id") else {
             return
         }
         
         let endpoint = "\(baseURL)/Profile/GetProfile"
-        guard let url = URL(string: "\(endpoint)?SessionId=\(sessionId)") else {
+        guard let url = URL(string: "\(endpoint)?session_id=\(session_id)") else {
             return
         }
         
@@ -561,8 +561,8 @@ class LocalizationManager: NSObject, ObservableObject {
     }
     
     func saveLanguagePreferenceToBackend(languageCode: String) {
-        // Get sessionId from UserDefaults (safe access without SessionManager dependency)
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+        // Get session_id from UserDefaults (safe access without SessionManager dependency)
+        guard let session_id = UserDefaults.standard.string(forKey: "session_id") else {
             return
         }
         
@@ -575,7 +575,7 @@ class LocalizationManager: NSObject, ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let payload: [String: Any] = [
-            "SessionId": sessionId,
+            "session_id": session_id,
             "preferred_language": languageCode
         ]
         

@@ -27,18 +27,18 @@ Three new REST endpoints added to Flask Meeting blueprint:
 
 1. **POST /Meeting/Location/Update**
    - Updates user's current location during exchange
-   - Request: `{proposalId, sessionId, latitude, longitude}`
+   - Request: `{proposalId, session_id, latitude, longitude}`
    - Response: `{success, distance, tracking_radius}` or error
    - Validates session and user participation in proposal
 
 2. **GET /Meeting/Location/Get**
    - Retrieves other user's current location and details
-   - Params: `proposalId, sessionId`
+   - Params: `proposalId, session_id`
    - Response: `{other_user_id, name, latitude, longitude, distance_from_meeting, timestamp}`
 
 3. **GET /Meeting/Location/Status**
    - Checks if tracking is currently enabled for an exchange
-   - Params: `proposalId, sessionId`
+   - Params: `proposalId, session_id`
    - Response: `{tracking_enabled, time_until_exchange_hours, tracking_window_hours, tracking_radius_miles}`
 
 ### iOS Services
@@ -53,7 +53,7 @@ Three new REST endpoints added to Flask Meeting blueprint:
 - `@Published var distanceFromMeeting: Double?` - Distance to meeting point in miles
 
 **Key Methods:**
-- `startTracking(proposalId, sessionId, meetingLat, meetingLon)` - Begin location updates
+- `startTracking(proposalId, session_id, meetingLat, meetingLon)` - Begin location updates
 - `stopTracking()` - Stop updates and clean up timers
 - `requestLocationPermission()` - Request "When In Use" permission
 - `sendLocationUpdate()` - Posts location to server every 30 seconds
@@ -137,7 +137,7 @@ navigationLink(destination: ExchangeMapView(
     proposalId: proposal.id,
     meetingLat: proposal.latitude,
     meetingLon: proposal.longitude,
-    sessionId: sessionManager.sessionId
+    session_id: sessionManager.session_id
 ))
 ```
 
@@ -145,13 +145,13 @@ navigationLink(destination: ExchangeMapView(
 ```swift
 // ExchangeMapView.onAppear:
 locationManager.requestLocationPermission()
-locationManager.startTracking(proposalId, sessionId, meetingLat, meetingLon)
+locationManager.startTracking(proposalId, session_id, meetingLat, meetingLon)
 ```
 
 ### 3. Periodic Updates (Every 30 Seconds)
 ```
 Client: POST /Meeting/Location/Update
-        {proposalId, sessionId, latitude, longitude}
+        {proposalId, session_id, latitude, longitude}
 Server: Validates time window (1 hour before)
         Validates distance (<1 mile from meeting point)
         Stores in user_locations table
@@ -160,7 +160,7 @@ Server: Validates time window (1 hour before)
 
 ### 4. Real-Time Display (Every 3 Seconds)
 ```
-Client: GET /Meeting/Location/Get?proposalId=X&sessionId=Y
+Client: GET /Meeting/Location/Get?proposalId=X&session_id=Y
 Server: Retrieves other user's latest location
         Returns: {latitude, longitude, name, distance_from_meeting}
 Client: Updates map with other user's pin

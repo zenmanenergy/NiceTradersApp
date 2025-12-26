@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+#if canImport(UIKit)
+import UIKit
+
 extension View {
     /// Adds keyboard dismissal on tap anywhere outside input fields
     func dismissKeyboardOnTap() -> some View {
@@ -23,3 +26,4 @@ extension UIApplication {
         sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 }
+#endif

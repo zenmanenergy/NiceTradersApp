@@ -161,7 +161,7 @@ green: 0.29, blue: 0.64)]),
         .onAppear {
             print("VIEW: LoginView")
             // Clear form when view appears (e.g., after logout)
-            if SessionManager.shared.sessionId == nil {
+            if SessionManager.shared.session_id == nil {
                 email = ""
                 password = ""
                 errors = [:]
@@ -253,11 +253,11 @@ green: 0.29, blue: 0.64)]),
                             return
                         }
                         
-                        if let sessionId = json["SessionId"] as? String,
+                        if let session_id = json["session_id"] as? String,
                            let userType = json["UserType"] as? String {
                             
                             // Save session data
-                            UserDefaults.standard.set(sessionId, forKey: "SessionId")
+                            UserDefaults.standard.set(session_id, forKey: "session_id")
                             UserDefaults.standard.set(userType, forKey: "UserType")
                             
                             // Save user ID if available
@@ -287,7 +287,7 @@ green: 0.29, blue: 0.64)]),
                             navigateToDashboard = true
                         } else {
                             // Clear any stored credentials
-                            UserDefaults.standard.removeObject(forKey: "SessionId")
+                            UserDefaults.standard.removeObject(forKey: "session_id")
                             UserDefaults.standard.removeObject(forKey: "UserType")
                             UserDefaults.standard.removeObject(forKey: "user_id")
                             

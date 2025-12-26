@@ -2,9 +2,9 @@ from _Lib import Database
 import uuid
 import datetime
 
-def verify_session(SessionId):
-	if not SessionId:
-		SessionId = "-1"
+def verify_session(session_id):
+	if not session_id:
+		session_id = "-1"
 	
 	# Connect to the database
 	cursor, connection = Database.ConnectToDatabase()
@@ -16,7 +16,7 @@ def verify_session(SessionId):
 		INNER JOIN users ON user_sessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci 
 		WHERE user_sessions.session_id COLLATE utf8mb4_general_ci = %s
 	"""
-	values = (SessionId,)
+	values = (session_id,)
 
 
 	# Execute the query and get the results

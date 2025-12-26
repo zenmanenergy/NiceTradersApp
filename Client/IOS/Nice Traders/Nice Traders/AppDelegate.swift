@@ -212,11 +212,11 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         print("🔗 [AppDelegate] User info: \(userInfo)")
         
         // Extract session ID for auto-login
-        if let sessionId = userInfo["sessionId"] as? String {
-            print("🔗 [AppDelegate] Found session ID: \(sessionId)")
+        if let session_id = userInfo["session_id"] as? String {
+            print("🔗 [AppDelegate] Found session ID: \(session_id)")
             DispatchQueue.main.async {
-                SessionManager.shared.sessionId = sessionId
-                print("🔗 [AppDelegate] Set SessionManager.sessionId")
+                SessionManager.shared.session_id = session_id
+                print("🔗 [AppDelegate] Set SessionManager.session_id")
             }
         } else {
             print("🔗 [AppDelegate] No session ID in notification")
@@ -235,7 +235,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                     userInfo: [
                         "deepLinkType": deepLinkType,
                         "deepLinkId": deepLinkId,
-                        "sessionId": userInfo["sessionId"] as? String ?? ""
+                        "session_id": userInfo["session_id"] as? String ?? ""
                     ]
                 )
                 print("🔗 [AppDelegate] Posted DeepLinkNotification")

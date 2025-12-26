@@ -1,8 +1,8 @@
 from _Lib import Database
 import json
 
-def update_settings(SessionId, SettingsJson):
-	if not SessionId:
+def update_settings(session_id, SettingsJson):
+	if not session_id:
 		return '{"success": false, "error": "Session ID required"}'
 	
 	cursor, connection = Database.ConnectToDatabase()
@@ -15,7 +15,7 @@ def update_settings(SessionId, SettingsJson):
 			INNER JOIN users ON user_sessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE user_sessions.session_id COLLATE utf8mb4_general_ci = %s
 		"""
-		cursor.execute(session_query, (SessionId,))
+		cursor.execute(session_query, (session_id,))
 		user_result = cursor.fetchone()
 		
 		if not user_result:

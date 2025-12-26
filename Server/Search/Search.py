@@ -24,7 +24,7 @@ def SearchListings():
         UserLongitude = FilterData.get('UserLongitude') or FilterData.get('userLongitude')
         MinAmount = FilterData.get('MinAmount') or FilterData.get('minAmount')
         MaxAmount = FilterData.get('MaxAmount') or FilterData.get('maxAmount')
-        SessionId = FilterData.get('SessionId') or FilterData.get('sessionId')
+        session_id = FilterData.get('session_id') or FilterData.get('session_id')
         Limit = FilterData.get('Limit') or FilterData.get('limit', 20)
         Offset = FilterData.get('Offset') or FilterData.get('offset', 0)
         
@@ -38,7 +38,7 @@ def SearchListings():
             UserLongitude=UserLongitude,
             MinAmount=MinAmount,
             MaxAmount=MaxAmount,
-            SessionId=SessionId,
+            session_id=session_id,
             Limit=Limit,
             Offset=Offset
         )
@@ -78,14 +78,14 @@ def SearchListingsInRadius():
     try:
         # Get query parameters
         FilterData = request.args.to_dict()
-        SessionId = FilterData.get('SessionId') or FilterData.get('sessionId')
+        session_id = FilterData.get('session_id') or FilterData.get('session_id')
         ListingId = FilterData.get('ListingId') or FilterData.get('listingId')
         SearchQuery = FilterData.get('SearchQuery') or FilterData.get('searchQuery') or ""
         Limit = FilterData.get('Limit') or FilterData.get('limit', 5)
         
         # Call the search function
         result = search_listings_in_radius(
-            session_id=SessionId,
+            session_id=session_id,
             listing_id=ListingId,
             search_query=SearchQuery,
             limit=int(Limit)

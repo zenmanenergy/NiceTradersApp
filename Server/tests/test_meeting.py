@@ -68,7 +68,7 @@ class TestMeetingEndpoints:
         
         response = client.post('/Meeting/ProposeMeeting',
             json={
-                'sessionId': proposer_session,
+                'session_id': proposer_session,
                 'listingId': listing_id,
                 'proposedLocation': 'Starbucks on Main St',
                 'proposedTime': proposed_time,
@@ -93,7 +93,7 @@ class TestMeetingEndpoints:
     def test_get_meeting_proposals(self, client, test_listing, test_user):
         """Test getting meeting proposals for a listing"""
         response = client.get('/Meeting/GetMeetingProposals', query_string={
-            'sessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'listingId': test_listing['listing_id']
         })
         
@@ -162,7 +162,7 @@ class TestMeetingEndpoints:
         # Test respond to meeting
         response = client.post('/Meeting/RespondToMeeting',
             json={
-                'sessionId': user1_session,
+                'session_id': user1_session,
                 'proposalId': proposal_id,
                 'response': 'accepted'
             },

@@ -19,20 +19,20 @@ export async function handleLogin(Email, Password, formValid, callback) {
 	}
 
 	// Handle successful login
-	if (data && data.SessionId && data.UserType) {
-		console.log("Login successful, SessionId:", data.SessionId, "UserType:", data.UserType);
+	if (data && data.session_id && data.UserType) {
+		console.log("Login successful, session_id:", data.session_id, "UserType:", data.UserType);
 		
 		// Set cookies for session
-		Cookies.set("SessionId", data.SessionId, { expires: 365 });
+		Cookies.set("session_id", data.session_id, { expires: 365 });
 		Cookies.set("UserType", data.UserType, { expires: 365 });
 
 		callback(true);
 		// Redirect to dashboard after successful login
 		window.location.href = "/dashboard";
 	} else {
-		console.error("Invalid login response, no SessionId or UserType received");
+		console.error("Invalid login response, no session_id or UserType received");
 		
-		Cookies.remove("SessionId");
+		Cookies.remove("session_id");
 		Cookies.remove("UserType");
 
 		callback(false);

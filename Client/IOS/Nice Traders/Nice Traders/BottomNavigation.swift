@@ -80,7 +80,7 @@ struct BottomNavigation: View {
     }
     
     func logout() {
-        UserDefaults.standard.removeObject(forKey: "SessionId")
+        UserDefaults.standard.removeObject(forKey: "session_id")
         UserDefaults.standard.removeObject(forKey: "UserType")
         
         // Post notification to reset navigation

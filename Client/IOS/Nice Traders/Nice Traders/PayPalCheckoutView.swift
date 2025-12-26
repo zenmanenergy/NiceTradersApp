@@ -327,7 +327,7 @@ struct PayPalCheckoutView: View {
         
         let payload: [String: Any] = [
             "orderId": orderId ?? "",
-            "sessionId": SessionManager.shared.sessionId ?? "",
+            "session_id": SessionManager.shared.session_id ?? "",
             "cardNumber": cardNumber,
             "cardholderName": cardholderName,
             "expiryMonth": expiryMonth,

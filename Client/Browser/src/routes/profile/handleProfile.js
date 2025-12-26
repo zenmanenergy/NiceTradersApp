@@ -1,9 +1,9 @@
 import { baseURL } from '../../Settings.js';
 import SuperFetch from '../../SuperFetch.js';
 
-export async function handleGetProfile(SessionId, callback) {
+export async function handleGetProfile(session_id, callback) {
 	const Data = {
-		SessionId: SessionId
+		session_id: session_id
 	};
 	
 	const url = baseURL + '/Profile/GetProfile?';
@@ -12,9 +12,9 @@ export async function handleGetProfile(SessionId, callback) {
 	callback(data);
 }
 
-export async function handleUpdateProfile(SessionId, name, email, phone, location, bio, callback) {
+export async function handleUpdateProfile(session_id, name, email, phone, location, bio, callback) {
 	const Data = {
-		SessionId: SessionId,
+		session_id: session_id,
 		name: name,
 		email: email,
 		phone: phone,
@@ -28,9 +28,9 @@ export async function handleUpdateProfile(SessionId, name, email, phone, locatio
 	callback(data);
 }
 
-export async function handleGetExchangeHistory(SessionId, callback) {
+export async function handleGetExchangeHistory(session_id, callback) {
 	const Data = {
-		SessionId: SessionId
+		session_id: session_id
 	};
 	
 	const url = baseURL + '/Profile/GetExchangeHistory?';
@@ -39,9 +39,9 @@ export async function handleGetExchangeHistory(SessionId, callback) {
 	callback(data);
 }
 
-export async function handleUpdateSettings(SessionId, settingsJson, callback) {
+export async function handleUpdateSettings(session_id, settingsJson, callback) {
 	const Data = {
-		SessionId: SessionId,
+		session_id: session_id,
 		settingsJson: settingsJson
 	};
 	
@@ -51,9 +51,9 @@ export async function handleUpdateSettings(SessionId, settingsJson, callback) {
 	callback(data);
 }
 
-export async function handleDeleteAccount(SessionId, callback) {
+export async function handleDeleteAccount(session_id, callback) {
 	const Data = {
-		SessionId: SessionId
+		session_id: session_id
 	};
 	
 	const url = baseURL + '/Profile/DeleteAccount?';

@@ -1,9 +1,9 @@
 #!/bin/bash
-# Migration script to rename usersessions table and SessionId column to snake_case
+# Migration script to rename usersessions table and session_id column to snake_case
 
 cd "$(dirname "$0")" || exit 1
 
-echo "Running migration: usersessions -> user_sessions, SessionId -> session_id"
+echo "Running migration: usersessions -> user_sessions, session_id -> session_id"
 echo ""
 
 ./venv/bin/python3 migrate_usersessions_to_snake_case.py

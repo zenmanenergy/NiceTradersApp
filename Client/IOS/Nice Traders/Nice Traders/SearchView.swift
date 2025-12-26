@@ -580,17 +580,17 @@ struct SearchView: View {
         searchError = nil
         pagination.offset = 0
         
-        guard let sessionId = SessionManager.shared.sessionId else {
-            print("ERROR: No sessionId found")
+        guard let session_id = SessionManager.shared.session_id else {
+            print("ERROR: No session_id found")
             isSearching = false
             return
         }
         
-        print("  sessionId: \(sessionId)")
+        print("  session_id: \(session_id)")
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Search/SearchListings")!
         var queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "limit", value: String(pagination.limit)),
             URLQueryItem(name: "offset", value: String(pagination.offset))
         ]

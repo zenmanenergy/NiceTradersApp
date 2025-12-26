@@ -3,23 +3,23 @@ import json
 from datetime import datetime
 import uuid
 
-def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
+def complete_exchange(session_id, ListingIdOrNegotiationId, CompletionNotes=""):
     """
     Mark an exchange as completed and create exchange history record.
     This happens after both users have met and confirmed the exchange.
     
     Args:
-        SessionId: User session ID
+        session_id: User session ID
         ListingIdOrNegotiationId: Listing ID (using actual schema)
         CompletionNotes: Optional notes about the exchange
     
     Returns: JSON response
     """
     try:
-        print(f"[CompleteExchange] Starting: SessionId={SessionId}, ListingIdOrNegotiationId={ListingIdOrNegotiationId}")
+        print(f"[CompleteExchange] Starting: session_id={session_id}, ListingIdOrNegotiationId={ListingIdOrNegotiationId}")
         
-        if not all([SessionId, ListingIdOrNegotiationId]):
-            print(f"[CompleteExchange] Missing required params: SessionId={SessionId}, ListingIdOrNegotiationId={ListingIdOrNegotiationId}")
+        if not all([session_id, ListingIdOrNegotiationId]):
+            print(f"[CompleteExchange] Missing required params: session_id={session_id}, ListingIdOrNegotiationId={ListingIdOrNegotiationId}")
             return json.dumps({
                 'success': False,
                 'error': 'Session ID and Listing ID are required'
@@ -34,15 +34,15 @@ def complete_exchange(SessionId, ListingIdOrNegotiationId, CompletionNotes=""):
             SELECT user_id FROM user_sessions 
             WHERE session_id = %s
         """
-        print(f"[CompleteExchange] Checking session: {SessionId}")
-        cursor.execute(session_query, (SessionId,))
+        print(f"[CompleteExchange] Checking session: {session_id}")
+        cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         
         print(f"[CompleteExchange] Session result: {session_result}")
         
         if not session_result:
             connection.close()
-            print(f"[CompleteExchange] Invalid session: {SessionId}")
+            print(f"[CompleteExchange] Invalid session: {session_id}")
             return json.dumps({
                 'success': False,
                 'error': 'Invalid or expired session'

@@ -1,19 +1,19 @@
 from _Lib import Database
 import json
 
-def get_received_ratings(SessionId, Limit=10, Offset=0):
+def get_received_ratings(session_id, Limit=10, Offset=0):
     """
     Get ratings received by the current user
     
     Args:
-        SessionId: User session ID
+        session_id: User session ID
         Limit: Number of ratings to return (default 10)
         Offset: Pagination offset (default 0)
     
     Returns: JSON response with ratings received
     """
     try:
-        if not SessionId:
+        if not session_id:
             return json.dumps({
                 'success': False,
                 'error': 'Session ID is required'
@@ -27,7 +27,7 @@ def get_received_ratings(SessionId, Limit=10, Offset=0):
             SELECT user_id FROM user_sessions 
             WHERE session_id = %s
         """
-        cursor.execute(session_query, (SessionId,))
+        cursor.execute(session_query, (session_id,))
         session_result = cursor.fetchone()
         
         if not session_result:

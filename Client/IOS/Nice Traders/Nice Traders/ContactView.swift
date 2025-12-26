@@ -734,11 +734,11 @@ struct ContactView: View {
     
     // MARK: - Functions
     func loadMessages() {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/GetContactMessages")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing_id))
         ]
         
@@ -766,14 +766,14 @@ struct ContactView: View {
     
     func sendMessage() {
         guard !newMessage.isEmpty,
-              let sessionId = SessionManager.shared.sessionId else { return }
+              let session_id = SessionManager.shared.session_id else { return }
         
         let messageToSend = newMessage
         newMessage = ""
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/SendContactMessage")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing_id)),
             URLQueryItem(name: "message", value: messageToSend)
         ]
@@ -792,9 +792,9 @@ struct ContactView: View {
     }
     
     func loadMeetingProposals() {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
-        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals?sessionId=\(sessionId)&listingId=\(contactData.listing_id)")!
+        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals?session_id=\(session_id)&listingId=\(contactData.listing_id)")!
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
@@ -825,7 +825,7 @@ struct ContactView: View {
     
     func proposeMeeting() {
         guard !proposedLocation.isEmpty,
-              let sessionId = SessionManager.shared.sessionId else { return }
+              let session_id = SessionManager.shared.session_id else { return }
         
         let dateFormatter = ISO8601DateFormatter()
         let calendar = Calendar.current
@@ -844,7 +844,7 @@ struct ContactView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/ProposeMeeting")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "listingId", value: String(contactData.listing_id)),
             URLQueryItem(name: "proposedLocation", value: proposedLocation),
             URLQueryItem(name: "proposedTime", value: proposedDateTime),
@@ -868,11 +868,11 @@ struct ContactView: View {
     }
     
     func respondToProposal(_ proposalId: String, response: String) {
-        guard let sessionId = SessionManager.shared.sessionId else { return }
+        guard let session_id = SessionManager.shared.session_id else { return }
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Meeting/RespondToMeeting")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId),
+            URLQueryItem(name: "session_id", value: session_id),
             URLQueryItem(name: "proposalId", value: proposalId),
             URLQueryItem(name: "response", value: response)
         ]

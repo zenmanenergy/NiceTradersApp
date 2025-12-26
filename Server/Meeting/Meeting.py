@@ -21,7 +21,7 @@ def ProposeMeeting():
         else:
             request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         listing_id = request_data.get('listingId')
         proposed_location = request_data.get('proposedLocation')
         proposed_time = request_data.get('proposedTime')
@@ -51,7 +51,7 @@ def RespondToMeeting():
         else:
             request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         proposal_id = request_data.get('proposalId')
         response = request_data.get('response')  # 'accepted' or 'rejected'
         
@@ -74,7 +74,7 @@ def GetMeetingProposals():
     try:
         request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         listing_id = request_data.get('listingId')
         
         result = get_meeting_proposals(session_id, listing_id)
@@ -88,7 +88,7 @@ def GetExactLocation():
     try:
         request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         listing_id = request_data.get('listingId')
         
         result = get_exact_location(session_id, listing_id)
@@ -101,12 +101,12 @@ def GetExactLocation():
 def UpdateLocation():
     """
     Update user's location during an active exchange
-    POST data: proposalId, latitude, longitude, sessionId
+    POST data: proposalId, latitude, longitude, session_id
     """
     try:
         request_data = request.get_json()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         proposal_id = request_data.get('proposalId')
         latitude = float(request_data.get('latitude'))
         longitude = float(request_data.get('longitude'))
@@ -138,12 +138,12 @@ def UpdateLocation():
 def GetOtherUserLocation():
     """
     Get the other user's location in an active exchange
-    GET params: proposalId, sessionId
+    GET params: proposalId, session_id
     """
     try:
         request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         proposal_id = request_data.get('proposalId')
         
         # Verify session and get user ID
@@ -171,12 +171,12 @@ def GetOtherUserLocation():
 def GetTrackingStatus():
     """
     Check if location tracking is currently enabled for an exchange
-    GET params: proposalId, sessionId
+    GET params: proposalId, session_id
     """
     try:
         request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         proposal_id = request_data.get('proposalId')
         
         # Verify session and get user ID
@@ -208,7 +208,7 @@ def CancelMeetingTime():
         else:
             request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         listing_id = request_data.get('listingId')
         
         result = cancel_meeting_time(session_id, listing_id)
@@ -225,10 +225,10 @@ def CancelLocation():
         else:
             request_data = request.args.to_dict()
         
-        session_id = request_data.get('sessionId')
+        session_id = request_data.get('session_id')
         listing_id = request_data.get('listingId')
         
-        print(f"[CancelLocation] Received request - sessionId={session_id}, listingId={listing_id}")
+        print(f"[CancelLocation] Received request - session_id={session_id}, listingId={listing_id}")
         
         result = cancel_location(session_id, listing_id)
         print(f"[CancelLocation] Result from cancel_location: {result}")

@@ -238,7 +238,7 @@ struct MessagesView: View {
     }
     
     func loadPurchasedContacts() {
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+        guard let session_id = UserDefaults.standard.string(forKey: "session_id") else {
             error = "No active session"
             isLoading = false
             return
@@ -246,7 +246,7 @@ struct MessagesView: View {
         
         var components = URLComponents(string: "\(Settings.shared.baseURL)/Contact/GetPurchasedContacts")!
         components.queryItems = [
-            URLQueryItem(name: "sessionId", value: sessionId)
+            URLQueryItem(name: "session_id", value: session_id)
         ]
         
         guard let url = components.url else {

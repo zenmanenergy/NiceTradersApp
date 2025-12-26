@@ -14,7 +14,7 @@ class UserLocationManager: NSObject, CLLocationManagerDelegate, ObservableObject
     
     // Configuration
     private var proposalId: String = ""
-    private var sessionId: String = ""
+    private var session_id: String = ""
     private var meetingCoordinate: CLLocationCoordinate2D?
     
     override init() {
@@ -29,9 +29,9 @@ class UserLocationManager: NSObject, CLLocationManagerDelegate, ObservableObject
         locationManager.requestWhenInUseAuthorization()
     }
     
-    func startTracking(proposalId: String, sessionId: String, meetingLat: Double, meetingLon: Double) {
+    func startTracking(proposalId: String, session_id: String, meetingLat: Double, meetingLon: Double) {
         self.proposalId = proposalId
-        self.sessionId = sessionId
+        self.session_id = session_id
         self.meetingCoordinate = CLLocationCoordinate2D(latitude: meetingLat, longitude: meetingLon)
         
         isTracking = true
@@ -65,7 +65,7 @@ class UserLocationManager: NSObject, CLLocationManagerDelegate, ObservableObject
     private func sendLocationUpdate() {
         guard let location = currentLocation,
               !proposalId.isEmpty,
-              !sessionId.isEmpty else {
+              !session_id.isEmpty else {
             return
         }
         
@@ -76,7 +76,7 @@ class UserLocationManager: NSObject, CLLocationManagerDelegate, ObservableObject
         
         let payload: [String: Any] = [
             "proposalId": proposalId,
-            "sessionId": sessionId,
+            "session_id": session_id,
             "latitude": location.latitude,
             "longitude": location.longitude
         ]

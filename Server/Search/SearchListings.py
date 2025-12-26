@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 from decimal import Decimal
 
-def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, UserLatitude=None, UserLongitude=None, MinAmount=None, MaxAmount=None, SessionId=None, Limit=None, Offset=None):
+def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistance=None, UserLatitude=None, UserLongitude=None, MinAmount=None, MaxAmount=None, session_id=None, Limit=None, Offset=None):
     """Search for currency exchange listings with filters"""
     try:
         # Connect to database
@@ -11,8 +11,8 @@ def search_listings(Currency=None, AcceptCurrency=None, Location=None, MaxDistan
         
         # Get current user ID from session to exclude their own listings
         current_user_id = None
-        if SessionId:
-            cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (SessionId,))
+        if session_id:
+            cursor.execute("SELECT user_id FROM user_sessions WHERE session_id = %s", (session_id,))
             session_result = cursor.fetchone()
             if session_result:
                 current_user_id = session_result['user_id']

@@ -2,11 +2,11 @@ from _Lib import Database
 from _Lib.Geocoding import GeocodingService
 import json
 
-def update_listing(SessionId, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar=None):
+def update_listing(session_id, ListingId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, Status, WillRoundToNearestDollar=None):
     """Update an existing listing"""
     try:
         # Parameters are passed directly from the blueprint
-        session_id = SessionId
+        session_id = session_id
         listing_id = ListingId
         currency = Currency
         amount = Amount

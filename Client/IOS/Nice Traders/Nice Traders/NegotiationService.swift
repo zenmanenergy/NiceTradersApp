@@ -19,14 +19,14 @@ class NegotiationService {
     // MARK: - Propose Negotiation
     
     func proposeNegotiation(listingId: String, proposedTime: Date, completion: @escaping (Result<ProposeResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
         let isoTime = ISO8601DateFormatter().string(from: proposedTime)
         
-        let urlString = "\(baseURL)/MeetingTime/Propose?listingId=\(listingId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(baseURL)/MeetingTime/Propose?listingId=\(listingId)&session_id=\(session_id)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         
         guard let url = URL(string: urlString) else {
@@ -83,13 +83,13 @@ class NegotiationService {
     // MARK: - Get Negotiation Details
     
     func getNegotiation(negotiationId: String, completion: @escaping (Result<NegotiationDetailResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[NegotiationService] Error: No active session")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingTime/Get?listingId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Get?listingId=\(negotiationId)&session_id=\(session_id)"
         print("[NegotiationService] getNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -136,13 +136,13 @@ class NegotiationService {
     // MARK: - Accept Proposal
     
     func acceptProposal(negotiationId: String, completion: @escaping (Result<AcceptResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[NegotiationService] Error: No active session for acceptProposal")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingTime/Accept?listingId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Accept?listingId=\(negotiationId)&session_id=\(session_id)"
         print("[NegotiationService] acceptProposal URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -188,13 +188,13 @@ class NegotiationService {
     // MARK: - Reject Negotiation
     
     func rejectNegotiation(negotiationId: String, completion: @escaping (Result<RejectResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             print("[NegotiationService] Error: No active session for rejectNegotiation")
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingTime/Reject?listingId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/Reject?listingId=\(negotiationId)&session_id=\(session_id)"
         print("[NegotiationService] rejectNegotiation URL: \(urlString)")
         
         guard let url = URL(string: urlString) else {
@@ -240,14 +240,14 @@ class NegotiationService {
     // MARK: - Counter Proposal
     
     func counterProposal(negotiationId: String, proposedTime: Date, completion: @escaping (Result<CounterResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
         let isoTime = ISO8601DateFormatter().string(from: proposedTime)
         
-        let urlString = "\(baseURL)/MeetingTime/Counter?listingId=\(negotiationId)&sessionId=\(sessionId)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "\(baseURL)/MeetingTime/Counter?listingId=\(negotiationId)&session_id=\(session_id)&proposedTime=\(isoTime.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -277,12 +277,12 @@ class NegotiationService {
     // MARK: - Pay Negotiation Fee
     
     func payNegotiationFee(negotiationId: String, completion: @escaping (Result<PaymentResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/ListingPayment/Pay?listingId=\(negotiationId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/ListingPayment/Pay?listingId=\(negotiationId)&session_id=\(session_id)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -332,12 +332,12 @@ class NegotiationService {
     // MARK: - PayPal Payment Integration
     
     func createPayPalOrder(listingId: String, amount: Double = 2.00, completion: @escaping (Result<CreateOrderResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&sessionId=\(sessionId)&amount=\(amount)"
+        let urlString = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&session_id=\(session_id)&amount=\(amount)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -376,13 +376,13 @@ class NegotiationService {
     }
     
     func capturePayPalOrder(orderId: String, listingId: String, completion: @escaping (Result<CaptureOrderResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId,
+        guard let session_id = SessionManager.shared.session_id,
               let userId = SessionManager.shared.user_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/Payments/CaptureOrder?orderId=\(orderId)&listingId=\(listingId)&sessionId=\(sessionId)&userId=\(userId)"
+        let urlString = "\(baseURL)/Payments/CaptureOrder?orderId=\(orderId)&listingId=\(listingId)&session_id=\(session_id)&userId=\(userId)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -414,12 +414,12 @@ class NegotiationService {
     // MARK: - Get My Negotiations
     
     func getMyNegotiations(completion: @escaping (Result<MyNegotiationsResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingTime/GetMy?sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingTime/GetMy?session_id=\(session_id)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -449,7 +449,7 @@ class NegotiationService {
     // MARK: - Propose Meeting Location
     
     func proposeMeetingLocation(listingId: String, latitude: Double, longitude: Double, locationName: String?, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
@@ -466,7 +466,7 @@ class NegotiationService {
         
         let body: [String: Any] = [
             "listingId": listingId,
-            "sessionId": sessionId,
+            "session_id": session_id,
             "latitude": latitude,
             "longitude": longitude,
             "locationName": locationName ?? ""
@@ -497,7 +497,7 @@ class NegotiationService {
     // MARK: - Counter Meeting Location
     
     func counterMeetingLocation(listingId: String, latitude: Double, longitude: Double, locationName: String?, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
@@ -514,7 +514,7 @@ class NegotiationService {
         
         let body: [String: Any] = [
             "listingId": listingId,
-            "sessionId": sessionId,
+            "session_id": session_id,
             "latitude": latitude,
             "longitude": longitude,
             "locationName": locationName ?? ""
@@ -545,12 +545,12 @@ class NegotiationService {
     // MARK: - Accept Meeting Location
     
     func acceptMeetingLocation(listingId: String, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingLocation/Accept?listingId=\(listingId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingLocation/Accept?listingId=\(listingId)&session_id=\(session_id)"
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
@@ -579,12 +579,12 @@ class NegotiationService {
     // MARK: - Reject Meeting Location
     
     func rejectMeetingLocation(listingId: String, completion: @escaping (Result<LocationResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/MeetingLocation/Reject?listingId=\(listingId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/MeetingLocation/Reject?listingId=\(listingId)&session_id=\(session_id)"
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
@@ -613,12 +613,12 @@ class NegotiationService {
     // MARK: - Get Buyer Info
     
     func getBuyerInfo(buyerId: String, completion: @escaping (Result<BuyerInfoResponse, Error>) -> Void) {
-        guard let sessionId = SessionManager.shared.sessionId else {
+        guard let session_id = SessionManager.shared.session_id else {
             completion(.failure(NSError(domain: "", code: 401, userInfo: [NSLocalizedDescriptionKey: "No active session"])))
             return
         }
         
-        let urlString = "\(baseURL)/Negotiations/GetBuyerInfo?buyerId=\(buyerId)&sessionId=\(sessionId)"
+        let urlString = "\(baseURL)/Negotiations/GetBuyerInfo?buyerId=\(buyerId)&session_id=\(session_id)"
         
         guard let url = URL(string: urlString) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))

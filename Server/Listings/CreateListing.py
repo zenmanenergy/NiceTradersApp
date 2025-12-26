@@ -4,11 +4,11 @@ import uuid
 from datetime import datetime
 import json
 
-def create_listing(SessionId, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar=False):
+def create_listing(session_id, Currency, Amount, AcceptCurrency, Location, Latitude, Longitude, LocationRadius, MeetingPreference, AvailableUntil, WillRoundToNearestDollar=False):
     """Create a new currency exchange listing"""
     try:
         # Parameters are passed directly from the blueprint
-        session_id = SessionId
+        session_id = session_id
         currency = Currency
         amount = Amount
         accept_currency = AcceptCurrency

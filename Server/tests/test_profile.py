@@ -10,7 +10,7 @@ class TestProfileEndpoints:
     def test_get_profile_success(self, client, test_user):
         """Test getting user profile"""
         response = client.get('/Profile/GetProfile', query_string={
-            'SessionId': test_user['session_id']
+            'session_id': test_user['session_id']
         })
         
         assert response.status_code == 200
@@ -22,7 +22,7 @@ class TestProfileEndpoints:
     def test_get_profile_invalid_session(self, client):
         """Test getting profile with invalid session"""
         response = client.get('/Profile/GetProfile', query_string={
-            'SessionId': 'INVALID-SESSION'
+            'session_id': 'INVALID-SESSION'
         })
         
         assert response.status_code == 200
@@ -32,7 +32,7 @@ class TestProfileEndpoints:
     def test_update_profile_success(self, client, test_user):
         """Test updating user profile"""
         response = client.get('/Profile/UpdateProfile', query_string={
-            'SessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'name': 'Updated Name',
             'email': test_user['email'],
             'phone': '555-9999',
@@ -47,7 +47,7 @@ class TestProfileEndpoints:
     def test_update_profile_invalid_session(self, client):
         """Test updating profile with invalid session"""
         response = client.get('/Profile/UpdateProfile', query_string={
-            'SessionId': 'INVALID-SESSION',
+            'session_id': 'INVALID-SESSION',
             'name': 'Test User',
             'email': 'test@example.com'
         })
@@ -61,7 +61,7 @@ class TestProfileEndpoints:
         settings = json.dumps({'preferredCurrency': 'USD', 'notifications': True})
         
         response = client.get('/Profile/UpdateSettings', query_string={
-            'SessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'settingsJson': settings
         })
         
@@ -96,7 +96,7 @@ class TestProfileEndpoints:
         
         # Test deletion
         response = client.get('/Profile/DeleteAccount', query_string={
-            'SessionId': session_id
+            'session_id': session_id
         })
         
         assert response.status_code == 200

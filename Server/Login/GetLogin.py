@@ -38,9 +38,9 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 			connection.commit()
 
 			# Create a new session
-			SessionId = "SES" + str(uuid.uuid4())
+			session_id = "SES" + str(uuid.uuid4())
 			query = "INSERT INTO user_sessions(session_id, user_id, DateAdded) VALUES (%s, %s, %s)"
-			values = (SessionId, result['user_id'], datetime.datetime.now(),)
+			values = (session_id, result['user_id'], datetime.datetime.now(),)
 			cursor.execute(query, values)
 			connection.commit()
 
@@ -74,7 +74,7 @@ def get_login(Email, Password, device_token=None, device_type='ios', device_name
 					connection_check.close()
 
 			# Return success with session data and user ID
-			return f'{{"SessionId": "{SessionId}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}", "firstName": "{result.get("FirstName", "")}", "lastName": "{result.get("LastName", "")}"}}'
+			return f'{{"session_id": "{session_id}", "UserType": "{result["UserType"]}", "user_id": "{result["user_id"]}", "firstName": "{result.get("FirstName", "")}", "lastName": "{result.get("LastName", "")}"}}'
 			
 	except Exception as e:
 		connection.close()

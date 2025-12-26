@@ -1,10 +1,10 @@
 from _Lib import Database
 import json
 
-def get_user_statistics(SessionId):
+def get_user_statistics(session_id):
     """Get detailed statistics for user dashboard"""
     try:
-        session_id = SessionId
+        session_id = session_id
         
         if not session_id:
             return json.dumps({

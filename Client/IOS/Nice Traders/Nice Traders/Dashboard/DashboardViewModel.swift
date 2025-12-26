@@ -15,7 +15,7 @@ class DashboardViewModel: ObservableObject {
     private var globalSeenIds = Set<String>()
     
     func loadDashboardData() {
-        guard let sessionId = UserDefaults.standard.string(forKey: "SessionId") else {
+        guard let session_id = UserDefaults.standard.string(forKey: "session_id") else {
             error = "No session found"
             isLoading = false
             return
@@ -32,14 +32,14 @@ class DashboardViewModel: ObservableObject {
         pendingNegotiations = []
         globalSeenIds = []
         
-        fetchDashboardSummary(sessionId: sessionId, thisRequestToken: thisRequestToken)
-        fetchPurchasedContacts(sessionId: sessionId, thisRequestToken: thisRequestToken)
-        fetchListingPurchases(sessionId: sessionId, thisRequestToken: thisRequestToken)
-        fetchPendingNegotiations(sessionId: sessionId, thisRequestToken: thisRequestToken)
+        fetchDashboardSummary(session_id: session_id, thisRequestToken: thisRequestToken)
+        fetchPurchasedContacts(session_id: session_id, thisRequestToken: thisRequestToken)
+        fetchListingPurchases(session_id: session_id, thisRequestToken: thisRequestToken)
+        fetchPendingNegotiations(session_id: session_id, thisRequestToken: thisRequestToken)
     }
     
-    private func fetchDashboardSummary(sessionId: String, thisRequestToken: UUID) {
-        let urlString = "\(Settings.shared.baseURL)/Dashboard/GetUserDashboard?SessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func fetchDashboardSummary(session_id: String, thisRequestToken: UUID) {
+        let urlString = "\(Settings.shared.baseURL)/Dashboard/GetUserDashboard?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             DispatchQueue.main.async { self.isLoading = false }
@@ -70,12 +70,12 @@ class DashboardViewModel: ObservableObject {
                     }
                 }
                 
-                self?.processDashboardSummary(dashboardData, userData: userData, sessionId: sessionId, thisRequestToken: thisRequestToken)
+                self?.processDashboardSummary(dashboardData, userData: userData, session_id: session_id, thisRequestToken: thisRequestToken)
             }
         }.resume()
     }
     
-    private func processDashboardSummary(_ dashboardData: [String: Any], userData: [String: Any], sessionId: String, thisRequestToken: UUID) {
+    private func processDashboardSummary(_ dashboardData: [String: Any], userData: [String: Any], session_id: String, thisRequestToken: UUID) {
         let firstName = userData["firstName"] as? String ?? ""
         let lastName = userData["lastName"] as? String ?? ""
         let dateCreated = userData["dateCreated"] as? String ?? ""
@@ -101,7 +101,7 @@ class DashboardViewModel: ObservableObject {
             
             for listing in myListings {
                 dispatchGroup.enter()
-                fetchMeetingProposals(sessionId: sessionId, listingId: listing.id) { result in
+                fetchMeetingProposals(session_id: session_id, listingId: listing.id) { result in
                     let pendingCount = (result?["proposals"] as? [[String: Any]])?.filter { ($0["status"] as? String) == "pending" }.count ?? 0
                     proposalCounts[listing.id] = pendingCount
                     
@@ -139,7 +139,7 @@ class DashboardViewModel: ObservableObject {
             
             for exchange in uniqueDashboardExchanges {
                 dispatchGroup.enter()
-                fetchMeetingProposals(sessionId: sessionId, listingId: exchange.id) { result in
+                fetchMeetingProposals(session_id: session_id, listingId: exchange.id) { result in
                     hasLocationProposalMap[exchange.id] = (result?["proposals"] as? [[String: Any]])?.contains { prop in
                         (prop["type"] as? String) == "location" && (prop["status"] as? String) != "rejected"
                     } ?? false
@@ -172,8 +172,8 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
-    private func fetchPurchasedContacts(sessionId: String, thisRequestToken: UUID) {
-        let urlString = "\(Settings.shared.baseURL)/Contact/GetPurchasedContacts?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func fetchPurchasedContacts(session_id: String, thisRequestToken: UUID) {
+        let urlString = "\(Settings.shared.baseURL)/Contact/GetPurchasedContacts?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else { return }
         
@@ -220,8 +220,8 @@ class DashboardViewModel: ObservableObject {
         }.resume()
     }
     
-    private func fetchListingPurchases(sessionId: String, thisRequestToken: UUID) {
-        let urlString = "\(Settings.shared.baseURL)/Contact/GetListingPurchases?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func fetchListingPurchases(session_id: String, thisRequestToken: UUID) {
+        let urlString = "\(Settings.shared.baseURL)/Contact/GetListingPurchases?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else { return }
         
@@ -266,8 +266,8 @@ class DashboardViewModel: ObservableObject {
         }.resume()
     }
     
-    private func fetchPendingNegotiations(sessionId: String, thisRequestToken: UUID) {
-        let urlString = "\(Settings.shared.baseURL)/Negotiations/GetMyNegotiations?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func fetchPendingNegotiations(session_id: String, thisRequestToken: UUID) {
+        let urlString = "\(Settings.shared.baseURL)/Negotiations/GetMyNegotiations?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else { return }
         
@@ -288,8 +288,8 @@ class DashboardViewModel: ObservableObject {
         }.resume()
     }
     
-    private func fetchMeetingProposals(sessionId: String, listingId: String, completion: @escaping ([String: Any]?) -> Void) {
-        let urlString = "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals?sessionId=\(sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&listingId=\(listingId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    private func fetchMeetingProposals(session_id: String, listingId: String, completion: @escaping ([String: Any]?) -> Void) {
+        let urlString = "\(Settings.shared.baseURL)/Meeting/GetMeetingProposals?session_id=\(session_id.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&listingId=\(listingId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
         
         guard let url = URL(string: urlString) else {
             completion(nil)

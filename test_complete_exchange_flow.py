@@ -94,7 +94,7 @@ def test_complete_exchange_flow():
             
             if partner_id:
                 rating_result = json.loads(submit_rating(
-                    SessionId=session_id,
+                    session_id=session_id,
                     user_id=partner_id,
                     Rating=5,
                     Review="Great exchange! Would trade again."

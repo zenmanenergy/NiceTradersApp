@@ -25,14 +25,14 @@ def ProposeNegotiation():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         proposed_time = request.args.get('proposedTime')
         
         if not all([listing_id, session_id, proposed_time]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId, sessionId, and proposedTime are required'
+                'error': 'listingId, session_id, and proposedTime are required'
             })
         
         result = propose_negotiation(listing_id, session_id, proposed_time)
@@ -48,14 +48,14 @@ def ProposeMeetingTime():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         proposed_time = request.args.get('proposedTime')
         
         if not all([listing_id, session_id, proposed_time]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId, sessionId, and proposedTime are required'
+                'error': 'listingId, session_id, and proposedTime are required'
             })
         
         result = propose_negotiation(listing_id, session_id, proposed_time)
@@ -71,13 +71,13 @@ def GetNegotiation():
     try:
         from flask import request
         negotiation_id = request.args.get('negotiationId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([negotiation_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'negotiationId and sessionId are required'
+                'error': 'negotiationId and session_id are required'
             })
         
         result = get_negotiation(negotiation_id, session_id)
@@ -93,13 +93,13 @@ def AcceptProposal():
     try:
         from flask import request
         negotiation_id = request.args.get('negotiationId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([negotiation_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'negotiationId and sessionId are required'
+                'error': 'negotiationId and session_id are required'
             })
         
         result = accept_proposal(negotiation_id, session_id)
@@ -115,13 +115,13 @@ def RejectNegotiation():
     try:
         from flask import request
         negotiation_id = request.args.get('negotiationId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([negotiation_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'negotiationId and sessionId are required'
+                'error': 'negotiationId and session_id are required'
             })
         
         result = reject_negotiation(negotiation_id, session_id)
@@ -137,14 +137,14 @@ def CounterProposal():
     try:
         from flask import request
         negotiation_id = request.args.get('negotiationId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         proposed_time = request.args.get('proposedTime')
         
         if not all([negotiation_id, session_id, proposed_time]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'negotiationId, sessionId, and proposedTime are required'
+                'error': 'negotiationId, session_id, and proposedTime are required'
             })
         
         result = counter_proposal(negotiation_id, session_id, proposed_time)
@@ -161,13 +161,13 @@ def PayNegotiationFee():
         from flask import request, Response
         import json
         negotiation_id = request.args.get('negotiationId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([negotiation_id, session_id]):
             return Response(
                 json.dumps({
                     'success': False,
-                    'error': 'negotiationId and sessionId are required'
+                    'error': 'negotiationId and session_id are required'
                 }),
                 mimetype='application/json'
             )
@@ -194,13 +194,13 @@ def GetMyNegotiations():
     """Get user's active negotiations"""
     try:
         from flask import request
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             import json
             return json.dumps({
                 'success': False,
-                'error': 'sessionId is required'
+                'error': 'session_id is required'
             })
         
         result = get_my_negotiations(session_id)
@@ -216,13 +216,13 @@ def GetBuyerInfo():
     try:
         from flask import request
         buyer_id = request.args.get('buyerId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([buyer_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'buyerId and sessionId are required'
+                'error': 'buyerId and session_id are required'
             })
         
         result = get_buyer_info(buyer_id, session_id)
@@ -242,14 +242,14 @@ def CounterMeetingTime():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         proposed_time = request.args.get('proposedTime')
         
         if not all([listing_id, session_id, proposed_time]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId, sessionId, and proposedTime are required'
+                'error': 'listingId, session_id, and proposedTime are required'
             })
         
         result = counter_proposal(listing_id, session_id, proposed_time)
@@ -265,13 +265,13 @@ def AcceptMeetingTime():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId and sessionId are required'
+                'error': 'listingId and session_id are required'
             })
         
         result = accept_proposal(listing_id, session_id)
@@ -287,13 +287,13 @@ def RejectMeetingTime():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId and sessionId are required'
+                'error': 'listingId and session_id are required'
             })
         
         result = reject_negotiation(listing_id, session_id)
@@ -309,13 +309,13 @@ def GetMeetingTimeDetails():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId and sessionId are required'
+                'error': 'listingId and session_id are required'
             })
         
         result = get_negotiation(listing_id, session_id)
@@ -330,13 +330,13 @@ def GetMyMeetingTimes():
     """Get user's active meeting time negotiations (refactored)"""
     try:
         from flask import request
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             import json
             return json.dumps({
                 'success': False,
-                'error': 'sessionId is required'
+                'error': 'session_id is required'
             })
         
         result = get_my_negotiations(session_id)
@@ -354,7 +354,7 @@ def ProposeMeetingLocation():
         import json
         
         listing_id = request.args.get('listingId') or (request.json or {}).get('listingId')
-        session_id = request.args.get('sessionId') or (request.json or {}).get('sessionId')
+        session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
         latitude = request.args.get('latitude') or (request.json or {}).get('latitude')
         longitude = request.args.get('longitude') or (request.json or {}).get('longitude')
         location_name = request.args.get('locationName') or (request.json or {}).get('locationName')
@@ -362,7 +362,7 @@ def ProposeMeetingLocation():
         if not all([listing_id, session_id, latitude, longitude]):
             return json.dumps({
                 'success': False,
-                'error': 'listingId, sessionId, latitude, and longitude are required'
+                'error': 'listingId, session_id, latitude, and longitude are required'
             })
         
         result = propose_meeting_location(listing_id, session_id, latitude, longitude, location_name)
@@ -380,7 +380,7 @@ def CounterMeetingLocation():
         import json
         
         listing_id = request.args.get('listingId') or (request.json or {}).get('listingId')
-        session_id = request.args.get('sessionId') or (request.json or {}).get('sessionId')
+        session_id = request.args.get('session_id') or (request.json or {}).get('session_id')
         latitude = request.args.get('latitude') or (request.json or {}).get('latitude')
         longitude = request.args.get('longitude') or (request.json or {}).get('longitude')
         location_name = request.args.get('locationName') or (request.json or {}).get('locationName')
@@ -388,7 +388,7 @@ def CounterMeetingLocation():
         if not all([listing_id, session_id, latitude, longitude]):
             return json.dumps({
                 'success': False,
-                'error': 'listingId, sessionId, latitude, and longitude are required'
+                'error': 'listingId, session_id, latitude, and longitude are required'
             })
         
         result = counter_meeting_location(listing_id, session_id, latitude, longitude, location_name)
@@ -404,13 +404,13 @@ def AcceptMeetingLocation():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId and sessionId are required'
+                'error': 'listingId and session_id are required'
             })
         
         result = accept_meeting_location(listing_id, session_id)
@@ -426,13 +426,13 @@ def RejectMeetingLocation():
     try:
         from flask import request
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             import json
             return json.dumps({
                 'success': False,
-                'error': 'listingId and sessionId are required'
+                'error': 'listingId and session_id are required'
             })
         
         result = reject_meeting_location(listing_id, session_id)
@@ -449,13 +449,13 @@ def PayListingFee():
         from flask import request, Response
         import json
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not all([listing_id, session_id]):
             return Response(
                 json.dumps({
                     'success': False,
-                    'error': 'listingId and sessionId are required'
+                    'error': 'listingId and session_id are required'
                 }),
                 mimetype='application/json'
             )
@@ -484,17 +484,17 @@ def CompleteExchange():
         from flask import request, Response
         import json
         listing_id = request.args.get('ListingId')
-        session_id = request.args.get('SessionId')
+        session_id = request.args.get('session_id')
         negotiation_id = request.args.get('NegotiationId')
         
-        print(f"[CompleteExchange] Endpoint called: SessionId={session_id}, ListingId={listing_id}, NegotiationId={negotiation_id}")
+        print(f"[CompleteExchange] Endpoint called: session_id={session_id}, ListingId={listing_id}, NegotiationId={negotiation_id}")
         
         if not all([session_id]) or not (listing_id or negotiation_id):
             print(f"[CompleteExchange] Missing required parameters")
             return Response(
                 json.dumps({
                     'success': False,
-                    'error': 'SessionId and (ListingId or NegotiationId) are required'
+                    'error': 'session_id and (ListingId or NegotiationId) are required'
                 }),
                 mimetype='application/json'
             )

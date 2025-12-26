@@ -10,12 +10,12 @@ def GetUserDashboard():
     """Get user dashboard data"""
     try:
         # Get parameters from query string
-        session_id = request.args.get('SessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             return {
                 'success': False,
-                'error': 'SessionId parameter is required'
+                'error': 'session_id parameter is required'
             }
         
         # Call the dashboard function
@@ -33,12 +33,12 @@ def GetUserStatistics():
     """Get user statistics for dashboard"""
     try:
         # Get parameters from query string
-        session_id = request.args.get('SessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             return {
                 'success': False,
-                'error': 'SessionId parameter is required'
+                'error': 'session_id parameter is required'
             }
         
         # Call the statistics function

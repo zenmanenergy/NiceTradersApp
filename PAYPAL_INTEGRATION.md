@@ -24,7 +24,7 @@ Creates a PayPal order and returns an approval URL.
 
 **Parameters:**
 - `listingId`: Negotiation listing ID
-- `sessionId`: User session ID
+- `session_id`: User session ID
 - `amount`: Amount to charge (default: $2.00)
 
 **Response:**
@@ -49,7 +49,7 @@ Finalizes a PayPal order after user approval.
 **Parameters:**
 - `orderId`: PayPal Order ID from CreateOrder response
 - `listingId`: Negotiation listing ID
-- `sessionId`: User session ID
+- `session_id`: User session ID
 - `userId`: User making payment
 
 **Response:**
@@ -147,7 +147,7 @@ The iOS app needs to:
 
 1. **Create Order**
    ```swift
-   let url = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&sessionId=\(sessionId)"
+   let url = "\(baseURL)/Payments/CreateOrder?listingId=\(listingId)&session_id=\(session_id)"
    URLSession.shared.dataTask(with: url) { data, _, _ in
        // Parse orderId and approvalUrl
        // Show PayPal checkout using native PayPal SDK
@@ -156,7 +156,7 @@ The iOS app needs to:
 
 2. **Capture Order**
    ```swift
-   let url = "\(baseURL)/Payments/CaptureOrder?orderId=\(orderId)&listingId=\(listingId)&sessionId=\(sessionId)&userId=\(userId)"
+   let url = "\(baseURL)/Payments/CaptureOrder?orderId=\(orderId)&listingId=\(listingId)&session_id=\(session_id)&userId=\(userId)"
    URLSession.shared.dataTask(with: url) { data, _, _ in
        // Handle payment confirmation
    }

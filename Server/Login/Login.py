@@ -15,18 +15,17 @@ def Login():
 	try:
 		from Profile.RegisterDevice import log_device_event
 		LoginData = request.args.to_dict()
-		log_device_event(f"LOGIN ENDPOINT HIT: LoginData={LoginData}")
-
-		# Extract the Email and Password from the LoginData
-		Email = LoginData.get('Email', None)
-		Password = LoginData.get('Password', None)
 		
-		# Extract optional device information
-		device_token = LoginData.get('deviceToken', None)
-		device_type = LoginData.get('deviceType', 'ios')
-		device_name = LoginData.get('deviceName', None)
-		app_version = LoginData.get('appVersion', None)
-		os_version = LoginData.get('osVersion', None)
+		# Support both capitalized and lowercase parameter names
+		Email = LoginData.get('Email') or LoginData.get('email')
+		Password = LoginData.get('Password') or LoginData.get('password')
+		device_token = LoginData.get('deviceToken') or LoginData.get('device_token')
+		device_type = LoginData.get('deviceType') or LoginData.get('device_type') or 'ios'
+		device_name = LoginData.get('deviceName') or LoginData.get('device_name')
+		app_version = LoginData.get('appVersion') or LoginData.get('app_version')
+		os_version = LoginData.get('osVersion') or LoginData.get('os_version')
+		
+		log_device_event(f"LOGIN ENDPOINT HIT: Email={Email}, Password={'*' * len(Password) if Password else None}")
 		
 		log_device_event(f"LOGIN EXTRACTED: Email={Email}, device_token={device_token}, device_type={device_type}, device_name={device_name}, app_version={app_version}, os_version={os_version}")
 
@@ -46,10 +45,10 @@ def Verify():
 		VerifyData = request.args.to_dict()
 
 		# Extract the Email and Password from the LoginData
-		SessionId = VerifyData.get('SessionId', None)
+		session_id = VerifyData.get('session_id', None)
 
 		# Call the get_login function from GetLogin.py with the extracted data
-		result = verify_session(SessionId)
+		result = verify_session(session_id)
 
 		return result
 	except Exception as e:

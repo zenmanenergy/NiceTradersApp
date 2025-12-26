@@ -1,7 +1,7 @@
 from _Lib import Database
 
-def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, Bio=None, PreferredLanguage=None):
-	if not SessionId:
+def update_profile(session_id, Name=None, Email=None, Phone=None, Location=None, Bio=None, PreferredLanguage=None):
+	if not session_id:
 		return '{"success": false, "error": "Session ID required"}'
 	
 	cursor, connection = Database.ConnectToDatabase()
@@ -14,7 +14,7 @@ def update_profile(SessionId, Name=None, Email=None, Phone=None, Location=None, 
 			INNER JOIN users ON user_sessions.user_id COLLATE utf8mb4_general_ci = users.user_id COLLATE utf8mb4_general_ci
 			WHERE user_sessions.session_id COLLATE utf8mb4_general_ci = %s
 		"""
-		cursor.execute(session_query, (SessionId,))
+		cursor.execute(session_query, (session_id,))
 		user_result = cursor.fetchone()
 		
 		if not user_result:

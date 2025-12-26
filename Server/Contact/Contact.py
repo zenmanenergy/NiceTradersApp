@@ -21,7 +21,7 @@ def GetContactDetails():
     try:
         # Get query parameters
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         user_lat = request.args.get('userLat')
         user_lng = request.args.get('userLng')
         
@@ -61,7 +61,7 @@ def SendInterestMessage():
     try:
         # Get query parameters
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         message = request.args.get('message', '')
         availability_str = request.args.get('availability', '[]')
         availability = json.loads(availability_str) if availability_str else []
@@ -91,7 +91,7 @@ def ReportListing():
     try:
         # Get query parameters
         listing_id = request.args.get('listingId')
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         reason = request.args.get('reason')
         description = request.args.get('description', '')
         
@@ -119,7 +119,7 @@ def GetPurchasedContacts():
     """Get all listings user has purchased contact access to"""
     try:
         # Get query parameters
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             return json.dumps({
@@ -140,7 +140,7 @@ def GetListingPurchases():
     """Get all purchases made for user's listings"""
     try:
         # Get query parameters
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         
         if not session_id:
             return json.dumps({
@@ -161,7 +161,7 @@ def GetContactMessages():
     """Get messages for a specific listing contact"""
     try:
         # Get query parameters
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         listing_id = request.args.get('listingId')
         
         if not session_id or not listing_id:
@@ -183,7 +183,7 @@ def SendContactMessage():
     """Send a message in a contact conversation"""
     try:
         # Get query parameters
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         listing_id = request.args.get('listingId')
         message = request.args.get('message')
         
@@ -205,13 +205,13 @@ def SendContactMessage():
 def GetLockedExchangeRate():
     """Get locked exchange rate for a contact access"""
     try:
-        session_id = request.args.get('sessionId')
+        session_id = request.args.get('session_id')
         listing_id = request.args.get('listingId')
         
         if not all([session_id, listing_id]):
             return json.dumps({
                 'success': False,
-                'error': 'sessionId and listingId are required'
+                'error': 'session_id and listingId are required'
             })
         
         # Get user_id from session

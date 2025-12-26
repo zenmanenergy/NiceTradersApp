@@ -10,7 +10,7 @@ struct ExchangeMapView: View {
     let proposalId: String
     let meetingLat: Double
     let meetingLon: Double
-    let sessionId: String
+    let session_id: String
     
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var otherUserLocation: CLLocation? = nil
@@ -101,9 +101,9 @@ struct ExchangeMapView: View {
     }
     
     private func fetchOtherUserLocation() {
-        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/Location/Get?proposalId=\(proposalId)&sessionId=\(sessionId)")!
+        let url = URL(string: "\(Settings.shared.baseURL)/Meeting/Location/Get?proposalId=\(proposalId)&session_id=\(session_id)")!
         var request = URLRequest(url: url)
-        request.setValue(sessionId, forHTTPHeaderField: "Session-ID")
+        request.setValue(session_id, forHTTPHeaderField: "Session-ID")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
@@ -133,6 +133,6 @@ struct ExchangeMapView: View {
         proposalId: "prop-123",
         meetingLat: 40.7128,
         meetingLon: -74.0060,
-        sessionId: "sess-456"
+        session_id: "sess-456"
     )
 }

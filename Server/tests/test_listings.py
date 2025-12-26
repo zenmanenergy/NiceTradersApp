@@ -13,7 +13,7 @@ class TestListingsEndpoints:
         available_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
         
         response = client.get('/Listings/CreateListing', query_string={
-            'SessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'currency': 'USD',
             'amount': '500',
             'acceptCurrency': 'EUR',
@@ -43,7 +43,7 @@ class TestListingsEndpoints:
         available_until = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d %H:%M:%S')
         
         response = client.get('/Listings/CreateListing', query_string={
-            'SessionId': 'INVALID-SESSION',
+            'session_id': 'INVALID-SESSION',
             'currency': 'USD',
             'amount': '500',
             'acceptCurrency': 'EUR',
@@ -94,7 +94,7 @@ class TestListingsEndpoints:
     def test_update_listing_success(self, client, test_listing, test_user):
         """Test updating a listing"""
         response = client.get('/Listings/UpdateListing', query_string={
-            'SessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'listingId': test_listing['listing_id'],
             'amount': '1500',
             'locationRadius': '15'
@@ -130,7 +130,7 @@ class TestListingsEndpoints:
         connection.commit()
         
         response = client.get('/Listings/UpdateListing', query_string={
-            'SessionId': session_id,
+            'session_id': session_id,
             'listingId': test_listing['listing_id'],
             'amount': '2000'
         })
@@ -166,7 +166,7 @@ class TestListingsEndpoints:
         connection.commit()
         
         response = client.get('/Listings/DeleteListing', query_string={
-            'SessionId': test_user['session_id'],
+            'session_id': test_user['session_id'],
             'listingId': listing_id,
             'permanent': 'true'
         })

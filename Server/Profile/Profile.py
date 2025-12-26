@@ -16,9 +16,9 @@ blueprint = Blueprint('Profile', __name__)
 def GetProfile():
 	try:
 		ProfileData = request.args.to_dict()
-		SessionId = ProfileData.get('SessionId', None)
+		session_id = ProfileData.get('session_id', None)
 		
-		result = get_profile(SessionId)
+		result = get_profile(session_id)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -33,7 +33,7 @@ def UpdateProfile():
 		else:
 			ProfileData = request.args.to_dict()
 		
-		SessionId = ProfileData.get('SessionId', None)
+		session_id = ProfileData.get('session_id', None)
 		Name = ProfileData.get('name', None)
 		Email = ProfileData.get('email', None)
 		Phone = ProfileData.get('phone', None)
@@ -41,7 +41,7 @@ def UpdateProfile():
 		Bio = ProfileData.get('bio', None)
 		PreferredLanguage = ProfileData.get('preferred_language', None)
 		
-		result = update_profile(SessionId, Name, Email, Phone, Location, Bio, PreferredLanguage)
+		result = update_profile(session_id, Name, Email, Phone, Location, Bio, PreferredLanguage)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -51,10 +51,10 @@ def UpdateProfile():
 def UpdateSettings():
 	try:
 		SettingsData = request.args.to_dict()
-		SessionId = SettingsData.get('SessionId', None)
+		session_id = SettingsData.get('session_id', None)
 		SettingsJson = SettingsData.get('settingsJson', None)
 		
-		result = update_settings(SessionId, SettingsJson)
+		result = update_settings(session_id, SettingsJson)
 		return result
 	except Exception as e:
 		return Debugger(e)
@@ -64,9 +64,9 @@ def UpdateSettings():
 def DeleteAccount():
 	try:
 		DeleteData = request.args.to_dict()
-		SessionId = DeleteData.get('SessionId', None)
+		session_id = DeleteData.get('session_id', None)
 		
-		result = delete_account(SessionId)
+		result = delete_account(session_id)
 		return result
 	except Exception as e:
 		return Debugger(e)
